@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>spa test</title>
+	<link rel="icon" href="data:;base64,=">
+	<!-- <script src="ice.0.1.0.js" config="config.js"></script> -->
+	<link rel="stylesheet" type="text/css" href="static/css/reset.css">
+	<link rel="stylesheet" type="text/css" href="static/css/index.css">
+</head>
+<body ice-module="root">
+	<div class="wrap">
+		<div class="header">
+			<a href="@login" class="btn selected">登录</a>
+			<a href="@register" class="btn">注册</a>
+		</div>
+		<div class="login-box" ice-module="login-box">
+			<div class="loading" ice-driver="loading"></div>
+		</div>
+	</div>
+
+	<!-- 表格组件渲染 -->
+	<div class="info-table" ice-driver="EditTable" ice-param="tableObj">
+		<table>
+		</table>
+
+		<div class="page-ctrl">
+			<ul>
+				<li><a href="#">上一页</a></li>
+				<li><a href="#">1</a></li>
+				<li><a href="#">2</a></li>
+				<li><a href="#">3</a></li>
+				<li><a href="#">下一页</a></li>
+			</ul>
+		</div>
+	</div>
+</body>
+<script>
+	ice.page(['Language', 'Animation', 'Http'], function(crystals, language, animate, http) {
+		crystals.tableObj = {
+			"head": ["姓名", "年龄", "性别", "住址"],
+			"body": [
+				["小A", "28", "Nan", "管理监管局"],
+				["小B", "42", "Nv", "车管所"],
+				["小C", "18", "Nv", "春风楼"]
+			]
+		}
+
+		var LANG_INDEX = language('lang_index');
+		crystals.path({
+			'login': LANG_INDEX.TITLE_LOGIN,
+			'register': LANG_INDEX.TITLE_REG
+		});
+
+		http.get('login')
+		.done(function(res) {
+			console.log(res);
+		});
+
+		crystals.refreshModule('login', 'login-box');
+
+		// 状态注册
+		crystals.registerState('login', function(element) {
+			var domReg = document.querySelector('a[href=@register]');
+			if (!element.classList.contains('selected')) {
+				element.className += ' selected';
+				domReg.className = domReg.replace(' selected', '');
+			}
+
+			// 将参数传递到逆方法内，逆方法可以直接通过函数拿到传递进入的参数
+			crystals.transmitParams(domReg, element);
+			crystals.refreshModule('register', 'login-box', function(newFragment, oldFragment) {
+				animateArr = [];
+				animateArr.push([oldFragment, {to: {opacity: 0}}, 1000]);
+				animate(animateArr, 1000, function() {
+					console.log('success');
+				})
+				.animate(oldFragment, {
+					to: {opacity: 0}
+				}, 1000)
+				.animate(oldFragment, {
+					from: {opacity: 0},
+					to: {opacity: 1}
+				}, 1000);
+			});
+		}).inverse(function(domReg, element) {
+			if (element.classList.contains('selected') && !domReg.classList.contains('selected')) {
+				domReg.className += ' selected';
+				element.className = element.replace(' selected', '');
+			}
+
+			crystals.redirect('login', 'login-box');
+		});
+	});
+</script>
+</html>
