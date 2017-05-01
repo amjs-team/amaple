@@ -2,8 +2,11 @@
 
 /* 声明此文件在jshint检测时的变量不报 'variable' is not defined. */
 /* globals replace,
-	_forEach,
+	util,
 	push,
+	concat,
+	config,
+	split,
  */
 
 /* 声明此文件在jshint检测时的变量不报 'variable' is defined but never used */
@@ -41,7 +44,7 @@ function urlTransform$ ( str, mode ) {
 		separation 			= '/';
 		
 
-	return mode ? replace.call(str, rsep, point) : replace.call(str, rpoint, separation);
+	return mode ? str.replace( rsep, point) : str.replace ( rpoint, separation );
 }
 
 /**
@@ -83,14 +86,14 @@ function decomposeArray$ ( array, callback ) {
 
 	// 复制array的副本到_array中
 	// 此地方直接使用“=”时只是引用，如果改变tmpArr也将改变原数组
-	var _array = concat.call ( [], array ),
+	var _array = [].concat ( array ),
 
 		_arr;
 
-	if (_config.params.moduleSeparator === '/') {
+	if ( config.params.moduleSeparator === '/' ) {
 		for ( var i = 0; i < _array.length; ) {
 			if ( _array [ i ] !== '' ) {
-				callback ( _array[ i ], _array[ i + 1] || '' );
+				callback ( _array[ i ], _array[ i + 1 ] || '' );
 
 				i += 2;
 			}
@@ -100,9 +103,9 @@ function decomposeArray$ ( array, callback ) {
 		}
 	}
 	else {
-		_forEach ( _array, function ( arr ) {
+		util.foreach ( _array, function ( arr ) {
 			if ( arr !== '' ) {
-				_arr = split.call ( arr, _config.params.moduleSeparator );
+				_arr = arr.split ( config.params.moduleSeparator );
 				callback ( _arr [ 0 ], _arr [ 1 ] );
 			}
 		} );

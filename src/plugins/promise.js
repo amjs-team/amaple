@@ -3,18 +3,12 @@
 /* 声明此文件在jshint检测时的变量不报 'variable' is not defined. */
 /* globals argErr,
 	push,
-	_forEach,
+	util,
  */
 
 /* 声明此文件在jshint检测时的变量不报 'variable' is defined but never used */
-/* exported slice,
-	splice,
-	push,
-	toString,
-	_extend,
-	ice,
-	_get,
-	_post
+/*
+
  */
 
 /**
@@ -80,10 +74,10 @@
  * @time   2016-07-31T16:34:12+0800
  * @param  {@function}                 resolver 处理函数体
  */
-function Promise(resolver) {
+function Promise ( resolver ) {
 	// 判断resolver是否为处理函数体
-	if (typeof resolver !== 'function') {
-		throw argErr('function Promise', '构造函数需传入一个函数参数');
+	if ( util.type ( resolver ) !== 'function' ) {
+		throw argErr ( 'function Promise', '构造函数需传入一个函数参数' );
 	}
 
 	/** @type {Number} Promise的三种状态定义 */
@@ -92,10 +86,10 @@ function Promise(resolver) {
 		REJECTED 			= 2,
 
 		/** 预定义的Promise对象对应的处理函数体信息 */
-		_value,
+		args,
 		_reason,
-		_state 				= PENDING,
-		_handler 			= [];
+		state 				= PENDING,
+		handlers 			= [];
 
 	/**
 	 * 用于判断对象是否为thenable对象（即是否包含then方法）
@@ -105,20 +99,20 @@ function Promise(resolver) {
 	 * @param  {multi}                 value 被判断的值
 	 * @return {Boolean}                     是thenable对象返回true，否则返回false
 	 */
-	this._isThenable = function(value) {
-		var t = typeof value;
-			if (value && (t === 'object' || t === 'function')) {
+	this._isThenable = function ( value ) {
+		var t = util.type ( value );
+			if ( value && ( t === 'object' || t === 'function' ) ) {
 				var then = value.then;
-				if (typeof then === 'function') {
+				if ( util.type ( then ) === 'function' ) {
 					return true;
 				}
 		  }
 		  return false;
-	}
+	};
 
 	/**
 	 * 根据Promise对象来对回调函数做出相应处理
-	 * 当状态为Pending时，将回调函数保存于promise._handler数组中待调用
+	 * 当状态为Pending时，将回调函数保存于promise.handlers数组中待调用
 	 * 当状态为Fulfilled时，执行onFulfilled方法
 	 * 当状态为Rejected时，执行onRejected方法
 	 *
@@ -127,20 +121,20 @@ function Promise(resolver) {
 	 * @param  {[type]}                 handler [description]
 	 * @return {[type]}                         [description]
 	 */
-	this.handle = function(handler) {
-		if (_state === PENDING) {
-			push.call(_handler, handler);
+	this.handle = function ( handler ) {
+		if ( state === PENDING ) {
+			handlers.push ( handler );
 		}
-		else if(_state === FULFILLED && typeof handler.onFulfilled === 'function') {
-			handler.onFulfilled.apply(null, _value);
+		else if ( state === FULFILLED && util.type ( handler.onFulfilled ) === 'function' ) {
+			handler.onFulfilled.apply ( null, args );
 		}
-		else if(_state === REJECTED && typeof handler.onRejected === 'function') {
-			handler.onRejected(_reason);
+		else if ( state === REJECTED && util.type ( handler.onRejected ) === 'function' ) {
+			handler.onRejected ( _reason );
 		}
-	}
+	};
 
 	/**
-	 * 改变Promise对象的状态为Fulfilled并执行promise._handler数组中所有的onFulfilled方法
+	 * 改变Promise对象的状态为Fulfilled并执行promise.handlers数组中所有的onFulfilled方法
 	 * 此方法用于执行成功时的回调绑定
 	 * see Promise注释
 	 *
@@ -148,19 +142,19 @@ function Promise(resolver) {
 	 * @time   2016-07-31T17:32:54+0800
 	 * @param  {multi}                 value 回调函数参数
 	 */
-	function _resolve() {
-		if (_state === PENDING) {
-			_state 		= FULFILLED;
-			_value 		= arguments;
+	function _resolve () {
+		if ( state === PENDING ) {
+			state 		= FULFILLED;
+			args 		= arguments;
 
-			_forEach(_handler, function(item) {
-				item.onFulfilled && item.onFulfilled.apply(null, _value);
-			});
+			util.foreach ( handlers, function ( item ) {
+				item.onFulfilled && item.onFulfilled.apply ( null, args );
+			} );
 		}
 	}
 
 	/**
-	 * 改变Promise对象的状态为Rejected并执行promise._handler数组中所有的onRejected方法
+	 * 改变Promise对象的状态为Rejected并执行promise.handlers数组中所有的onRejected方法
 	 * 此方法用于执行失败时的回调绑定
 	 * see Promise注释
 	 *
@@ -168,22 +162,25 @@ function Promise(resolver) {
 	 * @time   2016-07-31T17:36:37+0800
 	 * @param  {string}                 reason 失败原因
 	 */
-	function _reject(reason) {
-		if (_state === PENDING) {
-			_state 		= REJECTED;
+	function _reject ( reason ) {
+		if ( state === PENDING ) {
+			state 		= REJECTED;
 			_reason		= reason;
 
-			_forEach(_handler, function(item) {
-				item.onRejected && item.onRejected(_reason);
-			});
+			util.foreach ( handlers, function ( item ) {
+				item.onRejected && item.onRejected ( _reason );
+			} );
 		}
 	}
 
-	resolver(_resolve, _reject);
+	resolver ( _resolve, _reject );
 }
 
 // Promise原型对象
 Promise.prototype 		 	= {
+
+	constructor: Promise,
+
 	/**
 	 * Promise的主要方法之一，用于绑定或执行处理函数的回调函数，当成功时的回调函数返回值为thenable对象，则通知代理Promise对象执行回调函数
 	 * see Promise注释
@@ -194,27 +191,27 @@ Promise.prototype 		 	= {
 	 * @param  {function}                 onRejected  失败时的回调函数
 	 * @return {object}                               新创建的Promise代理对象
 	 */
-	then: function(onFulfilled, onRejected) {
-		var __this = this;
-		return new Promise(function(resolve, reject) {
-			__this.handle({
-				onFulfilled: function() {
-								var result = typeof onFulfilled === 'function' && onFulfilled.apply(null, arguments) || arguments;
-								if (__this._isThenable(result)) {
-									result.then(
-										function() {
-											resolve();
+	then : function ( onFulfilled, onRejected ) {
+		var _this = this;
+		return new Promise ( function ( resolve, reject ) {
+			_this.handle ( {
+				onFulfilled : function () {
+								var result = util.type ( onFulfilled ) === 'function' && onFulfilled.apply ( null, arguments ) || arguments;
+								if ( _this._isThenable ( result ) ) {
+									result.then (
+										function () {
+											resolve ();
 										},
-										function(reason) {
-											reject(reason);
-										});
+										function ( reason ) {
+											reject ( reason );
+										} );
 								}
 							},
 
 
-				onRejected: function(reason) {
-								var result = typeof onRejected === 'function' && onRejected(reason) || reason;
-								reject(result);
+				onRejected: function ( reason ) {
+								var result = util.type ( onRejected ) === 'function' && onRejected ( reason ) || reason;
+								reject ( result );
 							}
 			});
 		});
@@ -228,10 +225,10 @@ Promise.prototype 		 	= {
 	 * @param  {function}                 onFulfilled 回调函数
 	 * @return {object}                               当前Promise对象
 	 */
-	done: function(onFulfilled) {
-		this.handle({
-			onFulfilled: onFulfilled
-		});
+	done : function ( onFulfilled ) {
+		this.handle ( {
+			onFulfilled : onFulfilled
+		} );
 
 		return this;
 	},
@@ -244,10 +241,10 @@ Promise.prototype 		 	= {
 	 * @param  {function}                 onRejected 回调函数
 	 * @return {object}                              当前Promise对象
 	 */
-	fail: function(onRejected) {
-		this.handle({
-			onRejected: onRejected
-		});
+	fail : function ( onRejected ) {
+		this.handle ( {
+			onRejected : onRejected
+		} );
 
 		return this;
 	},
@@ -259,14 +256,14 @@ Promise.prototype 		 	= {
 	 * @time   2016-07-31T17:44:07+0800
 	 * @param  {function}               callback 回调函数
 	 */
-	always: function(callback) {
-		this.handle({
-			onFulfilled: callback,
-			onRejected: callback
-		});
+	always: function ( callback ) {
+		this.handle ( {
+			onFulfilled : callback,
+			onRejected 	: callback
+		} );
 	}
 
-}
+};
 
 /**
  * 存储准备调用的promise对象，用于多个异步请求并发协作时使用。
@@ -277,6 +274,6 @@ Promise.prototype 		 	= {
  * @param  {object} 		promise[1-n] 不定个数Promise对象
  * @return {object}                 	 promise对象
  */
-Promise.when 		= function() {
+Promise.when 		= function () {
 
-}
+};

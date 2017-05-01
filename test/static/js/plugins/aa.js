@@ -1,5 +1,6 @@
 plugin(function(crystals) {
+	var aa = '666'
 	return function() {
-		console.log(123);
+		console.log(aa);
 	}
 });

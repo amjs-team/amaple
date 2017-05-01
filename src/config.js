@@ -1,11 +1,14 @@
 'use strict';
 
 /* 声明此文件在jshint检测时的变量不报 'variable' is not defined. */
-/* globals _extend,
-	_isEmpty,
+/* globals util,
 	configErr,
-	_typeof,
 	ice,
+	document,
+	PAGE_STATE: true,
+	STATE_CONFIGED,
+	event,
+	
  */
 
 /* 声明此文件在jshint检测时的变量不报 'variable' is defined but never used */
@@ -13,7 +16,7 @@
  */
 
 /** @type {Array} 目前所支持的状态标记符号，如果所传入的状态标记符号不在此列表中，则会使用默认的状态标记符号@ */
-var stateValue 	= ['@', '$', '^', '*', '|', ':', '~', '!'];
+var stateValue 	= [ '@', '$', '^', '*', '|', ':', '~', '!' ];
 
 
 /**
@@ -34,10 +37,10 @@ var stateValue 	= ['@', '$', '^', '*', '|', ':', '~', '!'];
  * @time   2016-07-25T16:33:26+0800
  * @param  {Object}                 	params 开发者传入的配置参数对象
  */
-function _config(params) {
+function config ( params ) {
 	// 配置参数的类型固定为object
-	if (_typeof(params) !== 'object') {
-		throw configErr('params', '配置参数为参数对象');
+	if ( util.type ( params ) !== 'object' ) {
+		throw configErr ( 'params', '配置参数为参数对象' );
 	}
 
 	/** @type {String} 用于临时存储参数的类型 */
@@ -81,7 +84,7 @@ function _config(params) {
 		},
 
 		/** @type {String} url地址中的状态标识符，如http://...@login表示当前页面在login的状态 */
-		stateMark		: stateValue[0],
+		stateMark		: stateValue [ 0 ],
 
 		/** @type {Boolean} 是否开启跳转缓存，默认开启。跳转缓存是当页面无刷新跳转时缓存跳转数据，当此页面实时性较低时建议开启，以提高相应速度 */
 		redirectCache 	: true,
@@ -102,40 +105,40 @@ function _config(params) {
 		header 			: {}
 	};
 
-	if (!_isEmpty(params)) {
+	if ( !util.isEmpty(params ) ) {
 		// 处理params.base内参数
-		if (params.base !== undefined) {
+		if ( params.base !== undefined ) {
 			// 处理params.base.url参数
-			if (params.base.url !== undefined) {
-				type 				= _typeof(params.base.url);
+			if ( params.base.url !== undefined ) {
+				type 				= util.type ( params.base.url );
 				params.base.url = type === 'string' ? params.base.url : 
 									  type === 'function' ? params.base.url() :
 									  '';
-				params.base.url = params.base.url.substr(-1, 1) === '/' ? params.base.url : params.base.url + '/';
+				params.base.url = params.base.url.substr ( -1, 1 ) === '/' ? params.base.url : params.base.url + '/';
 			}
 
 			// 处理params.base.plugin参数
-			if (params.base.plugin !== undefined) {
-				type 		= _typeof(params.base.plugin);
+			if ( params.base.plugin !== undefined ) {
+				type 			= util.type ( params.base.plugin );
 				params.base.plugin = type === 'string' ? params.base.plugin : 
 									  type === 'function' ? params.base.plugin() :
 									  '';
-				params.base.plugin = params.base.plugin.substr(-1, 1) === '/' ? params.base.plugin : params.base.plugin + '/';
+				params.base.plugin = params.base.plugin.substr ( -1, 1 ) === '/' ? params.base.plugin : params.base.plugin + '/';
 			}
 
 			// 处理params.base.driver参数
-			if (params.base.driver !== undefined) {
-				type 		= _typeof(params.base.driver);
+			if ( params.base.driver !== undefined ) {
+				type 		= util.type ( params.base.driver );
 				params.base.driver = type === 'string' ? params.base.driver : 
-									  type === 'function' ? params.base.driver() :
-									  '';
-				params.base.driver = params.base.driver.substr(-1, 1) === '/' ? params.base.driver : params.base.driver + '/';
+									 type === 'function' ? params.base.driver() :
+									 '';
+				params.base.driver = params.base.driver.substr ( -1, 1 ) === '/' ? params.base.driver : params.base.driver + '/';
 			}
 		}
 
 		// 处理params.base.lang参数
-		if (params.base !== undefined && params.base.lang !== undefined) {
-			type 			= _typeof(params.base.lang);
+		if ( params.base !== undefined && params.base.lang !== undefined ) {
+			type 			= util.type ( params.base.lang );
 			params.base.lang = type === 'string' ? params.base.lang : 
 								  type === 'function' ? params.base.lang() :
 								  '';
@@ -144,17 +147,45 @@ function _config(params) {
 		}
 
 		// 判断传入的stateMark是否在stateValue限定的状态标记符号内
-		params.stateMark = stateValue.indexOf(params.stateMark) === -1 ? stateValue[0] : params.stateMark;
+		params.stateMark = stateValue.indexOf ( params.stateMark ) === -1 ? stateValue [ 0 ] : params.stateMark;
 
 		// 判断传入的redirectCache是否为true或false
 		params.redirectCache = params.redirectCache !== false ? true : false;
 	}
 	
-	params.base = _extend(_params.base, params.base);
-	_extend(_config, {params: _extend(_params, params)});
+	params.base = util.extend ( _params.base, params.base );
+	util.extend ( config, { params: util.extend ( _params, params ) } );
 }
 
 // ice对象继承config方法
-_extend(ice, {
-	config : _config
-});
+util.extend ( ice, {
+	config : config
+} );
+
+// 异步加载用户配置文件
+( function () {
+	//////////////////////////////////////////
+	// 根据icejs的script标签上的config属性来调用js文件，如没有该属性则传入空配置参数初始化配置
+	// 
+	var configSrc;
+
+	if ( configSrc = util.s ( 'script[config]' ).getAttribute( 'config' ) ) {
+
+		var script = document.createElement('script');
+		script.src = configSrc;
+
+		util.appendScript(script, function () {
+			PAGE_STATE = STATE_CONFIGED;
+
+			event.emit ( 'parsed' );
+		} );
+	}
+	else {
+		config( {} );
+
+		PAGE_STATE = STATE_CONFIGED;
+	}
+	//////////////////////////////////////////
+	//
+	//
+} )();

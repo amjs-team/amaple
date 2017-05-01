@@ -18,12 +18,11 @@
  * @time   2016-07-19T12:34:35+0800
  * @param  {string}                 moduleName 模块名称
  */
-function iceError(moduleName) {
-	return function (errCode, err) {
-		//
+function iceError ( moduleName ) {
+	return function ( errCode, err ) {
+
 		// 打印的错误信息
-		//
 		var errMsg = '[ice:' + (moduleName ? moduleName + '-' : '') + errCode + '] ' + err;
-		return new Error(errMsg);
-	}
+		return new Error ( errMsg );
+	};
 }

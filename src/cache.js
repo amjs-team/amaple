@@ -2,8 +2,7 @@
 
 /* 声明此文件在jshint检测时的变量不报 'variable' is not defined. */
 /* globals moduleErr,
-	_typeof,
-	_forEach,
+	util,
 	push,
 	
 	TYPE_PLUGIN,
@@ -27,20 +26,26 @@
  * 3. 页面跳转与状态切换时的缓存，开启缓存后，页面跳转数据将会被缓存，再次调用相同地址时将使用缓存更新页面以提高响应速度，实时性较高的页面建议关闭缓存。
  * 4. 当前页面初始化未完成时将page()模块的工厂方法缓存于page中，ice.page()未调用时，将ice.module()内定义的方法缓存于此等待执行
  */
-var cache = (function() {
+var cache = ( function () {
 	/** @type {Object} 插件存储，加载完成的插件都会存储于此 */
-	var plugins 	= {
-			/** @type {Object} 内置插件存储 */
-			builtIn 	: {},
-			/** @type {Object} 自定义插件存储 */
-			external 	: {}
-		},
+	var plugins 			 	= {};
+
+	/** @type {Object} 内置插件存储 */
+	plugins [ PLUGIN_BUILTIN ]  = {};
+
+	/** @type {Object} 自定义插件存储 */
+	plugins [ PLUGIN_EXTERNAL ] = {};
+			
+	var
 
 		/** @type {Object} 元素驱动器存储 */
 		drivers 	= {},
 
 		/** @type {Object} 页面跳转与状态切换时的缓存 */
 		redirects 	= {},
+
+		/** @type {Object} 模块注入工厂方法缓存 */
+		modules 	= {},
 
 		/**
 		 * @type {Object} 模块方法队列
@@ -60,16 +65,17 @@ var cache = (function() {
 	 * @param  {Object/Function}       	plugin 插件对象
 	 * @param  {String}                 type   插件类型
 	 */
-	function addPlugin(plugin, type) {
+	function addPlugin ( plugin, type ) {
+
 		// 遍历插件对象组依次缓存
-		_forEach(plugin, function(item, name) {
-			if (!hasOwnProperty.call(plugins[type], name)) {
-				plugins[type][name] = item;
+		util.foreach ( plugin, function ( item, name ) {
+			if ( !plugins [ type ].hasOwnProperty ( name ) ) {
+				plugins [ type ][ name ] = item;
 			}
 			else {
-				throw moduleErr('plugin', name + '插件已存在');
+				throw moduleErr ( 'plugin', name + '插件已存在' );
 			}
-		});
+		} );
 	}
 
 
@@ -81,16 +87,17 @@ var cache = (function() {
 	 * @param  {String}                 name   驱动器名称
 	 * @param  {Function}               driver 驱动器对象
 	 */
-	function addDriver(driver) {
+	function addDriver ( driver ) {
+
 		// 遍历插件对象组依次缓存
-		_forEach(driver, function(item, name) {
-			if (!hasOwnProperty.call(drivers, name)) {
-				drivers[name] = item;
+		util.foreach ( driver, function ( item, name ) {
+			if ( !drivers.hasOwnProperty.call ( name ) ) {
+				drivers [ name ] = item;
 			}
 			else {
-				throw moduleErr('driver', name + '元素驱动器已存在');
+				throw moduleErr ( 'driver', name + '元素驱动器已存在' );
 			}
-		});
+		} );
 	}
 
 	// 曝光接口到外部
@@ -108,30 +115,30 @@ var cache = (function() {
 		 * @param  {String}                 type      组件类型
 		 * @return {Object}                           组件对象或组件对象组
 		 */
-		componentCreater: function(name, component, type) {
-			var tmp,
-				tname = _typeof(name);
+		componentCreater : function ( name, component, type ) {
+			var _component,
+				tname = util.type ( name );
 
 			// 当未传入组件名，而是直接传入组件对象组时，将组件对象组传入cache对象缓存
-			if (tname === 'object') {
+			if ( tname === 'object' ) {
 				type 		= component;
 				component 	= name;
 				name 		= undefined;
 			}
 			else {
-				tmp 		= component;
+				_component 	= component;
 				component 	= {};
-				component[name] = tmp;
+				component [ name ] = _component;
 			}
 
 			if (type === PLUGIN_BUILTIN || type === PLUGIN_EXTERNAL) {
-				addPlugin(component, type);
+				addPlugin ( component, type );
 			}
-			else if (type === TYPE_DRIVER) {
-				addDriver(component);	
+			else if ( type === TYPE_DRIVER ) {
+				addDriver ( component );
 			}
 
-			return tmp || component;
+			return _component || component;
 		},
 
 		/**
@@ -144,10 +151,10 @@ var cache = (function() {
 		 * @param  {Number}                 type 组件类型
 		 * @return {Object/Function}      anonymous 组件对象
 		 */
-		componentFactory: function(name, type) {
-			return (type === TYPE_PLUGIN || type === undefined) ? 
-				   (plugins[PLUGIN_BUILTIN][name] || plugins[PLUGIN_EXTERNAL][name]) :
-				   		type === TYPE_DRIVER ? drivers[name] : null;
+		componentFactory : function ( name, type ) {
+			return ( type === TYPE_PLUGIN || type === undefined ) ? 
+				   ( plugins [ PLUGIN_BUILTIN ][ name ] || plugins [ PLUGIN_EXTERNAL ][ name ] ) :
+				   		type === TYPE_DRIVER ? drivers [ name ] : null;
 		},
 
 		/**
@@ -158,12 +165,12 @@ var cache = (function() {
 		 * @param  {String}                 name     缓存名称
 		 * @param  {Multi}                 redirect  缓存模块
 		 */
-		addRedirect: function(name, redirect) {
-			if (!hasOwnProperty.call(redirects, name)) {
-				redirects[name] = redirect;
+		addRedirect : function ( name, redirect ) {
+			if (!redirects.hasOwnProperty ( name ) ) {
+				redirects [ name ] = redirect;
 			}
 			else {
-				throw moduleErr('module', name + '页面模块已存在');
+				throw moduleErr ( 'module', name + '页面模块已存在' );
 			}
 		},
 
@@ -175,8 +182,8 @@ var cache = (function() {
 		 * @param  {String}                 name 缓存名称
 		 * @return {Multi}                  anonymous 缓存模块
 		 */
-		getRedirect: function(name) {
-			return redirects[name];
+		getRedirect : function ( name ) {
+			return redirects [ name ];
 		},
 
 		/**
@@ -187,14 +194,14 @@ var cache = (function() {
 		 * @param  {String}                 name    模块名称
 		 * @param  {Function}               factory 模块注入后工厂方法
 		 */
-		// addModule: function(name, factory) {
-		// 	if (!hasOwnProperty.call(modules, name)) {
-		// 		modules[name] = factory;
-		// 	}
-		// 	else {
-		// 		throw moduleErr('module', name + '模块已存在');
-		// 	}
-		// },
+		addModule : function ( name, factory ) {
+			if ( !modules.hasOwnProperty ( name ) ) {
+				modules [ name ] = factory;
+			}
+			else {
+				throw moduleErr ( 'module', name + '模块已存在' );
+			}
+		},
 
 		/**
 		 * 获取模块注入后工厂方法
@@ -204,9 +211,9 @@ var cache = (function() {
 		 * @param  {String}                 name      模块名称
 		 * @return {Function}               anonymous 模块注入后工厂方法
 		 */
-		// getModule: function(name) {
-		// 	return modules[name];
-		// },
+		getModule: function ( name ) {
+			return modules [ name ];
+		},
 
 		/**
 		 * 设置ice.page()注入后工厂方法，当页面状态为Loading状态时会将ice.page()注入后工厂方法保存于此等待页面解析完毕并执行
@@ -215,8 +222,8 @@ var cache = (function() {
 		 * @time   2016-09-23T16:37:53+0800
 		 * @param  {[type]}                 pageFactory [description]
 		 */
-		setPageFactory: function(factory) {
-			if (_typeof(factory) === 'function') {
+		setPageFactory : function ( factory ) {
+			if ( util.type ( factory ) === 'function' ) {
 				moduleQueue.page = factory;
 			}
 		},
@@ -228,9 +235,9 @@ var cache = (function() {
 		 * @time   2016-09-23T16:46:38+0800
 		 * @param  {[type]}                 factory [description]
 		 */
-		addUnexecutedModule: function(factory) {
-			if (_typeof(factory) === 'function') {
-				push.call(moduleQueue.module, factory);
+		addUnexecutedModule : function ( factory ) {
+			if ( util.type ( factory ) === 'function') {
+				push.call ( moduleQueue.module, factory );
 			}
 		},
 
@@ -240,19 +247,19 @@ var cache = (function() {
 		 * @author JOU
 		 * @time   2016-08-23T12:00:15+0800
 		 */
-		queueInvoke: function() {
-			if (PAGE_STATE === STATE_PARSED && _typeof(moduleQueue.page) === 'function') {
-				moduleQueue.page();
+		queueInvoke: function () {
+			if ( PAGE_STATE === STATE_PARSED && util.type ( moduleQueue.page ) === 'function') {
+				moduleQueue.page ();
 			}
 
 			// 依次执行被缓存的module主函数
-			else if (PAGE_STATE === STATE_READY  && moduleQueue.module.length > 0) {
-				_forEach(moduleQueue.module, function(module) {
-					if (_typeof(module) === 'function' ) {
-						module();
+			else if ( PAGE_STATE === STATE_READY  && moduleQueue.module.length > 0 ) {
+				util.foreach ( moduleQueue.module, function ( module ) {
+					if ( util.type ( module ) === 'function' ) {
+						module ();
 					}
-				});
+				} );
 			}
 		}
 	};
-})();
+} ) ();

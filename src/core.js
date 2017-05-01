@@ -1,17 +1,15 @@
 'use strict';
 
 /* 声明此文件在jshint检测时的变量不报 'variable' is not defined. */
-/* globals _extend,
-	_typeof,
-	_forEach,
-	_trim,
+/* globals window,
+	document,
+	util,
 	argErr,
 	split,
 	moduleLoader,
-	_config,
-	_s,
-	_S,
-	_on,
+	driverLoader,
+	config,
+	event,
 	TYPE_PAGE,
 	TYPE_MODULE,
 	TYPE_PLUGIN,
@@ -22,10 +20,8 @@
 	push,
 	concat,
 
-	_ajax,
-	_run,
-	_appendScript,
 	PAGE_STATE: true,
+	STATE_CONFIGED,
 	STATE_PARSED,
 
 	urlTransform$,
@@ -33,8 +29,7 @@
 	decomposeArray$,
 
 	single,
-
-
+	event,
  */
 
 /* 声明此文件在jshint检测时的变量不报 'variable' is defined but never used */
@@ -52,14 +47,14 @@
   * @param  {Object}                 node 		包含新增代码的节点对象或DocumentFragment对象
   * @param  {Boolean} 				 external 	是否为外部调用（外部指的是框架外），外部调用不具有不传参解析当前所有html的功能
   */
-function _control(node, external) {
-	if (external === true) {
-		if (node === undefined || node === null || (node.nodeType !== 1 && node.nodeType !== 11)) {
-			throw argErr('function control:node', 'control方法要求传入一个有效的node对象或DocumentFragment对象');
+function control ( node, external ) {
+	if ( external === true ) {
+		if ( node === undefined || node === null || ( node.nodeType !== 1 && node.nodeType !== 11 ) ) {
+			throw argErr ( 'function control:node', 'control方法要求传入一个有效的node对象或DocumentFragment对象' );
 		}
 	}
-	else if (external === undefined && (node === undefined || node === null)) {
-		node = _s('body');
+	else if ( external === undefined && ( node === undefined || node === null ) ) {
+		node = util.s ( 'body' );
 	}
 	
 	var 
@@ -90,44 +85,44 @@ function _control(node, external) {
 	//
 
 	// 如果根节点也是一个模块定义，则需要将根节点一起处理
-	if (node.nodeType === 1 && node.getAttribute(single.aModule) !== null) {
-		push.call(nodes, node);
+	if ( node.nodeType === 1 && node.getAttribute ( single.aModule ) !== null ) {
+		nodes.push ( node );
 	}
 
-	nodes = concat.call(nodes, slice.call(_S('*[' + single.aModule + ']', node)));
-	_forEach(nodes, function(module) {
+	nodes = nodes.concat ( util.S ( '*[' + single.aModule + ']', node ) );
+	util.foreach ( nodes, function ( module ) {
 
 		// 过滤nodes数组本身带有的属性或方法
-		if (module.nodeType === 1) {
-			if (src 		= module.getAttribute(single.aSrc)) {
-				cache 		= module.getAttribute(single.aCache);
+		if ( module.nodeType === 1 ) {
+			if (src 		= module.getAttribute ( single.aSrc ) ) {
+				cache 		= module.getAttribute ( single.aCache );
 
 
 				// 如果在single.moduleRecord中找到了当前加载模块的信息，则使用single.moduleRecord中的模块内容信息去加载内容
 				// 此模块信息是由初始化时将pathname解析而来
 				// 如果pathname中包含该模块的加载信息，则该模块需根据pathname的信息来加载，否则使用该模块的默认模块信息加载
-				src 		= single.getModuleRecord(module.getAttribute(single.aModule)) || src;
+				src 		= single.getModuleRecord ( module.getAttribute ( single.aModule ) ) || src;
 
 				// 保存当前的路径
 				// 用于无刷新跳转时，模块内容替换前的状态保存
 				// 这样便可以在后退或前进时找到刷新前的状态
-				setCurrentPath$(module, src);
+				setCurrentPath$ ( module, src );
 
 				// 无刷新跳转组件调用来完成无刷新跳转
-				single(
+				single (
 					src, 
 					module, 
 					null, 
 
 					// 模块定义ice-cache="true"，或配置文件定义redirectCache为true且模块没有定义为false
-					cache === 'true' || (_config.params.redirectCache === true && cache !== 'false')
+					cache === 'true' || (config.params.redirectCache === true && cache !== 'false')
 				);
 			}
 		}
 		else {
 			return false;
 		}
-	});
+	} );
 
 	
 
@@ -135,9 +130,9 @@ function _control(node, external) {
 	/////////////////////////////////////////////////////////
 	// 给带有ice-target-module属性和src属性的元素绑定点击事件
 	//
-	_forEach ( slice.call ( _S ( '*[' + single.aHref + ']' ) ), function ( btn ) {
+	util.foreach ( slice.call ( util.S ( '*[' + single.aHref + ']' ) ), function ( btn ) {
 		if ( btn.nodeName !== 'LINK' && btn.getAttribute ( single.aTargetMod ) ) {
-			_on ( btn, 'click', single.click );
+			event.on ( btn, 'click', single.click );
 		}
 	});
 
@@ -145,10 +140,10 @@ function _control(node, external) {
 	/////////////////////////////////////////////////////////
 	// 后退/前进事件绑定
 	//
-	_on ( window, 'popstate', function ( event ) {
+	event.on ( window, 'popstate', function ( event ) {
 
 	    // 取得在single中通过replaceState保存的state object
-	    state 		= single.history.getState ( window.location.pathname );
+	    state 			= single.history.getState ( window.location.pathname );
 
 	    before 			= {};
 	    after 			= {};
@@ -156,23 +151,23 @@ function _control(node, external) {
 
 	    _modules 		= [];
 
-	    if ( _typeof ( state ) === 'array' && state.length > 0 ) {
+	    if ( util.type ( state ) === 'array' && state.length > 0 ) {
 
 	    	if ( state.length === 1 ) {
 
 	    		push.call ( _modules, {
 	    			url 	: state [ 0 ].url, 
-	    			entity 	: _s ( '*[' + single.aModule + '=' + state [ 0 ].moduleName + ']' ), 
+	    			entity 	: util.s ( '*[' + single.aModule + '=' + state [ 0 ].moduleName + ']' ), 
 	    			title 	: state [ 0 ].title, 
 	    			isCache : state [ 0 ].cache
 	    		} );
 	    	}
 	    	else {
-	    		_forEach ( state, function ( item ) {
+	    		util.foreach ( state, function ( item ) {
 
 	    			push.call ( _modules, {
 	    				url 	: item.url, 
-	    				entity 	: _s ( '*[' + single.aModule + '=' + item.moduleName + ']' ), 
+	    				entity 	: util.s ( '*[' + single.aModule + '=' + item.moduleName + ']' ), 
 	    				title 	: item.title, 
 	    				isCache : item.cache
 	    			} );
@@ -196,13 +191,13 @@ function _control(node, external) {
 
 
 	    	// 对比跳转前后url所体现的变化module信息，根据这些不同的模块进行加载模块内容
-	    	_forEach ( after, function ( afterItem, key ) {
+	    	util.foreach ( after, function ( afterItem, key ) {
 	    		if ( before [ key ] !== afterItem ) {
 	    			differentState [ key ] = afterItem;
 	    		}
 	    	} );
 
-			_forEach ( before, function ( afterItem, key ) {
+			util.foreach ( before, function ( afterItem, key ) {
 				if ( after [ key ] !== afterItem ) {
 					differentState [ key ] = null;
 				}
@@ -211,16 +206,16 @@ function _control(node, external) {
 
 
 			// 根据对比跳转前后变化的module信息，遍历重新加载
-			_forEach ( differentState, function ( src, moduleName ) {
-				_module = _s ( '*[' + single.aModule + '=' + moduleName + ']' );
+			util.foreach ( differentState, function ( src, moduleName ) {
+				_module = util.s ( '*[' + single.aModule + '=' + moduleName + ']' );
 
 				src 	  = src === null ? _module.getAttribute( single.aSrc ) : src;
 				
 				single ( 
 						src, 
 						_module, 
-						_config.params.header[src], 
-						_module.getAttribute ( single.aCache ) !== 'false' && _config.params.redirectCache, 
+						config.params.header[src], 
+						_module.getAttribute ( single.aCache ) !== 'false' && config.params.redirectCache, 
 						true, 
 						true 
 					);
@@ -261,7 +256,7 @@ function _control(node, external) {
 	    //     	}
 	    // 	}
 	    // }
-	});
+	} );
 }
 
 /**
@@ -275,106 +270,120 @@ function _control(node, external) {
  * @param  {factory}                 factory      模块执行方法
  * @param  {Number}                  type         模块类型
  */
-function _module(moduleName, deps, factory, type) {
+function module ( moduleName, deps, factory, type ) {
 	// 判断参数合法性
 	// 当传入参数只有一个且此参数类型是function时，参数合法并纠正参数
-	if (!deps && !factory) {
-		throw argErr('function module', '至少需要传入模块主函数参数');
+	if ( !deps && !factory ) {
+		throw argErr ( 'function module', '至少需要传入模块主函数参数' );
 	}
-	else if (deps && !factory) {
+	else if ( deps && !factory ) {
 		factory 			= deps;
 		deps 				= undefined;
 	}
 
-	var tdeps 				= _typeof(deps),
-		tfactory 			= _typeof(factory);
+	var tdeps 				= util.type ( deps ),
+		tfactory 			= util.type ( factory );
 
 	// deps = undefined(or)null(or)array
-	if(deps !== undefined && deps !== null && tdeps !== 'array') {
-		throw argErr('function module:dependence', '方法第一个参数类型为Array，也可不传入第一个参数或传入null，方法将自动忽略此参数');
+	if ( deps !== undefined && deps !== null && tdeps !== 'array' ) {
+		throw argErr ( 'function module:dependence', '方法第一个参数类型为Array，也可不传入第一个参数或传入null，方法将自动忽略此参数' );
 	}
 
 	// factory参数必须为function
-	if(tfactory !== 'function') {
-		throw argErr('function module:factory', '至少需要传入模块主函数参数，而不是其他类型参数');
+	if ( tfactory !== 'function' ) {
+		throw argErr ( 'function module:factory', '至少需要传入模块主函数参数，而不是其他类型参数' );
 	}
 
 	/** @type {Object} 动态加载插件时的script标签 */
 	var script,
 
 		rargs 				= /^function\s*\((.*)\)\s*/,
-		args 				= split.call(rargs.exec(factory.toString())[1], ',');
+		args 				= rargs.exec ( factory.toString () )[1].split ( ',' );
 
-	_forEach(args, function(arg, index, args) {
-		args[index] = _trim(arg);
-	});
+	util.foreach ( args, function ( arg, index, args ) {
+		args [ index ] = util.trim ( arg );
+	} );
 
 	// 通过所使用插件过滤所需的加载项
-	deps = _typeof(deps) === 'array' ? slice.call(deps, 0, args.length - 1) : deps;
+	deps = util.type ( deps ) === 'array' ? deps.slice ( 0, args.length - 1 ) : deps;
 
 	// 将此模块保存于loadModule中
-	moduleLoader.putLoadModules(moduleName, {
+	moduleLoader.putLoadModules ( moduleName, {
 												type 	: type,
 												deps 	: deps,
 												factory : factory,
 												args 	: args
-											});
+											} );
 
 	// 遍历依赖，如果模块未被加载，则放入waiting中等待加载完成
-	if (_typeof(deps) === 'array') {
-		_forEach(deps, function(dep) {
+	if ( util.type ( deps ) === 'array' ) {
+		util.foreach ( deps, function ( dep ) {
 
 			// 模块名统一使用“.“作为命名空间分隔，将依赖项名字中的“/”统一转换为“.”
-			dep 				= urlTransform$(dep, true);
-			if (!cache.componentFactory(dep, TYPE_PLUGIN)) {
+			dep 				= urlTransform$ ( dep, true );
+			if ( !cache.componentFactory ( dep, TYPE_PLUGIN ) ) {
 
 				// 放入moduleLoader.context.waiting数组中等待加载
-				moduleLoader.putWaitingModuleName(dep);
+				moduleLoader.putWaitingModuleName ( dep );
 
 				// 将依赖项名称放入正在加载中模块名数组中，以供plugin方法内去获取当前正在加载中的模块名称
-				moduleLoader.putLoadingModuleName(dep);
+				moduleLoader.putLoadingModuleName ( dep );
 			}
 
-			script 				= document.createElement('script');
+			script 				= document.createElement ( 'script' );
 
-			script.src 			= _config.params.base.plugin + dep + moduleLoader.suffix;
+			script.src 			= config.params.base.plugin + dep + moduleLoader.suffix;
 
-			script.setAttribute(moduleLoader.moduleName, urlTransform$(dep));
-			_appendScript(script, moduleLoader.onScriptLoaded);
-		});
+			script.setAttribute ( moduleLoader.moduleName, urlTransform$ ( dep ) );
+			util.appendScript ( script, moduleLoader.onScriptLoaded );
+		} );
 	}
 }
 
-/**
- * 使用icejs初始化页面方法
- * #此方法所做工作如下：
- * 1、 如果开发者调用了config配置，则加载config配置项。配置项以ajax同步的方式加载，跨域加载请确保在HTML5环境下运行，且服务器端需设置响应头为：
- * 	   [Access-Control-Allow-Origin:*]
- *     [Access-Control-Allow-Methods:POST,GET']
- * 2、 管控页面结构，使之表现出具有icejs的特性
- * 3、 解析完页面后将PAGE_STATE置为STATE_PARSED
- * 4、 执行缓存的page()（此方法主要防止异步执行时ice.page()和_init()的顺序错乱问题，_init()必须在ice.page()前执行）
- *
- * @author JOU
- * @time   2017-01-13T17:11:28+0800
- */
-function _init() {
+// 页面DOM结构加载完成时执行初始化
+// 如果调用此函数时DOM结构已经加载完成，则立即执行初始化
+( function ( fn ) {
 
-	//////////////////////////////////////////
-	// 根据icejs的script标签上的config属性来调用js文件，如没有该属性则传入空配置参数初始化配置
-	// 
-	var 
-		scripts 		= _S ( 'script[config]' );
-
-	if ( scripts.length > 0 ) {
-		_ajax( {
-			url 	: scripts [ scripts.length - 1 ].getAttribute( 'config' ),
-			async 	: false,
-			type 	: 'SCRIPT'
-		} );
+	if ( document.readyState === 'complete' ) {
+		fn ();
 	}
 	else {
-		_config( {} );
+		function completed () {
+			event.remove ( document, 'DOMContentLoaded', completed );
+			event.remove ( window, 'load', completed );
+			fn ();
+		}
+
+		event.on ( document, 'DOMContentLoaded', completed );
+		event.on ( window, 'load', completed );
+	}
+} )	
+ // icejs初始化
+ // #此方法所做工作如下：
+ // 1、 如果开发者调用了config配置，则加载config配置项。配置项以ajax同步的方式加载，跨域加载请确保在HTML5环境下运行，且服务器端需设置响应头为：
+ // 	[Access-Control-Allow-Origin:*]
+ //     [Access-Control-Allow-Methods:POST,GET']
+ // 2、 管控页面结构，使之表现出具有icejs的特性
+ // 3、 解析完页面后将PAGE_STATE置为STATE_PARSED
+ // 4、 执行缓存的page()（此方法主要防止异步执行时ice.page()和_init()的顺序错乱问题，_init()必须在ice.page()前执行）
+( function () {
+
+	//////////////////////////////////////////
+	// 管控页面结构块
+	function chunk () {
+		control();
+
+		if ( util.isEmpty ( driverLoader ) ) {
+			event.emit ( 'page' );
+			PAGE_STATE = STATE_PARSED;
+		}
+	}
+
+	if ( PAGE_STATE === STATE_CONFIGED ) {
+		chunk ();
+	}
+	else {
+		event.on ( 'parse', chunk, false, true );
 	}
 	//////////////////////////////////////////
 	//
@@ -391,28 +400,24 @@ function _init() {
 	single.history.setState ( window.location.pathname, null );
 
 	//////////////////////////////////////////
-	// (异步执行)管控页面结构
-	//
-	_run ( _control );
-
-	//////////////////////////////////////////
 	// 将初始化状态设置为解析完成当前页面元素且执行完成ice.page
 	// 
 	PAGE_STATE = STATE_PARSED;
 
 	// 执行缓存的page
 	cache.queueInvoke ();
-	//////////////////////////////////////////
-	//
-	//
-}
+	
+} );
 
+//
+//
+//////////////////////////////////////////
 // ice对象继承page、module方法
-_extend(ice, {
+util.extend ( ice, {
 	/**
 	 * 页面初始化，异步执行方法，一个页面只能调用一次此方法
 	 * ice.page()会在所有模块方法执行前执行
-	 * ice.page()只有在PAGE_STATE=1时可执行，否则会将factory函数处理好缓存于moduleQueue中，等待PAGE_STATE置为1时立即执行
+	 * ice.page()只有在PAGE_STATE=1时可执行，否则会将factory函数处理好缓存于moduleQueue中，等待PAGEutil.STATE置为1时立即执行
 	 *
 	 * @author JOU
 	 * @time   2016-08-21T12:31:04+0800
@@ -420,12 +425,11 @@ _extend(ice, {
 	 * @param  {factory}                 factory      模块执行方法
 	 * @return {Object} 							  ice对象
 	 */
-	page: function(deps, factory) {
-		_init();
+	page : function ( deps, factory ) {
 
 		// 每次使用都需要先初始化模块加载器，以确认加载器内的参数是原始的
-		moduleLoader.init();
-		_module(moduleLoader.topModuleName, deps, factory, TYPE_PAGE);
+		moduleLoader.init ();
+		module ( moduleLoader.topModuleName, deps, factory, TYPE_PAGE );
 
 		return this;
 	},
@@ -442,31 +446,31 @@ _extend(ice, {
 	 * @param  {factory}                 factory      模块执行方法
 	 * @return {Object} 							  ice对象
 	 */
-	module: function(deps, factory) {
+	module : function ( deps, factory ) {
 		// 每次使用都需要先初始化模块加载器，以确认加载器内的参数是原始的
-		moduleLoader.init();
+		moduleLoader.init ();
 
-		_module(moduleLoader.topModuleName, deps, factory, TYPE_MODULE);
+		module ( moduleLoader.topModuleName, deps, factory, TYPE_MODULE );
 
 		return this;
 	},
 
 	/** 
-	 * 管控传入的html(@see function _control)，此方法为外部调用方法，只能传递一个参数
+	 * 管控传入的html(@see function control)，此方法为外部调用方法，只能传递一个参数
 	 *
 	 * @author JOU
 	 * @time   2017-01-16T19:46:38+0800
 	 * @param  {Object}                 node 包含新增代码的节点对象或DocumentFragment对象
 	 * @return {[type]}                      [description]
 	 */
-	control: function(node) {
-		_control(node, true);
+	control: function ( node ) {
+		control ( node, true );
 	}
 });
 
 
 // window全局对象继承plugin、driver方法
-_extend(window, {
+util.extend ( window, {
 
 	/**
 	 * 插件定义方法，此方法传入依赖插件数组deps和factory对象(factory可以为函数)
@@ -476,8 +480,8 @@ _extend(window, {
 	 * @param  {Array}                 	  deps    依赖插件数组
 	 * @param  {Function}                 factory 插件工厂方法
 	 */
-	plugin: function(deps, factory) {
-		_module(moduleLoader.getLoadingModuleName() || '', deps, factory, TYPE_PLUGIN);
+	plugin : function ( deps, factory ) {
+		module ( moduleLoader.getLoadingModuleName () || '', deps, factory, TYPE_PLUGIN );
 	},
 
 	/**
@@ -488,7 +492,7 @@ _extend(window, {
 	 * @param  {Array}                 	  deps    依赖插件数组
 	 * @param  {Function}                 factory 插件工厂方法
 	 */
-	driver: function (deps, factory) {
-		_module('', deps, factory, TYPE_DRIVER);
+	driver : function ( deps, factory ) {
+		module ( moduleLoader.topModuleName, deps, factory, TYPE_DRIVER );
 	}
 });

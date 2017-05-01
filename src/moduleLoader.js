@@ -2,9 +2,9 @@
 
 /* 声明此文件在jshint检测时的变量不报 'variable' is not defined. */
 /* globals runtimeErr,
-	_typeof,
-	_forEach,
-	_isEmpty,
+	util.type,
+	util.foreach,
+	util.isEmpty,
 	crystals,
 	push,
 	splice,
@@ -13,6 +13,7 @@
 	language,
 	util,
 	http,
+	event,
 	cache,
 
 	TYPE_PAGE,
@@ -68,7 +69,7 @@ var moduleLoader 			= {
 	 * @author JOU
 	 * @time   2016-09-04T15:45:01+0800
 	 */
-	init: function() {
+	init: function () {
 		// 初始化context对象
 		this.context.loadModules 				= {};
 		this.context.waiting 					= [];
@@ -84,8 +85,8 @@ var moduleLoader 			= {
 	 * @param  {String}                 name   保存的模块名
 	 * @param  {Object}                 module 保存的模块对象
 	 */
-	putLoadModules: function(name, module) {
-		this.context.loadModules[name] = module;
+	putLoadModules: function ( name, module ) {
+		this.context.loadModules [ name ] = module;
 	},
 
 	/**
@@ -95,9 +96,9 @@ var moduleLoader 			= {
 	 * @time   2016-09-06T12:06:13+0800
 	 * @param  {String}                 name 模块名
 	 */
-	putWaitingModuleName: function(name) {
-		if (_typeof(this.context.waiting) === 'array') {
-			push.call(this.context.waiting, name);
+	putWaitingModuleName: function ( name ) {
+		if ( util.type ( this.context.waiting ) === 'array' ) {
+			this.context.waiting.push ( name );
 		}
 	},
 
@@ -108,9 +109,9 @@ var moduleLoader 			= {
 	 * @time   2016-09-06T12:02:25+0800
 	 * @param  {String}                 name 模块名
 	 */
-	putLoadingModuleName: function(name) {
-		if (_typeof(this.context.loadingModules.names) === 'array') {
-			push.call(this.context.loadingModules.names, name);
+	putLoadingModuleName: function ( name ) {
+		if ( util.type ( this.context.loadingModules.names ) === 'array' ) {
+			this.context.loadingModules.names.push ( name );
 		}
 	},
 
@@ -121,8 +122,8 @@ var moduleLoader 			= {
 	 * @time   2016-09-06T11:51:30+0800
 	 * @return {String}                 模块名
 	 */
-	getLoadingModuleName: function() {
-		return (!_isEmpty(this.context.loadingModules.names) && this.context.loadingModules.pointer >= 0) ? this.context.loadingModules.names[this.context.loadingModules.pointer++] : false;
+	getLoadingModuleName: function () {
+		return ( !util.isEmpty ( this.context.loadingModules.names ) && this.context.loadingModules.pointer >= 0 ) ? this.context.loadingModules.names [ this.context.loadingModules.pointer++ ] : false;
 	},
 
 	/**
@@ -134,46 +135,47 @@ var moduleLoader 			= {
 	 * @param  {[type]}                 module [description]
 	 * @return {[type]}                        [description]
 	 */
-	inject: function(module) {
-		var args 			= [crystals],
+	inject: function ( module ) {
+		var args 			= [ crystals ],
 			_this 			= moduleLoader,
 
 			depModule,
 			returnValue;
 
-		if (_typeof(module.deps) === 'array') {
-			_forEach(module.deps, function(dep) {
+
+		if (util.type ( module.deps ) === 'array') {
+			util.foreach ( module.deps, function ( dep ) {
 				// 查找插件
-				if (depModule = cache.componentFactory(dep, TYPE_PLUGIN)) {
-					push.call(args, depModule);
+				if ( depModule = cache.componentFactory ( dep, TYPE_PLUGIN ) ) {
+					args.push ( depModule );
 				}
 
-				// 如果都没找到则去此次加载完成的模块中获取并缓存入外部对象
+				// 如果都没找到则去此此加载完成的模块中获取并缓存入外部对象
 				else {
-					depModule = _this.inject(_this.context.loadModules[dep]);
-					cache.componentCreater(
+					depModule = _this.inject ( _this.context.loadModules [ dep ] );
+					cache.componentCreater (
 						dep, 
 						depModule, 
 						PLUGIN_EXTERNAL
 					);
 
-					push.call(args, depModule);
+					args.push ( depModule );
 				}
-			});
+			} );
 		}
 
 		// 根据模块类型进行不同的操作
 		// 当模块类型为page或module时将依赖模块注入factory方法内返回，因为需要根据当前的页面状态值来判断是否需要马上执行factory方法；
 		// 当模块类型为plugin时注入依赖项并立即执行factory方法获取plugin对象
-		if (module.type === TYPE_PAGE || module.type === TYPE_MODULE) {
-			returnValue = function() {
-				module.factory.apply(null, args);
+		if ( module.type === TYPE_PAGE || module.type === TYPE_MODULE ) {
+			returnValue = function () {
+				module.factory.apply ( null, args );
 			};
 		}
-		else if (module.type === TYPE_PLUGIN) {
-			returnValue = module.factory.apply(null, args);
+		else if ( module.type === TYPE_PLUGIN ) {
+			returnValue = module.factory.apply ( null, args );
 		}
-		else if (module.type === TYPE_DRIVER) {
+		else if ( module.type === TYPE_DRIVER ) {
 			// 后续添上
 		}
 
@@ -188,25 +190,28 @@ var moduleLoader 			= {
 	 * @time   2016-09-05T15:44:48+0800
 	 * @param  {Object}                 event event对象
 	 */
-	onScriptLoaded: function(event) {
-		var /** @type {Function} 依赖注入后的工厂方法 */
+	onScriptLoaded : function ( event ) {
+
+		/** @type {Function} 依赖注入后的工厂方法 */
+		var 
 			factory,
 
 			_this 	= moduleLoader,
-			pointer = _this.context.waiting.indexOf(event.target.getAttribute(_this.moduleName));
+			pointer = _this.context.waiting.indexOf ( event.target.getAttribute(_this.moduleName ) );
+
 
 
 		// 移除已加载完成的模块
-		if (pointer !== -1) {
-			splice.call(_this.context.waiting, pointer, 1);
+		if ( pointer !== -1 ) {
+			_this.context.waiting. splice ( pointer, 1 );
 		}
 
 		// 执行
-		if (_this.context.waiting.length === 0) {
-			factory = _this.inject(_this.context.loadModules[_this.topModuleName]);
+		if ( _this.context.waiting.length === 0 ) {
+			factory = _this.inject ( _this.context.loadModules [ _this.topModuleName ] );
 
 			// 调用工厂方法
-			_this.factoryInvoke(factory, _this.context.loadModules[_this.topModuleName].type);
+			_this.factoryInvoke ( factory, _this.context.loadModules [ _this.topModuleName ].type );
 		}
 	}, 
 
@@ -218,49 +223,49 @@ var moduleLoader 			= {
 	 * @param  {Function}                 factory 待执行的工厂方法
 	 * @param  {type}                 	  type    模块类型
 	 */
-	factoryInvoke: function(factory, type) {
+	factoryInvoke : function ( factory, type ) {
 		// 通过ice.PAGE_STATE 判断页面是否初始化是否完成，如未完成则存入模块数组等待执行，如完成则直接执行
 		// 当module调用者为ice.page时
-		if (type === TYPE_PAGE) {
-			if (PAGE_STATE === STATE_LOADING) {
+		if ( type === TYPE_PAGE ) {
+			if ( PAGE_STATE === STATE_LOADING ) {
 
 				// 当前页面还未解析完成时，将page传入的主函数存储起来等待执行（将会在当前页面解析完成后执行此函数）
-				cache.setPageFactory(factory);
+				cache.setPageFactory ( factory );
 				
 			}
-			else if (PAGE_STATE === STATE_PARSED) {
+			else if ( PAGE_STATE === STATE_PARSED ) {
 				factory && factory(); // jshint ignore:line
 
 				// 将初始化状态设置为准备状态且执行完成ice.page
 				PAGE_STATE = STATE_READY;
 
 				// 执行缓存的module
-				cache.queueInvoke();
+				cache.queueInvoke ();
 			}
 			else {
-				throw runtimeErr('error', '页面状态错误(page)');
+				throw runtimeErr ( 'error', '页面状态错误(page)' );
 			}
 		}
 		// 当module调用者为ice.module时
-		else if (type === TYPE_MODULE) {
-			if (PAGE_STATE === STATE_PARSED) {
-				cache.addUnexecutedModule(factory);
+		else if ( type === TYPE_MODULE ) {
+			if ( PAGE_STATE === STATE_PARSED ) {
+				cache.addUnexecutedModule ( factory );
 			}
-			else if (PAGE_STATE === STATE_READY) {
-				factory && factory(); // jshint ignore:line
+			else if ( PAGE_STATE === STATE_READY ) {
+				factory && factory (); // jshint ignore:line
 			}
 			else {
-				throw runtimeErr('error', '页面状态错误(module)');
+				throw runtimeErr ( 'error', '页面状态错误(module)' );
 			}
 		}
 	}
 };
 
-cache.componentCreater({
+cache.componentCreater ( {
 	event 					: event,
 	Promise 				: Promise,
 	animation 				: animation,
 	language 				: language,
 	util					: util,
 	http 					: http
-}, PLUGIN_BUILTIN);
+}, PLUGIN_BUILTIN );

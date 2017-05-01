@@ -13,6 +13,7 @@ var iceFiles = {
 		'cache.js',
 		'single.js',
 		'state.js',
+		'driverLoader.js',
 		'moduleLoader.js',
 		'crystals.js',
 		'config.js',

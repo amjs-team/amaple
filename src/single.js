@@ -2,23 +2,21 @@
 
 /* jshint -W030 */
 /* 声明此文件在jshint检测时的变量不报 'variable' is not defined. */
-/* globals _typeof,
-	_config,
+/* globals util,
+	config,
 	cache,
-	_html,
-	_replaceAll,
 	substr,
-	_get,
+	http.get,
 	setCurrentPath$,
 	getCurrentPath$,
 	envErr,
 	moduleErr,
-	_extend,
-	_forEach,
-	_s,
 	push,
 	join,
-
+	document,
+	_module,
+	window,
+	http,
  */
 
 /* 声明此文件在jshint检测时的变量不报 'variable' is defined but never used */
@@ -87,10 +85,15 @@ function single ( url, module, title, isCache, pushStack, onpopstate ) {
 		_state 			= [];
 
 	// 判断传入的url的类型，如果是string，是普通的参数传递，即只更新一个模块的数据； 如果是array，它包括一个或多个模块更新的数据
-	if ( _typeof ( url ) === 'string' ) {
+	if ( util.type ( url ) === 'string' ) {
 
 		// 参数无需纠正
-		modules 		= [{url: url, entity: module, title: title, isCache: isCache}];
+		modules 		= [{
+							url 	: url, 
+							entity 	: module, 
+							title 	: title, 
+							isCache : isCache
+						}];
 	}
 	else {
 		modules 		= url;
@@ -103,38 +106,36 @@ function single ( url, module, title, isCache, pushStack, onpopstate ) {
 
 
 	// 循环modules，依次更新模块
-	_forEach ( modules, function ( _module ) {
+	util.foreach ( modules, function ( _module ) {
 
-		// console.log(_module);
-
-		type 			= _typeof(_module.title);
+		type 			= util.type ( _module.title );
 		moduleName 		= _module.entity.getAttribute ( single.aModule );
 		redirectKey 	= moduleName + '_' + _module.url;
-		complateUrl 	= _config.params.urlRule;
+		complateUrl 	= config.params.urlRule;
 
 		// isCache=true且cache已有当前模块的缓存时，才使用缓存
 		if ( _module.isCache === true && ( historyMod = cache.getRedirect ( redirectKey ) ) ) {
-			_html ( _module.entity, historyMod );
+			util.html ( _module.entity, historyMod );
 		}
 		else {
 
 			// 通过url规则转换url，并通过ice-base来判断是否添加base路径
-			complateUrl 	= _replaceAll ( complateUrl || '', modPlaceholder, moduleName );
-			complateUrl 	= _replaceAll ( complateUrl || '', conPlaceholder, _module.url );
+			complateUrl 	= util.replaceAll ( complateUrl || '', modPlaceholder, moduleName );
+			complateUrl 	= util.replaceAll ( complateUrl || '', conPlaceholder, _module.url );
 
 
 			hasSeparator 	= complateUrl.indexOf ( '/' );
-			complateUrl 	= _module.entity.getAttribute ( single.aBase ) !== 'false' && _config.params.base.url.length > 0 ?  
-							  _config.params.base.url +  ( hasSeparator === 0 ? substr.call ( complateUrl, 1 ) : complateUrl )
+			complateUrl 	= _module.entity.getAttribute ( single.aBase ) !== 'false' && config.params.base.url.length > 0 ?  
+							  config.params.base.url +  ( hasSeparator === 0 ? substr.call ( complateUrl, 1 ) : complateUrl )
 							  :
 							  hasSeparator === 0 ? complateUrl : '/' + complateUrl;
 
 
-			_get ( complateUrl ).done ( function ( result ) {
+			http.get ( complateUrl ).done ( function ( result ) {
 				try {
 
 					result 	= JSON.parse ( result );
-					html 	= result [ _config.params.htmlKey ];
+					html 	= result [ config.params.htmlKey ];
 
 				} catch ( e ) {
 					html 	= result;
@@ -143,7 +144,7 @@ function single ( url, module, title, isCache, pushStack, onpopstate ) {
 				/////////////////////////////////////////////////////////
 				// 将请求的html替换到module模块中
 				//
-				_html ( _module.entity, html );
+				util.html ( _module.entity, html );
 
 				/////////////////////////////////////////////////////////
 				// 如果需要缓存，则将html缓存起来
@@ -153,11 +154,11 @@ function single ( url, module, title, isCache, pushStack, onpopstate ) {
 				// 将_module.title统一为字符串
 				// 如果没有获取到字符串则为null
 				_module.title = type === 'string'   ? _module.title : 
-							  	type === 'function' ? _module.title ( result [ _config.params.codeKey ] || null ) || null : null;
+							  	type === 'function' ? _module.title ( result [ config.params.codeKey ] || null ) || null : null;
 			} );
 
 
-			if ( _typeof ( _module.title ) === 'string' ) {
+			if ( util.type ( _module.title ) === 'string' ) {
 
 				currentTitle 	= document.title;
 				document.title 	= _module.title;
@@ -208,7 +209,7 @@ function single ( url, module, title, isCache, pushStack, onpopstate ) {
 //////////////////////////////////////////
 // module无刷新跳转相关属性通用参数，为避免重复定义，统一挂载到single对象上
 //
-_extend(single, {
+util.extend ( single, {
 	aModule 		: 'ice-module',
 	aSrc 			: 'ice-src',
 	aCache 			: 'ice-cache',
@@ -219,10 +220,10 @@ _extend(single, {
 	aHref			: 'href',
 	aAction 		: 'action',
 	aTargetMod 		: 'ice-target-module'
-});
+} );
 
 
-_extend(single, {
+util.extend ( single, {
 
 	/** @type {Object} window.history封装 */
 	history : {
@@ -335,8 +336,8 @@ _extend(single, {
 			// 过滤moduleRecord数组中不存在于当前页面中的模块记录
 			var _record 		= {};
 
-			_forEach ( single.moduleRecord, function ( recordItem, key ) {
-				_typeof ( _s ( '*[ice-module=' + key + ']' ) ) === 'object' && ( _record [ key ] = recordItem );
+			util.foreach ( single.moduleRecord, function ( recordItem, key ) {
+				util.type ( util.s ( '*[ice-module=' + key + ']' ) ) === 'object' && ( _record [ key ] = recordItem );
 			});
 
 			single.moduleRecord 	= _record;
@@ -366,8 +367,8 @@ _extend(single, {
 		var 
 			_array = [];
 
-		_forEach ( single.moduleRecord, function ( recordItem, key ) {
-			push.call ( _array, key + ( _config.params.moduleSeparator || '' ) + recordItem );
+		util.foreach ( single.moduleRecord, function ( recordItem, key ) {
+			push.call ( _array, key + ( config.params.moduleSeparator || '' ) + recordItem );
 		} );
 
 
@@ -393,20 +394,20 @@ _extend(single, {
 			cache 			= this.getAttribute ( single.aCache ),
 
 			/** 获取当前按钮操作的模块 */
-			module				= _s ( '*[' + single.aModule + '=' + _moduleName + ']' );
+			module				= util.s ( '*[' + single.aModule + '=' + _moduleName + ']' );
 
 		e.preventDefault ();
-		if ( _typeof ( module ) === 'object' ) {
+		if ( util.type ( module ) === 'object' ) {
 
 			// 调用single方法
 			getCurrentPath$ ( module ) === src || 
-			single ( src, module, _config.params.header [ src ], 
+			single ( src, module, config.params.header [ src ], 
 
 					// 模块定义ice-cache="true"，或配置文件定义redirectCache为true且模块没有定义为false
-					cache === 'true' || ( _config.params.redirectCache === true && cache !== 'false' ), true );
+					cache === 'true' || ( config.params.redirectCache === true && cache !== 'false' ), true );
 		}
 		else {
 			throw moduleErr ( 'module', '找不到' + _moduleName + '模块' );
 		}
 	}
-});
+} );
