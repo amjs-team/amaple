@@ -46,6 +46,15 @@
  * @param  {Boolean/Null} 	        pushStack  是否压入history栈内（当url为请求数据对象时为null）
  * @param  {Boolean/Null} 	        onpopstate 是否为浏览器前进/后退时调用（当url为请求数据对象时为null）
  */
+
+/*
+	传参方式
+	1、url, module, data, title, timeout, before, success, error, abort, pushStack, onpopstate
+
+	2、{
+		url, module, data
+	}, title, timeout, before, success, error, abort, pushStack, onpopstate
+ */
 function single ( url, module, title, isCache, pushStack, onpopstate ) {
 
 	var 
@@ -62,7 +71,6 @@ function single ( url, module, title, isCache, pushStack, onpopstate ) {
 		/** @type {String} 模块内容标识占位符 */
 		conPlaceholder 	= ':v',
 
-
 		/** @type {String} 模块内容缓存key */
 		redirectKey, 
 
@@ -77,7 +85,7 @@ function single ( url, module, title, isCache, pushStack, onpopstate ) {
 
 
 		/** @type {String} 临时保存刷新前的title */
-		currentTitle,
+		currentTitle 	= document.title,
 
 		/** @type {String} 上一页面的路径 */
 		lastPath,
@@ -104,18 +112,26 @@ function single ( url, module, title, isCache, pushStack, onpopstate ) {
 	}
 
 
-
 	// 循环modules，依次更新模块
-	util.foreach ( modules, function ( _module ) {
+	util.foreach ( modules, function ( _module, i ) {
 
 		type 			= util.type ( _module.title );
 		moduleName 		= _module.entity.getAttribute ( single.aModule );
 		redirectKey 	= moduleName + '_' + _module.url;
 		complateUrl 	= config.params.urlRule;
 
-		// isCache=true且cache已有当前模块的缓存时，才使用缓存
-		if ( _module.isCache === true && ( historyMod = cache.getRedirect ( redirectKey ) ) ) {
+		// isCache=true、标题为固定的字符串、cache已有当前模块的缓存时，才使用缓存
+		// 如果当标题为function时，很有可能需要服务器实时返回的codeKey字段来获取标题，所以一定需要重新请求
+		// 根据不同的codeKey来刷新不同模块也一定需要重新请求，不能做缓存（后续添加）
+		if ( _module.isCache === true && type !== 'function' && ( historyMod = cache.getRedirect ( redirectKey ) ) ) {
+
 			util.html ( _module.entity, historyMod );
+			
+			if ( i === 0 ) {
+				if ( util.type ( modules [ 0 ].title ) === 'string' ) {
+					document.title = modules [ 0 ].title;
+				}
+			}
 		}
 		else {
 
@@ -151,32 +167,35 @@ function single ( url, module, title, isCache, pushStack, onpopstate ) {
 				//
 				_module.isCache === true && cache.addRedirect ( redirectKey, html );
 
-				// 将_module.title统一为字符串
-				// 如果没有获取到字符串则为null
-				_module.title = type === 'string'   ? _module.title : 
-							  	type === 'function' ? _module.title ( result [ config.params.codeKey ] || null ) || null : null;
+				if ( i  === '0' ) {
+
+					// 将_module.title统一为字符串
+					// 如果没有获取到字符串则为null
+					modules [ 0 ].title = type === 'string'   ? modules [ 0 ].title : 
+								  	type === 'function' ? modules [ 0 ].title ( result [ config.params.codeKey ] || null ) || null : null;
+
+					if ( util.type ( modules [ 0 ].title ) === 'string' ) {
+						document.title = modules [ 0 ].title;
+					}
+				}
 			} );
 
-
-			if ( util.type ( _module.title ) === 'string' ) {
-
-				currentTitle 	= document.title;
-				document.title 	= _module.title;
-			}
-
-			// 先保存上一页面的path用于上一页面的状态保存，再将模块的当前路径更新为刷新后的url
-			lastPath = getCurrentPath$ ( _module.entity );
-			setCurrentPath$ ( _module.entity, _module.url );
-
-			push.call ( _state,  {
-				url 		: lastPath,
-				moduleName 	: moduleName,
-				cache 		: _module.isCache,
-				title 		: currentTitle
-			} );
+		}
 
 
-			pushStack === true && single.setModuleRecord ( moduleName, _module.url, true );
+		// 先保存上一页面的path用于上一页面的状态保存，再将模块的当前路径更新为刷新后的url
+		lastPath = getCurrentPath$ ( _module.entity );
+		setCurrentPath$ ( _module.entity, _module.url );
+
+		_state.push ( {
+			url 		: lastPath,
+			moduleName 	: moduleName,
+			cache 		: _module.isCache,
+			title 		: currentTitle
+		} );
+
+		if ( pushStack === true ) {
+			single.setModuleRecord ( moduleName, _module.url, true );
 		}
 	} );
 
@@ -190,11 +209,11 @@ function single ( url, module, title, isCache, pushStack, onpopstate ) {
 			/////////////////////////////////////////////////////////
 			// 保存跳转前的页面状态
 			//
-
 			single.history.setState ( single.history.signature, _state, true );
 
-			// console.log(single.getFormatModuleRecord ());
-			onpopstate === true || single.history.push ( null, _module.title, single.getFormatModuleRecord () );
+			if ( onpopstate !== true ) {
+				single.history.push ( null, modules [ 0 ].title, single.getFormatModuleRecord () );
+			}
 
 			// 初始化一条将当前页的空值到single.history.state中
 			single.history.setState ( window.location.pathname, null );

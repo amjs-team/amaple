@@ -271,7 +271,7 @@ var STATE_LOADING 			= 0,
 	document,
 	setTimeout,
 	event,
-	
+
  */
 
 /* 声明此文件在jshint检测时的变量不报 'variable' is defined but never used */
@@ -306,8 +306,8 @@ var STATE_LOADING 			= 0,
   *
   * @author JOU
   * @time   2016-09-04T18:36:01+0800
-  * @param  {Array/Ojbect}           target     遍历目标参数，数组或对象
-  * @param  {Function}               callback   遍历回调函数，函数将会传入遍历值、遍历下标、当前遍历对象三个参数
+  * @param  {Array/Ojbect}          target     遍历目标参数，数组或对象
+  * @param  {Function}              callback   遍历回调函数，函数将会传入遍历值、遍历下标、当前遍历对象三个参数
   * @param  {Boolean} 				mode 	   模式，如果为true且遍历对象是数组，则只遍历数组内元素而不遍历数组本身的方法
   * @return {Boolean} 				isContinue 是否继续循环，如果返回false，则跳出循环
   */
@@ -740,7 +740,7 @@ var util = extend ( {}, {
 						scripts.push ( script );
 					}
 				}
-			});
+			} );
 
 			// scripts数组不空则顺序执行script
 			util.isEmpty ( scripts ) || util.scriptEval ( scripts );
@@ -934,6 +934,16 @@ function decomposeArray$ ( array, callback ) {
 	}
 }
 
+/**
+ * 获取唯一标识
+ *
+ * @author JOU
+ * @time   2017-05-05T22:29:37+0800
+ * @return {String}                 唯一标识
+ */
+function guid$ () {
+	return setTimeout( 1 ) + '';
+}
 
 
 /* 声明此文件在jshint检测时的变量不报 'variable' is not defined. */
@@ -961,9 +971,6 @@ var event = (function () {
 	var	/** @type {Object} 存储元素型自定义事件回调 */
 		events 		= {},
 
-		/** @type {Number} 唯一标示，自增属性 */
-		guid 		= 1,
-
 		rword 		= /\S+/g,
 
 		/** @type {Object} 特殊事件的判断函数、替代事件 */
@@ -975,7 +982,41 @@ var event = (function () {
 			},
 		},
 
-		eventProxy, _valueOf, ttype, tlistener, i, _listeners;
+		/** @type {Object} 创建事件触发对象时，根据事件类型来创建不同事件对象 */
+		eventMap 	= {
+			load 	: 'HTMLEvents',
+			unload 	: 'HTMLEvents',
+			abort 	: 'HTMLEvents',
+			error 	: 'HTMLEvents',
+			select 	: 'HTMLEvents',
+			change 	: 'HTMLEvents',
+			submit 	: 'HTMLEvents',
+			reset 	: 'HTMLEvents',
+			focus 	: 'HTMLEvents',
+			blur 	: 'HTMLEvents',
+			resize 	: 'HTMLEvents',
+			scroll 	: 'HTMLEvents',
+
+
+			keypress: 'KeyboartEvent',
+			keyup 	: 'KeyboartEvent',
+			keydown : 'KeyboartEvent',
+
+
+			contextmenu : 'MouseEvents',
+			click 		: 'MouseEvents',
+			dbclick 	: 'MouseEvents',
+			mouseout 	: 'MouseEvents',
+			mouseover 	: 'MouseEvents',
+			mouseenter 	: 'MouseEvents',
+			mouseleave 	: 'MouseEvents',
+			mousemove 	: 'MouseEvents',
+			mousedown 	: 'MouseEvents',
+			mouseup 	:'MouseEvents',
+			mousewheel 	:'MouseEvents'
+		},
+
+		eventProxy, _valueOf, ttype, tlistener, i, _this, _listeners;
 
 		/**
 		 * 所有事件绑定的回调函数
@@ -986,7 +1027,21 @@ var event = (function () {
 		 * @param  {Event}                 e 事件触发时的event对象
 		 */
 		function handler ( e ) {
-			eventProxy.emit ( e.currentTarget || e.target, e.type );
+			
+			_this = this;
+
+			_listeners = eventAccess ( _this, e.type );
+			if ( util.type ( _listeners ) === 'array' && _listeners.length > 0 ) {
+
+				util.foreach ( _listeners, function ( listener ) {
+					util.type ( listener ) === 'function' && listener.call ( _this, e );
+
+					// 如果该回调函数只执行一次则移除
+					if ( listener.once === true ) {
+						eventProxy.remove ( _this, e.type, listener, listener.useCapture );
+					}
+				} );
+			}
 		}
 
 		/**
@@ -1101,7 +1156,7 @@ var event = (function () {
 				return elem.valueOf ( elem, type, listener, remove );
 			}
 			else {
-				accessInner ( events, null, type, listener, remove );
+				return accessInner ( events, null, type, listener, remove );
 			}
 		}
 
@@ -1176,7 +1231,7 @@ var event = (function () {
 
 				// 给监听回调添加guid，方便移除事件
 				if ( !listener.guid ) {
-					listener.guid = guid++;
+					listener.guid = guid$ ();
 				}
 
 				// 如果once为true，则该回调只执行一次
@@ -1193,7 +1248,9 @@ var event = (function () {
 					// 元素对象存在，且元素支持浏览器事件时绑定事件，以方便浏览器交互时触发事件
 					// 元素不支持时属于自定义事件，需手动调用event.emit()触发事件
 					// IE.version >= 9
-					elem && eventProxy.support ( type, elem ) && elem.addEventListener && elem.addEventListener ( type, handler, !!useCapture );
+					if ( elem && eventProxy.support ( type, elem ) && elem.addEventListener ) {
+						elem.addEventListener ( type, handler, !!useCapture );
+					}
 				} );
 			},
 
@@ -1233,7 +1290,9 @@ var event = (function () {
 
 				replace.call ( types || '', rword, function ( type ) {
 
-					util.isEmpty ( eventAccess ( elem, type, listener, true ) ) && elem && eventProxy.support ( type, elem ) && elem.removeEventListener && elem.removeEventListener ( type, handler, !!useCapture );
+					if ( util.isEmpty ( eventAccess ( elem, type, listener, true ) ) && elem && eventProxy.support ( type, elem ) && elem.removeEventListener ) {
+						elem.removeEventListener ( type, handler, !!useCapture );	
+					}
 				} );
 			},
 
@@ -1262,18 +1321,17 @@ var event = (function () {
 				}
 
 				replace.call ( types || '', rword, function ( type ) {
+					if ( event.support ( type, elem ) ) {
 
-					_listeners = eventAccess ( elem, type );
-					if ( util.type ( _listeners ) === 'array' && _listeners.length > 0 ) {
+						// 使用creaeEvent创建事件
+						var e = document.createEvent ( eventMap [ type ] || 'CustomEvent' );
+						e.initEvent ( type, true, false );
 
-						util.foreach ( _listeners, function ( listener ) {
-							util.type ( listener ) === 'function' && listener.call ( elem );
-
-							// 如果该回调函数只执行一次则移除
-							if ( listener.once === true ) {
-								eventProxy.remove ( elem, type, listener, listener.useCapture );
-							}
-						} );
+						document.dispatchEvent ( e );
+						
+					}
+					else {
+						handler.call ( elem, { type: type } );
 					}
 				} );
 			}
@@ -2162,6 +2220,15 @@ var cache = ( function () {
  * @param  {Boolean/Null} 	        pushStack  是否压入history栈内（当url为请求数据对象时为null）
  * @param  {Boolean/Null} 	        onpopstate 是否为浏览器前进/后退时调用（当url为请求数据对象时为null）
  */
+
+/*
+	传参方式
+	1、url, module, data, title, timeout, before, success, error, abort, pushStack, onpopstate
+
+	2、{
+		url, module, data
+	}, title, timeout, before, success, error, abort, pushStack, onpopstate
+ */
 function single ( url, module, title, isCache, pushStack, onpopstate ) {
 
 	var 
@@ -2178,7 +2245,6 @@ function single ( url, module, title, isCache, pushStack, onpopstate ) {
 		/** @type {String} 模块内容标识占位符 */
 		conPlaceholder 	= ':v',
 
-
 		/** @type {String} 模块内容缓存key */
 		redirectKey, 
 
@@ -2193,7 +2259,7 @@ function single ( url, module, title, isCache, pushStack, onpopstate ) {
 
 
 		/** @type {String} 临时保存刷新前的title */
-		currentTitle,
+		currentTitle 	= document.title,
 
 		/** @type {String} 上一页面的路径 */
 		lastPath,
@@ -2220,18 +2286,26 @@ function single ( url, module, title, isCache, pushStack, onpopstate ) {
 	}
 
 
-
 	// 循环modules，依次更新模块
-	util.foreach ( modules, function ( _module ) {
+	util.foreach ( modules, function ( _module, i ) {
 
 		type 			= util.type ( _module.title );
 		moduleName 		= _module.entity.getAttribute ( single.aModule );
 		redirectKey 	= moduleName + '_' + _module.url;
 		complateUrl 	= config.params.urlRule;
 
-		// isCache=true且cache已有当前模块的缓存时，才使用缓存
-		if ( _module.isCache === true && ( historyMod = cache.getRedirect ( redirectKey ) ) ) {
+		// isCache=true、标题为固定的字符串、cache已有当前模块的缓存时，才使用缓存
+		// 如果当标题为function时，很有可能需要服务器实时返回的codeKey字段来获取标题，所以一定需要重新请求
+		// 根据不同的codeKey来刷新不同模块也一定需要重新请求，不能做缓存（后续添加）
+		if ( _module.isCache === true && type !== 'function' && ( historyMod = cache.getRedirect ( redirectKey ) ) ) {
+
 			util.html ( _module.entity, historyMod );
+			
+			if ( i === 0 ) {
+				if ( util.type ( modules [ 0 ].title ) === 'string' ) {
+					document.title = modules [ 0 ].title;
+				}
+			}
 		}
 		else {
 
@@ -2267,32 +2341,35 @@ function single ( url, module, title, isCache, pushStack, onpopstate ) {
 				//
 				_module.isCache === true && cache.addRedirect ( redirectKey, html );
 
-				// 将_module.title统一为字符串
-				// 如果没有获取到字符串则为null
-				_module.title = type === 'string'   ? _module.title : 
-							  	type === 'function' ? _module.title ( result [ config.params.codeKey ] || null ) || null : null;
+				if ( i  === '0' ) {
+
+					// 将_module.title统一为字符串
+					// 如果没有获取到字符串则为null
+					modules [ 0 ].title = type === 'string'   ? modules [ 0 ].title : 
+								  	type === 'function' ? modules [ 0 ].title ( result [ config.params.codeKey ] || null ) || null : null;
+
+					if ( util.type ( modules [ 0 ].title ) === 'string' ) {
+						document.title = modules [ 0 ].title;
+					}
+				}
 			} );
 
-
-			if ( util.type ( _module.title ) === 'string' ) {
-
-				currentTitle 	= document.title;
-				document.title 	= _module.title;
-			}
-
-			// 先保存上一页面的path用于上一页面的状态保存，再将模块的当前路径更新为刷新后的url
-			lastPath = getCurrentPath$ ( _module.entity );
-			setCurrentPath$ ( _module.entity, _module.url );
-
-			push.call ( _state,  {
-				url 		: lastPath,
-				moduleName 	: moduleName,
-				cache 		: _module.isCache,
-				title 		: currentTitle
-			} );
+		}
 
 
-			pushStack === true && single.setModuleRecord ( moduleName, _module.url, true );
+		// 先保存上一页面的path用于上一页面的状态保存，再将模块的当前路径更新为刷新后的url
+		lastPath = getCurrentPath$ ( _module.entity );
+		setCurrentPath$ ( _module.entity, _module.url );
+
+		_state.push ( {
+			url 		: lastPath,
+			moduleName 	: moduleName,
+			cache 		: _module.isCache,
+			title 		: currentTitle
+		} );
+
+		if ( pushStack === true ) {
+			single.setModuleRecord ( moduleName, _module.url, true );
 		}
 	} );
 
@@ -2306,11 +2383,11 @@ function single ( url, module, title, isCache, pushStack, onpopstate ) {
 			/////////////////////////////////////////////////////////
 			// 保存跳转前的页面状态
 			//
-
 			single.history.setState ( single.history.signature, _state, true );
 
-			// console.log(single.getFormatModuleRecord ());
-			onpopstate === true || single.history.push ( null, _module.title, single.getFormatModuleRecord () );
+			if ( onpopstate !== true ) {
+				single.history.push ( null, modules [ 0 ].title, single.getFormatModuleRecord () );
+			}
 
 			// 初始化一条将当前页的空值到single.history.state中
 			single.history.setState ( window.location.pathname, null );
@@ -2539,20 +2616,6 @@ var State = {
 };
 
 
-/* 声明此文件在jshint检测时的变量不报 'variable' is not defined. */
-/* 
- */
-
-/* 声明此文件在jshint检测时的变量不报 'variable' is defined but never used */
-/* exported 
-	driverLoader,
-
- */
-
-var driverLoader = {
-
-};
-
 
 /* 声明此文件在jshint检测时的变量不报 'variable' is not defined. */
 /* globals runtimeErr,
@@ -2591,57 +2654,26 @@ var driverLoader = {
 	插件分为内置插件与外部插件，内置插件可直接使用插件名注入；
 	外部插件则需使用插件相对于_config.base的路径注入(可省略.js)。
  */
-var moduleLoader 			= {
-	/** @type {String} 文件后缀 */
-	suffix					: '.js',
+function ModuleLoader ( name, load ) {
 
-	/** @type {String} js插件的模块名称属性，通过此属性可以得到加载完成的模块名 */
-	moduleName 				: 'data-moduleName',
+	
+	/** @type {Object} 需要加载的模块，加载完成所有模块需要遍历此对象上的所有模块并调用相应回调函数 */
+	this.load 		= {};
 
-	/** @type {String} 顶层模块名 */
-	topModuleName 			: '*',
-
-	/** @type {Object} 模块加载容器，用于模块加载时的控制 */
-	context 				: {
-		/** @type {Object} 需要加载的模块，加载完成所有模块需要遍历此对象上的所有模块并调用相应回调函数 */
-		loadModules 			: {},
-		/** @type {Array} 等待加载完成的模块，每加载完成一个模块都会将此模块在waiting对象上移除，当waiting为空时则表示相关模块已全部加载完成 */
-		waiting 				: [],
-		/** @type {Object} 正在加载中的模块信息，此对象用于当前正在加载中的模块内获取模块名称，此对象将会在_module方法内被赋值 */
-		loadingModules 			: {
-			/** @type {Number} 当前模块名指针 */
-			pointer 		 		: 0,
-			/** @type {Array} 正在加载中的模块名数组 */
-			names 					: []
-		}
-	},
+	/** @type {Array} 等待加载完成的模块，每加载完成一个模块都会将此模块在waiting对象上移除，当waiting为空时则表示相关模块已全部加载完成 */
+	this.waiting 	= [];
 
 
-	/**
-	 * 模块加载器初始化
-	 *
-	 * @author JOU
-	 * @time   2016-09-04T15:45:01+0800
-	 */
-	init: function () {
-		// 初始化context对象
-		this.context.loadModules 				= {};
-		this.context.waiting 					= [];
-		this.context.loadingModules.pointer 	= 0;
-		this.context.loadingModules.names 		= [];
-	},
+	//////////////////////////////////////////
+	//////////////////////////////////////////
+	this.load [ name ] = load;
+}
 
-	/**
-	 * 将模块对象放入context.loadModules对象中，等到所有的模块都加载完成后则会在this.onScriptLoaded方法内依次使用此对象内的内容
-	 *
-	 * @author JOU
-	 * @time   2016-09-06T12:11:35+0800
-	 * @param  {String}                 name   保存的模块名
-	 * @param  {Object}                 module 保存的模块对象
-	 */
-	putLoadModules: function ( name, module ) {
-		this.context.loadModules [ name ] = module;
-	},
+ModuleLoader.prototype = {
+
+	/** @type {Function} 将moduleLoader的构造器再指回本身 */
+	constructor : ModuleLoader,
+
 
 	/**
 	 * 将等待加载完成的模块名放入context.waiting中
@@ -2650,168 +2682,223 @@ var moduleLoader 			= {
 	 * @time   2016-09-06T12:06:13+0800
 	 * @param  {String}                 name 模块名
 	 */
-	putWaitingModuleName: function ( name ) {
-		if ( util.type ( this.context.waiting ) === 'array' ) {
-			this.context.waiting.push ( name );
-		}
+	putWaiting : function ( name ) {
+		this.waiting.push ( name );
 	},
 
 	/**
-	 * 将正在加载中的模块名放入context.loadingModules.names中
+	 * 将已加载完成的模块从等待列表中移除
 	 *
 	 * @author JOU
-	 * @time   2016-09-06T12:02:25+0800
+	 * @time   2017-05-05T23:09:40+0800
+	 * @param  {String}                 name 模块名称
+	 * @return {Number}                      剩余待加载模块数量
+	 */
+	dropWaiting : function ( name ) {
+		var pointer = this.waiting.indexOf ( name );
+		if ( pointer !== -1 ) {
+			this.waiting.splice ( pointer, 1 );
+		}
+
+		return this.waiting.length;
+	},
+
+	/**
+	 * 将加载的模块信息放入load对象中
+	 *
+	 * @author JOU
+	 * @time   2017-05-07T12:01:06+0800
 	 * @param  {String}                 name 模块名
+	 * @param  {Object}                 load 模块信息
 	 */
-	putLoadingModuleName: function ( name ) {
-		if ( util.type ( this.context.loadingModules.names ) === 'array' ) {
-			this.context.loadingModules.names.push ( name );
-		}
+	putLoad : function ( name, load ) {
+		this.load [ name ] = load;
 	},
 
 	/**
-	 * 获取正在加载中的模块名
+	 * 获取需要加载的模块对象
 	 *
 	 * @author JOU
-	 * @time   2016-09-06T11:51:30+0800
-	 * @return {String}                 模块名
+	 * @time   2017-05-05T23:18:40+0800
+	 * @param  {String}                 name 模块名
+	 * @return {Object}                      模块对象
 	 */
-	getLoadingModuleName: function () {
-		return ( !util.isEmpty ( this.context.loadingModules.names ) && this.context.loadingModules.pointer >= 0 ) ? this.context.loadingModules.names [ this.context.loadingModules.pointer++ ] : false;
-	},
+	getLoad : function ( name ) {
+		return this.load [ name ];
+	}
+};
 
-	/**
-	 * 插件注入方法实现，此方法默认注入的第一个参数是crystals对象，deps数组中的对象从第二个参数开始注入
-	 * 此方法先查找顺序为内置插件、外部插件、动态加载插件并缓存于外部插件
-	 *
-	 * @author JOU
-	 * @time   2016-09-06T14:13:38+0800
-	 * @param  {[type]}                 module [description]
-	 * @return {[type]}                        [description]
-	 */
-	inject: function ( module ) {
-		var args 			= [ crystals ],
-			_this 			= moduleLoader,
+/** @type {String} 文件后缀 */
+ModuleLoader.suffix 		= '.js';
 
-			depModule,
-			returnValue;
+/** @type {String} js插件的模块名称属性，通过此属性可以得到加载完成的模块名 */
+ModuleLoader.moduleName 	= 'data-moduleName';
 
+/** @type {String} script加载模块时用于标识模块 */
+ModuleLoader.scriptFlag 	= 'module-loading';
 
-		if (util.type ( module.deps ) === 'array') {
-			util.foreach ( module.deps, function ( dep ) {
-				// 查找插件
-				if ( depModule = cache.componentFactory ( dep, TYPE_PLUGIN ) ) {
-					args.push ( depModule );
-				}
+/** @type {String} script加载模块时用于标识模块 */
+ModuleLoader.loaderID 		= 'loader-ID';
 
-				// 如果都没找到则去此此加载完成的模块中获取并缓存入外部对象
-				else {
-					depModule = _this.inject ( _this.context.loadModules [ dep ] );
-					cache.componentCreater (
-						dep, 
-						depModule, 
-						PLUGIN_EXTERNAL
-					);
+/** @type {String} 顶层模块名 */
+ModuleLoader.topModuleName 	= '*';
 
-					args.push ( depModule );
-				}
-			} );
-		}
+/** @type {Object} 保存正在使用的模块加载器对象，因为当同时更新多个模块时将会存在多个模块加载器对象 */
+ModuleLoader.loaders 		= {};
 
-		// 根据模块类型进行不同的操作
-		// 当模块类型为page或module时将依赖模块注入factory方法内返回，因为需要根据当前的页面状态值来判断是否需要马上执行factory方法；
-		// 当模块类型为plugin时注入依赖项并立即执行factory方法获取plugin对象
-		if ( module.type === TYPE_PAGE || module.type === TYPE_MODULE ) {
-			returnValue = function () {
-				module.factory.apply ( null, args );
+/**
+ * 创建ModuleLoader对象保存于ModuleLoader.loaders中
+ * 
+ *
+ * @author JOU
+ * @time   2017-05-05T22:43:12+0800
+ * @param  {String}                 guid        全局唯一标示
+ * @param  {String}                 name        模块名称
+ * @param  {Object}                 loadModules 保存的模块对象
+ * @return {Object}                             ModuleLoader实例
+ */
+ModuleLoader.create = function ( guid, name, loadModules ) {
+
+	ModuleLoader.loaders [ guid ] = new ModuleLoader ( name, loadModules );
+	return ModuleLoader.loaders [ guid ];
+};
+
+/**
+ * 获取当前正在执行的模块名与对应的模块加载器编号
+ * 此方法使用报错的方式获取错误所在路径，使用正则表达式解析出对应模块信息
+ *
+ * @author JOU
+ * @time   2017-05-07T11:55:31+0800
+ * @return {Object}                 模块信息
+ */
+ModuleLoader.getCurrentModule = function () {
+	try {
+		____a.____b();
+	} catch(e) {
+		if ( e.stack ) {
+			var match = /\?m=(\S+)&guid=([\d]+):?/.exec ( e.stack );
+			return {
+				name: match [ 1 ],
+				guid: match [ 2 ]
 			};
 		}
-		else if ( module.type === TYPE_PLUGIN ) {
-			returnValue = module.factory.apply ( null, args );
-		}
-		else if ( module.type === TYPE_DRIVER ) {
-			// 后续添上
+	}
+};
+
+/**
+ * 插件注入方法实现，此方法默认注入的第一个参数是crystals对象，deps数组中的对象从第二个参数开始注入
+ * 此方法先查找顺序为内置插件、外部插件、动态加载插件并缓存于外部插件
+ *
+ * @author JOU
+ * @time   2016-09-06T14:13:38+0800
+ * @param  {Object}                 module 注入模块
+ * @return {Multi}                         注入后模块
+ */
+ModuleLoader.inject = function ( module, loader ) {
+	var args = [ crystals ],
+		arg, ret;
+
+	util.foreach ( module.deps, function ( dep ) {
+
+		// 查找插件
+		if ( arg = cache.componentFactory ( dep, TYPE_PLUGIN ) ) {
+			args.push ( arg );
 		}
 
-		return returnValue;
-	},
+		// 如果都没找到则去此此加载完成的模块中获取并缓存入外部对象
+		else {
+			arg = ModuleLoader.inject ( loader.getLoad ( dep ), loader );
+			cache.componentCreater ( dep, arg, PLUGIN_EXTERNAL );
 
-	/**
-	 * js依赖模块onload事件回调函数
-	 * ps:此函数不是直接在其他地方调用，而是赋值给script的onload事件的，所以函数里的this都需要使用moduleLoader来替代
-	 *
-	 * @author JOU
-	 * @time   2016-09-05T15:44:48+0800
-	 * @param  {Object}                 event event对象
-	 */
-	onScriptLoaded : function ( event ) {
+			args.push ( arg );
+		}
+	} );
+
+	// 根据模块类型进行不同的操作
+	// 当模块类型为page或module时将依赖模块注入factory方法内返回，因为需要根据当前的页面状态值来判断是否需要马上执行factory方法；
+	// 当模块类型为plugin时注入依赖项并立即执行factory方法获取plugin对象
+	if ( module.type === TYPE_PAGE || module.type === TYPE_MODULE ) {
+		ret = function () {
+			module.factory.apply ( null, args );
+		};
+	}
+	else if ( module.type === TYPE_PLUGIN ) {
+		ret = module.factory.apply ( null, args );
+	}
+	else if ( module.type === TYPE_DRIVER ) {
+		// 后续添上
+	}
+
+	return ret;
+};
+
+/**
+ * 模块工厂方法调用控制，只调用ice.page和ice.module的工厂方法调用。只有当页面状态正确时才会调用，否则将会存储起来等待调用
+ *
+ * @author JOU
+ * @time   2016-09-11T01:42:39+0800
+ * @param  {Function}                 factory 待执行的工厂方法
+ * @param  {type}                 	  type    模块类型
+ */
+ModuleLoader.factoryInvoke = function ( factory, type ) {
+
+	// 通过ice.PAGE_STATE 判断页面是否初始化是否完成，如未完成则存入模块数组等待执行，如完成则直接执行
+	// 当module调用者为ice.page时
+	if ( type === TYPE_PAGE ) {
+		if ( PAGE_STATE === STATE_LOADING ) {
+
+			// 当前页面还未解析完成时，将page传入的主函数存储起来等待执行（将会在当前页面解析完成后执行此函数）
+			cache.setPageFactory ( factory );
+			
+		}
+		else if ( PAGE_STATE === STATE_PARSED ) {
+			factory && factory(); // jshint ignore:line
+
+			// 将初始化状态设置为准备状态且执行完成ice.page
+			PAGE_STATE = STATE_READY;
+
+			// 执行缓存的module
+			cache.queueInvoke ();
+		}
+		else {
+			throw runtimeErr ( 'error', '页面状态错误(page)' );
+		}
+	}
+	// 当module调用者为ice.module时
+	else if ( type === TYPE_MODULE ) {
+		if ( PAGE_STATE === STATE_PARSED ) {
+			cache.addUnexecutedModule ( factory );
+		}
+		else if ( PAGE_STATE === STATE_READY ) {
+			factory && factory (); // jshint ignore:line
+		}
+		else {
+			throw runtimeErr ( 'error', '页面状态错误(module)' );
+		}
+	}
+};
+
+/**
+ * js依赖模块onload事件回调函数
+ * ps:此函数不是直接在其他地方调用，而是赋值给script的onload事件的，所以函数里的this都需要使用moduleLoader来替代
+ *
+ * @author JOU
+ * @time   2016-09-05T15:44:48+0800
+ * @param  {Object}                 event event对象
+ */
+ModuleLoader.onScriptLoaded = function ( event ) {
+
+	var 
+		curLoader 	= ModuleLoader.loaders [ event.target.getAttribute ( ModuleLoader.loaderID ) ];
+
+	// 执行
+	if ( curLoader.dropWaiting ( event.target.getAttribute(ModuleLoader.moduleName ) ) === 0 ) {
 
 		/** @type {Function} 依赖注入后的工厂方法 */
-		var 
-			factory,
+		var factory = ModuleLoader.inject ( curLoader.getLoad ( ModuleLoader.topModuleName ), curLoader );
 
-			_this 	= moduleLoader,
-			pointer = _this.context.waiting.indexOf ( event.target.getAttribute(_this.moduleName ) );
-
-
-
-		// 移除已加载完成的模块
-		if ( pointer !== -1 ) {
-			_this.context.waiting. splice ( pointer, 1 );
-		}
-
-		// 执行
-		if ( _this.context.waiting.length === 0 ) {
-			factory = _this.inject ( _this.context.loadModules [ _this.topModuleName ] );
-
-			// 调用工厂方法
-			_this.factoryInvoke ( factory, _this.context.loadModules [ _this.topModuleName ].type );
-		}
-	}, 
-
-	/**
-	 * 模块工厂方法调用控制，只调用ice.page和ice.module的工厂方法调用。只有当页面状态正确时才会调用，否则将会存储起来等待调用
-	 *
-	 * @author JOU
-	 * @time   2016-09-11T01:42:39+0800
-	 * @param  {Function}                 factory 待执行的工厂方法
-	 * @param  {type}                 	  type    模块类型
-	 */
-	factoryInvoke : function ( factory, type ) {
-		// 通过ice.PAGE_STATE 判断页面是否初始化是否完成，如未完成则存入模块数组等待执行，如完成则直接执行
-		// 当module调用者为ice.page时
-		if ( type === TYPE_PAGE ) {
-			if ( PAGE_STATE === STATE_LOADING ) {
-
-				// 当前页面还未解析完成时，将page传入的主函数存储起来等待执行（将会在当前页面解析完成后执行此函数）
-				cache.setPageFactory ( factory );
-				
-			}
-			else if ( PAGE_STATE === STATE_PARSED ) {
-				factory && factory(); // jshint ignore:line
-
-				// 将初始化状态设置为准备状态且执行完成ice.page
-				PAGE_STATE = STATE_READY;
-
-				// 执行缓存的module
-				cache.queueInvoke ();
-			}
-			else {
-				throw runtimeErr ( 'error', '页面状态错误(page)' );
-			}
-		}
-		// 当module调用者为ice.module时
-		else if ( type === TYPE_MODULE ) {
-			if ( PAGE_STATE === STATE_PARSED ) {
-				cache.addUnexecutedModule ( factory );
-			}
-			else if ( PAGE_STATE === STATE_READY ) {
-				factory && factory (); // jshint ignore:line
-			}
-			else {
-				throw runtimeErr ( 'error', '页面状态错误(module)' );
-			}
-		}
+		// 调用工厂方法
+		ModuleLoader.factoryInvoke ( factory, curLoader.getLoad ( ModuleLoader.topModuleName ).type );
 	}
 };
 
@@ -2826,6 +2913,74 @@ cache.componentCreater ( {
 
 
 /* 声明此文件在jshint检测时的变量不报 'variable' is not defined. */
+/* 
+ */
+
+/* 声明此文件在jshint检测时的变量不报 'variable' is defined but never used */
+/* exported 
+	driverLoader,
+
+ */
+
+'use strict';
+
+/* 声明此文件在jshint检测时的变量不报 'variable' is not defined. */
+/* globals runtimeErr,
+	util.type,
+	util.foreach,
+	util.isEmpty,
+	crystals,
+	push,
+	splice,
+	Promise,
+	animation,
+	language,
+	util,
+	http,
+	event,
+	cache,
+
+	TYPE_PAGE,
+	TYPE_MODULE,
+	TYPE_PLUGIN,
+	TYPE_DRIVER,
+	PAGE_STATE: true,
+	STATE_LOADING,
+	STATE_PARSED,
+	STATE_READY,
+	PLUGIN_BUILTIN,
+	PLUGIN_EXTERNAL,
+ */
+
+/* 声明此文件在jshint检测时的变量不报 'variable' is defined but never used */
+/* exported moduleInvoke,
+
+ */
+
+/**
+ * 元素驱动器加载器类
+ * ice解析页面时，当遇到没有缓存的元素驱动器则会异步加载此驱动器对象，并将待渲染元素对象与对应的元素驱动器保存在DriverLoader类的对象中，等到加载完成后再取出进行渲染
+ *
+ * @author JOU
+ * @time   2017-05-06T00:48:00+0800
+ * @param  {[type]}                 name [description]
+ * @param  {[type]}                 load [description]
+ */
+function DriverLoader ( name, load ) {
+
+	/** @type {Array} 等待加载完成的驱动器，每加载完成一个驱动器都会将此模块在waiting对象上移除，当waiting为空时则表示驱动器已全部加载完成 */
+	this.waiting 	= [];
+}
+
+DriverLoader.prototype = {
+
+	/** @type {Function} 将DriverLoader的构造器再指回本身 */
+	constructor : DriverLoader,
+	
+};
+
+
+/* 声明此文件在jshint检测时的变量不报 'variable' is not defined. */
 /* globals util,
 	
  */
@@ -2835,18 +2990,65 @@ cache.componentCreater ( {
 
  */
 
-/** @type {Function} 贯穿整个框架的对象。crystals提供了外部环境与ice内部环境的交互的接口，开发者可在此对象上设置一些参数来供内部查找调用，同时也提供内部封装属性给开发者进行调用 */
-function crystals () {
+/**
+ * 贯穿整个框架的对象。crystals提供了外部环境与ice内部环境的交互的接口，开发者可在此对象上设置一些参数来供内部查找调用，同时也提供内部封装属性给开发者进行调用
+ *
+ * @author JOU
+ * @time   2017-05-07T21:38:45+0800
+ * @param  {String}  	selector 元素选择器
+ * @return {Object}              返回元素驱动器对象
+ */
+function crystals ( selector ) {
 
 }
 
+/* 	src			请求路径（如果config配置了base参数，则跳转请求路径为base/src.js）
+	moduleName	跳转的模块名，当module值为对象时，表示返回的不同状态对应跳转不同的模块
+	data 		提交的额外参数，可写格式为k1=v1&k2=v2，或{k1:v1, k2:v2}
+	timeout		请求超时时间，超过时间后中断请求，单位为ms
+	before		发送请求前的回调函数，回调函数参数为xhr、fragment
+	success		返回成功后的执行回调函数，回调函数参数为newFragment、oldFragment
+	error 		请求错误时的回调函数，回调参数为error
+	abort 		请求中断后的执行回调函数
 
-function crystals_refreshModule () {
+	单个模块简单更新时
+	src, moduleName, data, callback
 
-}
+	单个模块复杂更新时
+	{
+		src: src,
+		moduleName: moduleName,
+		data: data
+		timeout: timeout,
+		before: before,
+		success: success,
+		error: error,
+		abort: abort,
+	}
+
+	多个模块复杂更新时
+	{
+		module: {
+			src: src,
+			moduleName: moduleName,
+			data: data
+		},
+		timeout: timeout,
+		before: before,
+		success: success,
+		error: error,
+		abort: abort,
+	}
+*/
 
 util.extend ( crystals, {
-	refreshModule 	: crystals_refreshModule
+	refreshModule : function ( src, moduleName, data, callback ) {
+		if ( util.type ( src ) === 'object' ) {
+			if ( arguments.length === 1 ) {
+
+			}
+		}
+	},
 } );
 
 
@@ -3306,40 +3508,26 @@ function control ( node, external ) {
  *
  * @author JOU
  * @time   2016-08-21T12:43:18+0800
- * @param  {String}        			 moduleName   模块名
- * @param  {Array}                 	 deps 		  依赖项数组
- * @param  {factory}                 factory      模块执行方法
- * @param  {Number}                  type         模块类型
+ * @param  {String}        			 name    	模块名
+ * @param  {Array}                 	 deps 		依赖项数组
+ * @param  {Function}                factory    模块执行方法
+ * @param  {Number}                  type       模块类型
  */
-function module ( moduleName, deps, factory, type ) {
-	// 判断参数合法性
-	// 当传入参数只有一个且此参数类型是function时，参数合法并纠正参数
-	if ( !deps && !factory ) {
-		throw argErr ( 'function module', '至少需要传入模块主函数参数' );
-	}
-	else if ( deps && !factory ) {
-		factory 			= deps;
-		deps 				= undefined;
-	}
-
-	var tdeps 				= util.type ( deps ),
-		tfactory 			= util.type ( factory );
-
-	// deps = undefined(or)null(or)array
-	if ( deps !== undefined && deps !== null && tdeps !== 'array' ) {
-		throw argErr ( 'function module:dependence', '方法第一个参数类型为Array，也可不传入第一个参数或传入null，方法将自动忽略此参数' );
-	}
-
-	// factory参数必须为function
-	if ( tfactory !== 'function' ) {
-		throw argErr ( 'function module:factory', '至少需要传入模块主函数参数，而不是其他类型参数' );
-	}
+function module ( name, deps, factory, type ) {
 
 	/** @type {Object} 动态加载插件时的script标签 */
-	var script,
+	var module,
 
 		rargs 				= /^function\s*\((.*)\)\s*/,
-		args 				= rargs.exec ( factory.toString () )[1].split ( ',' );
+		args 				= rargs.exec ( factory.toString () )[1].split ( ',' ),
+
+		// 如果模块类型为plugin，则name将传入一个包含name和guid的对象
+		guid 				= type !== TYPE_PLUGIN ? guid$ () : name.guid,
+
+		// 正在加载的模块数
+		loading 			= 0,
+
+		loader;
 
 	util.foreach ( args, function ( arg, index, args ) {
 		args [ index ] = util.trim ( arg );
@@ -3348,51 +3536,66 @@ function module ( moduleName, deps, factory, type ) {
 	// 通过所使用插件过滤所需的加载项
 	deps = util.type ( deps ) === 'array' ? deps.slice ( 0, args.length - 1 ) : deps;
 
-	// 将此模块保存于loadModule中
-	moduleLoader.putLoadModules ( moduleName, {
-												type 	: type,
-												deps 	: deps,
-												factory : factory,
-												args 	: args
-											} );
+	module = {
+			type 	: type,
+			deps 	: deps,
+			factory : factory,
+			args 	: args
+		};
+
+	// 只有在加载插件类型的模块时才不创建ModuleLoader加载器
+	if ( type !== TYPE_PLUGIN ) {
+
+		// 创建moduleLoader对象并将此模块保存于loadModule中
+		loader = ModuleLoader.create ( guid, name, module );
+	}
+	else {
+		loader = ModuleLoader.loaders [ guid ];
+
+		loader.putLoad ( name.name, module );
+	}
 
 	// 遍历依赖，如果模块未被加载，则放入waiting中等待加载完成
-	if ( util.type ( deps ) === 'array' ) {
-		util.foreach ( deps, function ( dep ) {
+	util.foreach ( deps, function ( dep ) {
 
-			// 模块名统一使用“.“作为命名空间分隔，将依赖项名字中的“/”统一转换为“.”
-			dep 				= urlTransform$ ( dep, true );
-			if ( !cache.componentFactory ( dep, TYPE_PLUGIN ) ) {
+		// 模块名可使用“.“作为命名空间分隔，将依赖项名字中的“.”统一转换为“/”
+		dep = urlTransform$ ( dep );
+		if ( !cache.componentFactory ( dep, TYPE_PLUGIN ) ) {
 
-				// 放入moduleLoader.context.waiting数组中等待加载
-				moduleLoader.putWaitingModuleName ( dep );
+			// 放入moduleLoader.context.waiting数组中等待加载
+			loader.putWaiting ( dep );
 
-				// 将依赖项名称放入正在加载中模块名数组中，以供plugin方法内去获取当前正在加载中的模块名称
-				moduleLoader.putLoadingModuleName ( dep );
-			}
+			// 加载模块
+			var script 		= document.createElement ( 'script' );
+			script.src 	= config.params.base.plugin + dep + ModuleLoader.suffix + '?m=' + dep + '&guid=' + guid;
+			script.setAttribute ( ModuleLoader.moduleName, dep );
+			script.setAttribute ( ModuleLoader.scriptFlag, '' );
+			script.setAttribute ( ModuleLoader.loaderID, guid );
 
-			script 				= document.createElement ( 'script' );
+			util.appendScript ( script, ModuleLoader.onScriptLoaded );
 
-			script.src 			= config.params.base.plugin + dep + moduleLoader.suffix;
+			loading ++;
+		}
+	} );
 
-			script.setAttribute ( moduleLoader.moduleName, urlTransform$ ( dep ) );
-			util.appendScript ( script, moduleLoader.onScriptLoaded );
-		} );
+	// 如果顶层执行模块没有待加载的模块参数，则直接执行
+	if ( loading === 0 && name === ModuleLoader.topModuleName ) {
+		ModuleLoader.factoryInvoke ( ModuleLoader.inject ( module, loader ), type );
 	}
 }
 
 // 页面DOM结构加载完成时执行初始化
 // 如果调用此函数时DOM结构已经加载完成，则立即执行初始化
-( function ( fn ) {
+( function ( init ) {
 
 	if ( document.readyState === 'complete' ) {
-		fn ();
+		init ();
 	}
 	else {
 		function completed () {
 			event.remove ( document, 'DOMContentLoaded', completed );
 			event.remove ( window, 'load', completed );
-			fn ();
+			init ();
 		}
 
 		event.on ( document, 'DOMContentLoaded', completed );
@@ -3414,10 +3617,10 @@ function module ( moduleName, deps, factory, type ) {
 	function chunk () {
 		control();
 
-		if ( util.isEmpty ( driverLoader ) ) {
-			event.emit ( 'page' );
-			PAGE_STATE = STATE_PARSED;
-		}
+		// if ( util.isEmpty ( driverLoader ) ) {
+		PAGE_STATE = STATE_PARSED;
+		event.emit ( 'page' );
+		// }
 	}
 
 	if ( PAGE_STATE === STATE_CONFIGED ) {
@@ -3468,11 +3671,32 @@ util.extend ( ice, {
 	 */
 	page : function ( deps, factory ) {
 
-		// 每次使用都需要先初始化模块加载器，以确认加载器内的参数是原始的
-		moduleLoader.init ();
-		module ( moduleLoader.topModuleName, deps, factory, TYPE_PAGE );
+		// 判断参数合法性
+		// 当传入参数只有一个且此参数类型是function时，参数合法并纠正参数
+		if ( arguments.length === 0 ) {
+			throw argErr ( 'function ice.page', '至少需要传入模块主函数参数' );
+		}
+		else if ( deps && !factory ) {
+			factory 			= deps;
+			deps 				= [];
+		}
 
-		return this;
+		var tdeps 				= util.type ( deps ),
+			tfactory 			= util.type ( factory );
+
+		// deps = undefined(or)null(or)array
+		if ( deps !== undefined && deps !== null && tdeps !== 'array' ) {
+			throw argErr ( 'function ice.page:dependence', '方法第一个参数类型为Array，也可不传入第一个参数或传入null，方法将自动忽略此参数' );
+		}
+
+		// factory参数必须为function
+		if ( tfactory !== 'function' ) {
+			throw argErr ( 'function ice.page:factory', '至少需要传入模块主函数参数，而不是其他类型参数' );
+		}
+
+		event.on( 'page', function () {
+			module ( ModuleLoader.topModuleName, deps, factory, TYPE_PAGE );
+		} );
 	},
 
 	/**
@@ -3488,12 +3712,31 @@ util.extend ( ice, {
 	 * @return {Object} 							  ice对象
 	 */
 	module : function ( deps, factory ) {
-		// 每次使用都需要先初始化模块加载器，以确认加载器内的参数是原始的
-		moduleLoader.init ();
 
-		module ( moduleLoader.topModuleName, deps, factory, TYPE_MODULE );
+		// 判断参数合法性
+		// 当传入参数只有一个且此参数类型是function时，参数合法并纠正参数
+		if ( arguments.length === 0 ) {
+			throw argErr ( 'function ice.module', '至少需要传入模块主函数参数' );
+		}
+		else if ( deps && !factory ) {
+			factory 			= deps;
+			deps 				= [];
+		}
 
-		return this;
+		var tdeps 				= util.type ( deps ),
+			tfactory 			= util.type ( factory );
+
+		// deps = undefined(or)null(or)array
+		if ( deps !== undefined && deps !== null && tdeps !== 'array' ) {
+			throw argErr ( 'function ice.module:dependence', '方法第一个参数类型为Array，也可不传入第一个参数或传入null，方法将自动忽略此参数' );
+		}
+
+		// factory参数必须为function
+		if ( tfactory !== 'function' ) {
+			throw argErr ( 'function ice.module:factory', '至少需要传入模块主函数参数，而不是其他类型参数' );
+		}
+
+		module ( ModuleLoader.topModuleName, deps, factory, TYPE_MODULE );
 	},
 
 	/** 
@@ -3505,7 +3748,7 @@ util.extend ( ice, {
 	 * @return {[type]}                      [description]
 	 */
 	control: function ( node ) {
-		control ( node, true );
+		return control ( node, true );
 	}
 });
 
@@ -3522,7 +3765,31 @@ util.extend ( window, {
 	 * @param  {Function}                 factory 插件工厂方法
 	 */
 	plugin : function ( deps, factory ) {
-		module ( moduleLoader.getLoadingModuleName () || '', deps, factory, TYPE_PLUGIN );
+
+		// 判断参数合法性
+		// 当传入参数只有一个且此参数类型是function时，参数合法并纠正参数
+		if ( arguments.length === 0 ) {
+			throw argErr ( 'function ice.plugin', '至少需要传入模块主函数参数' );
+		}
+		else if ( deps && !factory ) {
+			factory 			= deps;
+			deps 				= [];
+		}
+
+		var tdeps 				= util.type ( deps ),
+			tfactory 			= util.type ( factory );
+
+		// deps = undefined(or)null(or)array
+		if ( deps !== undefined && deps !== null && tdeps !== 'array' ) {
+			throw argErr ( 'function ice.plugin:dependence', '方法第一个参数类型为Array，也可不传入第一个参数或传入null，方法将自动忽略此参数' );
+		}
+
+		// factory参数必须为function
+		if ( tfactory !== 'function' ) {
+			throw argErr ( 'function ice.plugin:factory', '至少需要传入模块主函数参数，而不是其他类型参数' );
+		}
+
+		module ( ModuleLoader.getCurrentModule () || '', deps, factory, TYPE_PLUGIN );
 	},
 
 	/**
@@ -3534,7 +3801,31 @@ util.extend ( window, {
 	 * @param  {Function}                 factory 插件工厂方法
 	 */
 	driver : function ( deps, factory ) {
-		module ( moduleLoader.topModuleName, deps, factory, TYPE_DRIVER );
+
+		// 判断参数合法性
+		// 当传入参数只有一个且此参数类型是function时，参数合法并纠正参数
+		if ( arguments.length === 0 ) {
+			throw argErr ( 'function ice.driver', '至少需要传入模块主函数参数' );
+		}
+		else if ( deps && !factory ) {
+			factory 			= deps;
+			deps 				= [];
+		}
+
+		var tdeps 				= util.type ( deps ),
+			tfactory 			= util.type ( factory );
+
+		// deps = undefined(or)null(or)array
+		if ( deps !== undefined && deps !== null && tdeps !== 'array' ) {
+			throw argErr ( 'function ice.driver:dependence', '方法第一个参数类型为Array，也可不传入第一个参数或传入null，方法将自动忽略此参数' );
+		}
+
+		// factory参数必须为function
+		if ( tfactory !== 'function' ) {
+			throw argErr ( 'function ice.driver:factory', '至少需要传入模块主函数参数，而不是其他类型参数' );
+		}
+
+		module ( ModuleLoader.topModuleName, deps, factory, TYPE_DRIVER );
 	}
 });
 })(window);

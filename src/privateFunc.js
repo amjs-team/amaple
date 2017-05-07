@@ -111,3 +111,14 @@ function decomposeArray$ ( array, callback ) {
 		} );
 	}
 }
+
+/**
+ * 获取唯一标识
+ *
+ * @author JOU
+ * @time   2017-05-05T22:29:37+0800
+ * @return {String}                 唯一标识
+ */
+function guid$ () {
+	return setTimeout( 1 ) + '';
+}

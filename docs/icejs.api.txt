@@ -37,7 +37,7 @@ ice.config(object)	配置项设置，参数为一个对象，对象中的有效�
 							codeKey 		自定义状态码键名，此状态码为服务器返回的数据中用于标识数据状态，客户端根据此状态码作出不同的处理。默认为"code"
 							htmlKey 		自定义html模块键名，此html模块为服务器返回的数据中用于标识请求的html内容，客户端将此内容填充进对应模块中。默认为"html"
 							moduleSepatator	url中模块名称与模块内容标识的分隔符，默认为"-"
-							urlRule			自定义ajax请求时的url规则，通过设置此规则将规则中的模块名称与模块内容标识替换为当前请求环境的真实值，此规则与base.url和ice-base关联，即当设置了base.url且ice-base不为false时将自动添加base.url到此url前，如果ice-base为false时，此规则转换后的url将会从根目录当做url的起始路径，即在设置规则时第一个字符如果不是"/"，则系统将自动添加"/"到url的开头部分。默认规则为":m/:v.html";
+							urlRule			自定义ajax请求时的url规则，通过设置此规则将规则中的模块名称与模块内容标识替换为当前请求环境的真实值，此规则与base.url和ice-base关联，即当设置了base.url且ice-base不为false时将自动添加base.url到此url前，如果ice-base为false时，此规则转换后的url将会从根目录当作url的起始路径，即在设置规则时第一个字符如果不是"/"，则系统将自动添加"/"到url的开头部分。默认规则为":m/:v.html";
 
 							header			二维数组，无刷新跳转时，不同请求路径对应的标题，格式为[[path1, title1], [path2, title2]...]。path为字符串，title为字符串或方法（当为方法时接收一个codeKey参数，方法需返回一个字符串作为标题，如返回为空则标题将不变）
 -----------------------------------------------------------
@@ -53,11 +53,10 @@ crystals.inverse([inverseFunction])	当前状态注册的逆方法，通常使�
 -----------------------------------------------------------
 crystals.transmitParams(arg1 [, arg2, arg3, ...])	逆方法参数传递，传递后逆方法可直接接收此传递的参数
 -----------------------------------------------------------
-crystals.refreshModule(path, moduleTagName[, data][, callback])	刷新模块（无刷新重新加载模块），方法形式一
+crystals.refreshModule(src, moduleName[, data][, callback])	刷新模块（无刷新重新加载模块），方法形式一
 crystals.refreshModule(argObj)	刷新模块（无刷新重新加载模块），方法形式二
-							path		请求路径（如配置了base参数，则跳转请求路径为base/path）
-							module		跳转的模块名，当module值为对象时，表示返回的不同状态对应跳转不同的模块
-							code		返回的状态属性名，默认为"code"
+							src			请求路径（如果config配置了base参数，则跳转请求路径为base/src.js）
+							moduleName	跳转的模块名，当module值为对象时，表示返回的不同状态对应跳转不同的模块
 							data 		提交的额外参数，可写格式为k1=v1&k2=v2，或{k1:v1, k2:v2}
 							timeout		请求超时时间，超过时间后中断请求，单位为ms
 							before		发送请求前的回调函数，回调函数参数为xhr、fragment
@@ -96,7 +95,10 @@ animate(animateArray[, delay][, callback])		Animation模块方法，dom元素动
 -----------------------------------------------------------
 Language(mod_lang)		Language模块方法，获取对应模块的语言包，此方法只有在ice.config方法里配置了langDir参数时生效，否则将报错
 -----------------------------------------------------------
-Event.on(bindElem, type, listener) 		事件绑定
+event.support(type, elem) 								事件支持检测
+event.on(elem, types, listener, useCapture, once) 		事件绑定
+event.remove(elem, types, listener, useCapture)			事件解绑
+event.emit(elem, types) 								事件触发
 -----------------------------------------------------------
 http.get(url[, args][, callback][, type])		get请求，返回promise对象
 http.post(url[, data][, callback][, type])		post请求，返回promise对象

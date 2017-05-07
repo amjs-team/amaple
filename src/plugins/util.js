@@ -14,7 +14,7 @@
 	document,
 	setTimeout,
 	event,
-	
+
  */
 
 /* 声明此文件在jshint检测时的变量不报 'variable' is defined but never used */
@@ -49,8 +49,8 @@
   *
   * @author JOU
   * @time   2016-09-04T18:36:01+0800
-  * @param  {Array/Ojbect}           target     遍历目标参数，数组或对象
-  * @param  {Function}               callback   遍历回调函数，函数将会传入遍历值、遍历下标、当前遍历对象三个参数
+  * @param  {Array/Ojbect}          target     遍历目标参数，数组或对象
+  * @param  {Function}              callback   遍历回调函数，函数将会传入遍历值、遍历下标、当前遍历对象三个参数
   * @param  {Boolean} 				mode 	   模式，如果为true且遍历对象是数组，则只遍历数组内元素而不遍历数组本身的方法
   * @return {Boolean} 				isContinue 是否继续循环，如果返回false，则跳出循环
   */
@@ -483,7 +483,7 @@ var util = extend ( {}, {
 						scripts.push ( script );
 					}
 				}
-			});
+			} );
 
 			// scripts数组不空则顺序执行script
 			util.isEmpty ( scripts ) || util.scriptEval ( scripts );

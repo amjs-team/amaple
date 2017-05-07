@@ -265,40 +265,26 @@ function control ( node, external ) {
  *
  * @author JOU
  * @time   2016-08-21T12:43:18+0800
- * @param  {String}        			 moduleName   模块名
- * @param  {Array}                 	 deps 		  依赖项数组
- * @param  {factory}                 factory      模块执行方法
- * @param  {Number}                  type         模块类型
+ * @param  {String}        			 name    	模块名
+ * @param  {Array}                 	 deps 		依赖项数组
+ * @param  {Function}                factory    模块执行方法
+ * @param  {Number}                  type       模块类型
  */
-function module ( moduleName, deps, factory, type ) {
-	// 判断参数合法性
-	// 当传入参数只有一个且此参数类型是function时，参数合法并纠正参数
-	if ( !deps && !factory ) {
-		throw argErr ( 'function module', '至少需要传入模块主函数参数' );
-	}
-	else if ( deps && !factory ) {
-		factory 			= deps;
-		deps 				= undefined;
-	}
-
-	var tdeps 				= util.type ( deps ),
-		tfactory 			= util.type ( factory );
-
-	// deps = undefined(or)null(or)array
-	if ( deps !== undefined && deps !== null && tdeps !== 'array' ) {
-		throw argErr ( 'function module:dependence', '方法第一个参数类型为Array，也可不传入第一个参数或传入null，方法将自动忽略此参数' );
-	}
-
-	// factory参数必须为function
-	if ( tfactory !== 'function' ) {
-		throw argErr ( 'function module:factory', '至少需要传入模块主函数参数，而不是其他类型参数' );
-	}
+function module ( name, deps, factory, type ) {
 
 	/** @type {Object} 动态加载插件时的script标签 */
-	var script,
+	var module,
 
 		rargs 				= /^function\s*\((.*)\)\s*/,
-		args 				= rargs.exec ( factory.toString () )[1].split ( ',' );
+		args 				= rargs.exec ( factory.toString () )[1].split ( ',' ),
+
+		// 如果模块类型为plugin，则name将传入一个包含name和guid的对象
+		guid 				= type !== TYPE_PLUGIN ? guid$ () : name.guid,
+
+		// 正在加载的模块数
+		loading 			= 0,
+
+		loader;
 
 	util.foreach ( args, function ( arg, index, args ) {
 		args [ index ] = util.trim ( arg );
@@ -307,51 +293,66 @@ function module ( moduleName, deps, factory, type ) {
 	// 通过所使用插件过滤所需的加载项
 	deps = util.type ( deps ) === 'array' ? deps.slice ( 0, args.length - 1 ) : deps;
 
-	// 将此模块保存于loadModule中
-	moduleLoader.putLoadModules ( moduleName, {
-												type 	: type,
-												deps 	: deps,
-												factory : factory,
-												args 	: args
-											} );
+	module = {
+			type 	: type,
+			deps 	: deps,
+			factory : factory,
+			args 	: args
+		};
+
+	// 只有在加载插件类型的模块时才不创建ModuleLoader加载器
+	if ( type !== TYPE_PLUGIN ) {
+
+		// 创建moduleLoader对象并将此模块保存于loadModule中
+		loader = ModuleLoader.create ( guid, name, module );
+	}
+	else {
+		loader = ModuleLoader.loaders [ guid ];
+
+		loader.putLoad ( name.name, module );
+	}
 
 	// 遍历依赖，如果模块未被加载，则放入waiting中等待加载完成
-	if ( util.type ( deps ) === 'array' ) {
-		util.foreach ( deps, function ( dep ) {
+	util.foreach ( deps, function ( dep ) {
 
-			// 模块名统一使用“.“作为命名空间分隔，将依赖项名字中的“/”统一转换为“.”
-			dep 				= urlTransform$ ( dep, true );
-			if ( !cache.componentFactory ( dep, TYPE_PLUGIN ) ) {
+		// 模块名可使用“.“作为命名空间分隔，将依赖项名字中的“.”统一转换为“/”
+		dep = urlTransform$ ( dep );
+		if ( !cache.componentFactory ( dep, TYPE_PLUGIN ) ) {
 
-				// 放入moduleLoader.context.waiting数组中等待加载
-				moduleLoader.putWaitingModuleName ( dep );
+			// 放入moduleLoader.context.waiting数组中等待加载
+			loader.putWaiting ( dep );
 
-				// 将依赖项名称放入正在加载中模块名数组中，以供plugin方法内去获取当前正在加载中的模块名称
-				moduleLoader.putLoadingModuleName ( dep );
-			}
+			// 加载模块
+			var script 		= document.createElement ( 'script' );
+			script.src 	= config.params.base.plugin + dep + ModuleLoader.suffix + '?m=' + dep + '&guid=' + guid;
+			script.setAttribute ( ModuleLoader.moduleName, dep );
+			script.setAttribute ( ModuleLoader.scriptFlag, '' );
+			script.setAttribute ( ModuleLoader.loaderID, guid );
 
-			script 				= document.createElement ( 'script' );
+			util.appendScript ( script, ModuleLoader.onScriptLoaded );
 
-			script.src 			= config.params.base.plugin + dep + moduleLoader.suffix;
+			loading ++;
+		}
+	} );
 
-			script.setAttribute ( moduleLoader.moduleName, urlTransform$ ( dep ) );
-			util.appendScript ( script, moduleLoader.onScriptLoaded );
-		} );
+	// 如果顶层执行模块没有待加载的模块参数，则直接执行
+	if ( loading === 0 && name === ModuleLoader.topModuleName ) {
+		ModuleLoader.factoryInvoke ( ModuleLoader.inject ( module, loader ), type );
 	}
 }
 
 // 页面DOM结构加载完成时执行初始化
 // 如果调用此函数时DOM结构已经加载完成，则立即执行初始化
-( function ( fn ) {
+( function ( init ) {
 
 	if ( document.readyState === 'complete' ) {
-		fn ();
+		init ();
 	}
 	else {
 		function completed () {
 			event.remove ( document, 'DOMContentLoaded', completed );
 			event.remove ( window, 'load', completed );
-			fn ();
+			init ();
 		}
 
 		event.on ( document, 'DOMContentLoaded', completed );
@@ -373,10 +374,10 @@ function module ( moduleName, deps, factory, type ) {
 	function chunk () {
 		control();
 
-		if ( util.isEmpty ( driverLoader ) ) {
-			event.emit ( 'page' );
-			PAGE_STATE = STATE_PARSED;
-		}
+		// if ( util.isEmpty ( driverLoader ) ) {
+		PAGE_STATE = STATE_PARSED;
+		event.emit ( 'page' );
+		// }
 	}
 
 	if ( PAGE_STATE === STATE_CONFIGED ) {
@@ -427,11 +428,32 @@ util.extend ( ice, {
 	 */
 	page : function ( deps, factory ) {
 
-		// 每次使用都需要先初始化模块加载器，以确认加载器内的参数是原始的
-		moduleLoader.init ();
-		module ( moduleLoader.topModuleName, deps, factory, TYPE_PAGE );
+		// 判断参数合法性
+		// 当传入参数只有一个且此参数类型是function时，参数合法并纠正参数
+		if ( arguments.length === 0 ) {
+			throw argErr ( 'function ice.page', '至少需要传入模块主函数参数' );
+		}
+		else if ( deps && !factory ) {
+			factory 			= deps;
+			deps 				= [];
+		}
 
-		return this;
+		var tdeps 				= util.type ( deps ),
+			tfactory 			= util.type ( factory );
+
+		// deps = undefined(or)null(or)array
+		if ( deps !== undefined && deps !== null && tdeps !== 'array' ) {
+			throw argErr ( 'function ice.page:dependence', '方法第一个参数类型为Array，也可不传入第一个参数或传入null，方法将自动忽略此参数' );
+		}
+
+		// factory参数必须为function
+		if ( tfactory !== 'function' ) {
+			throw argErr ( 'function ice.page:factory', '至少需要传入模块主函数参数，而不是其他类型参数' );
+		}
+
+		event.on( 'page', function () {
+			module ( ModuleLoader.topModuleName, deps, factory, TYPE_PAGE );
+		} );
 	},
 
 	/**
@@ -447,12 +469,31 @@ util.extend ( ice, {
 	 * @return {Object} 							  ice对象
 	 */
 	module : function ( deps, factory ) {
-		// 每次使用都需要先初始化模块加载器，以确认加载器内的参数是原始的
-		moduleLoader.init ();
 
-		module ( moduleLoader.topModuleName, deps, factory, TYPE_MODULE );
+		// 判断参数合法性
+		// 当传入参数只有一个且此参数类型是function时，参数合法并纠正参数
+		if ( arguments.length === 0 ) {
+			throw argErr ( 'function ice.module', '至少需要传入模块主函数参数' );
+		}
+		else if ( deps && !factory ) {
+			factory 			= deps;
+			deps 				= [];
+		}
 
-		return this;
+		var tdeps 				= util.type ( deps ),
+			tfactory 			= util.type ( factory );
+
+		// deps = undefined(or)null(or)array
+		if ( deps !== undefined && deps !== null && tdeps !== 'array' ) {
+			throw argErr ( 'function ice.module:dependence', '方法第一个参数类型为Array，也可不传入第一个参数或传入null，方法将自动忽略此参数' );
+		}
+
+		// factory参数必须为function
+		if ( tfactory !== 'function' ) {
+			throw argErr ( 'function ice.module:factory', '至少需要传入模块主函数参数，而不是其他类型参数' );
+		}
+
+		module ( ModuleLoader.topModuleName, deps, factory, TYPE_MODULE );
 	},
 
 	/** 
@@ -464,7 +505,7 @@ util.extend ( ice, {
 	 * @return {[type]}                      [description]
 	 */
 	control: function ( node ) {
-		control ( node, true );
+		return control ( node, true );
 	}
 });
 
@@ -481,7 +522,31 @@ util.extend ( window, {
 	 * @param  {Function}                 factory 插件工厂方法
 	 */
 	plugin : function ( deps, factory ) {
-		module ( moduleLoader.getLoadingModuleName () || '', deps, factory, TYPE_PLUGIN );
+
+		// 判断参数合法性
+		// 当传入参数只有一个且此参数类型是function时，参数合法并纠正参数
+		if ( arguments.length === 0 ) {
+			throw argErr ( 'function ice.plugin', '至少需要传入模块主函数参数' );
+		}
+		else if ( deps && !factory ) {
+			factory 			= deps;
+			deps 				= [];
+		}
+
+		var tdeps 				= util.type ( deps ),
+			tfactory 			= util.type ( factory );
+
+		// deps = undefined(or)null(or)array
+		if ( deps !== undefined && deps !== null && tdeps !== 'array' ) {
+			throw argErr ( 'function ice.plugin:dependence', '方法第一个参数类型为Array，也可不传入第一个参数或传入null，方法将自动忽略此参数' );
+		}
+
+		// factory参数必须为function
+		if ( tfactory !== 'function' ) {
+			throw argErr ( 'function ice.plugin:factory', '至少需要传入模块主函数参数，而不是其他类型参数' );
+		}
+
+		module ( ModuleLoader.getCurrentModule () || '', deps, factory, TYPE_PLUGIN );
 	},
 
 	/**
@@ -493,6 +558,30 @@ util.extend ( window, {
 	 * @param  {Function}                 factory 插件工厂方法
 	 */
 	driver : function ( deps, factory ) {
-		module ( moduleLoader.topModuleName, deps, factory, TYPE_DRIVER );
+
+		// 判断参数合法性
+		// 当传入参数只有一个且此参数类型是function时，参数合法并纠正参数
+		if ( arguments.length === 0 ) {
+			throw argErr ( 'function ice.driver', '至少需要传入模块主函数参数' );
+		}
+		else if ( deps && !factory ) {
+			factory 			= deps;
+			deps 				= [];
+		}
+
+		var tdeps 				= util.type ( deps ),
+			tfactory 			= util.type ( factory );
+
+		// deps = undefined(or)null(or)array
+		if ( deps !== undefined && deps !== null && tdeps !== 'array' ) {
+			throw argErr ( 'function ice.driver:dependence', '方法第一个参数类型为Array，也可不传入第一个参数或传入null，方法将自动忽略此参数' );
+		}
+
+		// factory参数必须为function
+		if ( tfactory !== 'function' ) {
+			throw argErr ( 'function ice.driver:factory', '至少需要传入模块主函数参数，而不是其他类型参数' );
+		}
+
+		module ( ModuleLoader.topModuleName, deps, factory, TYPE_DRIVER );
 	}
 });

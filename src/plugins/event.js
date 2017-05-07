@@ -25,9 +25,6 @@ var event = (function () {
 	var	/** @type {Object} 存储元素型自定义事件回调 */
 		events 		= {},
 
-		/** @type {Number} 唯一标示，自增属性 */
-		guid 		= 1,
-
 		rword 		= /\S+/g,
 
 		/** @type {Object} 特殊事件的判断函数、替代事件 */
@@ -39,7 +36,41 @@ var event = (function () {
 			},
 		},
 
-		eventProxy, _valueOf, ttype, tlistener, i, _listeners;
+		/** @type {Object} 创建事件触发对象时，根据事件类型来创建不同事件对象 */
+		eventMap 	= {
+			load 	: 'HTMLEvents',
+			unload 	: 'HTMLEvents',
+			abort 	: 'HTMLEvents',
+			error 	: 'HTMLEvents',
+			select 	: 'HTMLEvents',
+			change 	: 'HTMLEvents',
+			submit 	: 'HTMLEvents',
+			reset 	: 'HTMLEvents',
+			focus 	: 'HTMLEvents',
+			blur 	: 'HTMLEvents',
+			resize 	: 'HTMLEvents',
+			scroll 	: 'HTMLEvents',
+
+
+			keypress: 'KeyboartEvent',
+			keyup 	: 'KeyboartEvent',
+			keydown : 'KeyboartEvent',
+
+
+			contextmenu : 'MouseEvents',
+			click 		: 'MouseEvents',
+			dbclick 	: 'MouseEvents',
+			mouseout 	: 'MouseEvents',
+			mouseover 	: 'MouseEvents',
+			mouseenter 	: 'MouseEvents',
+			mouseleave 	: 'MouseEvents',
+			mousemove 	: 'MouseEvents',
+			mousedown 	: 'MouseEvents',
+			mouseup 	:'MouseEvents',
+			mousewheel 	:'MouseEvents'
+		},
+
+		eventProxy, _valueOf, ttype, tlistener, i, _this, _listeners;
 
 		/**
 		 * 所有事件绑定的回调函数
@@ -50,7 +81,21 @@ var event = (function () {
 		 * @param  {Event}                 e 事件触发时的event对象
 		 */
 		function handler ( e ) {
-			eventProxy.emit ( e.currentTarget || e.target, e.type );
+			
+			_this = this;
+
+			_listeners = eventAccess ( _this, e.type );
+			if ( util.type ( _listeners ) === 'array' && _listeners.length > 0 ) {
+
+				util.foreach ( _listeners, function ( listener ) {
+					util.type ( listener ) === 'function' && listener.call ( _this, e );
+
+					// 如果该回调函数只执行一次则移除
+					if ( listener.once === true ) {
+						eventProxy.remove ( _this, e.type, listener, listener.useCapture );
+					}
+				} );
+			}
 		}
 
 		/**
@@ -165,7 +210,7 @@ var event = (function () {
 				return elem.valueOf ( elem, type, listener, remove );
 			}
 			else {
-				accessInner ( events, null, type, listener, remove );
+				return accessInner ( events, null, type, listener, remove );
 			}
 		}
 
@@ -240,7 +285,7 @@ var event = (function () {
 
 				// 给监听回调添加guid，方便移除事件
 				if ( !listener.guid ) {
-					listener.guid = guid++;
+					listener.guid = guid$ ();
 				}
 
 				// 如果once为true，则该回调只执行一次
@@ -257,7 +302,9 @@ var event = (function () {
 					// 元素对象存在，且元素支持浏览器事件时绑定事件，以方便浏览器交互时触发事件
 					// 元素不支持时属于自定义事件，需手动调用event.emit()触发事件
 					// IE.version >= 9
-					elem && eventProxy.support ( type, elem ) && elem.addEventListener && elem.addEventListener ( type, handler, !!useCapture );
+					if ( elem && eventProxy.support ( type, elem ) && elem.addEventListener ) {
+						elem.addEventListener ( type, handler, !!useCapture );
+					}
 				} );
 			},
 
@@ -297,7 +344,9 @@ var event = (function () {
 
 				replace.call ( types || '', rword, function ( type ) {
 
-					util.isEmpty ( eventAccess ( elem, type, listener, true ) ) && elem && eventProxy.support ( type, elem ) && elem.removeEventListener && elem.removeEventListener ( type, handler, !!useCapture );
+					if ( util.isEmpty ( eventAccess ( elem, type, listener, true ) ) && elem && eventProxy.support ( type, elem ) && elem.removeEventListener ) {
+						elem.removeEventListener ( type, handler, !!useCapture );	
+					}
 				} );
 			},
 
@@ -326,18 +375,17 @@ var event = (function () {
 				}
 
 				replace.call ( types || '', rword, function ( type ) {
+					if ( event.support ( type, elem ) ) {
 
-					_listeners = eventAccess ( elem, type );
-					if ( util.type ( _listeners ) === 'array' && _listeners.length > 0 ) {
+						// 使用creaeEvent创建事件
+						var e = document.createEvent ( eventMap [ type ] || 'CustomEvent' );
+						e.initEvent ( type, true, false );
 
-						util.foreach ( _listeners, function ( listener ) {
-							util.type ( listener ) === 'function' && listener.call ( elem );
-
-							// 如果该回调函数只执行一次则移除
-							if ( listener.once === true ) {
-								eventProxy.remove ( elem, type, listener, listener.useCapture );
-							}
-						} );
+						document.dispatchEvent ( e );
+						
+					}
+					else {
+						handler.call ( elem, { type: type } );
 					}
 				} );
 			}
