@@ -39,7 +39,7 @@ ice.config(object)	配置项设置，参数为一个对象，对象中的有效�
 							moduleSepatator	url中模块名称与模块内容标识的分隔符，默认为"-"
 							urlRule			自定义ajax请求时的url规则，通过设置此规则将规则中的模块名称与模块内容标识替换为当前请求环境的真实值，此规则与base.url和ice-base关联，即当设置了base.url且ice-base不为false时将自动添加base.url到此url前，如果ice-base为false时，此规则转换后的url将会从根目录当作url的起始路径，即在设置规则时第一个字符如果不是"/"，则系统将自动添加"/"到url的开头部分。默认规则为":m/:v.html";
 
-							header			二维数组，无刷新跳转时，不同请求路径对应的标题，格式为[[path1, title1], [path2, title2]...]。path为字符串，title为字符串或方法（当为方法时接收一个codeKey参数，方法需返回一个字符串作为标题，如返回为空则标题将不变）
+							header			二维数组，无刷新跳转时，不同请求路径对应的标题，格式为[[src1, title1], [path2, title2]...]。path为字符串，title为字符串或方法（当为方法时接收一个codeKey参数，方法需返回一个字符串作为标题，如返回为空则标题将不变）
 -----------------------------------------------------------
 ice.page([[moduleArray],] function(crystals))	页面初始化，获取crystals对象
 -----------------------------------------------------------
@@ -55,27 +55,28 @@ crystals.transmitParams(arg1 [, arg2, arg3, ...])	逆方法参数传递，传递
 -----------------------------------------------------------
 crystals.refreshModule(src, moduleName[, data][, callback])	刷新模块（无刷新重新加载模块），方法形式一
 crystals.refreshModule(argObj)	刷新模块（无刷新重新加载模块），方法形式二
-							src			请求路径（如果config配置了base参数，则跳转请求路径为base/src.js）
+							src			请求路径（如果config配置了base参数，则跳转请求路径为base/src）
 							moduleName	跳转的模块名，当module值为对象时，表示返回的不同状态对应跳转不同的模块
 							data 		提交的额外参数，可写格式为k1=v1&k2=v2，或{k1:v1, k2:v2}
 							timeout		请求超时时间，超过时间后中断请求，单位为ms
-							before		发送请求前的回调函数，回调函数参数为xhr、fragment
-							success		返回成功后的执行回调函数，回调函数参数为newFragment、oldFragment
-							error 		请求错误时的回调函数，回调参数为error
-							abort 		请求中断后的执行回调函数
+							before		发送请求前的回调函数，回调函数参数为module对应的DOM对象
+							success		返回成功后的执行回调函数，回调函数参数为module对应的DOM对象
+							error 		请求错误时的回调函数，回调参数为module对应的DOM对象、error信息
+							abort 		请求中断后的执行回调函数，回调参数为module对应的DOM对象
 -----------------------------------------------------------
-crystals.submit(path, data, module[, callback])		无刷新提交跳转，方法形式一
-crystals.submit(formName, module[, callback])	无刷新提交跳转，方法形式二
+crystals.submit(src, moduleName, data[, callback])		无刷新提交跳转，方法形式一
+crystals.submit(src, moduleName, formName[, callback])	无刷新提交跳转，方法形式二
+crystals.submit(moduleName, formName[, callback])	无刷新提交跳转，方法形式三
+crystals.submit(src, moduleName, formData[, callback])	无刷新提交跳转，方法形式四
 crystals.submit(object)		无刷新提交跳转，方法形式三; 参数为一个对象，对象中的有效键名为：
-							formName	提交的表单名
-							module 		跳转的模块名，当module值为对象时，表示返回的不同状态对应跳转不同的模块
-							code 		返回的状态属性名，默认为"code"
-							data 		提交的额外参数，可写格式为k1=v1&k2=v2，或{k1:v1, k2:v2}
+							src			提交路径（如果config配置了base参数，则提交路径为base/src）
+							moduleName 	跳转的模块名，当module值为对象时，表示返回的不同状态对应跳转不同的模块
+							data 		提交的额外参数，可写为formName、FormData对象、或格式为k1=v1&k2=v2、{k1:v1, k2:v2}的数据，当data不为formName时必须要有src值（当data为formName时，如果也提供了src参数则优先使用src参数）
 							timeout 	请求超时时间，超过时间后中断请求，单位为ms
-							before 		发送请求前的回调函数，回调函数参数为xhr、fragment
-							success		返回成功后的执行回调函数，回调函数参数为result、oldFragment
-							error 		请求错误时的回调函数，回调参数为error
-							abort 		请求中断后的执行回调函数
+							before 		发送请求前的回调函数，回调函数参数为module对应的DOM对象
+							success		返回成功后的执行回调函数，回调函数参数为module对应的DOM对象
+							error 		请求错误时的回调函数，回调参数为module对应的DOM对象、error信息
+							abort 		请求中断后的执行回调函数，回调函数参数为module对应的DOM对象
 -----------------------------------------------------------
 
 
@@ -105,11 +106,21 @@ http.post(url[, data][, callback][, type])		post请求，返回promise对象
 http.request(object)		ajax请求，get\post方法的底层方法，参数对象的有效键名为：
 							method 		请求类型，GET或POST，大小写不敏感，默认为GET
 							url 		请求地址，必传参数
-							data 		提交的额外参数，可写格式为k1=v1&k2=v2，或{k1:v1, k2:v2}
+							data 		提交的额外参数，可写为formName、FormData对象、或格式为k1=v1&k2=v2、{k1:v1, k2:v2}的数据，当data不为formName时必须要有src值（当data为formName时，如果也提供了src参数则优先使用src参数）
 							async 		是否异步请求，默认为true
 							cache 		请求缓存，如果为false，则每次都会发送请求，默认为true
 							contentType 请求参数编码
-							type 		返回的数据类型，TEXT/JSON/SCRIPT，默认为text
+							type 		返回的数据类型，TEXT/JSON/SCRIPT/JSONP，默认为TEXT
+							username	服务器认证用户名
+							password	服务器认证密码
+							mimeType	设置mimeType
+							headers 	请求头信息，为一个对象
+							timeout 	请求超时时间
+							beforeSend 	请求发送前回调，函数参数为iceXHR对象、options
+							success 	请求成功后回调，函数参数为data、statusText、iceXHR对象
+							error 		请求失败后回调，函数参数为iceXHR对象、statusText
+							complete	请求完成后回调，函数参数为iceXHR对象、statusText
+							abort 		请求中断后回调，函数参数为statusText
 -----------------------------------------------------------
 -----------------------------------------------------------
 

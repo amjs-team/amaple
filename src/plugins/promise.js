@@ -146,7 +146,7 @@ function Promise ( resolver ) {
 		if ( state === PENDING ) {
 			state 		= FULFILLED;
 			args 		= arguments;
-
+			
 			util.foreach ( handlers, function ( item ) {
 				item.onFulfilled && item.onFulfilled.apply ( null, args );
 			} );

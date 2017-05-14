@@ -271,8 +271,8 @@ ModuleLoader.factoryInvoke = function ( factory, type ) {
  */
 ModuleLoader.onScriptLoaded = function ( event ) {
 
-	var 
-		curLoader 	= ModuleLoader.loaders [ event.target.getAttribute ( ModuleLoader.loaderID ) ];
+	var loadID 		= event.target.getAttribute ( ModuleLoader.loaderID ),
+		curLoader 	= ModuleLoader.loaders [ loadID ];
 
 	// 执行
 	if ( curLoader.dropWaiting ( event.target.getAttribute(ModuleLoader.moduleName ) ) === 0 ) {
@@ -282,6 +282,8 @@ ModuleLoader.onScriptLoaded = function ( event ) {
 
 		// 调用工厂方法
 		ModuleLoader.factoryInvoke ( factory, curLoader.getLoad ( ModuleLoader.topModuleName ).type );
+		
+		delete ModuleLoader.loaders [ loadID ];
 	}
 };
 

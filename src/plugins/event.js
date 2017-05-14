@@ -125,15 +125,7 @@ var event = (function () {
 
 						// 保存事件缓存
 						if ( !remove ) {
-							if ( !eventsData [ type ] ) {
-								Object.defineProperty ( eventsData, type, {
-									value 			: [],
-									configurable 	: true,
-									enumerable 	 	: true,
-									writable 	 	: true
-								} );
-							}
-							
+							eventsData [ type ] = eventsData [ type ] || [];
 							eventsData [ type ].push ( listener );
 						}
 

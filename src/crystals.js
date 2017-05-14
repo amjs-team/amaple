@@ -69,4 +69,8 @@ util.extend ( crystals, {
 			}
 		}
 	},
+
+	submit : function ( src, moduleName, data, callback ) {
+		
+	}
 } );

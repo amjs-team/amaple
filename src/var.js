@@ -98,26 +98,12 @@ var a 	 					= [],
     //
     //////////////////////////////////////////
 	// 变量定义区
-	xhr,	 				// XMLHttpRequest对象
 	document 				= window.document,
 
     /** @type {Object} ice对象 */
 	ice 					= window.ice || ( window.ice = {} ),
 
-	/** @type {RegExp} ajax支持的返回类型正则表达式 */
-	rtype 					= /^(?:TEXT|JSON|SCRIPT)$/,
-
-    // 默认参数对象初始化
-    /** @type {Object} ajax默认参数对象初始化 */
-    _defaultOptions 		= {
-    	method 					: 'GET',
-    	url 					: '',
-    	data 					: '',     
-    	async 					: true,
-    	cache 					: true,
-    	contentType 			: 'application/x-www-form-urlencoded; charset=UTF-8',
-    	type 					: 'TEXT'
-    },
+	
     
 
 	/** @type {Object} 浏览器的类型、版本及当前平台类型 */
@@ -136,17 +122,7 @@ var a 	 					= [],
 
 									return ret;
 										
-								  } )( window.navigator.userAgent.toLowerCase () ),
-
-	/** @type {Array} 创建IE ActiveXObject时的所使用到的各版本参数 */
-	msXhrDialect			= ['Microsoft.XMLHTTP', 
-								'MSXML.XMLHTTP', 
-								'Msxml2.XMLHTTP.7.0', 
-								'Msxml2.XMLHTTP.6.0', 
-								'Msxml2.XMLHTTP.5.0', 
-								'Msxml2.XMLHTTP.4.0', 
-								'MSXML2.XMLHTTP.3.0', 
-								'MSXML2.XMLHTTP'];
+								  } )( window.navigator.userAgent.toLowerCase () );
 // END 变量定义区 
 //////////////////////////////////////////
 

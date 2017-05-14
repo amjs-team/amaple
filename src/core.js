@@ -109,14 +109,7 @@ function control ( node, external ) {
 				setCurrentPath$ ( module, src );
 
 				// 无刷新跳转组件调用来完成无刷新跳转
-				single (
-					src, 
-					module, 
-					null, 
-
-					// 模块定义ice-cache="true"，或配置文件定义redirectCache为true且模块没有定义为false
-					cache === 'true' || (config.params.redirectCache === true && cache !== 'false')
-				);
+				single ( src, module );
 			}
 		}
 		else {
@@ -153,29 +146,16 @@ function control ( node, external ) {
 
 	    if ( util.type ( state ) === 'array' && state.length > 0 ) {
 
-	    	if ( state.length === 1 ) {
+    		util.foreach ( state, function ( item ) {
 
-	    		push.call ( _modules, {
-	    			url 	: state [ 0 ].url, 
-	    			entity 	: util.s ( '*[' + single.aModule + '=' + state [ 0 ].moduleName + ']' ), 
-	    			title 	: state [ 0 ].title, 
-	    			isCache : state [ 0 ].cache
-	    		} );
-	    	}
-	    	else {
-	    		util.foreach ( state, function ( item ) {
+    			_modules.push ( {
+    				url 	: item.url, 
+    				entity 	: util.s ( '*[' + single.aModule + '=' + item.moduleName + ']' ), 
+    				data 	: item.data
+    			} );
+    		} );
 
-	    			push.call ( _modules, {
-	    				url 	: item.url, 
-	    				entity 	: util.s ( '*[' + single.aModule + '=' + item.moduleName + ']' ), 
-	    				title 	: item.title, 
-	    				isCache : item.cache
-	    			} );
-	    		} );
-	    	}
-
-
-	    	single ( _modules, true, true );
+	    	single ( _modules, null, null, state [ 0 ].title, null, null, null, null, null, null, true, true );
 	    }
 	    else {
 
@@ -210,16 +190,15 @@ function control ( node, external ) {
 				_module = util.s ( '*[' + single.aModule + '=' + moduleName + ']' );
 
 				src 	  = src === null ? _module.getAttribute( single.aSrc ) : src;
-				
-				single ( 
-						src, 
-						_module, 
-						config.params.header[src], 
-						_module.getAttribute ( single.aCache ) !== 'false' && config.params.redirectCache, 
-						true, 
-						true 
-					);
+
+				_modules.push ( {
+    				url 	: src, 
+    				entity 	: _module, 
+    				data 	: null
+				} );
 			} );
+
+			single ( _modules, null, null, config.params.header [ _modules [ 0 ].url ], null, null, null, null, null, null, true, true );
 	    }
 
 	    // if (state) {
