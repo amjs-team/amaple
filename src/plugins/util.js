@@ -317,9 +317,10 @@ var util = extend ( {}, {
 	 * @author JOU
 	 * @time   2016-08-23T13:45:27+0800
 	 * @param  {Object}                 node   script标签
-	 * @param  {Function}               callback 加载回调函数，只有当script标签有src属性时有效
+	 * @param  {Function}               callback 加载成功回调函数，只有当script标签有src属性时有效
+	 * @param  {Function}               callback 加载失败回调函数，只有当script标签有src属性时有效
 	 */
-	appendScript : function ( node, callback ) {
+	appendScript : function ( node, callback, error ) {
 		var script 				= document.createElement ( 'script' );
 		script.type 			= 'text/javascript';
 
@@ -465,12 +466,12 @@ var util = extend ( {}, {
 
 				// 清空_elem
 				_elem.textContent = '';
+
+				// 清空fragment并依次插入元素
+				fragment.textContent = '';
 			}
 
 			
-
-			// 清空fragment并依次插入元素
-			fragment.textContent = '';
 			util.foreach ( nodes, function ( node ) {
 				context.appendChild ( node );
 

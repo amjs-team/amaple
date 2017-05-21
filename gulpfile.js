@@ -38,7 +38,9 @@ var path 		  = {
 // 模拟API请求数据
 var mockData 	  = {
 	'/api_json' : '{"a": 1, "b": 2}',
-	'/api_text'	: '<link rel="stylesheet" type="text/css" href="a.css">'
+	'/api_text'	: '<link rel="stylesheet" type="text/css" href="a.css">',
+	'/api_script' : 'console.log("request script success")',
+	'/api_jsonp' : 'jsonpCallback8({aa: 1, bb: 2})',
 };
 
 /**

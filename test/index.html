@@ -6,10 +6,25 @@
 	<link rel="icon" href="data:;base64,=">
 	<script src="ice.0.1.0.js" config="config.js"></script>
 	<script type="text/javascript">
-	ice.page(['aa'], function(crystals, aa) {
-		aa();
+	ice.page(['http', 'util', 'event'], function(crystals, http, util, event) {
+		// aa();
 		// bb();
-		console.log(crystals);
+		http.request ( {
+			url: 'api_json',
+			data: {aa: 'b'},
+			method: 'get',
+			complete: function (xhr) {
+				console.log('complete');
+				console.log(xhr.transport);
+			},
+			error: function ( xhr, text ) {
+				console.log( xhr.transport, text );
+			},
+			success: function ( res ) {
+				console.log(res);
+			},
+			dataType: 'json'
+		} );
 		// var html = '<div id="abcd"></div>',
 		// 	fragment = document.createDocumentFragment(),
 		// 	div = document.createElement('div');
@@ -69,6 +84,11 @@
 		<div class="__status" ice-module="status" ice-src="mod2" ice-base="false">
 
 		</div>
+		<form name="formbaby" action="aa" method="post">
+			<input type="text" name="abc" value="123" />
+			<input type="file" name="ddd" value="125" />
+			<input type="submit" id="sub" />
+		</form>
 	</div>
 </body>
 </html>

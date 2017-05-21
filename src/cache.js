@@ -26,12 +26,13 @@
  * 3. 页面跳转与状态切换时的缓存，开启缓存后，页面跳转数据将会被缓存，再次调用相同地址时将使用缓存更新页面以提高响应速度，实时性较高的页面建议关闭缓存。
  * 4. 当前页面初始化未完成时将page()模块的工厂方法缓存于page中，ice.page()未调用时，将ice.module()内定义的方法缓存于此等待执行
  */
-var cache = ( function () {
+var cache = ( function ( builtInPlugins ) {
+
 	/** @type {Object} 插件存储，加载完成的插件都会存储于此 */
 	var plugins 			 	= {};
 
 	/** @type {Object} 内置插件存储 */
-	plugins [ PLUGIN_BUILTIN ]  = {};
+	plugins [ PLUGIN_BUILTIN ]  = builtInPlugins;
 
 	/** @type {Object} 自定义插件存储 */
 	plugins [ PLUGIN_EXTERNAL ] = {};
@@ -65,8 +66,15 @@ var cache = ( function () {
 	 * @param  {Object/Function}       	plugin 插件对象
 	 * @param  {String}                 type   插件类型
 	 */
-	function addPlugin ( plugin, type ) {
+	function addPlugin ( name, plugin, type ) {
 
+		if ( name && util.type ( name ) === 'string' ) {
+			var _plugin = {};
+
+			_plugin [ name ] = plugin;
+			plugin = _plugin;
+		}
+		
 		// 遍历插件对象组依次缓存
 		util.foreach ( plugin, function ( item, name ) {
 			if ( !plugins [ type ].hasOwnProperty ( name ) ) {
@@ -78,6 +86,19 @@ var cache = ( function () {
 		} );
 	}
 
+	/**
+	 * 获取插件
+	 * 此方法会先从内部方法找，再到外部方法找，如果找到了就返回，没有找打则返回null
+	 *
+	 * @author JOU
+	 * @time   2017-05-14T16:23:35+0800
+	 * @param  {String}                 name 插件名字
+	 * @return {Object}                      插件对象
+	 */
+	function getPlugin ( name ) {
+		return plugins [ PLUGIN_BUILTIN ][ name ] || plugins [ PLUGIN_EXTERNAL ][ name ] || null;
+	}
+
 
 	/**
 	 * 添加元素驱动器
@@ -87,7 +108,14 @@ var cache = ( function () {
 	 * @param  {String}                 name   驱动器名称
 	 * @param  {Function}               driver 驱动器对象
 	 */
-	function addDriver ( driver ) {
+	function addDriver ( name, driver ) {
+
+		if ( name && util.type ( name ) === 'string' ) {
+			var _driver = {};
+
+			_driver [ name ] = driver;
+			driver = _driver;
+		}
 
 		// 遍历插件对象组依次缓存
 		util.foreach ( driver, function ( item, name ) {
@@ -98,6 +126,18 @@ var cache = ( function () {
 				throw moduleErr ( 'driver', name + '元素驱动器已存在' );
 			}
 		} );
+	}
+
+	/**
+	 * 获取元素驱动器
+	 *
+	 * @author JOU
+	 * @time   2017-05-14T16:26:15+0800
+	 * @param  {String}                 name 驱动器名称
+	 * @return {Object}                      驱动器对象
+	 */
+	function getDriver ( name ) {
+		return drivers [ name ] || null;
 	}
 
 	// 曝光接口到外部
@@ -116,29 +156,15 @@ var cache = ( function () {
 		 * @return {Object}                           组件对象或组件对象组
 		 */
 		componentCreater : function ( name, component, type ) {
-			var _component,
-				tname = util.type ( name );
-
-			// 当未传入组件名，而是直接传入组件对象组时，将组件对象组传入cache对象缓存
-			if ( tname === 'object' ) {
-				type 		= component;
-				component 	= name;
-				name 		= undefined;
-			}
-			else {
-				_component 	= component;
-				component 	= {};
-				component [ name ] = _component;
-			}
 
 			if (type === PLUGIN_BUILTIN || type === PLUGIN_EXTERNAL) {
-				addPlugin ( component, type );
+				addPlugin ( name, component, type );
 			}
 			else if ( type === TYPE_DRIVER ) {
-				addDriver ( component );
+				addDriver ( name, component );
 			}
 
-			return _component || component;
+			return component;
 		},
 
 		/**
@@ -152,9 +178,9 @@ var cache = ( function () {
 		 * @return {Object/Function}      anonymous 组件对象
 		 */
 		componentFactory : function ( name, type ) {
-			return ( type === TYPE_PLUGIN || type === undefined ) ? 
-				   ( plugins [ PLUGIN_BUILTIN ][ name ] || plugins [ PLUGIN_EXTERNAL ][ name ] ) :
-				   		type === TYPE_DRIVER ? drivers [ name ] : null;
+
+			return type === TYPE_PLUGIN || type === undefined ? getPlugin ( name ) : 
+				   type === TYPE_DRIVER ? getDriver ( name ) : null;
 		},
 
 		/**
@@ -262,4 +288,11 @@ var cache = ( function () {
 			}
 		}
 	};
-} ) ();
+} ) ( {
+	event 			: event,
+	Promise 		: Promise,
+	animation 		: animation,
+	language 		: language,
+	util			: util,
+	http 			: http
+} );

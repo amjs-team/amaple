@@ -129,7 +129,7 @@ function Promise ( resolver ) {
 			handler.onFulfilled.apply ( null, args );
 		}
 		else if ( state === REJECTED && util.type ( handler.onRejected ) === 'function' ) {
-			handler.onRejected ( _reason );
+			handler.onRejected.apply ( null, _reason );
 		}
 	};
 
@@ -162,13 +162,14 @@ function Promise ( resolver ) {
 	 * @time   2016-07-31T17:36:37+0800
 	 * @param  {string}                 reason 失败原因
 	 */
-	function _reject ( reason ) {
+	function _reject () {
+
 		if ( state === PENDING ) {
 			state 		= REJECTED;
-			_reason		= reason;
+			_reason		= arguments;
 
 			util.foreach ( handlers, function ( item ) {
-				item.onRejected && item.onRejected ( _reason );
+				item.onRejected && item.onRejected.apply ( null, _reason );
 			} );
 		}
 	}
@@ -274,6 +275,6 @@ Promise.prototype 		 	= {
  * @param  {object} 		promise[1-n] 不定个数Promise对象
  * @return {object}                 	 promise对象
  */
-Promise.when 		= function () {
+Promise.when = function () {
 
 };

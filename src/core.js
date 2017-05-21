@@ -302,7 +302,7 @@ function module ( name, deps, factory, type ) {
 			loader.putWaiting ( dep );
 
 			// 加载模块
-			var script 		= document.createElement ( 'script' );
+			var script 	= document.createElement ( 'script' );
 			script.src 	= config.params.base.plugin + dep + ModuleLoader.suffix + '?m=' + dep + '&guid=' + guid;
 			script.setAttribute ( ModuleLoader.moduleName, dep );
 			script.setAttribute ( ModuleLoader.scriptFlag, '' );

@@ -106,7 +106,7 @@ http.post(url[, data][, callback][, type])		post请求，返回promise对象
 http.request(object)		ajax请求，get\post方法的底层方法，参数对象的有效键名为：
 							method 		请求类型，GET或POST，大小写不敏感，默认为GET
 							url 		请求地址，必传参数
-							data 		提交的额外参数，可写为formName、FormData对象、或格式为k1=v1&k2=v2、{k1:v1, k2:v2}的数据，当data不为formName时必须要有src值（当data为formName时，如果也提供了src参数则优先使用src参数）
+							data 		提交的额外参数，可写为form对象、FormData对象、或格式为k1=v1&k2=v2、{k1:v1, k2:v2}的数据，当data不为form对象时必须要有src值（当data为form对象时，如果也提供了src参数则优先使用src参数）
 							async 		是否异步请求，默认为true
 							cache 		请求缓存，如果为false，则每次都会发送请求，默认为true
 							contentType 请求参数编码

@@ -286,12 +286,3 @@ ModuleLoader.onScriptLoaded = function ( event ) {
 		delete ModuleLoader.loaders [ loadID ];
 	}
 };
-
-cache.componentCreater ( {
-	event 					: event,
-	Promise 				: Promise,
-	animation 				: animation,
-	language 				: language,
-	util					: util,
-	http 					: http
-}, PLUGIN_BUILTIN );

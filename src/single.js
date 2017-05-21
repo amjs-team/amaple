@@ -140,7 +140,7 @@ function single ( url, module, data, title, method, timeout, before, success, er
 			complateUrl 	= isBase ? config.params.base.url +  ( hasSeparator === 0 ? substr.call ( complateUrl, 1 ) : complateUrl )
 							  :
 							  hasSeparator === 0 ? complateUrl : '/' + complateUrl;
-
+							  
 			http.request ( {
 
 				url 		: complateUrl, 
@@ -152,11 +152,10 @@ function single ( url, module, data, title, method, timeout, before, success, er
 				},
 				abort: function () {
 					util.type ( abort ) === 'function' && abort ( moduleItem );
-				}
+				},
 
 			} ).done ( function ( result ) {
 				try {
-					
 					result 	= JSON.parse ( result );
 					html 	= result [ config.params.htmlKey ];
 
