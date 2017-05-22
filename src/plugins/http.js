@@ -49,9 +49,6 @@ function request ( method ) {
 
 		transportName,
 
-		// 返回的内容
-		response, 
-
 		params, nohashUrl, hash,
 
 		// 相关正则表达式
@@ -185,16 +182,18 @@ function request ( method ) {
 			}
 
 			// 如果解析错误也会报错，并调用error
-			try {
-				response 	= ajaxConverters [ transport.dataType ] && ajaxConverters [ transport.dataType ] ( response );
-			} catch ( e ) {
-				transport.status 		= 500;
-				transport.statusText 	= 'Parse Error: ' + e;
+			if ( transport.response ) {
+				try {
+					transport.response 	= ajaxConverters [ transport.dataType ] && ajaxConverters [ transport.dataType ] ( transport.response );
+				} catch ( e ) {
+					transport.status 	= 500;
+					transport.statusText = 'Parse Error: ' + e;
+				}
 			}
 
 	    	// 请求成功，调用成功回调，dataType为script时不执行成功回调
-	    	if ( transport.status === 200 && dataType !== 'script' ) {
-	    		transport.callbacks.success && transport.callbacks.success ( response, transport.statusText, iceXHR );
+	    	if ( transport.status === 200 && transport.dataType !== 'script' ) {
+	    		transport.callbacks.success && transport.callbacks.success ( transport.response, transport.statusText, iceXHR );
 	    	}
 
 	    	// 请求错误调用error回调
@@ -254,7 +253,7 @@ function request ( method ) {
 	                    // 绑定请求中断回调
 	                    if ( util.type ( options.abort ) === 'function' && event.support ( 'abort', xhr ) ) {
 	                    	xhr.onabort = function () {
-	                    		options.abort ( iceXHR.transport.statusText );
+	                    		options.abort ( this.statusText );
 	                    	}
 	                    }
 
@@ -288,7 +287,7 @@ function request ( method ) {
 	    			},
 
 	    			/**
-	    			 * ajax请求完成或中断后的处理
+	    			 * ajax请求完成后的处理
 	    			 *
 	    			 * @author JOU
 	    			 * @time   2017-05-14T02:37:38+0800
@@ -300,23 +299,27 @@ function request ( method ) {
 
 	    				xhr.onload = xhr.onerror = xhr.onreadystatechange = null;
 
-	    				if ( this.abortText && util.type ( xhr.abort ) === 'function' ) {
+    					// 获取所有返回头信息
+    					this.responseHeadersString = xhr.getAllResponseHeaders ();
 
-	    					this.status 	= 0;
-	    					this.statusText = this.abortText;
+    					this.status 		= xhr.status;
+    					this.statusText 	= xhr.statusText;
+    					this.response 		= xhr.responseText;
 
-	    					xhr.abort ();
-	    				}
-	    				else {
-	    					// 获取所有返回头信息
-	    					this.responseHeadersString = xhr.getAllResponseHeaders ();
+    					complete ( iceXHR );
+	    			},
 
-	    					this.status 		= xhr.status;
-	    					this.statusText 	= xhr.statusText;
-	    					response 			= xhr.responseText;
+	    			/**
+	    			 * ajax请求中断
+	    			 *
+	    			 * @author JOU
+	    			 * @time   2017-05-21T23:40:08+0800
+	    			 */
+	    			abort : function () {
+	    				this.status 	= 0;
+	    				this.statusText = this.abortText;
 
-	    					complete ( iceXHR );
-	    				}
+	    				xhr.abort && xhr.abort ();
 	    			}
 	    		};
 	    	},
@@ -343,8 +346,14 @@ function request ( method ) {
 	    				script 		= document.createElement ( 'script' );
 	    				script.src 	= options.url;
 
-						function callback ( e ) {
-							if ( !script.readyState || script.readyState === 'loaded' || script.raeadyState === 'complete' ) {
+
+	    				event.on ( script, 'load error', function ( e ) {
+
+	    					if ( script.parentNode ) {
+	    						script.parentNode.removeChild ( script );
+	    					}
+
+							if ( e.type === 'load' ) {
 								this.status 		= 200;
 								this.statusText 	= 'success';
 							}
@@ -353,9 +362,9 @@ function request ( method ) {
 								this.statusText 	= 'error';
 							}
 							self.done ( iceXHR );
-    					}
+    					} );
 
-	    				util.appendScript ( script, callback, callback );
+    					document.head.appendChild ( script );
 	    			},
 
 	    			/**
@@ -366,34 +375,40 @@ function request ( method ) {
 	    			 * @param  {Object}         iceXHR  iceXHR自定义对象
 	    			 */
 	    			done : function ( iceXHR ) {
-	    				if ( this.abortText ) {
 
+    					if ( options.dataType === 'JSONP' ) {
+
+    						dataType = 'json';
+
+    						if ( util.type ( window [ options.jsonpCallback ] ) !== 'function' ) {
+    							this.status 	= 200;
+    							this.statusText = 'success';
+    							this.response 	= window [ options.jsonpCallback ];
+    						}
+    						else {
+    							this.status 	= 500;
+    							this.statusText = 'error';
+    						}
+    					}
+
+    					complete ( iceXHR );
+	    			},
+
+	    			/**
+	    			 * 请求中断处理
+	    			 *
+	    			 * @author JOU
+	    			 * @time   2017-05-21T23:41:31+0800
+	    			 */
+	    			abort : function () {
+	    				if ( script.parentNode ) {
 	    					script.parentNode.removeChild ( script );
-
-	    					this.status 		= 0;
-	    					this.statusText 	= this.abortText;
-
-	    					return;
 	    				}
-	    				else {
 
-	    					if ( options.dataType === 'JSONP' ) {
+	    				this.status 		= 0;
+	    				this.statusText 	= this.abortText;
 
-	    						dataType = 'json';
-
-	    						if ( util.type ( window [ options.jsonpCallback ] ) !== 'function' ) {
-	    							this.status 	= 200;
-	    							this.statusText = 'success';
-	    							response 		= window [ options.jsonpCallback ];
-	    						}
-	    						else {
-	    							this.status 	= 500;
-	    							this.statusText = 'error';
-	    						}
-	    					}
-
-	    					complete ( iceXHR );
-	    				}
+	    				util.type ( options.abort ) === 'function' && options.abort ( this.statusText );
 	    			}
 	    		};
 	    	},
@@ -418,6 +433,10 @@ function request ( method ) {
 
 	    			done : function ( iceXHR ) {
 	    				scriptExtend.done ( iceXHR );
+	    			},
+
+	    			abort : function () {
+	    				scriptExtend.abort ();
 	    			}
 	    		};
 	    	},
@@ -506,14 +525,14 @@ function request ( method ) {
 
     						// 当mimeType为 text/javascript或application/javascript时，浏览器会将内容放在pre标签中
     						if ( ( child = doc.body.firstChild ) && child.nodeName.toUpperCase () === 'PRE' && child.firstChild ) {
-    							response = child.innerHTML;
+    							this.response = child.innerHTML;
     						}
     						else {
-    							response = doc.body.innerHTML;
+    							this.response = doc.body.innerHTML;
     						}
 
     						// 如果response中包含转义符，则将它们转换为普通字符
-    						if ( /&\S+;/.test (response) ) {
+    						if ( /&\S+;/.test (this.response) ) {
     							entity 	= {
     								lt 		: '<',
     								gt 		: '>',
@@ -521,7 +540,7 @@ function request ( method ) {
     								amp 	: '&',
     								quot 	: '"'
     							};
-									response = response.replace ( /&(lt|gt|nbsp|amp|quot);/ig, function ( all, t ) {
+									this.response = this.response.replace ( /&(lt|gt|nbsp|amp|quot);/ig, function ( all, t ) {
 										return entity [ t ];
 									} );
     						}
@@ -531,7 +550,15 @@ function request ( method ) {
 
 	    				// 移除iframe
 	    				uploadFrame.parentNode.removeChild (uploadFrame);
-	    			}
+	    			},
+
+	    			/**
+	    			 * 请求中断处理，此时无法中断
+	    			 *
+	    			 * @author JOU
+	    			 * @time   2017-05-21T23:42:09+0800
+	    			 */
+	    			abort : function () {}
 	    		};
 	    	}
 	    };
@@ -598,7 +625,7 @@ function request ( method ) {
 			abort : function ( statusText ) {
 		        if ( this.transport ) {
 		        	this.transport.abortText = statusText || 'abort';
-		            this.transport.done ();
+		            this.transport.abort ();
 		        }
 			},
 
@@ -705,6 +732,9 @@ function request ( method ) {
 			// 如果dataType为script但async为false时，使用xhr来实现同步请求
 			else if ( options.dataType === 'SCRIPT' && options.async === false ) {
 				transportName = 'xhr';
+			}
+			else {
+				transportName = options.dataType.toLowerCase ();
 			}
 
 			// 获取传送器对象，当没有匹配到传送器时统一使用xhr

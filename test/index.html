@@ -10,7 +10,7 @@
 		// aa();
 		// bb();
 		http.request ( {
-			url: 'api_json',
+			url: 'api_jsonp',
 			data: {aa: 'b'},
 			method: 'get',
 			complete: function (xhr) {
@@ -23,7 +23,11 @@
 			success: function ( res ) {
 				console.log(res);
 			},
-			dataType: 'json'
+			timeout: 0,
+			abort: function ( b) {
+				console.log('abort', util.type(b));
+			},
+			dataType: 'jsonp'
 		} );
 		// var html = '<div id="abcd"></div>',
 		// 	fragment = document.createDocumentFragment(),
