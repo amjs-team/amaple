@@ -1,133 +1,248 @@
-模块标签：
+////////// 模块相关属性 //////////
+ice-module 				定义一个模块模块，模块名不能重复
 -----------------------------------------------------------
-ice-module 				模块名定义
+ice-src 				模块加载路径，必须与ice-module同时存在
 -----------------------------------------------------------
-ice-src 				模块加载路径
+ice-cache 				是否缓存此跳转页面数据，默认为config.directionCache，必须与ice-module同时存在
 -----------------------------------------------------------
-ice-cache 				是否缓存此跳转页面数据，默认为config.redirectCache
+ice-href				模块跳转，若没有设置ice-base=false，则跳转依赖base.url参数
 -----------------------------------------------------------
-ice-base				true/false，路径是否依赖请求base路径，默认为true
+ice-target				无刷新跳转目标模块，一般与<a>或<form>元素使用。当值没有":"和","时表示模块名，当值的格式为"code1:mod1, 
+code2:mod2..."时，表示返回的不同状态对应跳转不同的模块，如果没有该属性则只会普通刷新跳转
 -----------------------------------------------------------
-ice-loading 			设置模块加载时的方法调用，格式为【选择器::方法】或【方法】，选择器参数可参考document.querySelector方法中的元素选择参数，方法以普通方法调用格式，如果是字符串则使用单引号引起来，如果是变量则不使用单引号，但此变量必须是crystals的属性；如果格式为【方法】，则会在crystals对象上去寻找方法并调用。如果未设置ice-finish，则在加载结束后会再一次调用此方法
+ice-router				用于模块的<template>元素上，定义地址栏的url（不在0.1.0版本规划中）
 -----------------------------------------------------------
-ice-finish 				设置模块加载结束的方法调用，格式为【选择器::方法】或【方法】，选择器参数可参考document.querySelector方法中的元素选择参数，方法以普通方法调用格式，如果是字符串则使用单引号引起来，如果是变量则不使用单引号，但此变量必须是crystals的属性；如果格式为【方法】，则会在crystals对象上去寻找方法并调用，必须与ice-loading标签一起使用，如果只设置此标签而未设置ice-loading，则此次设置的方法将不会被调用
+ice-title 				用于模块的<template>元素上，定义页面标题，如果不设置则不改变标题而是保持原来的
+-----------------------------------------------------------
+备注：子作用域可使用this.props参数来获取父作用域定义的vm数据，ice-driver定义的元素驱动器也属于一个独立模块
+-----------------------------------------------------------
+ice-group				将元素进行分组，相同标签值的元素将会分为一组
+-----------------------------------------------------------
+onrequest				模块请求事件，发出请求前触发（模块事件），可使用模板引擎的:onrequest绑定
+-----------------------------------------------------------
+onresponse				模块响应事件，请求响应后触发（模块事件），可使用模板引擎的:onresponse绑定
+-----------------------------------------------------------
+onfinish				模块转向完成事件，模块填充新内容后触发（模块事件），可使用模板引擎的:onfinish绑定
 -----------------------------------------------------------
 -----------------------------------------------------------
-ice-target-module		无刷新跳转目标模块，一般与<a>或<form>标签使用。当值没有":"和","时表示模块名，当值的格式为"code1:mod1, 
-code2:mod2..."时，表示返回的不同状态对应跳转不同的模块
+
+
+
+////////// url风格（v0.1.0） //////////
+http://icejs.org/root-index							只有模块信息
+http://icejs.org/root-index@login					有模块信息和状态信息
+http://icejs.org/root-index?id=28971897138@login	有模块信息、状态信息和参数
 -----------------------------------------------------------
-ice-base				true/false，带有ice-target-module的元素中，*:href或form:action是否依赖请求base路径，默认为true
+
+
+
+////////// url风格（Restful/v0.2.0） //////////
+http://icejs.org/index								只有模块信息
+http://icejs.org/index@login						有模块信息和状态信息
+http://icejs.org/index?id=28971897138@login			有模块信息、状态信息和参数
+-----------------------------------------------------------
+-----------------------------------------------------------
+
+
+
+////////// 元素驱动器 //////////
+元素驱动器对象拥有init方法、template属性、method属性、apply方法、deps属性
 -----------------------------------------------------------
 ice-driver 				指定渲染当前元素的元素驱动器，一般以路劲的方式指定，分隔可使用“.”或“/”
 -----------------------------------------------------------
-ice-param 				指定元素驱动器的渲染变量参数名，与ice-driver属性并用。多个参数使用“,”隔开，且传入的参数必须是crystals对象的成员变量。将会在crystals寻找对应传入的参数名并解析传入驱动器的构造方法内（注意接收参数的顺序，构造方法的第一二个参数分别固定为crystals与当前元素对象），如果在crystals对象上没有找到对应的变量，则会以null代替，而不是不传入
+ice.use(driverDefiner:Object) 				使用元素驱动器或插件，此方法内部会根据特征区分元素驱动器和插件
+-----------------------------------------------------------
+ice.drivenElem(selExp:String)	 			获取被驱动的元素对象，进行操作。参数为元素选择表达式
+-----------------------------------------------------------
 -----------------------------------------------------------
 
 
-方法：
+
+////////// 插件 //////////
+插件定义必须有build方法，使用deps属性制定依赖插件
 -----------------------------------------------------------
-ice.config(object)	配置项设置，参数为一个对象，对象中的有效键名为：
-							stateMark 		状态标识符，默认为"@"
+ice.use(pluginDefiner:Object) 				使用元素驱动器或插件，此方法内部会根据特征区分元素驱动器和插件
+-----------------------------------------------------------
+-----------------------------------------------------------
+
+
+
+////////// 通用属性 //////////
+ice-base				true/false，路径是否依赖请求base路径，默认为true。以下情况可使用此属性：
+						①、与ice-module一起使用，且有ice-src
+						②、与*:href或form:action一起使用，且有ice-target
+						③、与ice-driver使用
+-----------------------------------------------------------
+-----------------------------------------------------------
+
+
+
+////////// MVVM //////////
+-----------------------------------------------------------
+ice.module(moduleName:String, object:Object)		将模板内的模块进行初始化，object对象属性为：
+							init 					方法，返回需初始化的vm绑定变量、绑定方法及计算属性，其中绑定变量、绑定方法为对象属性，计算属性为computed属性的值对象属性，当计算属性为方法时表示get方法，当计算属性为对象时可定义set、get方法
+							apply 					方法，显式操作模块内的元素，此方法将传入ice-module属性所在元素的封装对象，此方法将会在解析模板前
+-----------------------------------------------------------
+-----------------------------------------------------------
+
+
+
+////////// HTML模板属性 //////////
+-----------------------------------------------------------
+:for					循环渲染所在元素及内部元素，value格式为“item of collection”，渲染后将会移除此属性
+-----------------------------------------------------------
+:key					:for循环渲染时的key，必须与:for一起使用
+-----------------------------------------------------------
+:if 					value为js判断语句，若true则显示此元素及内部元素，false则隐藏此元素及内部元素
+-----------------------------------------------------------
+:else-if 				value为js判断语句，与:if属性一起使用
+-----------------------------------------------------------
+:else 	 				value为js判断语句，与:if属性一起使用
+-----------------------------------------------------------
+:on[event name]			事件绑定，格式为:on+[事件名称]，值为方法名，可额外传入参数
+-----------------------------------------------------------
+:model 					表单控件绑定数据
+-----------------------------------------------------------
+{{ express }} 			模板表达式，可在模板任意属性值或元素内使用，双括号内一般为vm中定义的变量，也可以在内部进行方法调用，调用方式和js语法一致
+-----------------------------------------------------------
+特殊处理 					绑定元素的class时可传入数组，绑定渲染时会自动用空格隔开；绑定style属性时可传入对象，键为样式名的驼峰式，值为样式值
+-----------------------------------------------------------
+-----------------------------------------------------------
+
+
+
+////////// 全局配置 //////////
+-----------------------------------------------------------
+ice.config(options:Object)	配置项设置，参数为一个对象，对象中的有效键名为：
+							stateSymbol 	状态标识符，默认为"@"
 							base 	    	对象，内包含url、lang、plugin、driver参数
 								url				请求base路径
-								lang 			语言包根目录，当此值为function时需返回一个路径字符串
 								plugin 			插件根目录，当此值为function时需返回一个路径字符串
 								driver 			驱动器根目录，当此值为function时需返回一个路径字符串
-							redirectCache		跳转模块缓存，当加载过的模块再次跳转时则使用缓存而不再请求服务器，适用于实时性差的模块
-							codeKey 		自定义状态码键名，此状态码为服务器返回的数据中用于标识数据状态，客户端根据此状态码作出不同的处理。默认为"code"
-							htmlKey 		自定义html模块键名，此html模块为服务器返回的数据中用于标识请求的html内容，客户端将此内容填充进对应模块中。默认为"html"
+							directionCache	跳转模块缓存，当加载过的模块再次跳转时则使用缓存而不再请求服务器，适用于实时性差的模块
 							moduleSepatator	url中模块名称与模块内容标识的分隔符，默认为"-"
 							urlRule			自定义ajax请求时的url规则，通过设置此规则将规则中的模块名称与模块内容标识替换为当前请求环境的真实值，此规则与base.url和ice-base关联，即当设置了base.url且ice-base不为false时将自动添加base.url到此url前，如果ice-base为false时，此规则转换后的url将会从根目录当作url的起始路径，即在设置规则时第一个字符如果不是"/"，则系统将自动添加"/"到url的开头部分。默认规则为":m/:v.html";
-
-							header			二维数组，无刷新跳转时，不同请求路径对应的标题，格式为[[src1, title1], [path2, title2]...]。path为字符串，title为字符串或方法（当为方法时接收一个codeKey参数，方法需返回一个字符串作为标题，如返回为空则标题将不变）
------------------------------------------------------------
-ice.page([[moduleArray],] function(crystals))	页面初始化，获取crystals对象
------------------------------------------------------------
-ice.module([[moduleArr],] function(crystals))	模块定义，获取crystals对象
------------------------------------------------------------
-crystals.path(object)	无刷新跳转路径定义（废弃）
------------------------------------------------------------
-crystals.registerState(stateName, stateFunction)	状态注册
------------------------------------------------------------
-crystals.inverse([inverseFunction])	当前状态注册的逆方法，通常使用链式调用，当此方法不传入参数时将会以状态方法当作逆方法绑定
------------------------------------------------------------
-crystals.transmitParams(arg1 [, arg2, arg3, ...])	逆方法参数传递，传递后逆方法可直接接收此传递的参数
------------------------------------------------------------
-crystals.refreshModule(src, moduleName[, data][, callback])	刷新模块（无刷新重新加载模块），方法形式一
-crystals.refreshModule(argObj)	刷新模块（无刷新重新加载模块），方法形式二
-							src			请求路径（如果config配置了base参数，则跳转请求路径为base/src）
-							moduleName	跳转的模块名，当module值为对象时，表示返回的不同状态对应跳转不同的模块
-							data 		提交的额外参数，可写格式为k1=v1&k2=v2，或{k1:v1, k2:v2}
-							timeout		请求超时时间，超过时间后中断请求，单位为ms
-							before		发送请求前的回调函数，回调函数参数为module对应的DOM对象
-							success		返回成功后的执行回调函数，回调函数参数为module对应的DOM对象
-							error 		请求错误时的回调函数，回调参数为module对应的DOM对象、error信息
-							abort 		请求中断后的执行回调函数，回调参数为module对应的DOM对象
------------------------------------------------------------
-crystals.submit(src, moduleName, data[, callback])		无刷新提交跳转，方法形式一
-crystals.submit(src, moduleName, formName[, callback])	无刷新提交跳转，方法形式二
-crystals.submit(moduleName, formName[, callback])	无刷新提交跳转，方法形式三
-crystals.submit(src, moduleName, formData[, callback])	无刷新提交跳转，方法形式四
-crystals.submit(object)		无刷新提交跳转，方法形式三; 参数为一个对象，对象中的有效键名为：
-							src			提交路径（如果config配置了base参数，则提交路径为base/src）
-							moduleName 	跳转的模块名，当module值为对象时，表示返回的不同状态对应跳转不同的模块
-							data 		提交的额外参数，可写为formName、FormData对象、或格式为k1=v1&k2=v2、{k1:v1, k2:v2}的数据，当data不为formName时必须要有src值（当data为formName时，如果也提供了src参数则优先使用src参数）
-							timeout 	请求超时时间，超过时间后中断请求，单位为ms
-							before 		发送请求前的回调函数，回调函数参数为module对应的DOM对象
-							success		返回成功后的执行回调函数，回调函数参数为module对应的DOM对象
-							error 		请求错误时的回调函数，回调参数为module对应的DOM对象、error信息
-							abort 		请求中断后的执行回调函数，回调函数参数为module对应的DOM对象
------------------------------------------------------------
-
-
-插件方法：
------------------------------------------------------------
-animate(element/fragment, animateObj[, during][, delay][, callback])	Animation模块方法，dom元素动画设置，方法形式一，此方法可链式调用，表示依次执行动画(非同时执行)。animateObj参数为一个对象，对象的有效键名为：
-							from 		设置动画的起始状态，当没有设置to参数时，此参数失效。参数为一个对象，对象里的成员变量为css属性，css属性值可使用“+”、“-”设置相对当前状态的css属性值
-							to 			设置动画的结束状态，当没有设置from参数时，其实状态为当前状态。参数为一个对象，对象里的成员变量为css属性，css属性值可使用“+”、“-”设置相对当前状态的css属性值
-							extends 	继承动画的class名(实质是为元素增加class，此class内一般定义了动画属性)，优先级比from、to低，当参数类型为String时直接将此String当做class添加到对应元素上；当参数类型为Array时，遍历Array依次将数组项当做class添加到对应元素上
-animate(animateArray[, delay][, callback])		Animation模块方法，dom元素动画设置，方法形式二，此方法可链式调用，表示依次执行动画(非同时执行)。animateArray参数为一个二维数组，表示需要同时执行动画的元素数组，第二维数组内包含了同时执行的元素对象、动画参数及动画持续时间。参数数组形式(以下animateObj参数规则与形式一的animateObj相同):
-[
-	[elem1, animateObj[, during]],
-	[elem2, animateObj[, during]],
-	[elem3, animateObj[, during]],
-	...
-]
------------------------------------------------------------
-Language(mod_lang)		Language模块方法，获取对应模块的语言包，此方法只有在ice.config方法里配置了langDir参数时生效，否则将报错
------------------------------------------------------------
-event.support(type, elem) 								事件支持检测
-event.on(elem, types, listener, useCapture, once) 		事件绑定
-event.remove(elem, types, listener, useCapture)			事件解绑
-event.emit(elem, types) 								事件触发
------------------------------------------------------------
-http.get(url[, args][, callback][, type])		get请求，返回promise对象
-http.post(url[, data][, callback][, type])		post请求，返回promise对象
-http.request(object)		ajax请求，get\post方法的底层方法，参数对象的有效键名为：
-							method 		请求类型，GET或POST，大小写不敏感，默认为GET
-							url 		请求地址，必传参数
-							data 		提交的额外参数，可写为form对象、FormData对象、或格式为k1=v1&k2=v2、{k1:v1, k2:v2}的数据，当data不为form对象时必须要有src值（当data为form对象时，如果也提供了src参数则优先使用src参数）
-							async 		是否异步请求，默认为true
-							cache 		请求缓存，如果为false，则每次都会发送请求，默认为true
-							contentType 请求参数编码
-							type 		返回的数据类型，TEXT/JSON/SCRIPT/JSONP，默认为TEXT
-							username	服务器认证用户名
-							password	服务器认证密码
-							mimeType	设置mimeType
-							headers 	请求头信息，为一个对象
-							timeout 	请求超时时间
-							beforeSend 	请求发送前回调，函数参数为iceXHR对象、options
-							success 	请求成功后回调，函数参数为data、statusText、iceXHR对象
-							error 		请求失败后回调，函数参数为iceXHR对象、statusText
-							complete	请求完成后回调，函数参数为iceXHR对象、statusText
-							abort 		请求中断后回调，函数参数为statusText
+							alias           元素驱动器别名，为一个对象，key为别名，value为对应的元素驱动器地址（地址可使用“.”或“/”分割路径）
+							page404 		定义404页面显示模块及请求地址，格式为{moduleName: 404url}
+							page500 		定义500页面显示模块及请求地址，格式为{moduleName: 500url}
+// 或者直接将配置项赋值给config
 -----------------------------------------------------------
 -----------------------------------------------------------
 
-元素驱动器：
-1. 元素驱动器传参
-	①、标签属性传参，用户自定义，但只能传字符串
-	②、js变量传参以ice-param属性传入，参数必须在crystals对象上
-2. 元素驱动器间的依赖    ×
-3. 元素驱动器与插件间的依赖     依赖注入，与page与module用法相同
-4. 元素驱动器间的相互调用       元素驱动器暴露接口给外部调用，可通过事件绑定来触发绑定方法
+
+
+////////// 预定义插件 //////////
+
+////////// http插件 //////////
+-----------------------------------------------------------
+http.request(options:Object)	ajax请求，get\post方法的底层方法，参数对象的有效键名为：
+								method 		请求类型，GET或POST，大小写不敏感，默认为GET
+								url 		请求地址，必传参数
+								data 		提交的额外参数，可写为form对象、FormData对象、或格式为k1=v1&k2=v2、{k1:v1, k2:v2}的数据，当data不为form对象时必须要有src值（当data为form对象时，如果也提供了src参数则优先使用src参数）
+								async 		是否异步请求，默认为true
+								cache 		请求缓存，如果为false，则每次都会发送请求，默认为true
+								contentType 请求参数编码
+								type 		返回的数据类型，TEXT/JSON/SCRIPT/JSONP，默认为TEXT
+								username	服务器认证用户名
+								password	服务器认证密码
+								mimeType	设置mimeType
+								headers 	请求头信息，为一个对象
+								timeout 	请求超时时间
+								beforeSend 	请求发送前回调，函数参数为iceXHR对象、options
+								success 	请求成功后回调，函数参数为data、statusText、iceXHR对象
+								error 		请求失败后回调，函数参数为iceXHR对象、statusText
+								complete	请求完成后回调，函数参数为iceXHR对象、statusText
+								abort 		请求中断后回调，函数参数为statusText
+-----------------------------------------------------------
+http.get(url:String[, args:String/Object][, callback:Function][, type:String])		get请求，返回promise对象
+-----------------------------------------------------------
+http.post(url:String[, data:String/Object][, callback:Function][, type:String])		post请求，返回promise对象
+-----------------------------------------------------------
+http.reqBefore([target:String/Object, callback: Function])		ajax请求开始前事件绑定
+-----------------------------------------------------------
+http.reqComplete([target:String/Object, callback: Function])	ajax请求完成事件绑定
+-----------------------------------------------------------
+http.reqSuccess([target:String/Object, callback: Function])		ajax请求成功事件绑定
+-----------------------------------------------------------
+http.reqError([target:String/Object, callback: Function])		ajax请求失败事件绑定
+-----------------------------------------------------------
+http.reqAbort([target:String/Object, callback: Function])		ajax请求中断事件绑定
+-----------------------------------------------------------
+http.reqProgress([target:String/Object, callback: Function])	ajax请求响应进度事件绑定
+-----------------------------------------------------------
+http.uploadProgress([target:String/Object, callback: Function])	ajax上传进度事件绑定
+-----------------------------------------------------------
+备注：以上7个ajax事件返回http对象，且可多次叠加绑定事件回调函数，target参数可选值为：
+								省略传入/0/""/undefined/null/false 	监听使用http插件发起的所有请求
+								"get"/"GET"							只监听使用http插件触发的get请求
+								"post"/"POST"						只监听使用http插件触发的post请求
+								"group name"						只监听使用http插件触发的在group name组下的请求
+								request target 						只监听使用http插件触发请求的目标元素对象
+								"self"								当使用http插件触发请求的目标元素对象为自身时触发
+-----------------------------------------------------------
+-----------------------------------------------------------
+
+
+
+////////// event插件 //////////
+-----------------------------------------------------------
+event.support(type:String, elem:Object) 													事件支持检测
+-----------------------------------------------------------
+event.on(elem:Object, types:String, listener:Function, useCapture:Boolean, once:Boolean) 	事件绑定
+-----------------------------------------------------------
+event.remove(elem:Object, types:String, listener:Function, useCapture:Boolean)				事件解绑
+-----------------------------------------------------------
+event.emit(elem:Object, types:String) 														事件触发
+-----------------------------------------------------------
+-----------------------------------------------------------
+
+
+
+////////// animate插件 //////////
+-----------------------------------------------------------
+animate.linear(animatedVar:Number|Object, to:Number|Object[, during:Number][, callback:Function])				
+animate.sine.easeIn(animatedVar:Number|Object, to:Number|Object[, during:Number][, callback:Function])
+animate.sine.easeOut(animatedVar:Number|Object, to:Number|Object[, during:Number][, callback:Function])
+animate.sine.easeInOut(animatedVar:Number|Object, to:Number|Object[, during:Number][, callback:Function])
+
+animate.quad.easeIn(animatedVar:Number|Object, to:Number|Object[, during:Number][, callback:Function])
+animate.quad.easeOut(animatedVar:Number|Object, to:Number|Object[, during:Number][, callback:Function])
+animate.quad.easeInOut(animatedVar:Number|Object, to:Number|Object[, during:Number][, callback:Function])
+
+animate.cubic.easeIn(animatedVar:Number|Object, to:Number|Object[, during:Number][, callback:Function])
+animate.cubic.easeOut(animatedVar:Number|Object, to:Number|Object[, during:Number][, callback:Function])
+animate.cubic.easeInOut(animatedVar:Number|Object, to:Number|Object[, during:Number][, callback:Function])
+
+animate.quart.easeIn(animatedVar:Number|Object, to:Number|Object[, during:Number][, callback:Function])
+animate.quart.easeOut(animatedVar:Number|Object, to:Number|Object[, during:Number][, callback:Function])
+animate.quart.easeInOut(animatedVar:Number|Object, to:Number|Object[, during:Number][, callback:Function])
+
+animate.quint.easeIn(animatedVar:Number|Object, to:Number|Object[, during:Number][, callback:Function])
+animate.quint.easeOut(animatedVar:Number|Object, to:Number|Object[, during:Number][, callback:Function])
+animate.quint.easeInOut(animatedVar:Number|Object, to:Number|Object[, during:Number][, callback:Function])
+
+animate.expo.easeIn(animatedVar:Number|Object, to:Number|Object[, during:Number][, callback:Function])
+animate.expo.easeOut(animatedVar:Number|Object, to:Number|Object[, during:Number][, callback:Function])
+animate.expo.easeInOut(animatedVar:Number|Object, to:Number|Object[, during:Number][, callback:Function])
+
+animate.circ.easeIn(animatedVar:Number|Object, to:Number|Object[, during:Number][, callback:Function])
+animate.circ.easeOut(animatedVar:Number|Object, to:Number|Object[, during:Number][, callback:Function])
+animate.circ.easeInOut(animatedVar:Number|Object, to:Number|Object[, during:Number][, callback:Function])
+
+animate.back.easeIn(animatedVar:Number|Object, to:Number|Object[, during:Number][, callback:Function])
+animate.back.easeOut(animatedVar:Number|Object, to:Number|Object[, during:Number][, callback:Function])
+animate.back.easeInOut(animatedVar:Number|Object, to:Number|Object[, during:Number][, callback:Function])
+
+animate.elastic.easeIn(animatedVar:Number|Object, to:Number|Object[, during:Number][, callback:Function])
+animate.elastic.easeOut(animatedVar:Number|Object, to:Number|Object[, during:Number][, callback:Function])
+animate.elastic.easeInOut(animatedVar:Number|Object, to:Number|Object[, during:Number][, callback:Function])
+
+animate.bounce.easeIn(animatedVar:Number|Object, to:Number|Object[, during:Number][, callback:Function])
+animate.bounce.easeOut(animatedVar:Number|Object, to:Number|Object[, during:Number][, callback:Function])
+animate.bounce.easeInOut(animatedVar:Number|Object, to:Number|Object[, during:Number][, callback:Function])
+
+animate.step(fn:Function)				动画过程中每一步的回调函数
+animate.stop() 							停止动画
+animate.delay(millisecond:Number) 		动画延迟毫秒数
+-----------------------------------------------------------
+-----------------------------------------------------------

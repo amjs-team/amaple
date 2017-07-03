@@ -2,33 +2,30 @@
   "name": "ice.js",
   "version": "0.1.0",
   "description": "ice.js是一个基于状态的web单页面框架，通过ice，你可以快速构建华丽的web单页应用，并且它可以记住每个页面的操作状态如打开某组件后的状态、已经输入好信息的状态等，当你将此界面分享给你的好友时，你的操作状态也可以一并被你的好友所看到",
-  "main": "gulpfile.js",
   "dependencies": {},
   "devDependencies": {
-    "gulp": "^3.9.1",
-    "gulp-clean": "^0.3.2",
-    "gulp-concat": "^2.6.0",
-    "gulp-connect": "^4.2.0",
-    "gulp-header": "^1.8.7",
-    "gulp-if": "^2.0.1",
-    "gulp-jshint": "^2.0.1",
-    "gulp-livereload": "^3.8.1",
-    "gulp-load-plugins": "^1.2.4",
-    "gulp-rename": "^1.2.2",
-    "gulp-replace": "^0.5.4",
-    "gulp-uglify": "^1.5.4",
-    "gulp-webserver": "^0.9.1",
-    "jshint": "^2.9.2"
+    "jasmine-core": "^2.6.4",
+    "karma": "^1.7.0",
+    "karma-chrome-launcher": "^2.1.1",
+    "karma-firefox-launcher": "^1.0.1",
+    "karma-jasmine": "^1.1.0",
+    "karma-safari-launcher": "^1.0.0",
+    "rollup": "^0.43.0",
+    "rollup-plugin-babel": "^2.7.1",
+    "rollup-watch": "^4.0.0"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "rollup -c build/build.js",
+    "dev": "rollup -w -c build/dev.js",
+    "test:unit": "karma start test/unit/karma.conf.js"
   },
   "keywords": [
     "ice",
     "icejs",
     "state-based",
+    "spa",
     "spi"
   ],
-  "author": "JOU丶San <huzhen555@qq.com>",
+  "author": "JOU.San <huzhen555@qq.com>",
   "license": "MIT"
 }
