@@ -2,27 +2,13 @@ import { foreach, type, isPlainObject, noop } from "../func/util";
 import { vmComputedErr } from "../error";
 
 // 转换存取器属性
-function proxy ( descriptors, target ) {
-	foreach ( descriptors, ( descriptor, key, descriptors ) => {
-		descriptors [ key ] = {
-			enumerable : true,
-			configurable : true,
-			get : () => {
-				// 绑定视图
-
-				return target.valueOf._data [ key ];
-			},
-			set : ( newVal ) => {
-				if ( target.valueOf._data [ key ] !== newVal ) {
-					target.valueOf._data [ key ] = newVal;
-
-					// 更新视图
-
-				}
-			} 
-		}
+function defineProperty ( key, getter, setter, target ) {
+	Object.defineProperty ( target, key, {
+		enumerable : true,
+		configurable : true,
+		get : getter,
+		set : setter
 	} );
-	Object.defineProperties( target, descriptors );
 }
 
 // 初始化绑定事件
@@ -36,8 +22,8 @@ function initMethod ( methods, context ) {
 
 // 初始化监听属性
 function initState ( states, context ) {
-	let descriptors = {};
-
+  	let proxyState = {};
+	
 	foreach ( states, ( state, key ) => {
 		let watch = noop,
 			oldVal;
@@ -47,17 +33,14 @@ function initState ( states, context ) {
 			watch = state.watch;
 			state = state.value;
 		}
-
-		descriptors [ key ] = {
-			enumerable : true,
-			configurable : true,
-			get : () => {
+      	
+      	defineProperty ( key, () => {
 				// 绑定视图
 				// ...
 
 				return state;
 			},
-			set : ( newVal ) => {
+			( newVal ) => {
 				if ( state !== newVal ) {
 					oldVal = state
 					state = newVal;
@@ -67,51 +50,50 @@ function initState ( states, context ) {
 					// 更新视图
 					// ...
 				}
-			} 
-		};
-	} );
-
-	Object.defineProperties( context, descriptors );
+   			}, context );
+  		defineProperty ( key, () => {
+      			return context [ key ];
+    		},
+            ( newVal ) => {
+          		if ( state !== newVal ) {
+                  	context [ key ] = newVal;
+                }
+			}, proxyState );
+    } );
+  	
+  	return proxyState;
 }
 
 // 初始化计算属性
-function initComputed ( computeds, context ) {
+function initComputed ( computeds, states, context ) {
 	let descriptors = {};
 
 	foreach ( computeds, function ( computed, key ) {
-		let t = type ( computed ),
-			state;
 
 		if ( !computed || !t === "function" || !computed.hasOwnProperty ( "get" ) ) {
 			throw vmComputedErr ( key, "计算属性必须包含get函数，可直接定义一个函数或对象内包含get函数" );
 		}
 
-		descriptors [ key ] = {
-			enumerable : true,
-			configurable : true,
-			get : ( function () {
-				state = t === "function" ? computed.call ( context ) : computed.get.call ( context );
-
+		let state = descriptors [ key ] = type ( computed ) === "function" ? computed.call ( context ) : computed.get.call ( states );
+      
+      	defineProperty ( key, () => {
 				return function () {
 					// 绑定视图
 					// ...
 
 					return state;
 				};
-			} ) (),
-			set : type ( computed.set ) === "function" ? 
+			},
+			type ( computed.set ) === "function" ? 
 			( newVal ) => {
 				if ( state !== newVal ) {
-					state = computed.set.call ( context, newVal );
+					state = computed.set.call ( states, newVal );
 
 					// 更新视图
 					// ...
 				}
-			} : noop
-		};
+			} : noop ), context );
 	} );
-
-	Object.defineProperties( context, descriptors );
 }
 
 /**
@@ -164,7 +146,7 @@ export default function ViewModel ( vmData, isRoot = true ) {
 
 	// 初始化监听属性
 	initMethod ( method, this );
-	initState ( state, this );
-	initComputed ( computed, this );
+	state = initState ( state, this );
+	initComputed ( computed, state, this );
 	initArray ( array, this );
 }
