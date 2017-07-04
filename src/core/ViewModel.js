@@ -51,20 +51,20 @@ function initState ( states, context ) {
 					// ...
 				}
    			}, context );
+
+      	// 代理监控数据
   		defineProperty ( key, () => {
       			return context [ key ];
     		},
             ( newVal ) => {
-          		if ( state !== newVal ) {
-                  	context [ key ] = newVal;
-                }
+            	context [ key ] = newVal;
 			}, proxyState );
     } );
   	
   	return proxyState;
 }
 
-// 初始化计算属性
+// 初始化监听计算属性
 function initComputed ( computeds, states, context ) {
 	let descriptors = {};
 
@@ -92,7 +92,15 @@ function initComputed ( computeds, states, context ) {
 					// 更新视图
 					// ...
 				}
-			} : noop ), context );
+			} : noop, context );
+	} );
+}
+
+// 初始化监听数组
+function initArray ( array, context ) {
+	array = array.map ( item => {
+		// 监听数组转换
+		
 	} );
 }
 
@@ -113,8 +121,7 @@ export default function ViewModel ( vmData, isRoot = true ) {
 	this.$method 	= {};
 	let state 		= {},
 		method 		= {},
-		computed 	= {},
-		array 		= {};
+		computed 	= {};
 
 	// 将vmData内的属性进行分类
 	foreach ( vmData, ( value, key ) => {
@@ -132,15 +139,15 @@ export default function ViewModel ( vmData, isRoot = true ) {
 			} );
 		}
 
-		// 转换数组
-		else if ( type ( value ) === "array" ) {
-			array [ key ] = value;
-		}
-
-		// 转换普通数据，当值为包含value和watch时将watch转换为监听属性	
+		// 转换监听属性，当值为包含value和watch时将watch转换为监听属性	
 		// 如果是对象则将此对象也转换为ViewModel的实例
+		// 如果是数组则遍历数组将其内部属性转换为对应监听数组
 		else {
-			state [ key ] = type ( value ) === "object" && isPlainObject ( value ) ? new ViewModel ( value, false ) : value;
+			state [ key ] = 
+				type ( value ) === "object" && isPlainObject ( value ) ? 
+				new ViewModel ( value, false ) : 
+					type ( value ) === "array" ? 
+					initArray ( value, this ) : value;
 		}
 	} );
 
@@ -148,5 +155,4 @@ export default function ViewModel ( vmData, isRoot = true ) {
 	initMethod ( method, this );
 	state = initState ( state, this );
 	initComputed ( computed, state, this );
-	initArray ( array, this );
 }
