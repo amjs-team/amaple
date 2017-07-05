@@ -6,6 +6,7 @@ import { query } from "../func/node";
 import { argErr } from "../error";
 import NodeLite from "./NodeLite";
 import ViewModel from "./ViewModel";
+import Tmpl from "./Tmpl";
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -28,7 +29,7 @@ export default {
 		if ( type ( vmData ) !== "object" ) {
 			throw argErr ( "ice.module", "vmData参数类型必须为object" );
 		}
-i
+      	
 		// 查看是否有deps，有的话，value类型分为以下情况：
 		// 1、若value为string，则使用cache.componentCreater方法获取插件，如果没有则使用模块加载器加载
 		// 2、若value为object，则调用use构建插件
@@ -59,15 +60,20 @@ i
 			deps = _deps;
 
 			// 依赖注入插件对象后
-			// 对数据模型进行转化
-			// 解析模板
 			depend ( loader.topName, deps, initArgs, ( ...depArray ) => {
+				
+				let moduleElem = query ( "*[" + single.aModule + "=" + moduleName + "]" ),
+                    vm, tmpl;
 				if ( !deps.hasOwnProperty ( initArgs [ 0 ] ) ) {
-					depArray.unshift ( new NodeLite ( query ( "*[" + single.aModule + "=" + moduleName + "]" ) ) );
+					depArray.unshift ( new NodeLite ( moduleElem ) );
 				}
-
-				let vm = new ViewModel ( vmData.init.apply ( depArray ) );
-
+				
+              	// 对数据模型进行转化
+				vm = new ViewModel ( vmData.init.apply ( depArray ) );
+				
+              	// 使用vm解析模板
+              	tmpl = new Tmpl ( moduleElem );
+				tmpl.mount ( vm );
 			} );
 		}
 

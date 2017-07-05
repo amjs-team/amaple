@@ -11,10 +11,16 @@ function defineProperty ( key, getter, setter, target ) {
 	} );
 }
 
+function convertState ( value, context ) {
+  	return type ( value ) === "object" && isPlainObject ( value ) ? 
+				new ViewModel ( value, false ) : 
+					type ( value ) === "array" ? 
+					initArray ( value, context ) : value;
+}
 // 初始化绑定事件
 function initMethod ( methods, context ) {
 	foreach ( methods, ( method, key ) => {
-		context.$method [ key ] = ( ...args ) => {
+		context [ key ] = ( ...args ) => {
 			method.apply ( context, args );
 		};
 	} );
@@ -98,10 +104,37 @@ function initComputed ( computeds, states, context ) {
 
 // 初始化监听数组
 function initArray ( array, context ) {
+  	
+  	// 监听数组转换
 	array = array.map ( item => {
-		// 监听数组转换
-		
+      	return convertState ( item, context );
 	} );
+  	
+  	foreach ( [ "push", "pop", "shift", "unshift", "splice", "sort", "reverse" ], method => {
+      	let nativeMethod = Array.prototype [ method ];
+      	
+      	Object.defineProperty ( array, method, {
+          	value : function ( ...args ) {
+          		
+          		let res = nativeMethod.apply ( this, args );
+          		if ( /push|unshift|splice/.test ( method ) ) {
+                  	
+                  	// 转换数组新加入的项
+                  	convertState ( method === "splice" ? args.slice ( 2 ) : args, this );
+        		}
+              	
+              	// 更新视图
+				// ...
+              	
+              	return res;
+        	},
+            writable : true,
+            configurable : true,
+            enumeratable : false
+        } );
+      	
+      	
+    };
 }
 
 /**
@@ -143,11 +176,7 @@ export default function ViewModel ( vmData, isRoot = true ) {
 		// 如果是对象则将此对象也转换为ViewModel的实例
 		// 如果是数组则遍历数组将其内部属性转换为对应监听数组
 		else {
-			state [ key ] = 
-				type ( value ) === "object" && isPlainObject ( value ) ? 
-				new ViewModel ( value, false ) : 
-					type ( value ) === "array" ? 
-					initArray ( value, this ) : value;
+			state [ key ] = convertState ( value, this );
 		}
 	} );
 

@@ -36,5 +36,9 @@ extend ( NodeLite.prototype, {
 	query ( selector, all ) {
 		query ( selector, this.originNode, all );
 		return this;
-	}
+	},
+	
+	attr ( name, val ) {
+		
+    },
 } );
