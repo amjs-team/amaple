@@ -3,7 +3,7 @@ import cache from "../cache/cache";
 import single from "../single/single";
 import { type, isEmpty } from "../func/util";
 import { query } from "../func/node";
-import { argErr } from "../error";
+import check from "../check";
 import NodeLite from "./NodeLite";
 import ViewModel from "./ViewModel";
 import Tmpl from "./Tmpl";
@@ -23,12 +23,8 @@ export default {
 
 	module ( moduleName, vmData ) {
 		// 检查参数
-		if ( !moduleName || type ( moduleName ) !== "string" ) {
-			throw argErr ( "ice.module", "moduleName参数类型必须为string" );
-		}
-		if ( type ( vmData ) !== "object" ) {
-			throw argErr ( "ice.module", "vmData参数类型必须为object" );
-		}
+		check ( moduleName ).toType ( "string" ).toNotBe ( "" ).ifNot ( "ice.module", "moduleName参数类型必须为string" ).do ();
+		check ( vmData ).toType ( "Object" ).ifNot ( "ice.module", "vmData参数类型必须为object" ).do ();
       	
 		// 查看是否有deps，有的话，value类型分为以下情况：
 		// 1、若value为string，则使用cache.componentCreater方法获取插件，如果没有则使用模块加载器加载

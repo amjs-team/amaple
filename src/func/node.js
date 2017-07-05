@@ -1,5 +1,6 @@
 import { type, foreach, isEmpty } from "./util";
 import event from "../event/event";
+import check from "../check";
 
 /**
 	query ( selector: String, context?: Object, all?: Boolean )
@@ -81,8 +82,12 @@ export function appendScript ( node, success, error ) {
 	http://icejs.org/######
 */
 export function scriptEval ( code ) {
-	var tcode 		= type ( code );
+	// check ( code ).toType ( "string", "array", "object" )
+	// if ( typeof code === "string" || typeof code === "array" || typeof code === "object" && code.nodeType === 1 && code.nodeName.toLowerCase () === "script" ) {
+		
+	// }
 
+	var tcode 		= type ( code );
 	if ( tcode === "string" ) {
 
 		var script 	= document.createElement ( "script" );
