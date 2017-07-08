@@ -1,4 +1,4 @@
-import { append, clear, html, query } from "../func/node";
+import { append, clear, html, query, attr } from "../func/node";
 
 /**
 	NodeLite ( node: DOMObject|DOMString )
@@ -39,6 +39,8 @@ extend ( NodeLite.prototype, {
 	},
 	
 	attr ( name, val ) {
-		
+		attr ( this.originNode, name, val );
+    
+    	return this;
     },
 } );

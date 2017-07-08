@@ -1,4 +1,4 @@
-import { argErr } from "./error";
+import { argErr, checkErr } from "./error";
 import { type, extend } from "./func/util";
 
 /**
@@ -39,9 +39,31 @@ extend ( check.prototype, {
         http://icejs.org/######
     */
     or () {
-        this.bools.push ( "||" );
+      	if ( /^\|\|$/.test ( this.condition [ this.condition.length - 1 ] ) ) {
+            throw checkErr ( "condition", "不能连续调用“or()”" );
+        }
+        this.condition.push ( "||" );
 
         return this;
+    },
+	
+	/**
+        prior ( priorCb:Function )
+    
+        Return Type:
+        Object(check)
+    
+        Description:
+        优先判断的条件，相当于“()”
+    
+        URL doc:
+        http://icejs.org/######
+    */
+	prior ( priorCb ) {
+    	let i = this.condition.push ( "prior" ) - 1;
+    	priorCb ( this );
+		
+    	check.compare.call ( this, [ check.calculate ( this.condition.splice ( i, this.condition.length - i ).slice ( 1 ) ) ], _var => _var );
     },
 
     /**
@@ -96,35 +118,15 @@ extend ( check.prototype, {
     */
     // [true, "&&", false, "||", true]
     do () {
-        let res = false;
-        if ( this.condition.length === 0 ) {
-            this.text = "没有设置检查条件";
-        }
-        else if ( /^\|\|$/.test ( this.condition [ this.condition.length - 1 ] ) ) {
-            this.text = "\"or()\"应该需要紧跟条件，而不能作为最后的条件调用方法";
-        }
-        else if ( this.condition.length % 2 === 1 ) {
-            res = this.condition [ 0 ];
-            for ( let i = 0; this.condition [ i ]; i += 2 ) {
-                switch ( this.condition [ i+1 ] ) {
-                    case "&&":
-                        res = res && this.condition [ i+2 ];
-                        break;
-                    case "||":
-                        res = res || this.condition [ i+2 ];
-                        break;
-                }
-            }
-        }
-
-        // 如果为res的值为false则抛出错误
-        if ( !res ) {
+        
+        // 如果值为false则抛出错误
+        if ( !check.calculate ( this.condition ) ) {
             throw argErr ( this.code, this.text );
         }
     },
 
     /**
-        toBe ( variable: any )
+        be ( variable: any )
     
         Return Type:
         Object(check)
@@ -135,17 +137,16 @@ extend ( check.prototype, {
         URL doc:
         http://icejs.org/######
     */
-    toBe ( variable ) {
-        Array.prototype.push.apply ( this.bools, 
-            ( type ( this.bools [ length - 1 ] ) === "boolean" ? [ "&&" ] : [] )
-            .concat ( [ variable === this.target ] ) 
-        );
-
+    be ( ...vars ) {
+        check.compare.call ( this, vars, _var => {
+			return this.target === _var;
+        } );
+		
         return this;
     },
 
     /**
-        toNotBe ( variable: any )
+        notBe ( variable: any )
     
         Return Type:
         Object(check)
@@ -156,17 +157,16 @@ extend ( check.prototype, {
         URL doc:
         http://icejs.org/######
     */
-    toNotBe ( variable ) {
-        Array.prototype.push.apply ( this.bools, 
-            ( type ( this.bools [ length - 1 ] ) === "boolean" ? [ "&&" ] : [] )
-            .concat ( [ variable !== this.target ] ) 
-        );
+    notBe ( ...vars ) {
+        check.compare.call ( this, vars, _var => {
+			return this.target !== _var;
+        } );
 
         return this;
     },
 
     /**
-        toType ( string: String )
+        type ( string: String )
     
         Return Type:
         Object(check)
@@ -177,17 +177,16 @@ extend ( check.prototype, {
         URL doc:
         http://icejs.org/######
     */
-    toType ( string ) {
-        Array.prototype.push.apply ( this.bools, 
-            ( type ( this.bools [ length - 1 ] ) === "boolean" ? [ "&&" ] : [] )
-            .concat ( [ string === type ( this.target ) ] ) 
-        );
+    type ( ...strs ) {
+        check.compare.call ( this, strs, str => {
+			return type ( this.target ) === str;
+        } );
 
         return this;
     },
 
     /**
-        toNotType ( string: String )
+        notType ( string: String )
     
         Return Type:
         Object(check)
@@ -198,12 +197,49 @@ extend ( check.prototype, {
         URL doc:
         http://icejs.org/######
     */
-    toNotType ( string ) {
-        Array.prototype.push.apply ( this.bools, 
-            ( type ( this.bools [ length - 1 ] ) === "boolean" ? [ "&&" ] : [] )
-            .concat ( [ string !== type ( this.target ) ] ) 
-        );
+    notType ( ...strs ) {
+        check.compare.call ( this, vars, _var => {
+			return type ( this.target ) !== _var;
+        } );
 
         return this;
     },
+} );
+
+extend ( check, {
+	compare ( vars, compareFn ) {
+		Array.prototype.push.apply ( this.condition, 
+            ( type ( this.condition [ this.condition.length - 1 ] ) === "boolean" ? [ "&&" ] : [] )
+            .concat ( ( () => {
+          		let _var, res;
+        		while ( _var = vars.shift () ) {
+                	res = res || compareFn ( _var );
+                }
+        	} ) () ) 
+        );
+    },
+
+	calculate ( condition ) {
+        if ( condition.length === 0 ) {
+        	throw checkErr ( "condition", "没有设置检查条件" );
+        }
+        else if ( /^\|\|$/.test ( condition [ condition.length - 1 ] ) ) {
+        	throw checkErr ( "condition", "\"or()\"应该需要紧跟条件，而不能作为最后的条件调用方法" );
+        }
+        else if ( this.condition.length % 2 === 1 ) {
+            let res = this.condition [ 0 ];
+            for ( let i = 0; this.condition [ i ]; i += 2 ) {
+                switch ( this.condition [ i+1 ] ) {
+                    case "&&":
+                        res = res && this.condition [ i+2 ];
+                        break;
+                    case "||":
+                        res = res || this.condition [ i+2 ];
+                        break;
+                }
+            }
+          	
+          	return res;
+        }
+    }
 } );

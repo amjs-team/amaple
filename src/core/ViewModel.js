@@ -1,5 +1,6 @@
 import { foreach, type, isPlainObject, noop } from "../func/util";
 import { vmComputedErr } from "../error";
+import Subscriber from "./Subscriber";
 
 // 转换存取器属性
 function defineProperty ( key, getter, setter, target ) {
@@ -31,7 +32,8 @@ function initState ( states, context ) {
   	let proxyState = {};
 	
 	foreach ( states, ( state, key ) => {
-		let watch = noop,
+		let subs = new Subscriber ();
+        	watch = noop,
 			oldVal;
 
 		// 如果属性带有watch方法
@@ -42,7 +44,7 @@ function initState ( states, context ) {
       	
       	defineProperty ( key, () => {
 				// 绑定视图
-				// ...
+				subs.subscribe ();
 
 				return state;
 			},
@@ -54,7 +56,7 @@ function initState ( states, context ) {
 					watch.call ( context, newVal, oldVal );
 
 					// 更新视图
-					// ...
+					subs.notify ();
 				}
    			}, context );
 
@@ -80,12 +82,13 @@ function initComputed ( computeds, states, context ) {
 			throw vmComputedErr ( key, "计算属性必须包含get函数，可直接定义一个函数或对象内包含get函数" );
 		}
 
-		let state = descriptors [ key ] = type ( computed ) === "function" ? computed.call ( context ) : computed.get.call ( states );
+		let subs = new Subscriber (),
+        	state = descriptors [ key ] = type ( computed ) === "function" ? computed.call ( context ) : computed.get.call ( states );
       
       	defineProperty ( key, () => {
 				return function () {
 					// 绑定视图
-					// ...
+					subs.subscribe ();
 
 					return state;
 				};
@@ -96,7 +99,7 @@ function initComputed ( computeds, states, context ) {
 					state = computed.set.call ( states, newVal );
 
 					// 更新视图
-					// ...
+					subs.notify ();
 				}
 			} : noop, context );
 	} );

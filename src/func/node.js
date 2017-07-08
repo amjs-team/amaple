@@ -1,6 +1,7 @@
 import { type, foreach, isEmpty } from "./util";
 import event from "../event/event";
 import check from "../check";
+import correctParam from "../correctParam";
 
 /**
 	query ( selector: String, context?: Object, all?: Boolean )
@@ -245,4 +246,35 @@ export function html ( context, node ) {
 	context = append ( context, node );
 
 	return context;
+}
+
+/**
+	attr ( context: DOMObject, name: String, val: Object|String )
+
+	Return Type:
+	void
+
+	Description:
+	使用node替换context的内容
+	如果node内有script元素则会在插入元素后执行包含的script
+
+	URL doc:
+	http://icejs.org/######
+*/
+export function attr ( context, name, val ) {
+	let args = correctParam ( name, val ).to ( "string", [ "string", "object" ] );
+	name = args [ 0 ];
+	val = arg [ 1 ];
+  
+	switch ( type ( val ) ) {
+    	case "string":
+        	context.setAttribute ( name, val );
+        	break;
+    	case "undefined":
+        	return context.getAttribute ( name );
+    	case "object":
+        	foreach ( val, ( k, v ) => {
+            	context.setAttribute ( k, v );
+            } );
+    }
 }

@@ -30,6 +30,7 @@ function error ( errorType ) {
 
 export let envErr = error ( "env" );	// 环境错误
 export let argErr = error ( "arg" );	// 参数错误
+export let checkErr = error ( "check" );	// 参数检查错误
 export let requestErr = error ( "request" );	// 请求错误
 export let configErr = error ( "config" );		// 配置错误
 export let runtimeErr = error ( "runtime" );	// 运行时错误

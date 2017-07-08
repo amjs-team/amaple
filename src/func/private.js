@@ -22,7 +22,7 @@ import { foreach } from "./util";
 	http://icejs.org/######
 */
 export function urlTransform ( str, mode ) {
-	mode 					= mode ? true : false;
+	mode 					= !!mode;
 
 	var rpoint 				= /\./g,
 		rsep 				= /\//g,
