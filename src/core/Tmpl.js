@@ -21,15 +21,8 @@ extend ( Tmpl, {
         		// 处理:for
 				// 处理:if :else-if :else
 				// 处理{{ expression }}
-				// 处理:on
+				// 处理:on、:onrequest :onresponse :onfinish事件
 				// 处理:model
-				// 处理模板的:onrequest :onresponse :onfinish事件
-            	Tmpl.parseFor ( elem, vm )
-            	.parseIf ( elem, vm )
-            	.parseExpression ( elem, vm )
-            	.bindEvent ( elem, vm )
-            	.bindModel ( elem, vm )
-            	.bindModuleEvent ( elem, vm );
             }
         	else if ( elem.nodeType ===3 ) {
             	Tmpl.parseExpression ( elem, vm );
@@ -39,27 +32,25 @@ extend ( Tmpl, {
         }
     },
 	
-	parseFor ( elem, vm ) {
-    	let w = f;
-    },
+	mountHandlers : {
+        for ( elem, vm ) {
 
-	parseIf ( elem, vm ) {
-    	
-    },
-  
-	parseExpression ( elem, vm ) {
-    	
-    },
+        },
 
-	bindEvent ( elem, vm ) {
-    	
-    },
-  
-	bindModel ( elem, vm ) {
-    	
-    },
+        if ( elem, vm ) {
 
-	bindModuleEvent ( elem, vm ) {
-    	
-    },
+        },
+
+        expression ( elem, vm ) {
+
+        },
+
+        on ( elem, vm ) {
+
+        },
+
+        model ( elem, vm ) {
+
+        }
+    }
 } );

@@ -185,6 +185,5 @@ export default function ViewModel ( vmData, isRoot = true ) {
 
 	// 初始化监听属性
 	initMethod ( method, this );
-	state = initState ( state, this );
-	initComputed ( computed, state, this );
+	initComputed ( computed, initState ( state, this ), this );
 }

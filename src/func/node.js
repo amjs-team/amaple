@@ -83,12 +83,11 @@ export function appendScript ( node, success, error ) {
 	http://icejs.org/######
 */
 export function scriptEval ( code ) {
-	// check ( code ).toType ( "string", "array", "object" )
-	// if ( typeof code === "string" || typeof code === "array" || typeof code === "object" && code.nodeType === 1 && code.nodeName.toLowerCase () === "script" ) {
-		
-	// }
+	check ( code ).type ( "string", "array" ).or().prior ( function () {
+		this.type ( "object" ).check ( code.nodeType ).be ( 1 ).check ( code.nodeName.toLowerCase () ).be ( "script" );
+	} ).ifNot ( "function scriptEval:code", "参数必须为javascript代码片段、script标签或script标签数组" ).do ();
 
-	var tcode 		= type ( code );
+	var tcode = type ( code );
 	if ( tcode === "string" ) {
 
 		var script 	= document.createElement ( "script" );
@@ -119,9 +118,6 @@ export function scriptEval ( code ) {
 			}
 		});
 	}
-	else {
-		throw argErr ( "arg", "参数必须为javascript代码片段、script标签或script标签数组" );
-	}
 }
 
 /**
@@ -138,6 +134,8 @@ export function scriptEval ( code ) {
 	http://icejs.org/######
 */
 export function append ( context, node ) {
+	check ( context.nodeType ).toBe ( 1 ).ifNot ( "fn append:context", "context必须为DOM节点" ).do ();
+
 	var	rhtml 	= /<|&#?\w+;/,
 	 	telem	= type ( node ),
 		i 		= 0,
@@ -146,57 +144,52 @@ export function append ( context, node ) {
 		nodes 	= [],
 		scripts = [];
 
-	if ( context.nodeType === 1 ) {
-		if ( telem === "string" && !rhtml.test ( node ) ) {
+	if ( telem === "string" && !rhtml.test ( node ) ) {
 
-			// 插入纯文本，没有标签时的处理
-			nodes.push ( document.createTextNode ( node ) );
-		}
-		else if ( telem === "object" ) {
-			node.nodeType && nodes.push ( node );
-		}
-		else {
-			fragment = document.createDocumentFragment (),
-			_elem = fragment.appendChild ( document.createElement ( "div" ) );
-
-			// 将node字符串插入_elem中等待处理
-			_elem.innerHTML = node;
-
-			for ( ; i < _elem.childNodes.length; i ++ ) {
-				nodes.push ( _elem.childNodes [ i ] );
-			}
-
-			// 清空_elem
-			_elem.textContent = "";
-
-			// 清空fragment并依次插入元素
-			fragment.textContent = "";
-		}
-		
-		foreach ( nodes, node => {
-			context.appendChild ( node );
-
-			if ( node.nodeType === 1 ) {
-				_elem = query ( "script", node, true ).concat ( node.nodeName === "SCRIPT" ? [ node ] : [] );
-
-				i = 0;
-				while ( script = _elem [ i++ ] ) {
-					// 将所有script标签放入scripts数组内等待执行
-					scripts.push ( script );
-				}
-			}
-		} );
-
-		// scripts数组不空则顺序执行script
-		isEmpty ( scripts ) || scriptEval ( scripts );
-
-		// 需控制新添加的html内容。。。。。。
-
-		return context;
+		// 插入纯文本，没有标签时的处理
+		nodes.push ( document.createTextNode ( node ) );
+	}
+	else if ( telem === "object" ) {
+		node.nodeType && nodes.push ( node );
 	}
 	else {
-		throw argErr ( "context", "context必须为DOM节点" );
+		fragment = document.createDocumentFragment (),
+		_elem = fragment.appendChild ( document.createElement ( "div" ) );
+
+		// 将node字符串插入_elem中等待处理
+		_elem.innerHTML = node;
+
+		for ( ; i < _elem.childNodes.length; i ++ ) {
+			nodes.push ( _elem.childNodes [ i ] );
+		}
+
+		// 清空_elem
+		_elem.textContent = "";
+
+		// 清空fragment并依次插入元素
+		fragment.textContent = "";
 	}
+	
+	foreach ( nodes, node => {
+		context.appendChild ( node );
+
+		if ( node.nodeType === 1 ) {
+			_elem = query ( "script", node, true ).concat ( node.nodeName === "SCRIPT" ? [ node ] : [] );
+
+			i = 0;
+			while ( script = _elem [ i++ ] ) {
+				// 将所有script标签放入scripts数组内等待执行
+				scripts.push ( script );
+			}
+		}
+	} );
+
+	// scripts数组不空则顺序执行script
+	isEmpty ( scripts ) || scriptEval ( scripts );
+
+	// 需控制新添加的html内容。。。。。。
+
+	return context;
 }
 
 /**
@@ -214,9 +207,7 @@ export function append ( context, node ) {
 */
 export function clear ( context ) {
 	
-	if ( context.nodeType !== 1 ) {
-		throw argErr ( "context", "元素类型必须是dom节点" );
-	}
+	check ( context.nodeType ).be ( 1 ).ifNot ( "function clear:context", "元素类型必须是dom节点" ).do ();
 
 	// 防止内存泄漏，需删除context节点内的其他内容
 	// add...
