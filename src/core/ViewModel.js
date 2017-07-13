@@ -56,7 +56,7 @@ function initState ( states, context ) {
 					watch.call ( context, newVal, oldVal );
 
 					// 更新视图
-					subs.notify ();
+					subs.notify ( newVal );
 				}
    			}, context );
 
@@ -99,7 +99,7 @@ function initComputed ( computeds, states, context ) {
 					state = computed.set.call ( states, newVal );
 
 					// 更新视图
-					subs.notify ();
+					subs.notify ( newVal );
 				}
 			} : noop, context );
 	} );

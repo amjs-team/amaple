@@ -240,14 +240,13 @@ export function html ( context, node ) {
 }
 
 /**
-	attr ( context: DOMObject, name: String, val: Object|String )
+	attr ( context: DOMObject, name: String, val: Object|String|null )
 
 	Return Type:
 	void
 
 	Description:
-	使用node替换context的内容
-	如果node内有script元素则会在插入元素后执行包含的script
+	获取、设置（单个或批量）、移除元素属性
 
 	URL doc:
 	http://icejs.org/######
@@ -267,5 +266,8 @@ export function attr ( context, name, val ) {
         	foreach ( val, ( k, v ) => {
             	context.setAttribute ( k, v );
             } );
+        	break;
+    	case "null":
+        	context.removeAttribute ( name );
     }
 }

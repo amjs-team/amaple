@@ -1,7 +1,35 @@
 import { extend } from "../func/util";
+import { runtimeErr } from "../error";
+import Subscriber from "./Subscriber";
+
 
 /**
-	Watcher ( exp: String )
+	makeFn ( code: String )
+
+	Return Type:
+	Function
+    代码解析后的方法体
+
+	Description:
+	通过解析代码获取的对应vm属性值的方法
+
+	URL doc:
+	http://icejs.org/######
+*/
+function makeFn ( code ) {
+	return new Function ( "obj", 
+	`with ( obj ) {
+		try {
+			return ${ code };
+		}
+		catch ( e ) {
+			throw runtimeErr ( "view model", e );
+		}
+	}` );
+}
+
+/**
+	Watcher ( directiveHandler: Function, expr: String )
 
 	Return Type:
 	void
@@ -14,8 +42,20 @@ import { extend } from "../func/util";
 	URL doc:
 	http://icejs.org/######
 */
-function Watcher ( exp ) {
-	this.exp = exp;
+export default function Watcher ( directive, elem, expr, vm ) {
+	
+	this.directive = directive;
+	this.elem = elem;
+	this.getVal = makeFn ( expr );
+	this.vm = vm;
+	
+	if ( !directive.before.call ( this ) ) {
+    	return;
+    }
+	Subscriber.watcher = this;
+	
+	directive.update.call ( this, getVal ( vm ) );
+	Subscriber.watcher = undefined;
 }
 
 extend ( Watcher.prototype, {
@@ -33,6 +73,6 @@ extend ( Watcher.prototype, {
 		http://icejs.org/######
 	*/
 	update ( value ) {
-    	
+    	this.directive.update.call ( this, this.getVal ( vm ) );
     }
 } );
