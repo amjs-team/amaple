@@ -7,3 +7,6 @@ export const TYPE_PLUGIN = 3;
 
 // 表示driver()
 export const TYPE_DRIVER = 4;
+
+// 表达式正则对象
+export const rexpr = /{{\s*(.*?)\s*}}/g;

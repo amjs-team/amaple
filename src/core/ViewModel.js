@@ -135,8 +135,6 @@ function initArray ( array, context ) {
             configurable : true,
             enumeratable : false
         } );
-      	
-      	
     };
 }
 
@@ -154,7 +152,6 @@ function initArray ( array, context ) {
 	http://icejs.org/######
 */
 export default function ViewModel ( vmData, isRoot = true ) {
-	this.$method 	= {};
 	let state 		= {},
 		method 		= {},
 		computed 	= {};

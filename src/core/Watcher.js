@@ -29,7 +29,7 @@ function makeFn ( code ) {
 }
 
 /**
-	Watcher ( directiveHandler: Function, expr: String )
+	Watcher ( directive: Object, node: DOMObject, expr: String, vm: Object )
 
 	Return Type:
 	void
@@ -42,10 +42,10 @@ function makeFn ( code ) {
 	URL doc:
 	http://icejs.org/######
 */
-export default function Watcher ( directive, elem, expr, vm ) {
+export default function Watcher ( directive, node, expr, vm ) {
 	
 	this.directive = directive;
-	this.elem = elem;
+	this.node = node;
 	this.getVal = makeFn ( expr );
 	this.vm = vm;
 	

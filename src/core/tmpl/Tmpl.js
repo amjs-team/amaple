@@ -1,8 +1,9 @@
+import { rexpr } from "../../var/const";
 import { extend } from "../../func/util";
-// import { attr } from "../func/node";
 import Subscriber from "../Subscriber";
 import Watcher from "../Watcher";
 import directiveIf from "./directive/if";
+import { runtimeErr } from "../error";
 
 export default function Tmpl ( tmplCode ) {
 	this.tmplCode = tmplCode;
@@ -16,9 +17,8 @@ extend ( Tmpl.prototype, {
 
 extend ( Tmpl, 	{
 	mountElem ( elem, vm ) {
-    	let rattr = /^:([\$\w]+)$/,
-            rexpr = /{{\s*(.*?)\s*}}/g,
-            directive, expr;
+    	const rattr = /^:([\$\w]+)$/;
+        let directive, expr;
 		
     	do {
         	if ( elem.nodeType === 1 ) {
@@ -33,35 +33,32 @@ extend ( Tmpl, 	{
                 	if ( directive ) {
                     	directive = directive [ 1 ];
                     	if ( /^on/.test ( directive ) ) {
-                        	// bind evevt
+
+                        	// 事件绑定
                         	Tmpl.directives.on ( elem, directive.substr ( 3 ), vm );
                         }
                     	else if ( Tmpl.directives [ directive ] ) {
-                        	// bind attribute key
+
+                        	// 模板属性绑定
                         	new Watcher ( Tmpl.directives [ directive ], elem, attr.nodeValue, vm );
                         }
                     	else {
-                        	// no specified directive
-                        	
+
+                        	// 没有找到该指令
+                        	throw runtimeErr ( "directive", "没有找到\"" + directive + "\"指令或表达式" );
                         }
                     }
                 	else {
-                    	// bind attribute value expression
-                    	elem.nodeValue.replace ( rexpr, ( pat ) => {
-                        	new Watcher ( () => {
-                            	Tmpl.directives.expr ( elem, variable, vm );
-                            }, pat );
-                        } );
+
+                    	// 属性值表达式绑定
+                        new Watcher ( Tmpl.directives.expr, attr, attr.nodeValue, vm );
                     }
             	} );
             }
-        	else if ( elem.nodeType ===3 ) {
-            	// bind text node expression
-            	elem.nodeValue.replace ( rexpr, ( pat ) => {
-                	new Watcher ( () => {
-                    	Tmpl.directives.expr ( elem, variable, vm );
-                    }, pat );
-            	} );
+        	else if ( elem.nodeType === 3 ) {
+
+            	// 文本节点表达式绑定
+            	new Watcher ( Tmpl.directives.expr, elem, elem.nodeValue, vm );
             }
         
         	Tmpl.mountElem ( elem.firstChild, vm );
