@@ -46,16 +46,19 @@ export default function Watcher ( directive, node, expr, vm ) {
 	
 	this.directive = directive;
 	this.node = node;
-	this.getVal = makeFn ( expr );
 	this.vm = vm;
+  
+	let getVal = makeFn ( expr ),
+		val;
 	
 	if ( !directive.before.call ( this ) ) {
     	return;
     }
 	Subscriber.watcher = this;
-	
-	directive.update.call ( this, getVal ( vm ) );
+	val = getVal ( vm );
 	Subscriber.watcher = undefined;
+
+	directive.update.call ( this, val );
 }
 
 extend ( Watcher.prototype, {

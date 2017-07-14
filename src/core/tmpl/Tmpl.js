@@ -18,7 +18,7 @@ extend ( Tmpl.prototype, {
 extend ( Tmpl, 	{
 	mountElem ( elem, vm ) {
     	const rattr = /^:([\$\w]+)$/;
-        let directive, expr;
+        let directive, directiveHandler, targetNode, expr;
 		
     	do {
         	if ( elem.nodeType === 1 ) {
@@ -35,12 +35,15 @@ extend ( Tmpl, 	{
                     	if ( /^on/.test ( directive ) ) {
 
                         	// 事件绑定
-                        	Tmpl.directives.on ( elem, directive.substr ( 3 ), vm );
+                        	directiveHandler = Tmpl.directives.on;
+                        	targetNode = elem;
                         }
                     	else if ( Tmpl.directives [ directive ] ) {
 
                         	// 模板属性绑定
-                        	new Watcher ( Tmpl.directives [ directive ], elem, attr.nodeValue, vm );
+                        	directiveHandler = Tmpl.directives [ directive ];
+                        	targetNode = elem;
+                        	expr = attr.nodeValue;
                         }
                     	else {
 
@@ -51,15 +54,21 @@ extend ( Tmpl, 	{
                 	else {
 
                     	// 属性值表达式绑定
-                        new Watcher ( Tmpl.directives.expr, attr, attr.nodeValue, vm );
+                    	directiveHandler = Tmpl.directives.expr;
+                    	targetNode = attr;
+                    	expr = attr.nodeValue;
                     }
             	} );
             }
         	else if ( elem.nodeType === 3 ) {
 
             	// 文本节点表达式绑定
-            	new Watcher ( Tmpl.directives.expr, elem, elem.nodeValue, vm );
+            	directiveHandler = Tmpl.directives.expr;
+            	targetNode = elem;
+            	expr = elem.nodeValue;
             }
+          
+        	new Watcher ( directiveHandler, targetNode, expr, vm );
         
         	Tmpl.mountElem ( elem.firstChild, vm );
         } while ( elem = elem.nextSibling )

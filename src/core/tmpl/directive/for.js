@@ -21,17 +21,23 @@ export default {
         http://icejs.org/######
     */
 	before () {
-    	attr ( this.elem, ":for", null );
     	
-    	let doc = this.elem.ownerDocument,
-        	variable = rforWord.exec ( this.expr );
+    	let variable = rforWord.exec ( this.expr ),
+            elem = this.node;
   
-		this.startNode = doc.createTextNode ( "" );
+		this.startNode = elem.ownerDocument.createTextNode ( "" );
 		this.endNode = this.startNode.cloneNode ();
 		
 
         this.item = variable [ 1 ];
         this.expr = variable [ 2 ];
+       	this.key = attr ( elem, ":key" );
+    
+    	if ( this.key ) {
+            attr ( elem, ":key", null );
+        }
+    
+    	attr ( elem, ":for", null );
     },
 
     /**
@@ -49,34 +55,55 @@ export default {
     */
 	update ( array ) {
 		let elem = this.node,
-            doc = elem.ownerDocument;
-            f = doc.createDocumentFragment(),
-            scopedVm = {},
-            keyName = attr ( elem, ":key" ),
+            vm = this.vm,
+            parent = elem.parentNode,
+            fragment = elem.ownerDocument.createDocumentFragment(),
+            
+            scopedPrefix = "ICE_FOR_" + Date.now() + "_",
+            scoped = {},
             itemNode;
-
-        if ( keyName ) {
-            attr ( elem, ":key", null );
-        }
   		
-		f.appendChild ( this.startNode );
         foreach ( array, ( item, key ) => {
 
             // 如果指定了:key属性，则为此属性值赋值
-            if ( keyName ) {
-                scopedVm [ keyName ] = key;
+            if ( this.key ) {
+                // scopedVm [ this.key ] = key;
+            	vm [ scopedPrefix + "key" ] = key
+            	scoped [ scopedPrefix + "key" ] = this.key;
             }
 
             // 为遍历项赋值
-            scopedVm [ this.item ] = item;
+            // scopedVm [ this.item ] = item;
+        	vm [ scopedPrefix + "item" ] = item;
+        	scoped [ scopedPrefix + "item" = this.item;
 
             itemNode = elem.cloneNode ( true );
-            Tmpl.mountElem ( itemNode, scopedVm );
-            Tmpl.mountElem ( itemNode, this.vm );
+            Tmpl.mountElem ( itemNode, this.vm, scopedVm );
 
-        	f.appendChild ( itemNode );
+        	fragment.appendChild ( itemNode );
         } );
-        
-        f.appendChild ( this.endNode );
+    	
+      	// 初始化视图时将模板元素替换为挂载后元素
+    	if ( parent ) {
+        	fragment.insertBefore ( this.startNode, fragment.firstChild );
+        	fragment.appendChild ( this.endNode );
+          
+        	parent.replaceChild ( fragment, elem );
+        }
+    	
+    	// 改变数据后更新视图
+    	else {
+        	let el = this.startNode,
+                p = el.parentNode,
+                removes = [];
+        	while ( ( el = el.nextSibling ) !== this.endNode ) {
+            	removes.push ( el );
+            }
+        	reomves.map ( item = > {
+            	p.removeChild ( item );
+            } );
+        	
+        	p.insertBefore ( fragment, this.endNode );
+        }
     }
 };
