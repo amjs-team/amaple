@@ -1,4 +1,4 @@
-import { extend } from "../func/util";
+import { extend, type, foreach } from "../func/util";
 import { runtimeErr } from "../error";
 import Subscriber from "./Subscriber";
 
@@ -29,7 +29,7 @@ function makeFn ( code ) {
 }
 
 /**
-	Watcher ( directive: Object, node: DOMObject, expr: String, vm: Object )
+	Watcher ( directive: Object, node: DOMObject, expr: String, vm: Object, scoped: Object )
 
 	Return Type:
 	void
@@ -42,21 +42,33 @@ function makeFn ( code ) {
 	URL doc:
 	http://icejs.org/######
 */
-export default function Watcher ( directive, node, expr, vm ) {
+export default function Watcher ( directive, node, expr, vm, scoped ) {
 	
+  	// 如果scoped为局部数据对象则将expr内的局部变量名替换为局部变量名
+	if ( type ( scoped ) === "object" && scoped.__$reg__ instanceof RegExp ) {
+		expr = expr.replace ( scoped.__$reg__, match => scoped [ match ] || match );
+	}
+
 	this.directive = directive;
 	this.node = node;
 	this.vm = vm;
-  
-	let getVal = makeFn ( expr ),
-		val;
+	this.getVal = makeFn ( expr );
 	
 	if ( !directive.before.call ( this ) ) {
     	return;
     }
+
+    // 将获取表达式的真实值并将此watcher对象绑定到依赖监听属性中
 	Subscriber.watcher = this;
-	val = getVal ( vm );
+	let val = this.getVal ( vm );
 	Subscriber.watcher = undefined;
+
+	// 移除局部变量
+	foreach ( scoped || [], ( k, v ) => {
+		if ( type ( v ) === "string" ) {
+			delete vm [ v ];
+		}
+	} );
 
 	directive.update.call ( this, val );
 }
@@ -77,5 +89,37 @@ extend ( Watcher.prototype, {
 	*/
 	update ( value ) {
     	this.directive.update.call ( this, this.getVal ( vm ) );
+    },
+
+    /**
+    	defineScoped ( scopedDefinition: Object, vm: Object )
+    
+    	Return Type:
+    	Object
+    	局部变量操作对象
+    
+    	Description:
+		定义模板局部变量
+		此方法将生成局部变量操作对象（包含替身变量名）和增加局部变量属性到vm中
+    	此替身变量名不能为当前vm中已有的变量名，所以需取的生僻些
+    	在挂载数据时如果有替身则会将局部变量名替换为替身变量名来达到不重复vm中已有变量名的目的
+    
+    	URL doc:
+    	http://icejs.org/######
+    */
+    defineScoped ( scopedDefinition, vm ) {
+    	let scopedPrefix = "ICE_FOR_" + Date.now() + "_",
+    		scoped 		 = {};
+
+    	foreach ( scopedDefinition, ( variable, val ) => {
+    		if ( variable ) {
+    			scoped [ variable ] = scopedPrefix + variable;
+    			vm [ scopedPrefix + variable ] = val;
+    		}
+    	} );
+
+    	scoped.__$reg__ = new RegExp ( Object.keys ( scoped ).join ( "|" ), "g" );
+
+    	return scoped;
     }
 } );

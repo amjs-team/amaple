@@ -1,5 +1,4 @@
-import { rexpr } from "../../../var/const";
-import { attr } from "../../../func/node";
+import event from "../../../event/event";
 
 export default {
 
@@ -18,10 +17,9 @@ export default {
         http://icejs.org/######
     */
 	before () {
-        this.expr = "\"" + this.expr + "\"";
-
-        // 将表达式转换为字符串拼接代码
-    	this.expr.replace ( rexpr, ( match, rep ) => "\" + " + rep + " + \"" );
+        let expr = this.expr.split ( ":" );
+        this.type = expr [ 0 ];
+        this.expr = expr [ 1 ];
     },
 
     /**
@@ -31,14 +29,12 @@ export default {
         void
     
         Description:
-        “{{ express }}”表达式对应的视图更新方法
-        该表达式可用于标签属性与文本中
-        初始化挂载数据时和对应数据更新时将会被调用
+        事件绑定方法
     
         URL doc:
         http://icejs.org/######
     */
-	update ( val ) {
-        this.node.nodeValue = val;
+	update ( listener ) {
+        event.on ( this.node, this.type, listener );
     }
 };

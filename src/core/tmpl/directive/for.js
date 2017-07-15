@@ -22,16 +22,15 @@ export default {
     */
 	before () {
     	
-    	let variable = rforWord.exec ( this.expr ),
-            elem = this.node;
+    	let variable   = rforWord.exec ( this.expr ),
+            elem       = this.node;
   
 		this.startNode = elem.ownerDocument.createTextNode ( "" );
-		this.endNode = this.startNode.cloneNode ();
+		this.endNode   = this.startNode.cloneNode ();
 		
-
-        this.item = variable [ 1 ];
-        this.expr = variable [ 2 ];
-       	this.key = attr ( elem, ":key" );
+        this.item      = variable [ 1 ];
+        this.expr      = variable [ 2 ];
+       	this.key       = attr ( elem, ":key" );
     
     	if ( this.key ) {
             attr ( elem, ":key", null );
@@ -54,31 +53,25 @@ export default {
         http://icejs.org/######
     */
 	update ( array ) {
-		let elem = this.node,
-            vm = this.vm,
-            parent = elem.parentNode,
-            fragment = elem.ownerDocument.createDocumentFragment(),
-            
-            scopedPrefix = "ICE_FOR_" + Date.now() + "_",
-            scoped = {},
-            itemNode;
+		let elem         = this.node,
+            vm           = this.vm,
+            parent       = elem.parentNode,
+            fragment     = elem.ownerDocument.createDocumentFragment(),
+            itemNode,
+
+            // 局部变量定义
+            scopedDefinition = {};
   		
         foreach ( array, ( item, key ) => {
 
-            // 如果指定了:key属性，则为此属性值赋值
-            if ( this.key ) {
-                // scopedVm [ this.key ] = key;
-            	vm [ scopedPrefix + "key" ] = key
-            	scoped [ scopedPrefix + "key" ] = this.key;
-            }
-
-            // 为遍历项赋值
-            // scopedVm [ this.item ] = item;
-        	vm [ scopedPrefix + "item" ] = item;
-        	scoped [ scopedPrefix + "item" = this.item;
+            // 定义范围变量
+            scopedDefinition [ this.item ] = item;
+            scopedDefinition [ this.key ] = key;
 
             itemNode = elem.cloneNode ( true );
-            Tmpl.mountElem ( itemNode, this.vm, scopedVm );
+
+            // 为遍历克隆的元素挂载数据
+            Tmpl.mountElem ( itemNode, vm, this.defineScoped ( scopedDefinition, vm ) );
 
         	fragment.appendChild ( itemNode );
         } );
