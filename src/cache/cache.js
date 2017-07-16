@@ -1,7 +1,7 @@
 import plugin from "./plugin";
 import driver from "./driver";
 import direction from "./direction";
-import { TYPE_PLUGIN, TYPE_DRIVER } from "../var/const";
+import event from "./event";
 
 /**
 	Plugin cache
@@ -35,4 +35,10 @@ export default {
 
 	// 获取跳转缓存模块
 	getDirection : direction.get,
+
+	// 添加非元素事件缓存
+	pushEvent : event.push,
+
+	// 获取非元素事件缓存
+	getEvent : event.get,
 };

@@ -108,19 +108,3 @@ export function decomposeArray ( array, callback ) {
 		} );
 	}
 }
-
-/**
-	guid ()
-
-	Return Type:
-	Number
-
-	Description:
-	获取唯一标识
-
-	URL doc:
-	http://icejs.org/######
-*/
-export function guid () {
-	return setTimeout( 1 ) + "";
-}

@@ -252,3 +252,19 @@ export function isWindow ( object ) {
 export function isPlainObject ( object ) {
 	return toString.call ( object ) === "[object Object]";
 }
+
+/**
+	guid ()
+
+	Return Type:
+	Number
+
+	Description:
+	获取唯一标识
+
+	URL doc:
+	http://icejs.org/######
+*/
+export function guid () {
+	return setTimeout( 1 ) + "";
+}

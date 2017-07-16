@@ -31,10 +31,21 @@ export default function correctParam ( ...params ) {
                     	_params.push ( undefined );
                     	offset ++;
                     }
-            	} );
+            	}
             } );
           
-        	return _params;
+        	this._params = _params;
+            return this;
+        },
+
+        done ( callback ) {
+
+            if ( params.length === /^function.*\((.*?)\)/.exec ( callback.toString () ) [ 1 ].split ( "," ).length ) {
+                callback.apply ( null, this._params );
+            }
+            else {
+                callback ( this._params );
+            }
         }
     };
 }

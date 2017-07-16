@@ -1,12 +1,13 @@
 import map from "./eventMap";
-import { type, foreach } from "../func/util";
+import cache from "../cache/cache";
+import { type, foreach, guid, isEmpty } from "../func/util";
 import { attr } from "../func/node";
+import { rword } from "../var/const";
 import check from "../check";
 import correctParam from "../correctParam";
 
 let	// 存储元素型自定义事件回调
 	events = {},
-	rword = /\S+/g,
 
 	// 创建事件触发对象时，根据事件类型来创建不同事件对象
 	eventMap = map,
@@ -22,43 +23,49 @@ let	// 存储元素型自定义事件回调
 	eventProxy, _valueOf, ttype, tlistener, i, _this, _listeners;
 
 /**
- * 所有事件绑定的回调函数
- * 将根据事件触发DOM和事件类型调用相应真实的回调
- *
- * @author JOU
- * @time   2017-04-29T11:35:10+0800
- * @param  {Event}                 e 事件触发时的event对象
- */
+	handler ( e: EventObject )
+
+	Return Type:
+	void
+
+	Description:
+	所有事件绑定的回调函数
+	将根据事件触发DOM和事件类型调用相应真实的回调
+
+	URL doc:
+	http://icejs.org/######
+*/
 function handler ( e ) {
-	
-	_this = this;
+	_listeners = eventAccess ( this, e.type );
+	if ( type ( _listeners ) === "array" && _listeners.length > 0 ) {
 
-	_listeners = eventAccess ( _this, e.type );
-	if ( util.type ( _listeners ) === "array" && _listeners.length > 0 ) {
-
-		util.foreach ( _listeners, function ( listener ) {
-			util.type ( listener ) === "function" && listener.call ( _this, e );
+		foreach ( _listeners, listener => {
+			type ( listener ) === "function" && listener.call ( this, e );
 
 			// 如果该回调函数只执行一次则移除
 			if ( listener.once === true ) {
-				eventProxy.remove ( _this, e.type, listener, listener.useCapture );
+				eventProxy.remove ( this, e.type, listener, listener.useCapture );
 			}
 		} );
 	}
 }
 
+
 /**
- * 获取或保存事件缓存
- * 只有在保存事件缓存时，如果elem的valueOf还未经过改造才需对它进行改造
- *
- * @author JOU
- * @time   2017-04-29T12:35:39+0800
- * @param  {Object}                 elem 	 元素对象
- * @param  {String}                 type 	 事件类型
- * @param  {Function}               listener 事件回调函数
- * @param  {Boolean}                listener 是否为删除事件缓存
- * @return {Multi}                           缓存体
- */
+	eventAccess ( elem: DOMObject, type: String, listener: Function, remove?: Boolean )
+
+	Return Type:
+	any
+	缓存数据
+
+	Description:
+	获取或保存事件缓存
+	只有在保存事件缓存时，如果elem的valueOf还未经过改造才需对它进行改造
+	remove参数为true时移除事件缓存
+
+	URL doc:
+	http://icejs.org/######
+*/
 function eventAccess ( elem, type, listener, remove ) {
 
 	//////////////////////////////////
@@ -156,10 +163,16 @@ function eventAccess ( elem, type, listener, remove ) {
 }
 
 /**
- * 事件绑定与手动触发对象，可在节点对象上绑定常规与自定义事件（常规事件一般在交互过程中触发，自定义事件需调用event.emit(elem, type)手动触发），也可无节点绑定事件，由event.emit(type)手动触发
- * 
- * @type {Object}
- */
+	Plugin event
+
+	Description:
+	事件绑定与事件触发对象
+	可在节点对象上绑定常规与自定义事件，也可无节点绑定事件，由event.emit(type)手动触发
+	常规事件一般在交互过程中触发，自定义事件需调用event.emit(elem, type)手动触发
+
+	URL doc:
+	http://icejs.org/######
+*/
 export default {
 
 	/**
@@ -209,121 +222,123 @@ export default {
 		URL doc:
 		http://icejs.org/######
 	*/
-	on : function ( elem, types, listener, useCapture, once ) {
+	on ( elem, types, listener, useCapture, once ) {
 
-		// let args = correctParam ( name, val ).to ( "string", [ "string", "object" ] );
-		// correctParam ( elem, types, listener, useCapture, once ).to (  )
+		// 纠正参数
+		correctParam ( elem, types, listener, useCapture ).to ( "object", "string" ).done ( args => {
+			elem = args [ 0 ];
+			types = args [ 1 ];
+			listener = args [ 2 ];
+			useCapture = args [ 3 ];
+		} );
 
-		// if ( !util.isWindow ( elem ) && ( util.type ( elem ) !== "object" || !elem.nodeType ) ) {
-
-		// 	// 纠正参数
-		// 	once 		= useCapture;
-		// 	useCapture 	= listener;
-		// 	listener 	= types;
-		// 	types 		= elem;
-		// 	elem 		= undefined;
-		// }
-
-		check ( elem.nodeType ).notBe ( 3 ).notBe ( 8 ).ifNot ( "function event.on:elem", "elem参数不能为文本节点或注释节点" ).do ();
 		check ( types ).type ( "string" ).ifNot ( "function event.on:types", "types参数类型必须为string" ).do ();
 		check ( listener ).type ( "function" ).ifNot ( "function event.on:listener", "listener参数类型必须为function" ).do ();
+		if ( elem ) {
+			check ( elem.nodeType ).notBe ( 3 ).notBe ( 8 ).ifNot ( "function event.on:elem", "elem参数不能为文本节点或注释节点" ).do ();
+		}
 
 		// 给监听回调添加guid，方便移除事件
 		if ( !listener.guid ) {
-			listener.guid = guid$ ();
+			listener.guid = guid ();
 		}
 
 		// 如果once为true，则该回调只执行一次
 		if ( once === true ) {
 			listener.once 		= true;
-			listener.useCapture = useCapture;
+			listener.useCapture = !!useCapture;
 		}
 
-		// 多个事件拆分绑定
-		replace.call ( types || "", rword, function ( type ) {
+		let events;
 
-			eventAccess ( elem, type, listener );
+		// 多个事件拆分绑定
+		( types || "" ).replace ( rword, type => {
+
+			if ( elem ) {
+				events = elem.valueOf [ type ] = elem.valueOf [ type ] || [];
+				events.push ( listener );
+			}
+			else {
+				cache.pushEvent ( type, listener );
+			}
 
 			// 元素对象存在，且元素支持浏览器事件时绑定事件，以方便浏览器交互时触发事件
 			// 元素不支持时属于自定义事件，需手动调用event.emit()触发事件
 			// IE.version >= 9
-			if ( elem && eventProxy.support ( type, elem ) && elem.addEventListener ) {
+			if ( elem && this.support ( type, elem ) && elem.addEventListener ) {
 				elem.addEventListener ( type, handler, !!useCapture );
 			}
 		} );
 	},
 
+
 	/**
-	 * 以兼容模式解绑事件，可一次解绑多个类型的事件
-	 *
-	 * @author JOU
-	 * @time   2017-04-26T23:37:14+0800
-	 * @param  {Object}                 elem       事件解绑元素
-	 * @param  {String}                 types      绑定事件名称，多个名称可使用空格隔开
-	 * @param  {Function}               listener   事件监听回调
-	 * @param  {Boolean}                useCapture false（默认）- 事件句柄在冒泡阶段执行，true - 事件句柄在捕获阶段执行
-	 */
-	remove : function ( elem, types, listener, useCapture ) {
+		remove ( elem: DOMObject, types: String, listener: Function, useCapture: Boolean )
+	
+		Return Type:
+		void
+	
+		Description:
+		以兼容模式解绑事件，可一次解绑多个类型的事件
+	
+		URL doc:
+		http://icejs.org/######
+	*/
+	remove ( elem, types, listener, useCapture ) {
 
-		if ( !util.isWindow ( elem ) && ( util.type ( elem ) !== "object" || !elem.nodeType ) ) {
+		// 纠正参数
+		correctParam ( elem, types, listener, useCapture ).to ( "object", "string" ).done ( args => {
+			elem = args [ 0 ];
+			types = args [ 1 ];
+			listener = args [ 2 ];
+			useCapture = args [ 3 ];
+		} );
 
-			// 纠正参数
-			useCapture 	= listener;
-			listener 	= types;
-			types 		= elem;
-			elem 		= undefined;
+		if ( elem ) {
+			check ( elem.nodeType ).notBe ( 3 ).notBe ( 8 ).ifNot ( "function event.on:elem", "elem参数不能为文本节点或注释节点" ).do ();			
 		}
-		if ( elem.nodeType && ( elem.nodeType === 3 || elem.nodeType === 8 ) ) {
-			throw argErr ( "function event.on:elem", "elem参数不能为文本节点或注释节点" );
-		}
-		if ( util.type ( types ) !== "string" ) {
-			throw argErr ( "function event.remove:types", "types参数类型必须为string" );
-		}
-		if ( util.type ( listener ) !== "function" ) {
-			throw argErr ( "function event.remove:listener", "listener参数类型必须为function" );
-		}
+		check ( types ).type ( "string" ).ifNot ( "function event.on:types", "types参数类型必须为string" ).do ();
+		check ( listener ).type ( "function" ).ifNot ( "function event.on:listener", "listener参数类型必须为function" ).do ();
 
-		if ( util.isEmpty ( eventAccess ( elem ) ) ) {
-			return;
+		if ( elem && elem.valueOf ) {
+			return false;
 		}
 
-		replace.call ( types || "", rword, function ( type ) {
+		( types || "" ).replace ( rword, type => {
 
-			if ( util.isEmpty ( eventAccess ( elem, type, listener, true ) ) && elem && eventProxy.support ( type, elem ) && elem.removeEventListener ) {
+			if ( isEmpty ( eventAccess ( elem, type, listener, true ) ) && elem && this.support ( type, elem ) && elem.removeEventListener ) {
 				elem.removeEventListener ( type, handler, !!useCapture );	
 			}
 		} );
 	},
 
 	/**
-	 * 触发事件
-	 *
-	 * @author JOU
-	 * @time   2017-04-26T23:45:55+0800
-	 * @param  {Object}                 elem  事件触发元素
-	 * @param  {String}                 types 触发事件名称，多个名称可使用空格隔开
-	 */
-	emit : function ( elem, types ) {
+		emit ( elem: DOMObject, types: String )
+	
+		Return Type:
+		void
+	
+		Description:
+		触发事件
+	
+		URL doc:
+		http://icejs.org/######
+	*/
+	emit ( elem, types ) {
 
-		if ( util.type ( elem ) === "string" ) {
+		// 纠正参数
+		let args = correctParam ( elem, types ).to ( "object", "string" );
+		elem = args [ 0 ];
+		types = args [ 1 ];
 
-			// 纠正参数
-			types 		= elem;
-			elem 		= undefined;
-		}
+		check ( elem.nodeType ).notBe ( 3 ).notBe ( 8 ).ifNot ( "function event.emit:elem", "elem参数不能为文本节点或注释节点" ).do ();
+		check ( types ).type ( "string" ).ifNot ( "function event.emit:types", "types参数类型必须为string" ).do ()
 
-		if ( elem && ( elem.nodeType === 3 || elem.nodeType === 8 ) ) {
-			throw argErr ( "function event.emit:elem", "elem参数不能为文本节点或注释节点" );
-		}
-		if ( util.type ( types ) !== "string" ) {
-			throw argErr ( "function event.emit:types", "types参数类型必须为string" );
-		}
-
-		replace.call ( types || "", rword, function ( type ) {
-			if ( event.support ( type, elem ) ) {
+		( types || "" ).replace ( rword, type => {
+			if ( this.support ( type, elem ) ) {
 
 				// 使用creaeEvent创建事件
-				var e = document.createEvent ( eventMap [ type ] || "CustomEvent" );
+				let e = document.createEvent ( eventMap [ type ] || "CustomEvent" );
 				e.initEvent ( type, true, false );
 
 				document.dispatchEvent ( e );
