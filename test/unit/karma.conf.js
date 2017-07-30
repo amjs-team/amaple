@@ -1,3 +1,5 @@
+let path = require ( 'path' );
+
 // Karma configuration
 // Generated on Fri Jun 23 2017 23:26:20 GMT+0800 (CST)
 
@@ -15,10 +17,27 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-        'src/**/*.js',
-        'test/**/*.spect.js'
+        'context.js'
     ],
 
+    // webpack configuration
+    webpack: {
+        resolve: {
+            alias: {
+                src: path.resolve ( __dirname, '../../src' ),
+                func: path.resolve ( __dirname, '../../src/func' ),
+                core: path.resolve ( __dirname, '../../src/core' ),
+                ice: path.resolve ( __dirname, '../../src/core/core' ),
+
+            }
+        },
+        module: {
+            rules: [
+                { test: /\.js/, exclude: /node_modules/, loader: 'babel-loader' }
+            ]
+        },
+        devtool: 'inline-source-map'
+    },
 
     // list of files to exclude
     exclude: [
@@ -28,6 +47,7 @@ module.exports = function(config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
+        'context.js': ['webpack', 'sourcemap']
     },
 
 
@@ -56,7 +76,8 @@ module.exports = function(config) {
 
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: ['Chrome', 'Firefox', 'Safari'],
+    // browsers: ['Chrome', 'Firefox', 'Safari'],
+    browsers: ['Chrome'],
 
 
     // Continuous Integration mode

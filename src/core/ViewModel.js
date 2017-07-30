@@ -32,7 +32,7 @@ function initState ( states, context ) {
   	let proxyState = {};
 	
 	foreach ( states, ( state, key ) => {
-		let subs = new Subscriber ();
+		let subs = new Subscriber (),
         	watch = noop,
 			oldVal;
 
@@ -45,7 +45,6 @@ function initState ( states, context ) {
       	defineProperty ( key, () => {
 				// 绑定视图
 				subs.subscribe ();
-
 				return state;
 			},
 			( newVal ) => {
@@ -78,7 +77,7 @@ function initComputed ( computeds, states, context ) {
 
 	foreach ( computeds, function ( computed, key ) {
 
-		if ( !computed || !t === "function" || !computed.hasOwnProperty ( "get" ) ) {
+		if ( !computed || type ( computed ) !== "function" || ( type ( computed ) === "object" && type ( computed.get ) !== "function" ) ) {
 			throw vmComputedErr ( key, "计算属性必须包含get函数，可直接定义一个函数或对象内包含get函数" );
 		}
 
@@ -107,14 +106,15 @@ function initComputed ( computeds, states, context ) {
 
 // 初始化监听数组
 function initArray ( array, context ) {
-  	
+  	let nativeMethod;
+
   	// 监听数组转换
 	array = array.map ( item => {
       	return convertState ( item, context );
 	} );
   	
   	foreach ( [ "push", "pop", "shift", "unshift", "splice", "sort", "reverse" ], method => {
-      	let nativeMethod = Array.prototype [ method ];
+      	nativeMethod = Array.prototype [ method ];
       	
       	Object.defineProperty ( array, method, {
           	value : function ( ...args ) {
@@ -135,7 +135,7 @@ function initArray ( array, context ) {
             configurable : true,
             enumeratable : false
         } );
-    };
+    } );
 }
 
 /**
@@ -166,7 +166,7 @@ export default function ViewModel ( vmData, isRoot = true ) {
 
 		// 转换计算属性
 		// 深层嵌套内的computed属性对象不会被当做计算属性初始化
-		else if ( key === "computed" && type ( value ) === "object" && !isRoot ) {
+		else if ( key === "computed" && type ( value ) === "object" && isRoot ) {
 			foreach ( value, ( v, k ) => {
 				computed [ k ] = v;
 			} );

@@ -16,8 +16,9 @@ export default {
 		URL doc:
 		http://icejs.org/######
 	*/
-	push : function ( type, listener ) {
-		this.events [ type ] = listener;
+	push ( type, listener ) {
+		this.events [ type ] = this.events [ type ] || [];
+		this.events [ type ].push ( listener );
 	},
 
 	/**
@@ -33,7 +34,24 @@ export default {
 		URL doc:
 		http://icejs.org/######
 	*/
-	get : function ( type ) {
+	get ( type ) {
 		return this.events [ type ] || null;
+	},
+
+	/**
+		getAll ()
+	
+		Return Type:
+		Object
+		所有非元素事件
+	
+		Description:
+		获取所有非元素事件
+	
+		URL doc:
+		http://icejs.org/######
+	*/
+	getAll () {
+		return this.events;
 	}
 };

@@ -7,8 +7,18 @@ import directiveFor from "./directive/for";
 import directiveExpr from "./directive/expr";
 import directiveOn from "./directive/on";
 import directiveModel from "./directive/model";
-import { runtimeErr } from "../error";
+import { runtimeErr } from "../../error";
 
+/**
+    Plugin Tmpl
+
+    Description:
+    模板类
+    解析模板
+
+    URL doc:
+    http://icejs.org/######
+*/
 export default function Tmpl ( tmplCode ) {
 	this.tmplCode = tmplCode;
 }
@@ -81,9 +91,9 @@ extend ( Tmpl, 	{
     },
 	
 	directives : {
-        for : directiveFor
+        for : directiveFor,
         if : directiveIf,
-        expr : directiveExpr
+        expr : directiveExpr,
         on : directiveOn,
         model : directiveModel
     }

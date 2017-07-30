@@ -1,8 +1,8 @@
 import Loader from "./Loader";
-import cache from "../../cache/cache";
-import foreach from "../../func/foreach";
-import urlTransform from "../../func/urlTransform";
-import appendScript from "../../func/appendScript";
+import cache from "../../cache/core";
+import { foreach } from "../../func/util";
+import { urlTransform } from "../../func/private";
+import { appendScript } from "../../func/node";
 import core from "../core";
 
 /**

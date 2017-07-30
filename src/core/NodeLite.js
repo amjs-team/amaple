@@ -1,4 +1,5 @@
 import { append, clear, html, query, attr } from "../func/node";
+import { extend } from "../func/util";
 
 /**
 	NodeLite ( node: DOMObject|DOMString )

@@ -1,30 +1,30 @@
-"use strict";
-
-/* 声明此文件在jshint检测时的变量不报 "variable" is not defined. */
-/* globals util,
-	
- */
+import { type, extend, foreach } from "../../func/util";
+import cache from "../../cache/core";
 
 /**
- * 渲染元素驱动器
- *
- * @author JOU
- * @time   2017-05-23T23:12:52+0800
- * @param  {Object/Array}           elems 	   元素驱动器单个对象或数组
- * @param  {String}                 driverExp  驱动器表达式
- */
-function elementDriver ( elems, driverExp ) {
+	elementDriver ( elems: DOMObject|Array, driverExpr: String )
 
-	var driver,
+	Return Type:
+	void
+
+	Description:
+	渲染元素驱动器
+
+	URL doc:
+	http://icejs.org/######
+*/
+function elementDriver ( elems, driverExpr ) {
+
+	let driver,
 
 		// 待加载驱动器数据保存对象
 		loading = {};
 
 	// 统一为数组
-	elems = util.type ( elems ) === "array" ? elems : [ elems ];
+	elems = type ( elems ) === "array" ? elems : [ elems ];
 
-	util.foreach ( driverExp.split ( "," ), function ( driverName ) {
-		driverName = util.trim ( driverName );
+	foreach ( driverExpr.split ( "," ), driverName => {
+		driverName = driverName.trim ();
 		driverName = config.params.alias [ driverName ] || driverName;
 
 		// 查看驱动器是否已加载
@@ -45,24 +45,28 @@ function elementDriver ( elems, driverExp ) {
 //////////////////////////////////////////
 // 元素驱动器相关属性通用参数，为避免重复定义，统一挂载到elementDriver对象上
 //
-util.extend ( elementDriver, {
+extend ( elementDriver, {
 	aDriver : "ice-driver",
 	aParam 	: "ice-param"
 } );
 
 
-util.extend ( elementDriver, {
+extend ( elementDriver, {
 
 	/**
-	 * 使用元素驱动器渲染元素组件
-	 *
-	 * @author JOU
-	 * @time   2017-05-24T22:16:56+0800
-	 * @param  {Array}                 elems  被渲染元素数组
-	 * @param  {Object}                 driver 元素驱动器
-	 */
-	render 	: function ( elems, driver ) {
-		util.foreach ( elems, function ( elem ) {
+		render ( elems: Array, driver: Object )
+	
+		Return Type:
+		void
+	
+		Description:
+		使用元素驱动器渲染元素组件
+	
+		URL doc:
+		http://icejs.org/######
+	*/
+	render ( elems, driver ) {
+		foreach ( elems, function ( elem ) {
 			driver.init.call ( elem );
 		} );
 	}

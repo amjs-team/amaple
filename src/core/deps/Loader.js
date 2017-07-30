@@ -1,5 +1,5 @@
-import extend from "../../func/extend";
-import cache from "../../cache/cache";
+import { extend } from "../../func/util";
+import cache from "../../cache/core";
 
 /**
 	loader ( name: String, load: Object )

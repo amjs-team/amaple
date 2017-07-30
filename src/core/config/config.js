@@ -1,7 +1,7 @@
 import allowState from "./allowState";
 import defaultParams from "./defaultParams";
 import { configErr } from "../../error";
-import { type, isEmpty } from "../../func/util";
+import { type, isEmpty, extend } from "../../func/util";
 
 // 初始化配置方法
 export default function () {

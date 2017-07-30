@@ -1,4 +1,4 @@
-import event from "../../../event/event";
+import event from "../../../event/core";
 
 export default {
 
@@ -17,13 +17,17 @@ export default {
         http://icejs.org/######
     */
 	before () {
-        let expr = this.expr.split ( ":" );
+        let rarg = /([$\w]+)\s*\((.*?)\)/,
+            expr = this.expr.split ( ":" ),
+            argMatch = rarg.exec ( expr [ 1 ] );
+
         this.type = expr [ 0 ];
-        this.expr = expr [ 1 ];
+        this.expr = argMatch ? argMatch [ 1 ] : expr [ 1 ];
+        this.arg = argMatch ? argMatch [ 1 ].split ( "," ).map ( item => item.trim () ) : undefined;
     },
 
     /**
-        update ( val: String )
+        update ( listener: Function )
     
         Return Type:
         void

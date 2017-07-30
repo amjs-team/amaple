@@ -1,5 +1,5 @@
 import { type, foreach, isEmpty } from "./util";
-import event from "../event/event";
+import event from "../event/core";
 import check from "../check";
 import correctParam from "../correctParam";
 
@@ -252,9 +252,10 @@ export function html ( context, node ) {
 	http://icejs.org/######
 */
 export function attr ( context, name, val ) {
-	let args = correctParam ( name, val ).to ( "string", [ "string", "object" ] );
-	name = args [ 0 ];
-	val = arg [ 1 ];
+	correctParam ( name, val ).to ( "string", [ "string", "object" ] ).done ( function () {
+		this.$1 = name;
+		this.$2 = val;
+	} );
   
 	switch ( type ( val ) ) {
     	case "string":

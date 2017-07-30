@@ -1,5 +1,4 @@
-import type from "../func/type";
-import foreach from "../func/foreach";
+import { type, foreach } from "../func/util";
 
 export default {
 

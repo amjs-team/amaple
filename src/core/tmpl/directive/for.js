@@ -1,5 +1,5 @@
 import { foreach } from "../../../func/util";
-import { attr } from "../../../func/attr";
+import { attr } from "../../../func/node";
 import Tmpl from "../Tmpl";
 
 const rforWord = /^\s*([$\w]+)\s+in\s+([$\w]+)\s*$/;
@@ -92,7 +92,7 @@ export default {
         	while ( ( el = el.nextSibling ) !== this.endNode ) {
             	removes.push ( el );
             }
-        	reomves.map ( item = > {
+        	reomves.map ( item => {
             	p.removeChild ( item );
             } );
         	

@@ -1,4 +1,5 @@
 import toString from "../var/toString";
+import check from "../check";
 
 /**
  	type ( arg: any )
@@ -33,7 +34,7 @@ export function type ( arg ) {
 export function noop () {}
 
 /**
-	foreach ( target: Array|Object, callback: Function, mode?: Boolean )
+	foreach ( target: Array|Object, callback: Function )
 
 	Return Type:
 	Boolean
@@ -45,16 +46,15 @@ export function noop () {}
 	URL doc:
 	http://icejs.org/######
 */
-export function foreach ( target, callback, mode ) {
+export function foreach ( target, callback ) {
 
-	var 
-		isContinue,
+	let 
+		isContinue, i,
 		tTarget 	= type ( target ),
-		tCallback 	= type ( callback ),
-		i 			= 0;
+		tCallback 	= type ( callback );
 
-	if ( tTarget === "array" && mode === true ) {
-		for ( ; i < target.length; i++ ) {
+	if ( tTarget === "array" ) {
+		for ( i = 0; i < target.length; i++ ) {
 			isContinue = callback ( target [ i ], i, target );
 
 			if ( isContinue === false ) {
@@ -62,7 +62,7 @@ export function foreach ( target, callback, mode ) {
 			}
 		}
 	}
-	else if ( tTarget === "object" || mode !== true ) {
+	else if ( tTarget === "object" ) {
 		for ( i in target ) {
 			isContinue = callback ( target [ i ], i, target );
 
@@ -70,12 +70,6 @@ export function foreach ( target, callback, mode ) {
 				break;
 			}
 		}
-	}
-	else {
-		throw argErr ( "target", "第一个参数类型必须为array或object" );
-	}
-	if ( tCallback !== "function") {
-		throw argErr ( "callback", "第二个参数类型必须为function" );
 	}
 }
 
@@ -93,20 +87,16 @@ export function foreach ( target, callback, mode ) {
 	http://icejs.org/######
 */
 export function isEmpty ( object ) {
-	var result 	= true,
-		t 		= type ( object );
 
-	if ( t !== "array" && t !== "object" ) {
-		throw argErr ( "object", "参数类型必须为array或object" );
-	}
-	else {
-		foreach ( object, () => {
-			result = false;
+	check ( object ).type ( "array", "object" ).ifNot ( "object", "参数类型必须为array或object" ).do ();
 
-			// 跳出循环
-			return false;
-		} );
-	}
+	let result = true;
+	foreach ( object, () => {
+		result = false;
+
+		// 跳出循环
+		return false;
+	} );
 
 	return result;
 }
@@ -139,17 +129,13 @@ export function isEmpty ( object ) {
 	URL doc:
 	http://icejs.org/######
 */
-export function extend () {
-	var target 				= arguments [ 0 ],
-		ttarget 			= type ( target ),
-		args 				= slice.call ( arguments, 1 ),
+export function extend ( ...args ) {
 
-		/** 临时存储被继承参数的类型 */
+	let target = args [ 0 ],
+		ttarget = type ( target ),
 		targ;
 
-	if ( ttarget !== "array" && ttarget !== "object" && ttarget !== "function" ) {
-		throw argErr ( ttarget, "合并父体类型需为Array、Object或Function" );
-	}
+	args = args.slice ( 1 );
 
 	// 依次处理被继承参数
 	foreach ( args, function ( arg ) {
@@ -195,13 +181,8 @@ export function extend () {
 	http://icejs.org/######
 */
 export function replaceAll ( str, search, replaces ) {
-	if ( arguments.length !== 3 ) {
-		throw argErr ( "function:replaceAll", "必须传入被替换字符串、查找替换的字符串和替换的字符串三个参数" );
-	}
-
-	if ( type ( str ) !== "string" || type ( search ) !== "string" || type ( replaces ) !== "string") {
-		throw argErr ( "function:replaceAll", "函数所有参数类型都必须为string" );
-	}
+	check ( arguments.length ).toBe ( 3 ).ifNot ( "function:replaceAll", "必须传入被替换字符串、查找替换的字符串和替换的字符串三个参数" ).do ();
+	check ( str, search, replaces ).type ( "string" ).ifNot ( "function:replaceAll", "函数所有参数类型都必须为string" ).do ();
 
 	// 转义字符串中所有特殊的符号
 	search = search.split( "" );
@@ -232,7 +213,8 @@ export function replaceAll ( str, search, replaces ) {
 export function isWindow ( object ) {
 	try {
 		return type ( object ) === "object" && !!object.eval && !!object.setInterval && object.window === object.window.window;
-	} catch(e) {
+	}
+	catch( e ) {
 		return false;
 	}
 }

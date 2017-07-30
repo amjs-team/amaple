@@ -15,11 +15,13 @@ import { type, extend } from "./func/util";
     http://icejs.org/######
 */
 export default function check ( variable ) {
-	this.target = variable;
-    this.condition = [];
+    if ( this ) {
+        this.target = variable;
+        this.condition = [];
 
-    this.code = "";
-    this.text = "";
+        this.code = "";
+        this.text = "";
+    }
 
     return this instanceof check ? null : new check ( variable );
 }
@@ -60,10 +62,14 @@ extend ( check.prototype, {
         http://icejs.org/######
     */
 	prior ( priorCb ) {
-    	let i = this.condition.push ( "prior" ) - 1;
+    	let i = this.condition.push ( "prior" ) - 1,
+            priorCondition;
     	priorCb ( this );
-		
-    	check.compare.call ( this, [ check.calculate ( this.condition.splice ( i, this.condition.length - i ).slice ( 1 ) ) ], _var => _var );
+		priorCondition = this.condition.splice ( i, this.condition.length - i );
+
+    	check.compare.call ( this, [ check.calculate ( priorCondition.slice ( 1 ) ) ], _var => _var );
+
+        return this;
     },
 
     /**
@@ -198,7 +204,7 @@ extend ( check.prototype, {
         http://icejs.org/######
     */
     notType ( ...strs ) {
-        check.compare.call ( this, vars, _var => {
+        check.compare.call ( this, strs, _var => {
 			return type ( this.target ) !== _var;
         } );
 
@@ -215,6 +221,7 @@ extend ( check, {
         		while ( _var = vars.shift () ) {
                 	res = res || compareFn ( _var );
                 }
+                return res;
         	} ) () ) 
         );
     },
@@ -226,15 +233,15 @@ extend ( check, {
         else if ( /^\|\|$/.test ( condition [ condition.length - 1 ] ) ) {
         	throw checkErr ( "condition", "\"or()\"应该需要紧跟条件，而不能作为最后的条件调用方法" );
         }
-        else if ( this.condition.length % 2 === 1 ) {
-            let res = this.condition [ 0 ];
-            for ( let i = 0; this.condition [ i ]; i += 2 ) {
-                switch ( this.condition [ i+1 ] ) {
+        else if ( condition.length % 2 === 1 ) {
+            let res = condition [ 0 ];
+            for ( let i = 0; condition [ i ] !== undefined; i += 2 ) {
+                switch ( condition [ i+1 ] ) {
                     case "&&":
-                        res = res && this.condition [ i+2 ];
+                        res = res && condition [ i+2 ];
                         break;
                     case "||":
-                        res = res || this.condition [ i+2 ];
+                        res = res || condition [ i+2 ];
                         break;
                 }
             }
