@@ -13,12 +13,14 @@ function defineProperty ( key, getter, setter, target ) {
 	} );
 }
 
-function convertState ( value, context ) {
+
+function convertState ( value, subs, context ) {
   	return type ( value ) === "object" && isPlainObject ( value ) ? 
 				new ViewModel ( value, false ) : 
 					type ( value ) === "array" ? 
-					initArray ( value, context ) : value;
+					initArray ( value, subs, context ) : value;
 }
+
 // 初始化绑定事件
 function initMethod ( methods, context ) {
 	foreach ( methods, ( method, key ) => {
@@ -42,6 +44,8 @@ function initState ( states, context ) {
 			watch = state.watch;
 			state = state.value;
 		}
+      
+    	state = convertState ( state, subs, context );
       	
       	defineProperty ( key, () => {
 				// 绑定视图
@@ -74,8 +78,6 @@ function initState ( states, context ) {
 
 // 初始化监听计算属性
 function initComputed ( computeds, states, context ) {
-	let descriptors = {};
-
 	foreach ( computeds, function ( computed, key ) {
 
 		if ( type ( computed ) !== "function" && type ( computed ) === "object" && type ( computed.get ) !== "function" ) {
@@ -124,29 +126,29 @@ function initComputed ( computeds, states, context ) {
 }
 
 // 初始化监听数组
-function initArray ( array, context ) {
+function initArray ( array, subs, context ) {
   	let nativeMethod;
 
   	// 监听数组转换
 	array = array.map ( item => {
-      	return convertState ( item, context );
+      	return convertState ( item, subs, context );
 	} );
   	
   	foreach ( [ "push", "pop", "shift", "unshift", "splice", "sort", "reverse" ], method => {
       	nativeMethod = Array.prototype [ method ];
       	
       	Object.defineProperty ( array, method, {
-          	value : function ( ...args ) {
+          	value ( ...args ) => {
           		
           		let res = nativeMethod.apply ( this, args );
           		if ( /push|unshift|splice/.test ( method ) ) {
                   	
                   	// 转换数组新加入的项
-                  	convertState ( method === "splice" ? args.slice ( 2 ) : args, this );
+                  	convertState ( method === "splice" ? args.slice ( 2 ) : args, subs, context );
         		}
               	
               	// 更新视图
-				// ...
+				subs.notify ();
               	
               	return res;
         	},
@@ -186,16 +188,14 @@ export default function ViewModel ( vmData, isRoot = true ) {
 		// 转换计算属性
 		// 深层嵌套内的computed属性对象不会被当做计算属性初始化
 		else if ( key === "computed" && type ( value ) === "object" && isRoot ) {
-			foreach ( value, ( v, k ) => {
-				computed [ k ] = v;
-			} );
+			computed = value;
 		}
 
 		// 转换监听属性，当值为包含value和watch时将watch转换为监听属性	
 		// 如果是对象则将此对象也转换为ViewModel的实例
 		// 如果是数组则遍历数组将其内部属性转换为对应监听数组
 		else {
-			state [ key ] = convertState ( value, this );
+			state [ key ] = value;
 		}
 	} );
 

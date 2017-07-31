@@ -29,7 +29,7 @@ function makeFn ( code ) {
 }
 
 /**
-	Watcher ( directive: Object, node: DOMObject, expr: String, vm: Object, scoped: Object )
+	Watcher ( directive: Object, node: DOMObject, expr: String|Function, vm?: Object, scoped?: Object )
 
 	Return Type:
 	void
