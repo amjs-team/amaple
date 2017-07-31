@@ -127,25 +127,22 @@ function initComputed ( computeds, states, context ) {
 
 // 初始化监听数组
 function initArray ( array, subs, context ) {
-  	let nativeMethod;
 
   	// 监听数组转换
-	array = array.map ( item => {
-      	return convertState ( item, subs, context );
-	} );
+	array = array.map ( item => convertState ( item, subs, context ) );
   	
   	foreach ( [ "push", "pop", "shift", "unshift", "splice", "sort", "reverse" ], method => {
-      	nativeMethod = Array.prototype [ method ];
+      	let nativeMethod = Array.prototype [ method ],
+ 			res;
       	
       	Object.defineProperty ( array, method, {
-          	value ( ...args ) => {
-          		
-          		let res = nativeMethod.apply ( this, args );
+          	value ( ...args ) {
           		if ( /push|unshift|splice/.test ( method ) ) {
                   	
                   	// 转换数组新加入的项
-                  	convertState ( method === "splice" ? args.slice ( 2 ) : args, subs, context );
+                  	args = args.map ( item => convertState ( item, subs, context ) );
         		}
+        		res = nativeMethod.apply ( this, args );
               	
               	// 更新视图
 				subs.notify ();
@@ -157,6 +154,8 @@ function initArray ( array, subs, context ) {
             enumeratable : false
         } );
     } );
+
+    return array;
 }
 
 /**
