@@ -52,16 +52,15 @@ export default function Watcher ( directive, node, expr, vm, scoped ) {
 	this.directive = directive;
 	this.node = node;
 	this.vm = vm;
-	this.getVal = makeFn ( expr );
+	this.getVal = type ( expr ) === "function" ? expr : makeFn ( expr );
 	
-	if ( !directive.before.call ( this ) ) {
+	if ( directive.before && !directive.before.call ( this ) ) {
     	return;
     }
 
     // 将获取表达式的真实值并将此watcher对象绑定到依赖监听属性中
 	Subscriber.watcher = this;
 	let val = this.getVal ( vm );
-	Subscriber.watcher = undefined;
 
 	// 移除局部变量
 	foreach ( scoped || [], ( k, v ) => {
@@ -76,7 +75,7 @@ export default function Watcher ( directive, node, expr, vm, scoped ) {
 extend ( Watcher.prototype, {
 
 	/**
-		update ( value: any )
+		update ()
 	
 		Return Type:
 		void
@@ -87,8 +86,8 @@ extend ( Watcher.prototype, {
 		URL doc:
 		http://icejs.org/######
 	*/
-	update ( value ) {
-    	this.directive.update.call ( this, this.getVal ( vm ) );
+	update () {
+    	this.directive.update.call ( this, this.getVal ( this.vm ) );
     },
 
     /**

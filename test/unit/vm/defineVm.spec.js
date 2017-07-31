@@ -16,6 +16,14 @@ describe ( "define vm", () => {
 			computed : {
 				comp1 () {
 					return this.str + " world";
+				},
+				comp2 : {
+					get: function () {
+						return this.str + " ice";
+					},
+					set: function (val) {
+						this.str = val;
+					}
 				}
 			}
 		} );
@@ -36,9 +44,16 @@ describe ( "define vm", () => {
 	} );
 
 	it ( "It transform the computed data which depend on vm data", () => {
-		expect ( vm.comp1 () ).toBe ( "hello world" );
+		expect ( vm.comp1 ).toBe ( "hello world" );
 
 		vm.str = "hel";
-		expect ( vm.comp1 () ).toBe ( "hel world" );
+		expect ( vm.comp1 ).toBe ( "hel world" );
+
+		vm.comp1 = "123";
+		expect ( vm.comp1 ).toBe ( "hel world" );
+
+		vm.comp2 = "123";
+		expect ( vm.comp2 ).toBe ( "123 ice" );
+		expect ( vm.str ).toBe ( "123" );
 	} );
 } );

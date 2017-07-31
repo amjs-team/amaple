@@ -1,6 +1,7 @@
 import { foreach, type, isPlainObject, noop } from "../func/util";
 import { vmComputedErr } from "../error";
 import Subscriber from "./Subscriber";
+import Watcher from "./Watcher";
 
 // 转换存取器属性
 function defineProperty ( key, getter, setter, target ) {
@@ -55,7 +56,7 @@ function initState ( states, context ) {
 					watch.call ( context, newVal, oldVal );
 
 					// 更新视图
-					subs.notify ( newVal );
+					subs.notify ();
 				}
    			}, context );
 
@@ -77,28 +78,46 @@ function initComputed ( computeds, states, context ) {
 
 	foreach ( computeds, function ( computed, key ) {
 
-		if ( !computed || type ( computed ) !== "function" || ( type ( computed ) === "object" && type ( computed.get ) !== "function" ) ) {
+		if ( type ( computed ) !== "function" && type ( computed ) === "object" && type ( computed.get ) !== "function" ) {
 			throw vmComputedErr ( key, "计算属性必须包含get函数，可直接定义一个函数或对象内包含get函数" );
 		}
 
-		let subs = new Subscriber (),
-        	state = descriptors [ key ] = type ( computed ) === "function" ? computed.call ( context ) : computed.get.call ( states );
-      
-      	defineProperty ( key, () => {
+		let state,
+			subs = new Subscriber (),
+			getter = () => {
+				let computedGetter = type ( computed ) === "function" ? computed : computed.get;
 				return function () {
-					// 绑定视图
-					subs.subscribe ();
-
-					return state;
+					return computedGetter.call ( states );
 				};
+        	};
+
+        // 创建Watcher对象供依赖数据监听
+        new Watcher ( {
+        	update ( newVal ) {
+        		if ( state !== newVal ) {
+        			state = newVal;
+
+        			// 更新视图
+					subs.notify ();
+        		}
+        	}
+        }, null, getter () );
+      	
+      	// 设置计算属性为监听数据
+      	defineProperty ( key, () => {
+
+				// 绑定视图
+				subs.subscribe ();
+
+				return state;
 			},
 			type ( computed.set ) === "function" ? 
 			( newVal ) => {
 				if ( state !== newVal ) {
-					state = computed.set.call ( states, newVal );
+					computed.set.call ( states, newVal );
 
 					// 更新视图
-					subs.notify ( newVal );
+					subs.notify ();
 				}
 			} : noop, context );
 	} );

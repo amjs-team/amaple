@@ -35,7 +35,7 @@ extend ( Subscriber.prototype, {
 	subscribe () {
     	if ( Subscriber.watcher instanceof Watcher ) {
         	this.watchers.push ( Subscriber.watcher );
-        	Subscribe.watcher = undefined;
+        	Subscriber.watcher = undefined;
         }
     },
 
