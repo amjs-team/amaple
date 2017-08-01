@@ -21,7 +21,7 @@ export default {
         this.expr = "\"" + this.expr + "\"";
 
         // 将表达式转换为字符串拼接代码
-    	this.expr.replace ( rexpr, ( match, rep ) => "\" + " + rep + " + \"" );
+    	this.expr = this.expr.replace ( rexpr, ( match, rep ) => "\" + " + rep + " + \"" );
     },
 
     /**

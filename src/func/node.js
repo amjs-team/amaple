@@ -1,4 +1,5 @@
 import { type, foreach, isEmpty } from "./util";
+import slice from "../var/slice";
 import event from "../event/core";
 import check from "../check";
 import correctParam from "../correctParam";
@@ -17,7 +18,7 @@ import correctParam from "../correctParam";
 */
 export function query ( selector, context, all ) {
 	var elem = ( context || document )[ all ? "querySelectorAll" : "querySelector" ] ( selector );
-	return elem.length ? Array.prototype.slice.call ( elem ) : elem;
+	return elem.length ? slice.call ( elem ) : elem;
 }
 
 /**

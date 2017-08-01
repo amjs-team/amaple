@@ -23,8 +23,8 @@ export default {
         }
             
         attr ( elem, ":if", null );
-    	this.parent = this.elem.parentNode;
-    	this.replacement = this.elem.ownerDocument.createTextNode ( "" );
+        this.parent = elem.parentNode;
+    	this.replacement = elem.ownerDocument.createTextNode ( "" );
     },
 
     /**
@@ -42,13 +42,13 @@ export default {
     */
 	update ( val ) {
 		let elem = this.node,
-            parent = elem.parent;
-            
-        if ( val && !elem.parentNode ) {
-            parent.replaceChild ( this.replacement, elem );
+            parent = elem.parentNode;
+
+        if ( val && !parent ) {
+            this.parent.replaceChild ( elem, this.replacement );
         }
-        else if ( !val && this.elem.parentNode == parent ) {
-            parent.replaceChild ( elem, replacement );
+        else if ( !val && elem.parentNode === this.parent ) {
+            this.parent.replaceChild ( this.replacement, elem );
         }
     }
 };

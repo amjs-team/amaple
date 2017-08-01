@@ -1,5 +1,6 @@
 import { rexpr } from "../../var/const";
-import { extend } from "../../func/util";
+import slice from "../../var/slice";
+import { extend, foreach } from "../../func/util";
 import Subscriber from "../Subscriber";
 import Watcher from "../Watcher";
 import directiveIf from "./directive/if";
@@ -42,7 +43,7 @@ extend ( Tmpl, 	{
 				// 处理{{ expression }}
 				// 处理:on、:onrequest :onresponse :onfinish事件
 				// 处理:model
-            	foreach ( elem.attributes, attr => {
+            	foreach ( slice.call ( elem.attributes ), attr => {
                 	directive = rattr.exec ( attr.nodeName );
                 	if ( directive ) {
                     	directive = directive [ 1 ];
@@ -66,27 +67,30 @@ extend ( Tmpl, 	{
                         	throw runtimeErr ( "directive", "没有找到\"" + directive + "\"指令或表达式" );
                         }
                     }
-                	else {
+                	else if ( rexpr.test ( attr.nodeValue ) ) {
 
                     	// 属性值表达式绑定
                     	handler = Tmpl.directives.expr;
                     	targetNode = attr;
                     	expr = attr.nodeValue;
                     }
+
+                    // 为视图创建Watcher实例
+                    new Watcher ( handler, targetNode, expr, vm, scoped );
             	} );
             }
         	else if ( elem.nodeType === 3 ) {
 
             	// 文本节点表达式绑定
-            	handler = Tmpl.directives.expr;
-            	targetNode = elem;
-            	expr = elem.nodeValue;
+                if ( rexpr.test ( elem.nodeValue ) ) {
+                    // 为视图创建Watcher实例
+                    new Watcher ( Tmpl.directives.expr, elem, elem.nodeValue, vm, scoped );
+                }
             }
             
-            // 为视图创建Watcher实例
-        	new Watcher ( handler, targetNode, expr, vm, scoped );
-        
-        	Tmpl.mountElem ( elem.firstChild, vm );
+            if ( elem.firstChild ) {
+                Tmpl.mountElem ( elem.firstChild, vm );
+            }
         } while ( elem = elem.nextSibling )
     },
 	

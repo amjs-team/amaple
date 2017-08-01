@@ -6,28 +6,38 @@ describe ( "directive expr", () => {
 	
 	beforeEach ( () => {
     	d = document.createElement ( "div" );
-    	d.innerHTML = '<span>{{ expr }}<span><p id="{{ id }}">expr test</p>';
     } );
 	
-	it ( "directive expression will mount in text node", () => {
-    	let t = new Tmpl ( d ),
+	xit ( "directive expression will mount in text node", () => {
+        d.innerHTML = '<span>{{ expr }}</span><span>{{ expr }}123</span>';
+        let t = new Tmpl ( d ),
             vm = new ViewModel ( {
-            	expr : "success",
+                expr : "success",
             } );
-      
-      	t.mount ( vm );
-      
+        t.mount ( vm );
     	expect ( d.firstChild.firstChild.nodeValue ).toBe ( "success" );
+        expect ( d.firstChild.nextSibling.firstChild.nodeValue ).toBe ( "success123" );
+
+        vm.expr = "hello";
+        expect ( d.firstChild.firstChild.nodeValue ).toBe ( "hello" );
+        expect ( d.firstChild.nextSibling.firstChild.nodeValue ).toBe ( "hello123" );
     } );
   
-	it ( "directive expression will mount in attribute node", () => {
-    	let t = new Tmpl ( d ),
+	xit ( "directive expression will mount in attribute node", () => {
+        d.innerHTML = '<p id="{{ id }}">attr expr</p><p id="{{ id }}456">attr expr2</p>';
+        let t = new Tmpl ( d ),
             vm = new ViewModel ( {
-            	id : "text",
+                id : "text",
             } );
-      
-      	t.mount ( vm );
-      
-    	expect ( d.querySelector ( "p" ).getAttribute ( "id" ) ).toBe ( "text" );
+        t.mount ( vm );
+
+    	expect ( d.firstChild.getAttribute ( "id" ) ).toBe ( "text" );
+        expect ( d.querySelector ( "#text" ).firstChild.nodeValue ).toBe ( "attr expr" );
+        expect ( d.querySelector ( "#text456" ).firstChild.nodeValue ).toBe ( "attr expr2" );
+
+        vm.id = "success";
+        expect ( d.firstChild.getAttribute ( "id" ) ).toBe ( "success" );
+        expect ( d.querySelector ( "#success" ).firstChild.nodeValue ).toBe ( "attr expr" );
+        expect ( d.querySelector ( "#success456" ).firstChild.nodeValue ).toBe ( "attr expr2" );
     } );
 } );

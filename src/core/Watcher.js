@@ -17,13 +17,13 @@ import Subscriber from "./Subscriber";
 	http://icejs.org/######
 */
 function makeFn ( code ) {
-	return new Function ( "obj", 
+	return new Function ( "obj", "runtimeErr", 
 	`with ( obj ) {
 		try {
 			return ${ code };
 		}
 		catch ( e ) {
-			throw runtimeErr ( "view model", e );
+			throw runtimeErr ( "vm", e );
 		}
 	}` );
 }
@@ -49,18 +49,27 @@ export default function Watcher ( directive, node, expr, vm, scoped ) {
 		expr = expr.replace ( scoped.__$reg__, match => scoped [ match ] || match );
 	}
 
+	let texpr = type ( expr );
+
 	this.directive = directive;
 	this.node = node;
 	this.vm = vm;
-	this.getVal = type ( expr ) === "function" ? expr : makeFn ( expr );
-	
-	if ( directive.before && !directive.before.call ( this ) ) {
-    	return;
-    }
+
+	if ( texpr !== "function" ) {
+		this.expr = expr;
+		if ( directive.before && directive.before.call ( this ) === false ) {
+			return;
+		}
+
+		this.getVal = makeFn ( this.expr );
+	}
+	else {
+		this.getVal = expr;
+	}
 
     // 将获取表达式的真实值并将此watcher对象绑定到依赖监听属性中
 	Subscriber.watcher = this;
-	let val = this.getVal ( vm );
+	let val = this.getVal ( vm, runtimeErr );
 
 	// 移除局部变量
 	foreach ( scoped || [], ( k, v ) => {
@@ -87,7 +96,7 @@ extend ( Watcher.prototype, {
 		http://icejs.org/######
 	*/
 	update () {
-    	this.directive.update.call ( this, this.getVal ( this.vm ) );
+    	this.directive.update.call ( this, this.getVal ( this.vm, runtimeErr ) );
     },
 
     /**
