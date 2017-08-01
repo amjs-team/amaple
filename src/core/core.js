@@ -1,6 +1,7 @@
 import config from "./config/config";
 import cache from "../cache/core";
 import single from "../single/core";
+import depend from "./deps/depend";
 import { type, isEmpty } from "../func/util";
 import { query } from "../func/node";
 import check from "../check";

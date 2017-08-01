@@ -18,7 +18,7 @@ import core from "../core";
 	URL doc:
 	http://icejs.org/######
 */
-function depend ( name, deps, args, factory ) {
+export default function depend ( name, deps, args, factory ) {
 
 	let // 非最外层加载依赖则name将接收一个包含name和guid的对象
 		guid = name === Loader.topName ? guid$ () : name.guid,
