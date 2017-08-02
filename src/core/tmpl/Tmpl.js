@@ -25,15 +25,18 @@ export default function Tmpl ( tmplCode ) {
 }
 
 extend ( Tmpl.prototype, {
-	mount ( vm ) {
-    	Tmpl.mountElem ( this.tmplCode, vm );
+	mount ( vm, scoped ) {
+    	foreach ( Tmpl.mountElem ( this.tmplCode, vm ), ( item ) => {
+        	new Watcher ( item.handler, item.targetNode, item.expr, vm, scoped );
+        } );
     },
 } );
 
 extend ( Tmpl, 	{
-	mountElem ( elem, vm, scoped ) {
+	mountElem ( elem ) {
     	const rattr = /^:([\$\w]+)$/;
-        let directive, handler, targetNode, expr;
+        let directive, handler, targetNode, expr,
+            tmplItems = [];
 		
     	do {
         	if ( elem.nodeType === 1 ) {
@@ -64,7 +67,7 @@ extend ( Tmpl, 	{
                     	else {
 
                         	// 没有找到该指令
-                        	throw runtimeErr ( "directive", "没有找到\"" + directive + "\"指令或表达式" );
+e                        	throw runtimeErr ( "directive", "没有找到\"" + directive + "\"指令或表达式" );
                         }
                     }
                 	else if ( rexpr.test ( attr.nodeValue ) ) {
@@ -75,23 +78,30 @@ extend ( Tmpl, 	{
                     	expr = attr.nodeValue;
                     }
 
-                    // 为视图创建Watcher实例
-                    new Watcher ( handler, targetNode, expr, vm, scoped );
+                    tmplItems.push ( {
+                    	handler, 
+                    	targetNode,
+                    	expr
+                    } );
             	} );
             }
         	else if ( elem.nodeType === 3 ) {
 
             	// 文本节点表达式绑定
                 if ( rexpr.test ( elem.nodeValue ) ) {
-                    // 为视图创建Watcher实例
-                    new Watcher ( Tmpl.directives.expr, elem, elem.nodeValue, vm, scoped );
+                	tmplItems.push ( {
+                    	handler : Tmpl.directives.expr, 
+                    	targetNode : elem,
+                    	expr : elem.nodeValue
+                    } );
                 }
             }
             
             if ( elem.firstChild ) {
-                Tmpl.mountElem ( elem.firstChild, vm );
+                tmplItems.concat ( Tmpl.mountElem ( elem.firstChild ) );
             }
         } while ( elem = elem.nextSibling )
+        return tmplItems;
     },
 	
 	directives : {

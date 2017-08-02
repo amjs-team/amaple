@@ -71,7 +71,7 @@ export default {
             itemNode = elem.cloneNode ( true );
 
             // 为遍历克隆的元素挂载数据
-            Tmpl.mountElem ( itemNode, vm, this.defineScoped ( scopedDefinition, vm ) );
+        	new Tmpl ( itemNode ).mount ( vm, this.defineScoped ( scopedDefinition, vm ) );
 
         	fragment.appendChild ( itemNode );
         } );

@@ -61,15 +61,15 @@ export default function Watcher ( directive, node, expr, vm, scoped ) {
 			return;
 		}
 
-		this.getVal = makeFn ( this.expr );
+		this.getter = makeFn ( this.expr );
 	}
 	else {
-		this.getVal = expr;
+		this.getter = expr;
 	}
 
     // 将获取表达式的真实值并将此watcher对象绑定到依赖监听属性中
 	Subscriber.watcher = this;
-	let val = this.getVal ( vm, runtimeErr );
+	let val = this.getter ( vm, runtimeErr );
 
 	// 移除局部变量
 	foreach ( scoped || [], ( k, v ) => {
@@ -96,7 +96,7 @@ extend ( Watcher.prototype, {
 		http://icejs.org/######
 	*/
 	update () {
-    	this.directive.update.call ( this, this.getVal ( this.vm, runtimeErr ) );
+    	this.directive.update.call ( this, this.getter ( this.vm, runtimeErr ) );
     },
 
     /**
