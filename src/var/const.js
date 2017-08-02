@@ -9,7 +9,7 @@ export const TYPE_PLUGIN = 3;
 export const TYPE_DRIVER = 4;
 
 // 表达式正则表达式
-export const rexpr = /{{\s*(.*?)\s*}}/g;
+export const rexpr = /{{\s*(.*?)\s*}}/;
 
 // 连续字符正则表达式
 export const rword = /\S+/g;

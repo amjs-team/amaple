@@ -67,7 +67,7 @@ extend ( Tmpl, 	{
                     	else {
 
                         	// 没有找到该指令
-e                        	throw runtimeErr ( "directive", "没有找到\"" + directive + "\"指令或表达式" );
+                        	throw runtimeErr ( "directive", "没有找到\"" + directive + "\"指令或表达式" );
                         }
                     }
                 	else if ( rexpr.test ( attr.nodeValue ) ) {
@@ -98,7 +98,7 @@ e                        	throw runtimeErr ( "directive", "没有找到\"" + dir
             }
             
             if ( elem.firstChild ) {
-                tmplItems.concat ( Tmpl.mountElem ( elem.firstChild ) );
+                 tmplItems = tmplItems.concat ( Tmpl.mountElem ( elem.firstChild ) );
             }
         } while ( elem = elem.nextSibling )
         return tmplItems;

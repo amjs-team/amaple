@@ -8,7 +8,7 @@ describe ( "directive expr", () => {
     	d = document.createElement ( "div" );
     } );
 	
-	xit ( "directive expression will mount in text node", () => {
+	it ( "directive expression will mount in text node", () => {
         d.innerHTML = '<span>{{ expr }}</span><span>{{ expr }}123</span>';
         let t = new Tmpl ( d ),
             vm = new ViewModel ( {
@@ -23,7 +23,7 @@ describe ( "directive expr", () => {
         expect ( d.firstChild.nextSibling.firstChild.nodeValue ).toBe ( "hello123" );
     } );
   
-	xit ( "directive expression will mount in attribute node", () => {
+	it ( "directive expression will mount in attribute node", () => {
         d.innerHTML = '<p id="{{ id }}">attr expr</p><p id="{{ id }}456">attr expr2</p>';
         let t = new Tmpl ( d ),
             vm = new ViewModel ( {
