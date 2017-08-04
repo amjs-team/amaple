@@ -1,4 +1,4 @@
-import { extend, foreach } from "../func/util";
+import { extend, foreach, type } from "../func/util";
 import Watcher from "./Watcher";
 
 /**
@@ -33,7 +33,7 @@ extend ( Subscriber.prototype, {
         http://icejs.org/######
     */
 	subscribe () {
-    	if ( Subscriber.watcher instanceof Watcher ) {
+    	if ( type ( Subscriber.watcher ) === "object" ) {
         	this.watchers.push ( Subscriber.watcher );
         	Subscriber.watcher = undefined;
         }

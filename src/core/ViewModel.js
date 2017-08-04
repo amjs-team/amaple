@@ -1,7 +1,7 @@
 import { foreach, type, isPlainObject, noop } from "../func/util";
 import { vmComputedErr } from "../error";
 import Subscriber from "./Subscriber";
-import Watcher from "./Watcher";
+import ComputedWatcher from "./ComputedWatcher";
 
 // 转换存取器属性
 function defineProperty ( key, getter, setter, target ) {
@@ -93,17 +93,15 @@ function initComputed ( computeds, states, context ) {
 				};
         	};
 
-        // 创建Watcher对象供依赖数据监听
-        new Watcher ( {
-        	update ( newVal ) {
+        // 创建ComputedWatcher对象供依赖数据监听
+        new ComputedWatcher ( ( newVal ) => {
         		if ( state !== newVal ) {
         			state = newVal;
 
         			// 更新视图
 					subs.notify ();
         		}
-        	}
-        }, null, getter () );
+        	}, getter () );
       	
       	// 设置计算属性为监听数据
       	defineProperty ( key, () => {

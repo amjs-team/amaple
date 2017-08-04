@@ -21,7 +21,7 @@ export default {
     	if ( attr ( elem, ":for" ) ) {
             return false;
         }
-            
+        
         attr ( elem, ":if", null );
         this.parent = elem.parentNode;
     	this.replacement = elem.ownerDocument.createTextNode ( "" );

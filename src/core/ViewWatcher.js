@@ -29,56 +29,47 @@ function makeFn ( code ) {
 }
 
 /**
-	Watcher ( directive: Object, node: DOMObject, expr: String|Function, vm?: Object, scoped?: Object )
+	ViewWatcher ( directive: Object, node: DOMObject, expr: String, vm?: Object, scoped?: Object )
 
 	Return Type:
 	void
 
 	Description:
 	视图监听类
-	模板中所有需绑定的视图都将依次转换为此类的对象
+	模板中所有需绑定的视图都将依次转换为ViewWacther类的对象
 	当数据发生变化时，这些对象负责更新视图
 
 	URL doc:
 	http://icejs.org/######
 */
-export default function Watcher ( directive, node, expr, vm, scoped ) {
+export default function ViewWatcher ( directive, node, expr, vm, scoped ) {
 	
   	// 如果scoped为局部数据对象则将expr内的局部变量名替换为局部变量名
 	if ( type ( scoped ) === "object" && scoped.__$reg__ instanceof RegExp ) {
 		expr = expr.replace ( scoped.__$reg__, match => scoped [ match ] || match );
 	}
 
-	let texpr = type ( expr );
-
 	this.directive = directive;
 	this.node = node;
+	this.expr = expr;
 	this.vm = vm;
-
-	if ( texpr !== "function" ) {
-		this.expr = expr;
-		if ( directive.before && directive.before.call ( this ) === false ) {
-			return;
-		}
-
-		this.getter = makeFn ( this.expr );
+	this.scoped = scoped;
+	if ( directive.before && directive.before.call ( this ) === false ) {
+		return;
 	}
-	else {
-		this.getter = expr;
-	}
+
+	this.getter = makeFn ( this.expr );
 
     // 将获取表达式的真实值并将此watcher对象绑定到依赖监听属性中
 	Subscriber.watcher = this;
-	let val = this.getter ( vm, runtimeErr );
+	this.val = this.getter ( vm, runtimeErr );
 
 	// 移除局部变量
-	foreach ( scoped || [], ( k, v ) => {
-		if ( type ( v ) === "string" ) {
-			delete vm [ v ];
-		}
-	} );
-
-	directive.update.call ( this, val );
+	// foreach ( scoped || [], ( k, v ) => {
+	// 	if ( type ( v ) === "string" ) {
+	// 		delete vm [ v ];
+	// 	}
+	// } );
 }
 
 extend ( Watcher.prototype, {
@@ -117,12 +108,14 @@ extend ( Watcher.prototype, {
     */
     defineScoped ( scopedDefinition, vm ) {
     	let scopedPrefix = "ICE_FOR_" + Date.now() + "_",
-    		scoped 		 = {};
+    		scoped = {},
+    		scopedVar;
 
     	foreach ( scopedDefinition, ( variable, val ) => {
     		if ( variable ) {
-    			scoped [ variable ] = scopedPrefix + variable;
-    			vm [ scopedPrefix + variable ] = val;
+    			scopedVar = scopedPrefix + variable;
+    			scoped [ variable ] = scopedVar;
+    			vm [ scopedVar ] = val;
     		}
     	} );
 

@@ -40,7 +40,7 @@ export default {
     },
 
     /**
-        update ( array: Array )
+        update ( iterator: Array )
     
         Return Type:
         void
@@ -52,7 +52,7 @@ export default {
         URL doc:
         http://icejs.org/######
     */
-	update ( array ) {
+	update ( iterator ) {
 		let elem         = this.node,
             vm           = this.vm,
             parent       = elem.parentNode,
@@ -62,7 +62,7 @@ export default {
             // 局部变量定义
             scopedDefinition = {};
   		
-        foreach ( array, ( item, key ) => {
+        foreach ( iterator, ( item, key ) => {
 
             // 定义范围变量
             scopedDefinition [ this.item ] = item;

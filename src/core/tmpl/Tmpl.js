@@ -2,7 +2,7 @@ import { rexpr } from "../../var/const";
 import slice from "../../var/slice";
 import { extend, foreach } from "../../func/util";
 import Subscriber from "../Subscriber";
-import Watcher from "../Watcher";
+import ViewWatcher from "../ViewWatcher";
 import directiveIf from "./directive/if";
 import directiveFor from "./directive/for";
 import directiveExpr from "./directive/expr";
@@ -26,17 +26,17 @@ export default function Tmpl ( tmplCode ) {
 
 extend ( Tmpl.prototype, {
 	mount ( vm, scoped ) {
-    	foreach ( Tmpl.mountElem ( this.tmplCode, vm ), ( item ) => {
-        	new Watcher ( item.handler, item.targetNode, item.expr, vm, scoped );
+    	foreach ( Tmpl.mountElem ( this.tmplCode, vm, scoped ), ( watcher ) => {
+        	watcher.directive.update.call ( watcher, watcher.val );
         } );
     },
 } );
 
 extend ( Tmpl, 	{
-	mountElem ( elem ) {
+	mountElem ( elem, vm, scoped ) {
     	const rattr = /^:([\$\w]+)$/;
         let directive, handler, targetNode, expr,
-            tmplItems = [];
+            watchers = [];
 		
     	do {
         	if ( elem.nodeType === 1 ) {
@@ -78,30 +78,22 @@ extend ( Tmpl, 	{
                     	expr = attr.nodeValue;
                     }
 
-                    tmplItems.push ( {
-                    	handler, 
-                    	targetNode,
-                    	expr
-                    } );
+                    watchers.push ( new ViewWatcher ( handler, targetNode, expr, vm, scoped ) );
             	} );
             }
         	else if ( elem.nodeType === 3 ) {
 
             	// 文本节点表达式绑定
                 if ( rexpr.test ( elem.nodeValue ) ) {
-                	tmplItems.push ( {
-                    	handler : Tmpl.directives.expr, 
-                    	targetNode : elem,
-                    	expr : elem.nodeValue
-                    } );
+                    watchers.push ( new ViewWatcher ( Tmpl.directives.expr, elem, elem.nodeValue, vm, scoped ) );
                 }
             }
             
             if ( elem.firstChild ) {
-                 tmplItems = tmplItems.concat ( Tmpl.mountElem ( elem.firstChild ) );
+                watchers = watchers.concat ( Tmpl.mountElem ( elem.firstChild ) );
             }
         } while ( elem = elem.nextSibling )
-        return tmplItems;
+        return watchers;
     },
 	
 	directives : {
