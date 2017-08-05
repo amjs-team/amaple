@@ -1,6 +1,8 @@
 import { attr } from "../../../func/node";
+import { foreach } from "../../../func/util";
 
 export default {
+	name : "if",
 
     /**
         before ()
@@ -17,18 +19,21 @@ export default {
         http://icejs.org/######
     */
 	before () {
-    	let elem = this.node;
-    	if ( attr ( elem, ":for" ) ) {
-            return false;
-        }
-        
+		let elem = this.node;
         attr ( elem, ":if", null );
+		
+    	this.expr = "[" + elem.conditions.join ( "," ) + "]";
+    	this.currentElem = elem;
         this.parent = elem.parentNode;
     	this.replacement = elem.ownerDocument.createTextNode ( "" );
+      
+    	foreach ( this.conditionElem, nextSib => {
+        	new Tmpl ( nextSib ).mount ( this.vm, this.scoped );
+        } );
     },
 
     /**
-        update ( val: Boolean )
+        update ( conditions: Array )
     
         Return Type:
         void
@@ -40,15 +45,24 @@ export default {
         URL doc:
         http://icejs.org/######
     */
-	update ( val ) {
+	update ( conditions ) {
 		let elem = this.node,
-            parent = elem.parentNode;
+            conditionElem = elem.conditionElem,
+            newElem;
 
-        if ( val && !parent ) {
-            this.parent.replaceChild ( elem, this.replacement );
-        }
-        else if ( !val && elem.parentNode === this.parent ) {
-            this.parent.replaceChild ( this.replacement, elem );
+        foreach ( conditions, ( cond, i ) => {
+        	if ( cond ) {
+            	newElem = conditionElem [ i ];
+            	return false;
+            }
+        } );
+      
+    	newElem = newElem || this.replacement;
+    
+    	if ( !newElem.parentNode ) {
+        	this.parent.replaceChild ( newElem, this.currentElem );
+        	
+        	this.currentElem = newElem;
         }
     }
 };

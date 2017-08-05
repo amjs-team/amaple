@@ -2,9 +2,8 @@ import { foreach } from "../../../func/util";
 import { attr } from "../../../func/node";
 import Tmpl from "../Tmpl";
 
-const rforWord = /^\s*([$\w]+)\s+in\s+([$\w]+)\s*$/;
-
 export default {
+	name : "for",
 
     /**
         before ()
@@ -22,7 +21,7 @@ export default {
     */
 	before () {
     	
-    	let variable   = rforWord.exec ( this.expr ),
+    	let variable   = /^\s*([$\w]+)\s+in\s+([$\w]+)\s*$/.exec ( this.expr ),
             elem       = this.node;
   
 		this.startNode = elem.ownerDocument.createTextNode ( "" );
@@ -35,8 +34,6 @@ export default {
     	if ( this.key ) {
             attr ( elem, ":key", null );
         }
-    
-    	attr ( elem, ":for", null );
     },
 
     /**
@@ -55,29 +52,38 @@ export default {
 	update ( iterator ) {
 		let elem         = this.node,
             vm           = this.vm,
-            parent       = elem.parentNode,
-            fragment     = elem.ownerDocument.createDocumentFragment(),
-            itemNode,
+            doc 		 = elem.ownerDocument,
+            fragment     = doc.createDocumentFragment(),
+            itemNode, f
 
             // 局部变量定义
             scopedDefinition = {};
   		
         foreach ( iterator, ( item, key ) => {
+        	f = doc.createDocumentFragment ();
 
             // 定义范围变量
             scopedDefinition [ this.item ] = item;
             scopedDefinition [ this.key ] = key;
 
             itemNode = elem.cloneNode ( true );
+        	if ( elem.conditionElems ) {
+            	itemNode.conditionElems = [];
+            	foreach ( elem.conditionElems, nextSib => {
+                	itemNode.conditionElems.push ( nextSib.cloneNode ( true ) );
+                } );
+            	itemNode.conditions = elem.conditions;
+            }
+        	f.appendChild ( itemNode );
 
             // 为遍历克隆的元素挂载数据
-        	new Tmpl ( itemNode ).mount ( vm, this.defineScoped ( scopedDefinition, vm ) );
+        	new Tmpl ( f ).mount ( vm, this.defineScoped ( scopedDefinition, vm ) );
 
-        	fragment.appendChild ( itemNode );
+        	fragment.appendChild ( f.childNodes [ 0 ] );
         } );
     	
       	// 初始化视图时将模板元素替换为挂载后元素
-    	if ( parent ) {
+    	if ( elem.parentNode ) {
         	fragment.insertBefore ( this.startNode, fragment.firstChild );
         	fragment.appendChild ( this.endNode );
           

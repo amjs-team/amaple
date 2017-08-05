@@ -1,4 +1,4 @@
-import { extend, type, foreach } from "../func/util";
+import { extend, type, foreach, noop } from "../func/util";
 import { runtimeErr } from "../error";
 import Subscriber from "./Subscriber";
 
@@ -45,8 +45,8 @@ function makeFn ( code ) {
 export default function ViewWatcher ( directive, node, expr, vm, scoped ) {
 	
   	// 如果scoped为局部数据对象则将expr内的局部变量名替换为局部变量名
-	if ( type ( scoped ) === "object" && scoped.__$reg__ instanceof RegExp ) {
-		expr = expr.replace ( scoped.__$reg__, match => scoped [ match ] || match );
+	if ( type ( scoped ) === "object" && scoped.regexp instanceof RegExp ) {
+		expr = expr.replace ( scoped.regexp, match => scoped.prefix + match );
 	}
 
 	this.directive = directive;
@@ -54,22 +54,18 @@ export default function ViewWatcher ( directive, node, expr, vm, scoped ) {
 	this.expr = expr;
 	this.vm = vm;
 	this.scoped = scoped;
-	if ( directive.before && directive.before.call ( this ) === false ) {
-		return;
-	}
+	( directive.before || noop ).call ( this );
 
 	this.getter = makeFn ( this.expr );
 
     // 将获取表达式的真实值并将此watcher对象绑定到依赖监听属性中
 	Subscriber.watcher = this;
-	this.val = this.getter ( vm, runtimeErr );
-
-	// 移除局部变量
-	// foreach ( scoped || [], ( k, v ) => {
-	// 	if ( type ( v ) === "string" ) {
-	// 		delete vm [ v ];
-	// 	}
-	// } );
+  
+	this.addScoped ();
+	let val = this.getter ( vm, runtimeErr );
+	this.removeScoped ();
+  
+	directive.update.call ( this, val );
 }
 
 extend ( Watcher.prototype, {
@@ -87,11 +83,13 @@ extend ( Watcher.prototype, {
 		http://icejs.org/######
 	*/
 	update () {
+    	this.addScoped ();
     	this.directive.update.call ( this, this.getter ( this.vm, runtimeErr ) );
+    	this.removeScoped ();
     },
 
     /**
-    	defineScoped ( scopedDefinition: Object, vm: Object )
+    	defineScoped ( scopedDefinition: Object )
     
     	Return Type:
     	Object
@@ -99,28 +97,70 @@ extend ( Watcher.prototype, {
     
     	Description:
 		定义模板局部变量
-		此方法将生成局部变量操作对象（包含替身变量名）和增加局部变量属性到vm中
+		此方法将生成局部变量操作对象，内含替身变量前缀
     	此替身变量名不能为当前vm中已有的变量名，所以需取的生僻些
     	在挂载数据时如果有替身则会将局部变量名替换为替身变量名来达到不重复vm中已有变量名的目的
     
     	URL doc:
     	http://icejs.org/######
     */
-    defineScoped ( scopedDefinition, vm ) {
-    	let scopedPrefix = "ICE_FOR_" + Date.now() + "_",
-    		scoped = {},
-    		scopedVar;
+    defineScoped ( scopedDefinition ) {
+		let scoped = {
+            	prefix : "ICE_FOR_" + Date.now() + "_",
+        		vars : {}
+            },
+            availableItems = [];
 
-    	foreach ( scopedDefinition, ( variable, val ) => {
-    		if ( variable ) {
-    			scopedVar = scopedPrefix + variable;
-    			scoped [ variable ] = scopedVar;
-    			vm [ scopedVar ] = val;
+    	foreach ( scopedDefinition, ( val, varName ) => {
+    		if ( varName ) {
+    			scoped.vars [ scoped.prefix + varName ] = val;
+            	availableItems.push ( varName );
     		}
     	} );
 
-    	scoped.__$reg__ = new RegExp ( Object.keys ( scoped ).join ( "|" ), "g" );
+    	scoped.regexp = new RegExp ( availableItems.join ( "|" ), "g" );
 
     	return scoped;
+    },
+	
+	/**
+    	addScoped ()
+    
+    	Return Type:
+    	Object
+    	void
+    
+    	Description:
+		为vm增加局部变量
+    
+    	URL doc:
+    	http://icejs.org/######
+    */
+	addScoped () {
+    	// 增加局部变量
+		foreach ( this.scoped.vars || {}, ( val, varName ) => {
+			this.vm [ varName ] = val;
+		} );
+    },
+	
+	/**
+    	removeScoped ()
+    
+    	Return Type:
+    	Object
+    	void
+    
+    	Description:
+		移除vm中的局部变量
+    
+    	URL doc:
+    	http://icejs.org/######
+    */
+	removeScoped () {
+    	foreach ( this.scoped.vars || {}, ( val, varName ) => {
+        	if ( this.vm.hasOwnProperty ( varName ) {
+                delete this.vm [ varName ]
+            }
+		} );
     }
 } );

@@ -1,6 +1,8 @@
 import event from "../../../event/core";
+import { attr }. from "../../../func/node";
 
 export default {
+	name : /^on/,
 
     /**
         before ()
@@ -17,13 +19,20 @@ export default {
         http://icejs.org/######
     */
 	before () {
-        let rarg = /([$\w]+)\s*\((.*?)\)/,
-            expr = this.expr.split ( ":" ),
-            argMatch = rarg.exec ( expr [ 1 ] );
+        let expr = this.expr.split ( ":" ),
+            argMatch = /([$\w]+)\s*\((.*?)\)/.exec ( expr [ 1 ] ),
+            listener = argMatch ? argMatch [ 1 ] : expr [ 1 ],
+        	arg = argMatch [ 2 ] ? argMatch [ 2 ].split ( "," ).map ( item => item.trim () ) : [],
+            event = "__$event__";
+      
 
         this.type = expr [ 0 ];
-        this.expr = argMatch ? argMatch [ 1 ] : expr [ 1 ];
-        this.arg = argMatch ? argMatch [ 1 ].split ( "," ).map ( item => item.trim () ) : undefined;
+    	attr ( this.node, "on" + this.type, null );
+        arg.unshift ( event );
+    
+    	this.expr = `function ( ${ event } ) {
+			${ listener }.call ( this, ${ arg.join ( "," ) } );
+		}`;
     },
 
     /**
