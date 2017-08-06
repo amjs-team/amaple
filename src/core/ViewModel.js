@@ -24,8 +24,8 @@ function convertState ( value, subs, context ) {
 // 初始化绑定事件
 function initMethod ( methods, context ) {
 	foreach ( methods, ( method, key ) => {
-		context [ key ] = ( ...args ) => {
-			method.apply ( context, args );
+		context [ key ] = function ( ...args ) {
+			method.apply ( this, args );
 		};
 	} );
 }

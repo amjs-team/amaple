@@ -30,7 +30,8 @@ export default {
         this.item      = variable [ 1 ];
         this.expr      = variable [ 2 ];
        	this.key       = attr ( elem, ":key" );
-    
+        
+        attr ( elem, ":for", null );
     	if ( this.key ) {
             attr ( elem, ":key", null );
         }
@@ -54,7 +55,7 @@ export default {
             vm           = this.vm,
             doc 		 = elem.ownerDocument,
             fragment     = doc.createDocumentFragment(),
-            itemNode, f
+            itemNode, f,
 
             // 局部变量定义
             scopedDefinition = {};
@@ -64,22 +65,35 @@ export default {
 
             // 定义范围变量
             scopedDefinition [ this.item ] = item;
-            scopedDefinition [ this.key ] = key;
+            if ( this.key ) {
+                scopedDefinition [ this.key ] = key;
+            }
 
             itemNode = elem.cloneNode ( true );
         	if ( elem.conditionElems ) {
-            	itemNode.conditionElems = [];
-            	foreach ( elem.conditionElems, nextSib => {
-                	itemNode.conditionElems.push ( nextSib.cloneNode ( true ) );
+            	itemNode.conditionElems = [ itemNode ];
+            	foreach ( elem.conditionElems, ( nextSib, i ) => {
+                    if ( i > 0 ) {
+                        itemNode.conditionElems.push ( nextSib.cloneNode ( true ) );
+                    }
                 } );
             	itemNode.conditions = elem.conditions;
             }
-        	f.appendChild ( itemNode );
+
+            f.appendChild ( itemNode );
 
             // 为遍历克隆的元素挂载数据
         	new Tmpl ( f ).mount ( vm, this.defineScoped ( scopedDefinition, vm ) );
 
-        	fragment.appendChild ( f.childNodes [ 0 ] );
+            itemNode = f.firstChild;
+            if ( itemNode.nodeName && itemNode.nodeName.toUpperCase () === "TEMPLATE" ) {
+                foreach ( itemNode.content && itemNode.content.childNodes || itemNode.childNodes, node => {
+                    fragment.appendChild ( node );
+                } );
+            }
+            else {
+                fragment.appendChild ( f );
+            }
         } );
     	
       	// 初始化视图时将模板元素替换为挂载后元素
@@ -87,7 +101,7 @@ export default {
         	fragment.insertBefore ( this.startNode, fragment.firstChild );
         	fragment.appendChild ( this.endNode );
           
-        	parent.replaceChild ( fragment, elem );
+            elem.parentNode.replaceChild ( fragment, elem );
         }
     	
     	// 改变数据后更新视图
@@ -98,7 +112,7 @@ export default {
         	while ( ( el = el.nextSibling ) !== this.endNode ) {
             	removes.push ( el );
             }
-        	reomves.map ( item => {
+        	removes.map ( item => {
             	p.removeChild ( item );
             } );
         	

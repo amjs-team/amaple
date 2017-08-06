@@ -1,7 +1,7 @@
 import correctParam from "src/correctParam";
 
 describe ( "correctParam", () => {
-	xit ( "based type", () => {
+	it ( "based type", () => {
 		let a = 1,
 			b = "",
 			c = [];
@@ -12,7 +12,7 @@ describe ( "correctParam", () => {
 		} );
 	} );
 
-	xit ( "event args correct", () => {
+	it ( "event args correct", () => {
 		( function ( elem, types, listener, useCapture ) {
 			correctParam ( elem, types, listener, useCapture ).to ( "object", "string" ).done ( ( elem, types, listener, useCapture ) => {
 				expect ( elem ).toBeUndefined ();
@@ -23,7 +23,7 @@ describe ( "correctParam", () => {
 		} ) ( "change", () => {}, false );
 	} );
 
-	xit ( "http args correct", () => {
+	it ( "http args correct", () => {
 		( function ( url, args, callback, dataType ) {
 			correctParam ( url, args, callback, dataType ).to ( "string", [ /=/, "object" ], "function", /^(?:TEXT|JSON|SCRIPT|JSONP)$/i ).done ( ( url, args, callback, dataType ) => {
 				expect ( url ).toBe ( "index.html" );

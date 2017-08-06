@@ -40,4 +40,18 @@ describe ( "directive expr", () => {
         expect ( d.querySelector ( "#success" ).firstChild.nodeValue ).toBe ( "attr expr" );
         expect ( d.querySelector ( "#success456" ).firstChild.nodeValue ).toBe ( "attr expr2" );
     } );
+
+    it ( "multiple directive expression in single attribute or single text", () => {
+        d.innerHTML = '<p id="{{ id }}{{ text }}">{{ hello }} {{ id }}</p>';
+        let t = new Tmpl ( d ),
+            vm = new ViewModel ( {
+                id : "text",
+                text : "222",
+                hello : "hello",
+            } );
+        t.mount ( vm );
+
+        expect ( d.querySelector ( "#text222" ).firstChild.nodeValue ).toBe ( "hello text" );
+
+    } );
 } );

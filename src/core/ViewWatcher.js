@@ -1,5 +1,6 @@
 import { extend, type, foreach, noop } from "../func/util";
 import { runtimeErr } from "../error";
+import slice from "../var/slice";
 import Subscriber from "./Subscriber";
 
 
@@ -17,15 +18,20 @@ import Subscriber from "./Subscriber";
 	http://icejs.org/######
 */
 function makeFn ( code ) {
-	return new Function ( "obj", "runtimeErr", 
-	`with ( obj ) {
+	return new Function ( "runtimeErr", 
+	`let self = this,
+		 ret;
+	self.addScoped ();
+	with ( self.vm ) {
 		try {
-			return ${ code };
+			ret = ${ code };
 		}
 		catch ( e ) {
 			throw runtimeErr ( "vm", e );
 		}
-	}` );
+	}
+	self.removeScoped ();
+	return ret;` );
 }
 
 /**
@@ -43,32 +49,31 @@ function makeFn ( code ) {
 	http://icejs.org/######
 */
 export default function ViewWatcher ( directive, node, expr, vm, scoped ) {
-	
-  	// 如果scoped为局部数据对象则将expr内的局部变量名替换为局部变量名
-	if ( type ( scoped ) === "object" && scoped.regexp instanceof RegExp ) {
-		expr = expr.replace ( scoped.regexp, match => scoped.prefix + match );
-	}
 
 	this.directive = directive;
 	this.node = node;
 	this.expr = expr;
 	this.vm = vm;
 	this.scoped = scoped;
+
 	( directive.before || noop ).call ( this );
+
+  	// 如果scoped为局部数据对象则将expr内的局部变量名替换为局部变量名
+	if ( type ( scoped ) === "object" && scoped.regexp instanceof RegExp ) {
+		this.expr = this.expr.replace ( scoped.regexp, match => scoped.prefix + match );
+	}
 
 	this.getter = makeFn ( this.expr );
 
     // 将获取表达式的真实值并将此watcher对象绑定到依赖监听属性中
 	Subscriber.watcher = this;
-  
-	this.addScoped ();
-	let val = this.getter ( vm, runtimeErr );
-	this.removeScoped ();
+	let val = this.getter ( runtimeErr );
+	Subscriber.watcher = undefined;
   
 	directive.update.call ( this, val );
 }
 
-extend ( Watcher.prototype, {
+extend ( ViewWatcher.prototype, {
 
 	/**
 		update ()
@@ -83,9 +88,7 @@ extend ( Watcher.prototype, {
 		http://icejs.org/######
 	*/
 	update () {
-    	this.addScoped ();
-    	this.directive.update.call ( this, this.getter ( this.vm, runtimeErr ) );
-    	this.removeScoped ();
+    	this.directive.update.call ( this, this.getter ( runtimeErr ) );
     },
 
     /**
@@ -138,7 +141,7 @@ extend ( Watcher.prototype, {
     */
 	addScoped () {
     	// 增加局部变量
-		foreach ( this.scoped.vars || {}, ( val, varName ) => {
+		foreach ( this.scoped && this.scoped.vars || {}, ( val, varName ) => {
 			this.vm [ varName ] = val;
 		} );
     },
@@ -157,8 +160,8 @@ extend ( Watcher.prototype, {
     	http://icejs.org/######
     */
 	removeScoped () {
-    	foreach ( this.scoped.vars || {}, ( val, varName ) => {
-        	if ( this.vm.hasOwnProperty ( varName ) {
+    	foreach ( this.scoped && this.scoped.vars || {}, ( val, varName ) => {
+        	if ( this.vm.hasOwnProperty ( varName ) ) {
                 delete this.vm [ varName ]
             }
 		} );

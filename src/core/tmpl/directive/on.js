@@ -1,5 +1,5 @@
 import event from "../../../event/core";
-import { attr }. from "../../../func/node";
+import { attr } from "../../../func/node";
 
 export default {
 	name : /^on/,
@@ -22,16 +22,18 @@ export default {
         let expr = this.expr.split ( ":" ),
             argMatch = /([$\w]+)\s*\((.*?)\)/.exec ( expr [ 1 ] ),
             listener = argMatch ? argMatch [ 1 ] : expr [ 1 ],
-        	arg = argMatch [ 2 ] ? argMatch [ 2 ].split ( "," ).map ( item => item.trim () ) : [],
+        	arg = argMatch && argMatch [ 2 ] ? argMatch [ 2 ].split ( "," ).map ( item => item.trim () ) : [],
             event = "__$event__";
       
 
         this.type = expr [ 0 ];
-    	attr ( this.node, "on" + this.type, null );
+    	attr ( this.node, ":on" + this.type, null );
         arg.unshift ( event );
     
     	this.expr = `function ( ${ event } ) {
+            self.addScoped ();
 			${ listener }.call ( this, ${ arg.join ( "," ) } );
+            self.removeScoped ();
 		}`;
     },
 

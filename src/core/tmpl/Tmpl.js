@@ -1,6 +1,6 @@
-import { rexpr } from "../../var/const";
 import slice from "../../var/slice";
 import { extend, foreach } from "../../func/util";
+import { attr } from "../../func/node";
 import Subscriber from "../Subscriber";
 import ViewWatcher from "../ViewWatcher";
 import directiveIf from "./directive/if";
@@ -35,8 +35,9 @@ extend ( Tmpl.prototype, {
 extend ( Tmpl, 	{
 	mountElem ( elem ) {
     	const rattr = /^:([\$\w]+)$/;
-        let directive, handler, targetNode, expr, forAttrValue, 
-            watcherData = [];
+        let directive, handler, targetNode, expr, forAttrValue, firstChild,
+            watcherData = [],
+            rexpr = /{{\s*(.*?)\s*}}/;
 		
     	do {
         	if ( elem.nodeType === 1 ) {
@@ -94,28 +95,49 @@ extend ( Tmpl, 	{
                 }
             }
             
-            if ( elem.firstChild && !forAttrValue ) {
-                watcherData = watcherData.concat ( Tmpl.mountElem ( elem.firstChild ) );
+            firstChild = elem.firstChild || elem.content && elem.content.firstChild;
+            if ( firstChild && !forAttrValue ) {
+                watcherData = watcherData.concat ( Tmpl.mountElem ( firstChild ) );
             }
         } while ( elem = elem.nextSibling )
         return watcherData;
     },
-  
+
+    /**
+        preTreat ( elem: DOMObject )
+    
+        Return Type:
+        String
+        当前元素的“:for”属性值
+    
+        Description:
+        元素预处理
+        主要对“:if”、“:for”两个指令的特殊处理
+    
+        URL doc:
+        http://icejs.org/######
+    */
 	preTreat ( elem ) {
-    	let nextSib, parent, condition;
-    	if ( condition = attr ( elem,  ":if" ) && !elem.conditionElems ) {
+    	let nextSib, parent, 
+            _if = ":if",
+            _elseif = ":else-if",
+            _else = ":else",
+            condition = attr ( elem, _if );
+    	if ( condition && !elem.conditionElems ) {
             elem.conditions = [ condition ];
             elem.conditionElems = [ elem ];
             parent = elem.parentNode;
         	while ( nextSib = elem.nextElementSibling ) {
-        		if ( condition = attr ( nextSib, ":else-if" ) ) {
+        		if ( condition = attr ( nextSib, _elseif ) ) {
 					elem.conditions.push ( condition );
-                	elem.conditionsElems.push ( nextSib );
+                	elem.conditionElems.push ( nextSib );
+                    attr ( nextSib, _elseif, null );
           			parent.removeChild ( nextSib );
             	}
-				else if ( nextSib.hasAttribute ( ":else" ) ) {
+				else if ( nextSib.hasAttribute ( _else ) ) {
                 	elem.conditions.push ( "true" );
-                	elem.conditionsElems.push ( nextSib );
+                	elem.conditionElems.push ( nextSib );
+                    attr ( nextSib, _else, null );
           			parent.removeChild ( nextSib );
                 	break;
                 }
@@ -124,6 +146,12 @@ extend ( Tmpl, 	{
                 }
         	}
         }
+
+        foreach ( elem.conditionElems || [], elem => {
+            if ( elem.nodeName.toUpperCase () === "TEMPLATE" ) {
+                elem.templateNodes = slice.call ( elem.content.childNodes );
+            }
+        } );
         
         return attr ( elem, ":for" );
     },

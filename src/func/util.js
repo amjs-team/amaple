@@ -1,4 +1,5 @@
 import toString from "../var/toString";
+import slice from "../var/slice";
 import check from "../check";
 
 /**
@@ -48,10 +49,19 @@ export function noop () {}
 */
 export function foreach ( target, callback ) {
 
+	if ( ( target.length || Object.keys ( target ).length ) <= 0 ) {
+		return;
+	}
+
 	let 
 		isContinue, i,
 		tTarget 	= type ( target ),
 		tCallback 	= type ( callback );
+
+	if ( tTarget === "object" && target.length ) {
+		target = slice.call ( target );
+		tTarget = "array";
+	}
 
 	if ( tTarget === "array" ) {
 		for ( i = 0; i < target.length; i++ ) {

@@ -1,5 +1,4 @@
 import { extend, foreach, type } from "../func/util";
-import Watcher from "./Watcher";
 
 /**
     Subscriber ()

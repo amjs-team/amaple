@@ -23,10 +23,10 @@ export default function ComputedWatcher ( updateFn, getter ) {
 
     // 将获取表达式的真实值并将此watcher对象绑定到依赖监听属性中
 	Subscriber.watcher = this;
-	updateFn ( this, getter () );
+	updateFn ( getter () );
 }
 
-extend ( Watcher.prototype, {
+extend ( ComputedWatcher.prototype, {
 
 	/**
 		update ()
@@ -41,7 +41,7 @@ extend ( Watcher.prototype, {
 		http://icejs.org/######
 	*/
 	update () {
-    	this.updateFn ( this, this.getter () );
+    	this.updateFn ( this.getter () );
     }
 
 } );

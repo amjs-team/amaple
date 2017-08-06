@@ -1,4 +1,3 @@
-import { rexpr } from "../../../var/const";
 import { attr } from "../../../func/node";
 
 export default {
@@ -21,7 +20,7 @@ export default {
         this.expr = "\"" + this.expr + "\"";
 
         // 将表达式转换为字符串拼接代码
-    	this.expr = this.expr.replace ( rexpr, ( match, rep ) => "\" + " + rep + " + \"" );
+    	this.expr = this.expr.replace ( /{{\s*(.*?)\s*}}/g, ( match, rep ) => "\" + " + rep + " + \"" );
     },
 
     /**
