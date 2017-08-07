@@ -163,7 +163,7 @@ describe ( "directive for => ", () => {
         t.mount ( vm );
 
         children = d.children;
-        console.log(d);
+        // console.log(d);
 
         // 调用list方法时会重新克隆元素，然后再进行渲染，此时相关监听变量会再次监听克隆出来的新的元素，但旧的监听已经需要删除了
 

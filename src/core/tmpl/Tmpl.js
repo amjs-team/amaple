@@ -74,16 +74,14 @@ extend ( Tmpl, 	{
                         		// 没有找到该指令
                         		throw runtimeErr ( "directive", "没有找到\"" + directive + "\"指令或表达式" );
                         	}
+
+                            watcherData.push ( { handler, targetNode, expr } );
                     	}
                 		else if ( rexpr.test ( attr.nodeValue ) ) {
 
                     		// 属性值表达式绑定
-                    		handler = Tmpl.directives.expr;
-                    		targetNode = attr;
-                    		expr = attr.nodeValue;
+                            watcherData.push ( { handler: Tmpl.directives.expr, targetNode : attr, expr : attr.nodeValue } );
                     	}
-
-                    	watcherData.push ( { handler, targetNode, expr } );
             		} );
                 }
             }

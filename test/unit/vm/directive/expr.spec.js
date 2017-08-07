@@ -52,6 +52,26 @@ describe ( "directive expr", () => {
         t.mount ( vm );
 
         expect ( d.querySelector ( "#text222" ).firstChild.nodeValue ).toBe ( "hello text" );
+    } );
 
+    it ( "Special treatment at attribute \"style\" and \"class\" with directive expression", () => {
+        d.innerHTML = '<p class="{{ clazz }}" style="{{ color }}">hello icejs</p>';
+        let t = new Tmpl ( d ),
+            vm = new ViewModel ( {
+                clazz: [ "a", "b", "c" ],
+                color: {
+                    background: "red",
+                    color: "white",
+                    fontSize: 20,
+                }
+            } );
+        t.mount ( vm );
+
+        expect ( d.querySelector ( ".a" ) ).toEqual ( jasmine.any ( Object ) );
+        expect ( d.querySelector ( ".b" ) ).toEqual ( jasmine.any ( Object ) );
+        expect ( d.querySelector ( ".c" ) ).toEqual ( jasmine.any ( Object ) );
+        expect ( d.firstChild.style.background ).toBe ( "red" );
+        expect ( d.firstChild.style.color ).toBe ( "white" );
+        expect ( d.firstChild.style.fontSize ).toBe ( "20px" );
     } );
 } );
