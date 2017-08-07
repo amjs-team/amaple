@@ -68,6 +68,8 @@ export default function ViewWatcher ( directive, node, expr, vm, scoped ) {
     // 将获取表达式的真实值并将此watcher对象绑定到依赖监听属性中
 	Subscriber.watcher = this;
 	let val = this.getter ( runtimeErr );
+  
+	// 局部变量没有设置监听，所以不会调用Subscriber.subscriber()，需手动设置为undefined
 	Subscriber.watcher = undefined;
   
 	directive.update.call ( this, val );

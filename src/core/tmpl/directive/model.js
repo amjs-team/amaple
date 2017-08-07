@@ -1,4 +1,5 @@
 import { attr } from "../../../func/node";
+import { type } from "../../../func/util";
 import event from "../../../event/core";
 
 export default {
@@ -19,40 +20,43 @@ export default {
     */
 	before () {
         let support = {
-            input : {
-                nodeName : "TEXTAREA",
-                type : "text, password, color, search, week, date, datetime-local, month, time, email, range, tel, url"
-            },
-            change : {
-                nodeName : "SELECT",
-                inputType : "radio, checkbox"
-            }
-        },
-        elem = this.node,
-        expr = this.expr,
-        vm = this.vm,
-        nodeName = elem.nodeName.toUpperCase (),
-        type = attr ( elem, "type" ).toLowerCase (),
+              input : {
+                  nodeName : "TEXTAREA",
+                  type : "text, password, color, search, week, date, datetime-local, month, time, email, range, tel, url"
+              },
+              change : {
+                  nodeName : "SELECT",
+                  inputType : "radio, checkbox"
+              }
+          },
+          elem = this.node,
+          expr = this.expr,
+          vm = this.vm,
+          nodeName = elem.nodeName.toUpperCase (),
+          inputType = attr ( elem, "type" ).toLowerCase (),
 
-        // 如果是复选框则数据要以数组的形式表现
-        handler = nodeName === "INPUT" && type === "checkbox" ? function () {
-            vm [ expr ] = vm [ expr ] || [];
-            if ( this.checked ) {
-                vm [ expr ].push ( this.value );
-            }
-            else {
-                vm [ expr ].splice ( vm [ expr ].indexOf ( this.value ), 1 );
-            }
-        } : 
-        function () {
-            vm [ expr ] = this.value;
-        };
+          // 如果是复选框则数据要以数组的形式表现
+          handler = nodeName === "INPUT" && inputType === "checkbox" ? function () {
+              if ( this.checked ) {
+                  vm [ expr ].push ( this.value );
+              }
+              else {
+                  vm [ expr ].splice ( vm [ expr ].indexOf ( this.value ), 1 );
+              }
+          } : 
+          function () {
+              vm [ expr ] = this.value;
+          };
 
         // 判断支持input事件的元素名称或对应type的input元素
-        if ( ( nodeName === "INPUT" && support.input.type.indexOf ( type ) !== -1 ) || nodeName.indexOf ( support.input.nodeName ) !== -1 ) {
+        if ( ( nodeName === "INPUT" && support.input.type.indexOf ( inputType ) !== -1 ) || support.input.nodeName.indexOf ( nodeName ) !== -1 ) {
             event ( elem, "input", handler );
         }
-        else if ( ( nodeName === "INPUT" && support.change.type.indexOf ( type ) !== -1 ) || nodeName.indexOf ( support.change.nodeName ) !== -1 ) {
+        else if ( ( nodeName === "INPUT" && support.change.type.indexOf ( inputType ) !== -1 ) || support.change.nodeName.indexOf ( nodeName ) !== -1 ) {
+        	// 将相同model的radio控件分为一组
+        	if ( inputType === "radio" ) {
+            	attr ( elem, "name", expr );
+            }
             event ( elem, "change", handler );
         }
     },
@@ -70,6 +74,29 @@ export default {
         http://icejs.org/######
     */
 	update ( val ) {
-        this.node.value = val;
+    	let tval = type ( val ),
+            elem = this.node,
+        	nodeName = elem.nodeName.toUpperCase (),
+            inputType = attr ( elem, "type" ).toLowerCase ();
+
+		// 对radio的处理
+    	if ( tval === "string" && nodeName === "INPUT" && inputType === "radio" && elem.value === val ) {
+        	elem.checked = true;
+        }
+    	
+    	// 对checkbox的处理
+    	else if ( tval === "array" && nodeName === "INPUT" && inputType === "checkbox" ) {
+        	if ( val.indexOf ( elem.value ) !== -1 ) {
+            	elem.checked = true;
+            }
+        	else {
+            	elem.checked = false;
+            }
+        }
+    	
+    	// 其他控件的处理
+    	else {
+        	elem.value = val;
+        }
     }
 };
