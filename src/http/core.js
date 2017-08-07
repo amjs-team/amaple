@@ -1,4 +1,5 @@
 import { extend } from "../func/util";
+import event from "../event/core";
 
 /**
 	Plugin http

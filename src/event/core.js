@@ -92,7 +92,7 @@ export default event = {
 	},
 
 	/**
-		on ( elem: DOMObject, types: String, listener: Function, useCapture?: Boolean, once?: Boolean )
+		on ( elem?: DOMObject, types: String, listener: Function, useCapture?: Boolean, once?: Boolean )
 	
 		Return Type:
 		void
@@ -158,7 +158,7 @@ export default event = {
 
 
 	/**
-		remove ( elem: DOMObject, types: String, listener: Function, useCapture: Boolean )
+		remove ( elem?: DOMObject, types: String, listener: Function, useCapture?: Boolean )
 	
 		Return Type:
 		void
@@ -218,7 +218,7 @@ export default event = {
 	},
 
 	/**
-		emit ( elem: DOMObject, types: String )
+		emit ( elem?: DOMObject, types: String )
 	
 		Return Type:
 		void

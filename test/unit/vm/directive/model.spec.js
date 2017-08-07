@@ -1,5 +1,6 @@
 import Tmpl from "core/tmpl/Tmpl";
 import ViewModel from "core/ViewModel";
+import event from "src/event/core";
 
 describe ( "directive :model", () => {
 	let d;
@@ -21,9 +22,8 @@ describe ( "directive :model", () => {
 		expect ( d.firstChild.value ).toBe ( "hello world" );
       
 		d.firstChild.value = "hello icejs2";
+        event.emit ( d.firstChild, "input" );
 		expect ( vm.text ).toBe ( "hello icejs2" );
-
-        console.log(d);
     } );
 	
 	it ( "directive :model will mount in textarea node", () => {
@@ -39,9 +39,8 @@ describe ( "directive :model", () => {
 		expect ( d.firstChild.value ).toBe ( "hello world" );
       
 		d.firstChild.value = "hello icejs2";
+        event.emit ( d.firstChild, "input" );
 		expect ( vm.text ).toBe ( "hello icejs2" );
-
-        console.log(d);
     } );
 
 	it ( "directive :model will mount in radio input node", () => {
@@ -62,7 +61,8 @@ describe ( "directive :model", () => {
     	expect ( d.firstChild.checked ).toBe ( false );
 		expect ( d.firstChild.nextSibling.checked ).toBe ( false );
 
-        console.log(d);
+        event.emit ( d.firstChild, "change" );
+        expect ( vm.text ).toBe ( "a" );
     } );
 	
 	it ( "directive :model will in checkbox input node", () => {
@@ -78,16 +78,28 @@ describe ( "directive :model", () => {
     	expect ( d.childNodes [ 1 ].checked ).toBe ( true );
     	expect ( d.childNodes [ 2 ].checked ).toBe ( false );
     	
-    	d.childNodes [ 0 ].click ();
+        d.childNodes [ 0 ].checked = true;
+        event.emit ( d.childNodes [ 0 ], "change" );
     	expect ( d.childNodes [ 0 ].checked ).toBe ( true );
     	expect ( d.childNodes [ 1 ].checked ).toBe ( true );
     	expect ( d.childNodes [ 2 ].checked ).toBe ( false );
+        expect ( vm.arr.toString () ).toBe ( "b,a" );
+
+        d.childNodes [ 1 ].checked = false;
+        event.emit ( d.childNodes [ 1 ], "change" );
+        expect ( d.childNodes [ 0 ].checked ).toBe ( true );
+        expect ( d.childNodes [ 1 ].checked ).toBe ( false );
+        expect ( d.childNodes [ 2 ].checked ).toBe ( false );
+        expect ( vm.arr.toString () ).toBe ( "a" );
     
-    	vm.push ( "c" );
+    	vm.arr.push ( "c" );
     	expect ( d.childNodes [ 0 ].checked ).toBe ( true );
-    	expect ( d.childNodes [ 1 ].checked ).toBe ( true );
+    	expect ( d.childNodes [ 1 ].checked ).toBe ( false );
     	expect ( d.childNodes [ 2 ].checked ).toBe ( true );
-    	
-    	console.log (d);
+
+        vm.arr.shift ();
+        expect ( d.childNodes [ 0 ].checked ).toBe ( false );
+        expect ( d.childNodes [ 1 ].checked ).toBe ( false );
+        expect ( d.childNodes [ 2 ].checked ).toBe ( true );
     } );
 } );
