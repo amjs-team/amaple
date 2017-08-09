@@ -1,5 +1,5 @@
 import { argErr, checkErr } from "./error";
-import { type, extend } from "./func/util";
+import { type, extend, foreach } from "./func/util";
 
 /**
     check ( variable: Any )
@@ -217,10 +217,11 @@ extend ( check, {
 		Array.prototype.push.apply ( this.condition, 
             ( type ( this.condition [ this.condition.length - 1 ] ) === "boolean" ? [ "&&" ] : [] )
             .concat ( ( () => {
-          		let _var, res;
-        		while ( _var = vars.shift () ) {
-                	res = res || compareFn ( _var );
-                }
+          		let res;
+                foreach ( vars, _var => {
+                    res = res || compareFn ( _var );
+                } );
+
                 return res;
         	} ) () ) 
         );

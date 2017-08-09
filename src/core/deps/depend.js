@@ -1,12 +1,12 @@
 import Loader from "./Loader";
 import cache from "../../cache/core";
-import { foreach } from "../../func/util";
+import { foreach, guid } from "../../func/util";
 import { urlTransform } from "../../func/private";
 import { appendScript } from "../../func/node";
 import core from "../core";
 
 /**
-	depend ( name: String, deps: Object, args: Array, factory: Function )
+	depend ( name: String, deps: Object, factory: Function )
 
 	Return Type:
 	void
@@ -18,41 +18,30 @@ import core from "../core";
 	URL doc:
 	http://icejs.org/######
 */
-export default function depend ( name, deps, args, factory ) {
+export default function depend ( name, deps, factory ) {
 
 	let // 非最外层加载依赖则name将接收一个包含name和guid的对象
-		guid = name === Loader.topName ? guid$ () : name.guid,
+		nguid = name === Loader.topName ? guid () : name.guid,
 
 		// 正在加载的依赖数
 		loadingCount = 0,
-		canFire 	 = true,
+		canFire = true,
+		loadObj,
 
-		module, loadObj;
-
-	// 判断init方法是否使用插件
-	// 如果没有使用插件则可以直接调用
-	foreach ( args, item => {
-		if ( deps.hasOwnProperty ( item ) ) {
-			canFire = false;
-			return false;
-		}
-	} );
-
-	module = {
+		module = {
 			// type 	: type,
 			deps 	: deps,
 			factory : factory,
-			args 	: args
 		};
 
 	// 只有在加载插件类型的依赖时才不创建Loader加载器
 	if ( name === Loader.topName ) {
 
 		// 创建Loader对象并将此依赖保存于loadDep中
-		loadObj = Loader.create ( guid, name, module );
+		loadObj = Loader.create ( nguid, name, module );
 	}
 	else {
-		loadObj = Loader.loaderMap [ guid ];
+		loadObj = Loader.loaderMap [ nguid ];
 		loadObj.putLoad ( name.name, module );
 	}
 
@@ -68,10 +57,10 @@ export default function depend ( name, deps, args, factory ) {
 
 			// 加载依赖
 			let script 	= document.createElement ( "script" );
-			script.src 	= core.config.base.plugin + depStr + loader.suffix + "?m=" + depStr + "&guid=" + guid;
+			script.src 	= core.config.base.plugin + depStr + loader.suffix + "?m=" + depStr + "&guid=" + nguid;
 			script.setAttribute ( Loader.depName, depStr );
 			script.setAttribute ( Loader.scriptFlag, "" );
-			script.setAttribute ( Loader.loaderID, guid );
+			script.setAttribute ( Loader.loaderID, nguid );
 
 			appendScript ( script, Loader.onScriptLoaded );
 
@@ -80,7 +69,7 @@ export default function depend ( name, deps, args, factory ) {
 	} );
 
 	// 如果顶层执行依赖没有待加载的依赖参数，或可以直接触发，则直接执行
-	if ( ( loadingCount === 0 && name === Loader.topName ) || canFire ) {
+	if ( loadingCount === 0 && name === Loader.topName ) {
 		loadObj.inject ();
 		loadObj.fire ();
 	}

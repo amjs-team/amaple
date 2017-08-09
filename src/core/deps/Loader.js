@@ -1,4 +1,4 @@
-import { extend } from "../../func/util";
+import { extend, foreach } from "../../func/util";
 import cache from "../../cache/core";
 
 /**
@@ -61,7 +61,7 @@ extend ( Loader.prototype, {
 		http://icejs.org/######
 	*/
 	dropWaiting ( name ) {
-		var pointer = this.waiting.indexOf ( name );
+		let pointer = this.waiting.indexOf ( name );
 		if ( pointer !== -1 ) {
 			this.waiting.splice ( pointer, 1 );
 		}
@@ -115,10 +115,10 @@ extend ( Loader.prototype, {
 	*/
 	inject () {
 
-		var 
+		let 
 			module = this.getLoad ( Loader.topName ),
 			args = ( function () {
-				var _args = [];
+				let _args = [];
 				foreach ( module.args, ( item, key ) => {
 
 					// 获取所有需注入的依赖
@@ -128,7 +128,7 @@ extend ( Loader.prototype, {
 				} );
 
 				return _args;
-			}) (),
+			} ) (),
 
 			dep, ret, deps = [];
 
@@ -226,7 +226,7 @@ extend ( Loader, {
 			____a.____b();
 		} catch(e) {
 			if ( e.stack ) {
-				var match = /\?m=(\S+)&guid=([\d]+):?/.exec ( e.stack );
+				let match = /\?m=(\S+)&guid=([\d]+):?/.exec ( e.stack );
 				return {
 					name: match [ 1 ],
 					guid: match [ 2 ]
@@ -250,14 +250,14 @@ extend ( Loader, {
 	*/
 	onScriptLoaded ( event ) {
 
-		var loadID = event.target.getAttribute ( Loader.loaderID ),
+		let loadID = event.target.getAttribute ( Loader.loaderID ),
 			curLoader = Loader.loaderMap [ loadID ];
 
 		// 执行
-		if ( curLoader.dropWaiting ( event.target.getAttribute( Loader.depName ) ) === 0 ) {
+		if ( curLoader.dropWaiting ( event.target.getAttribute ( Loader.depName ) ) === 0 ) {
 
 			// 依赖注入后的工厂方法
-			var factory = curLoader.inject ();
+			let factory = curLoader.inject ();
 
 			// 调用工厂方法
 			Loader.fire ( factory );
