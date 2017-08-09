@@ -117,39 +117,27 @@ extend ( Loader.prototype, {
 
 		let 
 			module = this.getLoad ( Loader.topName ),
-			args = ( function () {
-				let _args = [];
-				foreach ( module.args, ( item, key ) => {
+			deps = {},
+			depObj, ret;
 
-					// 获取所有需注入的依赖
-					if ( module.deps.hasOwnProperty ( item ) ) {
-						_args.push ( item );
-					}
-				} );
-
-				return _args;
-			} ) (),
-
-			dep, ret, deps = [];
-
-		foreach ( args, arg => {
+		foreach ( module.deps, dep => {
 
 			// 查找插件
-			if ( dep = cache.getPlugin ( arg ) ) {
-				deps.push ( dep );
+			if ( depObj = cache.getPlugin ( dep ) ) {
+				deps [ dep ] = depObj;
 			}
 
 			// 如果都没找到则去此次加载完成的依赖中获取并缓存入外部对象
 			else {
-				dep = this.inject ( this.getLoad ( arg ) );
-				cache.pushPlugin ( arg, dep );
-				deps.push ( dep );
+				depObj = this.inject ( this.getLoad ( dep ) );
+				cache.pushPlugin ( dep, depObj );
+            	deps [ dep ] = depObj;
 			}
 		} );
 
 		// 返回注入后工厂方法
 		this.factory = () => {
-			module.factory.apply ( null, deps );
+			module.factory ( deps );
 		}
 	},
 

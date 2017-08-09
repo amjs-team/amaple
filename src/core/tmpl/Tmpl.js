@@ -1,6 +1,8 @@
 import slice from "../../var/slice";
 import { extend, foreach } from "../../func/util";
 import { attr } from "../../func/node";
+import single from "../../single/core";
+import elementDriver from "../driver/elementDriver";
 import Subscriber from "../Subscriber";
 import ViewWatcher from "../ViewWatcher";
 import directiveIf from "./directive/if";
@@ -52,6 +54,12 @@ extend ( Tmpl, 	{
                 	watcherData.push ( { handler : Tmpl.directives.for, targetNode : elem, expr : forAttrValue } );
                 }
             	else {
+                	// 绑定无刷新跳转点击事件
+                	single.bind ( elem );
+                	
+                	// 加载元素驱动器渲染元素
+                	elementDriver.render ( elem );
+                	
                 	foreach ( slice.call ( elem.attributes ), attr => {
                 		directive = rattr.exec ( attr.nodeName );
                 		if ( directive ) {

@@ -33,5 +33,6 @@ export let argErr = error ( "arg" );	// 参数错误
 export let checkErr = error ( "check" );	// 参数检查错误
 export let requestErr = error ( "request" );	// 请求错误
 export let configErr = error ( "config" );		// 配置错误
+export let moduleErr = error ( "module" );		// 模块错误
 export let runtimeErr = error ( "runtime" );	// 运行时错误
 export let vmComputedErr = error ( "vm-computed" );		// 模块错误

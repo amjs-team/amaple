@@ -3,15 +3,49 @@ import cache from "../cache/core";
 import single from "../single/core";
 import depend from "./deps/depend";
 import Loader from "./deps/Loader";
-import { type, isEmpty, foreach } from "../func/util";
+import { type, isEmpty, foreach, noop } from "../func/util";
 import { query } from "../func/node";
+import { TYPE_PLUGIN, TYPE_DRIVER } from "../var/const";
 import check from "../check";
+import correctParam from "../correctParam";
 import NodeLite from "./NodeLite";
 import ViewModel from "./ViewModel";
 import Tmpl from "./tmpl/Tmpl";
 
 
 /////////////////////////////////
+function getFnArgs ( fn ) {
+	return type ( fn ) === "function" ? 
+			( ( /^function\s*\((.*)\)\s*/.exec ( fn.toString () ) || [] ) [ 1 ] || "" ).split ( "," ).map ( item => item.trim () ) 
+    		: [];
+}
+
+/**
+	filterDeps ( deps: Object, args: Array )
+
+	Return Type:
+	Object
+	过滤后deps对象
+
+	Description:
+	过滤deps中未被接收的依赖项
+
+	URL doc:
+	http://icejs.org/######
+*/
+function filterDeps ( deps, args ) {
+	let _deps = {};
+	
+	// 过滤多余的依赖项
+	foreach ( deps, ( item, key ) => {
+		if ( args.indexOf ( key ) > -1 ) {
+			_deps [ key ] = item;
+		}
+	} );
+
+	return _deps;
+}
+
 /**
 	findParentVm ( elem: DOMObject )
 
@@ -46,11 +80,41 @@ function findParentVm ( elem ) {
 let ice = {
 	config : config (),
 
-	use ( structure ) {
+	use ( name, structure ) {
+    	
+    	correctParam ( name, structure ).to ( "string", "object" ).done ( function () {
+        	name = this.$1;
+        	structure = this.$2;
+        } );
 		// 查看是否有deps，有的时候，value类型分为以下情况：
 		// 1、若value为string，则使用cache.componentCreater方法获取插件，如果没有则使用模块加载器加载
 		// 2、若value为object，则调用use构建插件
 		// 判断是plugin还是driver，存入相应的cache中并返回
+    	
+    	check ( structure.build ).type ( "function" ).or ().check ( structure.init ).type ( "function" ).ifNot ( "plugin-driver", "plugin必须包含build方法，driver必须包含init方法" ).do ();
+      
+    	let deps = structure.deps || {},
+            moduleType = structure.build ? TYPE_PLUGIN :TYPE_DRIVER,
+            moduleInfo = Loader.getCurrentDep (),
+            args;
+    	
+        switch ( moduleType ) {
+            case TYPE_PLUGIN:
+                args = getFnArgs ( structure.build );
+            	deps = filterDeps ( deps, args );
+    			depend ( moduleInfo || {}, deps, ( depObject ) => {
+                	cache.pushPlugin ( moduleInfo.name, structure.build.apply ( null, args.map ( arg => depObject [ arg ] ) ) );
+                } );
+            	
+                break;
+            case TYPE_DRIVER:
+                args = getFnArgs ( structure.apply ).slice ( 1 ).concat ( getFnArgs ( structure.init ) );
+            	deps = filterDeps ( deps, args );
+          		cache.pushDriver ( structure );
+    			depend ( Loader.TopName, deps, noop );
+            	
+                break;
+        }
 	},
 
 	module ( moduleName, vmData ) {
@@ -63,27 +127,18 @@ let ice = {
       	/////////////////////////////////
       	///
 		let moduleElem 	= query ( "*[" + single.aModule + "=" + moduleName + "]" ),
-			rarg 		= /^function\s*\((.*)\)\s*/,
 
 			// 获取init方法参数
-			initArgs 	= ( ( rarg.exec ( vmData.init.toString () ) || [] ) [ 1 ] || "" ).split ( "," ).map ( item => item.trim () ),
+			initArgs 	= getFnArgs ( vmData.init ),
 
 			// 获取apply方法参数
-			applyArgs 	= type ( vmData.apply ) === "function" ? 
-						( ( rarg.exec ( vmData.apply.toString () ) || [] ) [ 1 ] || "" ).split ( "," ).map ( item => item.trim () ) : [],
+			applyArgs 	= getFnArgs ( vmData.apply ),
 
 			// apply方法的第一个参数为module根元素，而不是插件
 			args 		= applyArgs.slice ( 1 ).concat ( initArgs ),
-			deps 		= vmData.deps,
-			_deps 		= {};
+			deps 		= vmData.deps || {};
 
-		// 过滤多余的依赖项
-		foreach ( deps, ( item, key ) => {
-			if ( args.indexOf ( key ) > -1 ) {
-				_deps [ key ] = item;
-			}
-		} );
-		deps = _deps;
+		deps = filterDeps ( deps, args );
 
 		// 依赖注入插件对象后
 		depend ( Loader.topName, deps, ( depObject ) => {
