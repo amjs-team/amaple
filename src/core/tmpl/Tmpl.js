@@ -35,7 +35,7 @@ extend ( Tmpl.prototype, {
 } );
 
 extend ( Tmpl, 	{
-	mountElem ( elem ) {
+	mountElem ( elem, vm, scoped ) {
     	const rattr = /^:([\$\w]+)$/;
         let directive, handler, targetNode, expr, forAttrValue, firstChild,
             watcherData = [],
@@ -49,16 +49,16 @@ extend ( Tmpl, 	{
 				// 处理{{ expression }}
 				// 处理:on、:onrequest :onresponse :onfinish事件
 				// 处理:model
-            	forAttrValue = Tmpl.preTreat ( elem );
+            	forAttrValue = Tmpl.preTreat ( elem, vm, scoped );
             	if ( forAttrValue ) {
                 	watcherData.push ( { handler : Tmpl.directives.for, targetNode : elem, expr : forAttrValue } );
                 }
             	else {
                 	// 绑定无刷新跳转点击事件
-                	single.bind ( elem );
+                	// single.bind ( elem );
                 	
                 	// 加载元素驱动器渲染元素
-                	elementDriver.render ( elem );
+                	// elementDriver.render ( elem );
                 	
                 	foreach ( slice.call ( elem.attributes ), attr => {
                 		directive = rattr.exec ( attr.nodeName );
@@ -123,7 +123,7 @@ extend ( Tmpl, 	{
         URL doc:
         http://icejs.org/######
     */
-	preTreat ( elem ) {
+	preTreat ( elem, vm, scoped ) {
     	let nextSib, parent, 
             _if = ":if",
             _elseif = ":else-if",
@@ -153,9 +153,9 @@ extend ( Tmpl, 	{
         	}
         }
 
-        foreach ( elem.conditionElems || [], elem => {
-            if ( elem.nodeName.toUpperCase () === "TEMPLATE" ) {
-                elem.templateNodes = slice.call ( elem.content.childNodes );
+        foreach ( elem.conditionElems || [], nextSib => {
+            if ( nextSib.nodeName.toUpperCase () === "TEMPLATE" ) {
+                nextSib.templateNodes = slice.call ( nextSib.content.childNodes );
             }
         } );
         

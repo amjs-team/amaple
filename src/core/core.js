@@ -5,6 +5,7 @@ import depend from "./deps/depend";
 import Loader from "./deps/Loader";
 import { type, isEmpty, foreach, noop } from "../func/util";
 import { query } from "../func/node";
+import { matchFnArgs } from "../func/private";
 import { TYPE_PLUGIN, TYPE_DRIVER } from "../var/const";
 import check from "../check";
 import correctParam from "../correctParam";
@@ -14,11 +15,6 @@ import Tmpl from "./tmpl/Tmpl";
 
 
 /////////////////////////////////
-function getFnArgs ( fn ) {
-	return type ( fn ) === "function" ? 
-			( ( /^function\s*\((.*)\)\s*/.exec ( fn.toString () ) || [] ) [ 1 ] || "" ).split ( "," ).map ( item => item.trim () ) 
-    		: [];
-}
 
 /**
 	filterDeps ( deps: Object, args: Array )
@@ -100,7 +96,7 @@ let ice = {
     	
         switch ( moduleType ) {
             case TYPE_PLUGIN:
-                args = getFnArgs ( structure.build );
+                args = matchFnArgs ( structure.build );
             	deps = filterDeps ( deps, args );
     			depend ( moduleInfo || {}, deps, ( depObject ) => {
                 	cache.pushPlugin ( moduleInfo.name, structure.build.apply ( null, args.map ( arg => depObject [ arg ] ) ) );
@@ -108,7 +104,7 @@ let ice = {
             	
                 break;
             case TYPE_DRIVER:
-                args = getFnArgs ( structure.apply ).slice ( 1 ).concat ( getFnArgs ( structure.init ) );
+                args = matchFnArgs ( structure.apply ).slice ( 1 ).concat ( matchFnArgs ( structure.init ) );
             	deps = filterDeps ( deps, args );
           		cache.pushDriver ( structure );
     			depend ( Loader.TopName, deps, noop );
@@ -129,16 +125,14 @@ let ice = {
 		let moduleElem 	= query ( "*[" + single.aModule + "=" + moduleName + "]" ),
 
 			// 获取init方法参数
-			initArgs 	= getFnArgs ( vmData.init ),
+			initArgs 	= matchFnArgs ( vmData.init ),
 
 			// 获取apply方法参数
-			applyArgs 	= getFnArgs ( vmData.apply ),
+			applyArgs 	= matchFnArgs ( vmData.apply || noop ),
 
 			// apply方法的第一个参数为module根元素，而不是插件
 			args 		= applyArgs.slice ( 1 ).concat ( initArgs ),
-			deps 		= vmData.deps || {};
-
-		deps = filterDeps ( deps, args );
+			deps 		= filterDeps ( vmData.deps || {}, args );
 
 		// 依赖注入插件对象后
 		depend ( Loader.topName, deps, ( depObject ) => {

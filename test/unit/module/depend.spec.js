@@ -6,12 +6,12 @@ describe ( "depend =>", () => {
 		document.body.innerHTML = `<div ice-module="test"></div>`;
 	} );
 
-	it ( "deps load asynchronously", ( done ) => {
+	it ( "deps load asynchronously", done => {
 		ice.module ( "test", {
 			deps : { demoPlugin : "demo-plugin" },
-			init ( demoPlugin ) {
-				// done ();
-				// expect ( demoPlugin ).not ().toBeUndefined ();
+			init: function ( demoPlugin ) {
+				done ();
+				expect ( demoPlugin ).not.toBe ( undefined );
 				return {};
 			}
 		} );

@@ -25,7 +25,6 @@ export default function depend ( name, deps, factory ) {
 
 		// 正在加载的依赖数
 		loadingCount = 0,
-		canFire = true,
 		loadObj,
 
 		module = {
@@ -53,11 +52,11 @@ export default function depend ( name, deps, factory ) {
 		if ( !cache.getPlugin ( depStr ) ) {
 
 			// 放入待加载列表中等待加载
-			depStr.putWaiting ( depStr );
+			loadObj.putWaiting ( depStr );
 
 			// 加载依赖
 			let script 	= document.createElement ( "script" );
-			script.src 	= core.config.base.plugin + depStr + loader.suffix + "?m=" + depStr + "&guid=" + nguid;
+			script.src 	= core.config.base.plugin + depStr + Loader.suffix + "?m=" + depStr + "&guid=" + nguid;
 			script.setAttribute ( Loader.depName, depStr );
 			script.setAttribute ( Loader.scriptFlag, "" );
 			script.setAttribute ( Loader.loaderID, nguid );
