@@ -17,7 +17,14 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-        'context.js'
+        'context.js',
+    	{
+        	pattern : 'module/module-files/**/*',
+        	watched : false,
+        	included : false,
+        	served : true,
+        	nocache : false
+        }
     ],
 
     // webpack configuration
@@ -88,6 +95,8 @@ module.exports = function(config) {
     // how many browser should be started simultaneous
     concurrency: Infinity,
 
-    urlRoot: '/',
+    proxies: {
+    	'/plugin/' : '/base/module/module-files/plugin/'
+    }
   })
 }
