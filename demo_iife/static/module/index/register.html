@@ -1,15 +1,21 @@
-<template ice-router="/register" ice-title="注册">
+<template ice-title="注册">
 	<div>
 		<form name="login_form" method="post">
 			<ul>
 				<li><input type="text" name="user_name" :model="userName" /></li>
 				<li><input type="password" name="password" :model="password" /></li>
 				<li><input type="conform_pwd" name="conform_pwd" :model="confirmPwd" /></li>
-				<li><input type="submit" value="{{ submit }}" ice-driver="driver.Button" /></li>
+				<li><SubmitButton text="{{ submit }}" /></li>
 			</ul>
 		</form>
 	</div>
 </template>
+
+<style>
+	/* scoped style */
+	
+</style>
+
 <script>
 	var reg = ice.module ( "body", {
 		init : function () {
@@ -21,9 +27,9 @@
 			};
 		}
 
-		// 要操作模块内的dom，可调用该函数，参数elem为module对应的元素封装，可链式调用
-		apply : function ( elem ) {
-				
+		// 要操作模块内的dom，可调用该函数，this.moduleElem为module对应的元素封装，可链式调用
+		apply : function () {
+			
 		},
 	} );
 

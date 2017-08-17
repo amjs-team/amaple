@@ -1,60 +1,73 @@
-ice.use ( {
+ice.install ( {
+	name : "PagrCtrl",
 
 	// driver中的init方法接收外部传入的参数
 	init : function () {
 		return {
-			reqPath 	: this.props.options.reqPath,
-			currentPage : this.props.options.currentPage,
-			pageCount 	: this.props.options.pageCount,
-			current 	: this.props.options.current,
+			reqPath : {
+            	value : this.props.options.reqPath,
+            	check : String,
+            	require : true,
+            	default : "",
+            }
+			currentPage : {
+          		value : this.props.options.currentPage,
+        		check : function ( val ) {
+        			return !!val;
+        		},
+          		require : true,
+        	},
+			pageCount : {
+          		value : this.props.options.pageCount,
+        		check : Number,
+          		require : true,
+        	},
+			current : {
+            	value : this.props.options.current,
+                require : true,
+                check : String
+            },
+              
+            setPage : {
+            	value : this.props.setPage,
+                require : true,
+                check : Function
+            },
 
-			pagePrev 	: "上一页",
-			pageNext 	: "下一页",
+			pagePrev : "上一页",
+			pageNext : "下一页",
 		};
 	},
-	template : ['<ul>',
-					'<li :if="currentPage !== 1"><a href="#">{{ pagePrev }}</a></li>',
+	layout : {
+    	html : ['<ul>',
+					'<li class="sel" :if="currentPage !== 1"><a href="#">{{ pagePrev }}</a></li>',
 					'<li :for="i in pageCount" :key="k" class="{{ current }} list"><a href="#">{{ i }}</a></li>',
 					'<li :if="currentPage !== pageCount"><a href="#">{{ pageNext }}</a></li>',
 				'</ul>'].join(),
+          style : {
+          		"li" : { border: "solid 1px #555", background: "#666" },
+                ".sel" : { fontSize: 16, background: red }
+          }
+    }
 
-	// method中定义驱动器方法，会过滤不是function的属性。方法中的this为init方法返回的vm对象
+	// action中定义驱动器方法，会过滤不是function的属性。方法中的this为init方法返回的vm对象
 	// 定义驱动器方法时不能使用箭头函数定义，因为这样内部的this的指向将会错误
-	method : {
-		prev : function () {
-			this.currentPage -= 1;
-
-			// 暂时省略插件、其他驱动器获取方法
-			http.get ( this.reqPath + "?page=" + currentPage ).done ( function ( res ) {
-
-				// 更新表格数据
-				table.update ( res );
-			} );
-		},
-		next : function () {
-			this.currentPage += 1;
-
-			// 暂时省略插件、其他驱动器获取方法
-			http.get ( this.reqPath + "?page=" + currentPage ).done ( function ( res ) {
-
-				// 更新表格数据
-				table.update ( res );
-			} );
-		},
-		turnTo : function ( page ) {
-			if ( page > 0 && page <= pageCount ) {
-				this.currentPage = page;
-
-				// 暂时省略插件、其他驱动器获取方法
-				http.get ( this.reqPath + "?page=" + currentPage ).done ( function ( res ) {
-
-					// 更新表格数据
-					table.update ( res );
-				} );
-			}
-		}
+	action : function ( http ) {
+      	return {
+			prev : function () {
+				this.state.setPage ( --this.state.currentPage );
+			},
+			next : function () {
+				this.state.setPage ( ++this.state.currentPage );
+			},
+			turnTo : function ( page ) {
+				if ( page > 0 && page <= this.state.pageCount ) {
+					this.state.setPage ( page );
+				}
+            }
+        };
 	},
-	apply : function ( elem ) {
+	apply : function () {
 		// ...
 	}
 } );

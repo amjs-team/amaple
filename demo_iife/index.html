@@ -7,6 +7,8 @@
 	<!-- <script src="ice.0.1.0.js" config="config.js"></script> -->
 	<link rel="stylesheet" type="text/css" href="static/css/reset.css">
 	<link rel="stylesheet" type="text/css" href="static/css/index.css">
+  	<script src="js/driver/EditTable.js"></script>
+	<script src="js/driver/PageCtrl.js"></script>
 </head>
 <body>
 	<div class="wrap" ice-module="wrap">
@@ -15,31 +17,17 @@
 			<a href="forget_pwd" ice-target="body">忘记密码？</a>
 		</div>
 
-
-
 		<div class="info-table" ice-module="table">
 			<!-- 表格组件渲染 -->
-			<table ice-driver="driver.EditTable">
-				<tr>
-					<th :for="t of title">{{ t }}</th>
-				</tr>
-				<tr :for="c of content">
-					<td :for="item of c">{{ item }}</td>
-				</tr>
-			</table>
+			<EditTable />
 			
 			<!-- 翻页组件渲染 -->
-			<div ice-driver="driver.PageCtrl" ice-data="{{ pageCtrl }}"></div>
+			<PageCtrl options="{{ pageCtrl }}" setPage="{{ setPage }}" />
 		</div>
-
-
 	</div>
 </body>
 <script>
 	ice.config ( {
-		base: {
-			url: "url/static/"
-		},
 		directionCache: false
 	} );
 
@@ -61,6 +49,10 @@
 					pageCount 	: 10,
 					current 	: "current"
 				},
+            
+            	setPage : function ( newVal ) {
+                	this.pageCtrl.currentPage = newVal;
+                }
 			};
 		}
 	} );

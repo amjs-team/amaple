@@ -1,4 +1,4 @@
-<template ice-router="/login" ice-title="登录">
+<template ice-title="登录">
 	<div>
 		<form name="login_form" method="post" ice-target="root">
 			<ul>
@@ -9,17 +9,19 @@
 					<input type="password" name="password" :model="password" />
 				</li>
 				<li>
-					<!-- <input type="submit" value="{{ submit }}" ice-driver="driver.Button" /> -->
-					<a ice-driver="driver.Submit, driver.Button">{{ btnOpts.btnText }}</a>
+					<SubmitButton text="{{ btnOpts.btnText }}" />
 				</li>
 			</ul>
 		</form>
 	</div>
 </template>
+
+<style>
+	
+</style>
+
 <script>
 	var login = ice.module ( "body", {
-
-		deps : { animate : "animate" },
 
 		// 该函数返回的对象为该模块内的数据绑定，包括变量和方法
 		init : function ( animate ) {
@@ -59,9 +61,9 @@
 			};
 		},
 
-		// 要操作模块内的dom，可调用该函数，参数elem为module对应的元素封装，可链式调用
-		apply : function ( elem ) {
-
+		// 要操作模块内的dom，可调用该函数，参数this.moduleElem为module对应的元素封装，可链式调用
+		apply : function () {
+			
 		}
 	} );
 </script>
