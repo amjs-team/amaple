@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>spa test</title>
+	<link rel="icon" href="data:;base64,=">
+	<link rel="stylesheet" type="text/css" href="src/assets/css/reset.css">
+	<link rel="stylesheet" type="text/css" href="src/assets/css/index.css">
+</head>
+<body>
+	<div class="wrap" ice-module="wrap" ice-src="root"></div>
+</body>
+<script>
+	// function(crystals, language, animate, http) {
+
+	// 	http.get('login')
+	// 	.done(function(res) {
+	// 		console.log(res);
+	// 	});
+
+	// 	crystals.refreshModule('login', 'login-box');
+
+	// 	// 状态注册
+	// 	crystals.registerState('login', function(element) {
+	// 		var domReg = document.querySelector('a[href=@register]');
+	// 		if (!element.classList.contains('selected')) {
+	// 			element.className += ' selected';
+	// 			domReg.className = domReg.replace(' selected', '');
+	// 		}
+
+	// 		// 将参数传递到逆方法内，逆方法可以直接通过函数拿到传递进入的参数
+	// 		crystals.refreshModule('register', 'login-box', function(newFragment, oldFragment) {
+	// 			animateArr = [];
+	// 			animateArr.push([oldFragment, {to: {opacity: 0}}, 1000]);
+	// 			animate(animateArr, 1000, function() {
+	// 				console.log('success');
+	// 			})
+	// 			.animate(oldFragment, {
+	// 				to: {opacity: 0}
+	// 			}, 1000)
+	// 			.animate(oldFragment, {
+	// 				from: {opacity: 0},
+	// 				to: {opacity: 1}
+	// 			}, 1000);
+	// 		});
+
+	// 		return [domReg, element];
+	// 	}).inverse(function(domReg, element) {
+	// 		if (element.classList.contains('selected') && !domReg.classList.contains('selected')) {
+	// 			domReg.className += ' selected';
+	// 			element.className = element.replace(' selected', '');
+	// 		}
+
+	// 		crystals.redirect('login', 'login-box');
+	// 	});
+	// }
+</script>
+</html>

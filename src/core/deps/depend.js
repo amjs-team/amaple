@@ -2,7 +2,7 @@ import Loader from "./Loader";
 import cache from "../../cache/core";
 import { foreach, guid } from "../../func/util";
 import { urlTransform } from "../../func/private";
-import { appendScript } from "../../func/node";
+import { appendScript, attr } from "../../func/node";
 import core from "../core";
 
 /**
@@ -55,11 +55,12 @@ export default function depend ( name, deps, factory ) {
 			loadObj.putWaiting ( depStr );
 
 			// 加载依赖
-			let script 	= document.createElement ( "script" );
+			let script = document.createElement ( "script" );
+
 			script.src 	= core.config.base.plugin + depStr + Loader.suffix + "?m=" + depStr + "&guid=" + nguid;
-			script.setAttribute ( Loader.depName, depStr );
-			script.setAttribute ( Loader.scriptFlag, "" );
-			script.setAttribute ( Loader.loaderID, nguid );
+			attr ( script, Loader.depName, depStr );
+			attr ( script, Loader.scriptFlag, "" );
+			attr ( script, Loader.loaderID, nguid );
 
 			appendScript ( script, Loader.onScriptLoaded );
 

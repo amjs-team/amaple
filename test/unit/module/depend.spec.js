@@ -8,7 +8,7 @@ describe ( "depend =>", () => {
 
 	it ( "deps load asynchronously", done => {
 		ice.module ( "test", {
-			deps : { demoPlugin : "plugin/demo-plugin" },
+			deps : { demoPlugin : "plugin.demo-plugin" },
 			init: function ( demoPlugin ) {
 				done ();
 				expect ( demoPlugin ).not.toBe ( undefined );

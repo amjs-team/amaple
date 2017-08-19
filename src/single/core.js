@@ -1,9 +1,9 @@
-import { extend, type, foreach, replaceAll, noop, isPlain } from "../func/util";
+import { extend, type, foreach, replaceAll, noop, isPlainObject } from "../func/util";
 import { attr, html } from "../func/node";
 import { envErr } from "../error";
 import singleAttr from "./singleAttr";
 import clsProperty from "./clsProperty";
-import clickHandler from "./clickHandler";
+import requestHandler from "./requestHandler";
 import cache from "../cache/core";
 import http from "../http/core";
 import event from "../event/core";
@@ -36,10 +36,10 @@ export default function single ( url, module, data, method, timeout, before = no
 		moduleName, aCache, isCache, isBase, modules, historyMod, html,
 
 		// 模块名占位符
-		modPlaceholder 	= ":m",
+		modPlaceholder = ":m",
 
 		// 模块内容标识占位符
-		conPlaceholder 	= ":v",
+		conPlaceholder = ":v",
 
 		// 模块内容缓存key
 		directionKey, 
@@ -49,27 +49,27 @@ export default function single ( url, module, data, method, timeout, before = no
 		/// 请求url处理相关
 		///
 
-		/** @type {String} 完整请求url初始化 */
+		// 完整请求url初始化
 		complateUrl, 
 		hasSeparator,
 
 
-		/** @type {String} 临时保存刷新前的title */
-		currentTitle 	= document.title,
+		// 临时保存刷新前的title
+		currentTitle = document.title,
 
-		/** @type {String} 上一页面的路径 */
+		// 上一页面的路径
 		lastPath,
 
-		_state 			= [];
+		_state = [];
 
 	// 判断传入的url的类型，如果是string，是普通的参数传递，即只更新一个模块的数据； 如果是array，它包括一个或多个模块更新的数据
 	if ( type ( url ) === "string" ) {
 
 		// 统一为modules数组
-		modules 		= [ { url : url, entity : module, data : data } ];
+		modules = [ { url : url, entity : module, data : data } ];
 	}
 	else {
-		modules 		= url;
+		modules = url;
 	}
 	
 	// 循环modules，依次更新模块
@@ -88,8 +88,6 @@ export default function single ( url, module, data, method, timeout, before = no
 		if ( moduleItem.isCache === true && ( historyMod = cache.getRedirect ( directionKey ) ) ) {
 
 			html ( moduleItem.entity, historyMod );
-			
-        	
 		}
 		else {
 
@@ -103,6 +101,7 @@ export default function single ( url, module, data, method, timeout, before = no
 							  :
 							  hasSeparator === 0 ? complateUrl : "/" + complateUrl;
 							  
+			// 请求模块跳转页面数据
 			http.request ( {
 
 				url 		: complateUrl, 
@@ -116,7 +115,7 @@ export default function single ( url, module, data, method, timeout, before = no
 					abort ( moduleItem );
 				},
 
-			} ).done ( function ( moduleStr, status, xhr ) {
+			} ).done ( ( moduleStr, status, xhr ) => {
             	// 解析请求module
             	// ...
 				compiler = moduleCompile ( moduleStr );
@@ -138,7 +137,7 @@ export default function single ( url, module, data, method, timeout, before = no
 
 				// 调用success回调
 				success ( moduleItem );
-			} ).fail ( function ( error ) {
+			} ).fail ( error => {
             	error ( module, error );
 			} );
 
@@ -190,4 +189,4 @@ export default function single ( url, module, data, method, timeout, before = no
 //////////////////////////////////////////
 // module无刷新跳转相关属性通用参数，为避免重复定义，统一挂载到single对象上
 // single相关静态变量与方法
-extend ( single, singleAttr, clsProperty, clickHandler );
+extend ( single, singleAttr, clsProperty, requestHandler );

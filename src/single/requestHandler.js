@@ -29,7 +29,19 @@ function getModuleElem ( moduleName ) {
     }
 }
 
-export default function ( elem ) {
+/**
+    requestHandler ( elem: DOMObject )
+
+    Return Type:
+    void
+
+    Description:
+    为最外层模块对象绑定请求动作的事件代理
+
+    URL doc:
+    http://icejs.org/######
+*/
+export default function requestHandler ( elem ) {
 	if ( attr ( elem, single.aModule ) ) {
     	let willBind = true;
     	
@@ -41,7 +53,7 @@ export default function ( elem ) {
         }
     	
     	if ( willBind ) {
-        	event ( elem, "click submit", ( e ) => {
+        	event ( elem, "click submit", e => {
             	let target = e.target,
                     moduleName = attr ( target, single.aTargetMod ),
                     url = attr ( target, e.type.toLowerCase () === "submit" ? single.aAction : single.aHref ),

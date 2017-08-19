@@ -44,10 +44,16 @@ ice.install ( {
 					'<li :for="i in pageCount" :key="k" class="{{ current }} list"><a href="#">{{ i }}</a></li>',
 					'<li :if="currentPage !== pageCount"><a href="#">{{ pageNext }}</a></li>',
 				'</ul>'].join(),
-          style : {
-          		"li" : { border: "solid 1px #555", background: "#666" },
-                ".sel" : { fontSize: 16, background: red }
-          }
+		style : {
+			"li" : {
+				border: "solid 1px #555",
+				background: "#666"
+			},
+			".sel" : {
+				fontSize: 16,
+				background: red
+			},
+		}
     }
 
 	// action中定义驱动器方法，会过滤不是function的属性。方法中的this为init方法返回的vm对象
@@ -71,31 +77,3 @@ ice.install ( {
 		// ...
 	}
 } );
-
-
-
-// function btn(crystals, elem) {
-// 	this.currentState;
-// };
-
-// btn.prototype = {
-// 	setState: function(state) {
-// 		this.currentState = state;
-// 		var enableBg = elem.style.background,
-// 			disableBg = '#dddddd';
-
-// 		switch (state) {
-// 			case 'loading':
-// 				btn.style.background = disableBg;
-// 				btn.style.disabled = true;
-
-// 				break;
-// 			case 'default':
-// 				btn.style.background = enableBg;
-// 				btn.style.disabled = true;
-				
-// 				break;
-// 		}
-// 	}
-// }
-// driver(btn);

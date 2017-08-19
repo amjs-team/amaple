@@ -73,15 +73,11 @@ function findParentVm ( elem ) {
 
 
 /////////////////////////////////
-let ice = {
+export default {
 	config : config (),
 
-	use ( name, structure ) {
+	install ( structure ) {
     	
-    	correctParam ( name, structure ).to ( "string", "object" ).done ( function () {
-        	name = this.$1;
-        	structure = this.$2;
-        } );
 		// 查看是否有deps，有的时候，value类型分为以下情况：
 		// 1、若value为string，则使用cache.componentCreater方法获取插件，如果没有则使用模块加载器加载
 		// 2、若value为object，则调用use构建插件
@@ -156,11 +152,5 @@ let ice = {
 		} );
 		// 查看是否有元素驱动器，有的话就加载驱动器对象
 		// 调用apply方法
-	},
-
-	drivenElem () {
-
 	}
 };
-
-export default ice;

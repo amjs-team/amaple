@@ -1,0 +1,41 @@
+<Module :title="注册" :belong="main">
+	<template>
+		<div>
+			<form name="login_form" method="post">
+				<ul>
+					<li><input type="text" name="user_name" :model="userName" /></li>
+					<li><input type="password" name="password" :model="password" /></li>
+					<li><input type="conform_pwd" name="conform_pwd" :model="confirmPwd" /></li>
+					<li><SubmitButton text="{{ submit }}" /></li>
+				</ul>
+			</form>
+		</div>
+	</template>
+
+	<style scoped>
+		/* scoped style */
+		
+	</style>
+
+	<script>
+		var reg = ice.module ( "body", {
+			init : function () {
+
+				return {
+					submit 		: "提交",
+					userName 	: "",
+					password 	: "",
+					conformPwd 	: "",
+				};
+			}
+
+			// 要操作模块内的dom，可调用该函数，this.moduleElem为module对应的元素封装，可链式调用
+			apply : function ( http ) {
+				http.get ( "reg.php" ).done ( res => {
+					this.state.userName = res.userName;
+					this.state.passowrd = res.passowrd;
+				} );
+			},
+		} );
+	</script>
+</Module>

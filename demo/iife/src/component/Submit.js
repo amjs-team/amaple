@@ -1,6 +1,6 @@
 // 实现非submit按钮提交表单
 
-ice.use ( {
+ice.install ( {
 
 	// method中定义驱动器方法，会过滤不是function的属性。方法中的this为init方法返回的vm对象
 	// 定义驱动器方法时不能使用箭头函数定义，因为这样内部的this的指向将会错误
