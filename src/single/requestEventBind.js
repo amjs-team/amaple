@@ -1,6 +1,6 @@
-import single from "./single";
+import single from "./core";
 import { attr, query } from "../func/node";
-import { type }.from "../func/util";
+import { type } from "../func/util";
 import event from "../event/core";
 import { moduleErr } from "../error";
 
@@ -20,7 +20,7 @@ function getModuleElem ( moduleName ) {
     	
     	module = {};
     	foreach ( moduleName, ( name, code ) => {
-        	if ( !module [ code ] = query ( `*[${ single.aModule }=${ name }]` ) ) {
+        	if ( !( module [ code ] = query ( `*[${ single.aModule }=${ name }]` ) ) ) {
             	throw moduleErr ( "module", `找不到${ name }模块` );
             }
         } );
@@ -30,7 +30,7 @@ function getModuleElem ( moduleName ) {
 }
 
 /**
-    requestHandler ( elem: DOMObject )
+    requestEventBind ( elem: DOMObject )
 
     Return Type:
     void
@@ -41,7 +41,7 @@ function getModuleElem ( moduleName ) {
     URL doc:
     http://icejs.org/######
 */
-export default function requestHandler ( elem ) {
+export default function requestEventBind ( elem ) {
 	if ( attr ( elem, single.aModule ) ) {
     	let willBind = true;
     	

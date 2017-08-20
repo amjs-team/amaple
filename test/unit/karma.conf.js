@@ -29,12 +29,12 @@ module.exports = function(config) {
 
     // webpack configuration
     webpack: {
-        entry: path.resolve ( __dirname, '../../src/core' ),
-        output: {
-            library: "ice",
-            libraryTarget: "window",
-            umdNamedDefine: true,
-        },
+        // entry: path.resolve ( __dirname, '../../src/core' ),
+        // output: {
+        //     library: "ice",
+        //     libraryTarget: "window",
+        //     umdNamedDefine: true,
+        // },
         resolve: {
             alias: {
                 src: path.resolve ( __dirname, '../../src' ),

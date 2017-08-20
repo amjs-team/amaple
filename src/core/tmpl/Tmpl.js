@@ -27,35 +27,63 @@ export default function Tmpl ( tmplCode ) {
 }
 
 extend ( Tmpl.prototype, {
-	mount ( vm, scoped ) {
-    	foreach ( Tmpl.mountElem ( this.tmplCode ), ( data ) => {
+
+    /**
+        mount ( vm: ViewModel, isRoot: Boolean, scoped?: Object )
+    
+        Return Type:
+        void
+    
+        Description:
+        使用vm对象挂载并动态绑定数据到模板
+    
+        URL doc:
+        http://icejs.org/######
+    */
+	mount ( vm, isRoot, scoped ) {
+    	foreach ( Tmpl.mountElem ( this.tmplCode, isRoot ), ( data ) => {
         	new ViewWatcher ( data.handler, data.targetNode, data.expr, vm, scoped );
         } );
     },
 } );
 
 extend ( Tmpl, 	{
-	mountElem ( elem, vm, scoped ) {
+
+    /**
+        mountElem ( elem: DOMObject, isRoot: Boolean )
+    
+        Return Type:
+        watcherData
+        ViewWatcher对象数组
+    
+        Description:
+        递归遍历元素
+        将元素内需要挂载数据的部分使用ViewWatcher对象封装成数组并返回
+    
+        URL doc:
+        http://icejs.org/######
+    */
+	mountElem ( elem, isRoot ) {
     	const rattr = /^:([\$\w]+)$/;
         let directive, handler, targetNode, expr, forAttrValue, firstChild,
             watcherData = [],
             rexpr = /{{\s*(.*?)\s*}}/;
 		
     	do {
-        	if ( elem.nodeType === 1 ) {
+        	if ( elem.nodeType === 1 && !isRoot ) {
             	
         		// 处理:for
 				// 处理:if :else-if :else
 				// 处理{{ expression }}
 				// 处理:on、:onrequest :onresponse :onfinish事件
 				// 处理:model
-            	forAttrValue = Tmpl.preTreat ( elem, vm, scoped );
+            	forAttrValue = Tmpl.preTreat ( elem );
             	if ( forAttrValue ) {
                 	watcherData.push ( { handler : Tmpl.directives.for, targetNode : elem, expr : forAttrValue } );
                 }
             	else {
-                	// 绑定无刷新跳转点击事件
-                	// single.bind ( elem );
+                	// 绑定元素请求或提交表单的事件
+                	single.requestEventBind ( elem );
                 	
                 	// 加载元素驱动器渲染元素
                 	// elementDriver.render ( elem );
@@ -103,7 +131,7 @@ extend ( Tmpl, 	{
             
             firstChild = elem.firstChild || elem.content && elem.content.firstChild;
             if ( firstChild && !forAttrValue ) {
-                watcherData = watcherData.concat ( Tmpl.mountElem ( firstChild ) );
+                watcherData = watcherData.concat ( Tmpl.mountElem ( firstChild, false ) );
             }
         } while ( elem = elem.nextSibling )
         return watcherData;
@@ -123,7 +151,7 @@ extend ( Tmpl, 	{
         URL doc:
         http://icejs.org/######
     */
-	preTreat ( elem, vm, scoped ) {
+	preTreat ( elem ) {
     	let nextSib, parent, 
             _if = ":if",
             _elseif = ":else-if",

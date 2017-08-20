@@ -3,13 +3,15 @@ import { attr, html } from "../func/node";
 import { envErr } from "../error";
 import singleAttr from "./singleAttr";
 import clsProperty from "./clsProperty";
-import requestHandler from "./requestHandler";
+import requestEventBind from "./requestEventBind";
+import compileModule from "./compileModule";
+import configuration from "../core/configuration/core";
 import cache from "../cache/core";
 import http from "../http/core";
 import event from "../event/core";
 
 /**
-	single ( url: String|Object, module: DMOObject, data?: String|Object, method?:String, timeout?: Number, before?: Function, success?: Function, error?: Function, abort?: Function, pushStack?: Boolean, onpopstate?: Boolean )
+	single ( url: String|Object, moduleElem: DMOObject, data?: String|Object, method?:String, timeout?: Number, before?: Function, success?: Function, error?: Function, abort?: Function, pushStack?: Boolean, onpopstate?: Boolean )
 
 	Return Type:
 	void
@@ -22,24 +24,17 @@ import event from "../event/core";
 	此函数可通过第一个参数传入数组的方式同时更新多个模块
 	多模块同时更新时的参数格式为：
 	[
-		{url: url1, entity: module1, data: data1},
-		{url: url2, entity: module2, data: data2},
+		{url: url1, entity: moduleElem1, data: data1},
+		{url: url2, entity: moduleElem2, data: data2},
 		...
 	], timeout, before, success, error, abort, pushStack, onpopstate
 
 	URL doc:
 	http://icejs.org/######
 */
-export default function single ( url, module, data, method, timeout, before = noop, success = noop, error = noop, abort = noop, pushStack, onpopstate ) {
+export default function single ( url, moduleElem, data, method, timeout, before = noop, success = noop, error = noop, abort = noop, pushStack, onpopstate ) {
 
-	let 
-		moduleName, aCache, isCache, isBase, modules, historyMod, html,
-
-		// 模块名占位符
-		modPlaceholder = ":m",
-
-		// 模块内容标识占位符
-		conPlaceholder = ":v",
+	let moduleName, aCache, isCache, isBase, modules, historyMod, html,
 
 		// 模块内容缓存key
 		directionKey, 
@@ -47,96 +42,96 @@ export default function single ( url, module, data, method, timeout, before = no
 
 		//////////////////////////////////////////////////
 		/// 请求url处理相关
-		///
 
 		// 完整请求url初始化
-		complateUrl, 
+		fullUrl, 
 		hasSeparator,
-
-
-		// 临时保存刷新前的title
-		currentTitle = document.title,
 
 		// 上一页面的路径
 		lastPath,
 
 		_state = [];
 
-	// 判断传入的url的类型，如果是string，是普通的参数传递，即只更新一个模块的数据； 如果是array，它包括一个或多个模块更新的数据
-	if ( type ( url ) === "string" ) {
+	const 
+		// 模块名占位符
+		modPlaceholder = ":m",
 
-		// 统一为modules数组
-		modules = [ { url : url, entity : module, data : data } ];
-	}
-	else {
-		modules = url;
-	}
+		// 模块内容标识占位符
+		conPlaceholder = ":v",
+
+		// 临时保存刷新前的title
+		currentTitle = document.title;
+
+	// 判断传入的url的类型，如果是string，是普通的参数传递，即只更新一个模块的数据； 如果是array，它包括一个或多个模块更新的数据
+	// 需统一为modules数组
+	modules = type ( url ) === "string" ? [ { url : url, entity : moduleElem, data : data } ] : url;
+
 	
 	// 循环modules，依次更新模块
-	foreach ( modules, ( moduleItem, i ) => {
+	foreach ( modules, ( module, i ) => {
 
-		moduleName 		= attr ( moduleItem.entity, single.aModule );
-		directionKey 	= moduleName + "_" + moduleItem.url;
-		complateUrl 	= config.params.urlRule;
+		moduleName 		= attr ( module.entity, single.aModule );
+		directionKey 	= moduleName + "_" + module.url;
 
-		aCache 			= attr ( moduleItem.entity, single.aCache );
-		isCache 		= aCache === "true" || ( config.params.redirectCache === true && aCache !== "false" );
-		isBase 			= attr ( moduleItem.entity, single.aBase ) !== "false" && config.params.base.url.length > 0;
+		// aCache 			= attr ( module.entity, single.aCache );
+		// isCache 		= aCache === "true" || ( configuration.getConfigure ( redirectCache ) === true && aCache !== "false" );
+		isBase 			= attr ( module.entity, single.aBase ) !== "false" && configuration.getConfigure ( baseUrl ).length > 0;
 
-		// isCache=true、cache已有当前模块的缓存时，才使用缓存
-		// 根据不同的codeKey来刷新不同模块也一定需要重新请求，不能做缓存（后续添加）
-		if ( moduleItem.isCache === true && ( historyMod = cache.getRedirect ( directionKey ) ) ) {
+		// cache已有当前模块的缓存时，才使用缓存
+		// 根据不同的code来刷新不同模块也一定需要重新请求
+		if ( historyMod = cache.getDirection ( directionKey ) ) {
 
-			html ( moduleItem.entity, historyMod );
+			html ( module.entity, historyMod );
 		}
 		else {
 
+			fullUrl = configuration.getConfigure ( urlRule );
+
 			// 通过url规则转换url，并通过ice-base来判断是否添加base路径
-			complateUrl 	= replaceAll ( complateUrl || "", modPlaceholder, moduleName );
-			complateUrl 	= replaceAll ( complateUrl || "", conPlaceholder, moduleItem.url );
+			fullUrl = replaceAll ( fullUrl || "", modPlaceholder, moduleName );
+			fullUrl = replaceAll ( fullUrl || "", conPlaceholder, module.url );
 
-
-			hasSeparator 	= complateUrl.indexOf ( "/" );
-			complateUrl 	= isBase ? config.params.base.url +  ( hasSeparator === 0 ? complateUrl.substr( 1 ) : complateUrl )
+			hasSeparator = fullUrl.indexOf ( "/" );
+			fullUrl = isBase ? configuration.getConfigure ( baseUrl ) +  ( hasSeparator === 0 ? fullUrl.substr( 1 ) : fullUrl )
 							  :
-							  hasSeparator === 0 ? complateUrl : "/" + complateUrl;
+							  hasSeparator === 0 ? fullUrl : "/" + fullUrl;
 							  
 			// 请求模块跳转页面数据
 			http.request ( {
 
-				url 		: complateUrl, 
-				data 		: moduleItem.data || "",
+				url 		: fullUrl, 
+				data 		: module.data || "",
 				method 		: /^(GET|POST)$/i.test ( method ) ? method.toUpperCase () : "GET",
 				timeout 	: timeout || 0,
 				beforeSend 	: function () {
-					before ( moduleItem );
+					before ( module );
 				},
 				abort: function () {
-					abort ( moduleItem );
+					abort ( module );
 				},
 
-			} ).done ( ( moduleStr, status, xhr ) => {
+			} ).done ( ( moduleString, status, xhr ) => {
+
             	// 解析请求module
-            	// ...
-				compiler = moduleCompile ( moduleStr );
-            	if ( isPlainObject ( moduleItem.entity ) ) {
-                	moduleItem.entity = moduleItem.entity [ xhr.getResponseHeader ( "code" ) ];
+				compiler = compileModule ( moduleString );
+            	if ( isPlainObject ( module.entity ) ) {
+                	module.entity = module.entity [ xhr.getResponseHeader ( "code" ) ];
             	}
 				/////////////////////////////////////////////////////////
 				// 将请求的html替换到module模块中
-				html ( moduleItem.entity, html );
+				html ( module.entity, html );
 
 				/////////////////////////////////////////////////////////
 				// 如果需要缓存，则将html缓存起来
 				//
-				moduleItem.isCache === true && cache.addRedirect ( directionKey, html );
+				module.isCache === true && cache.addRedirect ( directionKey, html );
 
 				if ( compiler.title ) {
                 	document.title = compiler.title;
 				}
 
 				// 调用success回调
-				success ( moduleItem );
+				success ( module );
 			} ).fail ( error => {
             	error ( module, error );
 			} );
@@ -145,18 +140,18 @@ export default function single ( url, module, data, method, timeout, before = no
 
 
 		// 先保存上一页面的path用于上一页面的状态保存，再将模块的当前路径更新为刷新后的url
-		lastPath = getCurrentPath$ ( moduleItem.entity );
-		setCurrentPath$ ( moduleItem.entity, moduleItem.url );
+		lastPath = getCurrentPath$ ( module.entity );
+		setCurrentPath$ ( module.entity, module.url );
 
 		_state.push ( {
 			url 		: lastPath,
 			moduleName 	: moduleName,
-			data 		: moduleItem.data,
+			data 		: module.data,
 			title 		: i === "0" ? currentTitle : undefined
 		} );
 
 		if ( pushStack === true ) {
-			single.setModuleRecord ( moduleName, moduleItem.url, true );
+			single.setModuleRecord ( moduleName, module.url, true );
 		}
 	} );
 
@@ -189,4 +184,4 @@ export default function single ( url, module, data, method, timeout, before = no
 //////////////////////////////////////////
 // module无刷新跳转相关属性通用参数，为避免重复定义，统一挂载到single对象上
 // single相关静态变量与方法
-extend ( single, singleAttr, clsProperty, requestHandler );
+extend ( single, singleAttr, clsProperty, { requestEventBind } );

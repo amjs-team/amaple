@@ -1,12 +1,11 @@
-import config from "./config/config";
+import configuration from "./configuration/core";
 import cache from "../cache/core";
 import single from "../single/core";
-import depend from "./deps/depend";
-import Loader from "./deps/Loader";
 import { type, isEmpty, foreach, noop } from "../func/util";
 import { query } from "../func/node";
 import { matchFnArgs } from "../func/private";
 import { TYPE_PLUGIN, TYPE_DRIVER } from "../var/const";
+import slice from "../var/slice";
 import check from "../check";
 import correctParam from "../correctParam";
 import NodeLite from "./NodeLite";
@@ -74,7 +73,7 @@ function findParentVm ( elem ) {
 
 /////////////////////////////////
 export default {
-	config : config (),
+	configure : configuration,
 
 	install ( structure ) {
     	
@@ -126,31 +125,30 @@ export default {
 			// 获取apply方法参数
 			applyArgs 	= matchFnArgs ( vmData.apply || noop ),
 
-			// apply方法的第一个参数为module根元素，而不是插件
-			args 		= applyArgs.slice ( 1 ).concat ( initArgs ),
-			deps 		= filterDeps ( vmData.deps || {}, args );
 
-		// 依赖注入插件对象后
-		depend ( Loader.topName, deps, ( depObject ) => {
-			
-			let initDeps = initArgs.map ( arg => depObject [ arg ] ),
 
-				parentVm = findParentVm ( moduleElem ) || {},
 
-				// 获取后初始化vm的init方法
-				// 对数据模型进行转换
-				vm = new ViewModel ( vmData.init.apply ( parentVm, initDeps ) ),
+			initDeps 	= initArgs.map ( plugin => cache.getPlugin ( plugin ) ),
 
-				// 使用vm解析模板
-				tmpl = new Tmpl ( moduleElem );
-			
-			// 将当前vm保存在对应的模块根节点下，以便子模块寻找父模块的vm对象
-			moduleElem.__vm__ = vm;
+			parentVm = findParentVm ( moduleElem ) || {},
 
-			// 解析模板，挂载数据
-			tmpl.mount ( vm );
-		} );
+			// 获取后初始化vm的init方法
+			// 对数据模型进行转换
+			vm = new ViewModel ( vmData.init.apply ( parentVm, initDeps ) ),
+
+			// 使用vm解析模板
+			tmpl = new Tmpl ( moduleElem );
+		
+		// 将当前vm保存在对应的模块根节点下，以便子模块寻找父模块的vm对象
+		moduleElem.__vm__ = vm;
+
+		// 解析模板，挂载数据
+		tmpl.mount ( vm, true );
+
+		vm.view = slice.call ( moduleElem.childNodes ) || [];
 		// 查看是否有元素驱动器，有的话就加载驱动器对象
 		// 调用apply方法
+		 
+		return vm;
 	}
 };

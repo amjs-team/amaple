@@ -38,7 +38,7 @@ ice.install ( {
 			pageNext : "下一页",
 		};
 	},
-	layout : {
+	view : {
     	html : ['<ul>',
 					'<li class="sel" :if="currentPage !== 1"><a href="#">{{ pagePrev }}</a></li>',
 					'<li :for="i in pageCount" :key="k" class="{{ current }} list"><a href="#">{{ i }}</a></li>',

@@ -33,7 +33,7 @@ export default {
       
     	foreach ( elem.conditionElems, nextSib => {
             if ( nextSib !== elem ) {
-                new Tmpl ( nextSib ).mount ( this.vm, this.scoped );
+                new Tmpl ( nextSib ).mount ( this.vm, false, this.scoped );
             }
         } );
     },

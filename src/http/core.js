@@ -785,7 +785,7 @@ function request ( method ) {
 
 
 // http请求插件方法构造
-var http = extend( {}, {
+export default {
 	
 	request: request (),
 
@@ -818,4 +818,4 @@ var http = extend( {}, {
 		http://icejs.org/######
 	*/
 	post : request ( "POST" )
-} );
+};
