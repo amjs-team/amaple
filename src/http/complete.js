@@ -1,0 +1,57 @@
+import text from "./converter/text";
+import json from "./converter/json";
+import script from "./converter/script";
+
+// ajax返回数据转换器
+const ajaxConverters  = { text, json, script };
+
+/**
+    complete ( iceXHR: Object )
+
+    Return Type:
+    void
+
+    Description:
+    请求回调调用
+
+    URL doc:
+    http://icejs.org/######
+*/
+export default function complete ( iceXHR ) {
+
+	let transport = iceXHR.transport;
+
+	if ( transport.completed ) {
+		return;
+	}
+
+	transport.completed = true;
+
+	// 如果存在计时ID，则清除此
+	if ( transport.timeoutID ) {
+		window.clearTimeout( transport.timeoutID );
+	}
+
+	// 如果解析错误也会报错，并调用error
+	if ( transport.response ) {
+		try {
+			transport.response = ajaxConverters [ transport.dataType ] && ajaxConverters [ transport.dataType ] ( transport.response );
+		} catch ( e ) {
+			transport.status = 500;
+			transport.statusText = "Parse Error: " + e;
+		}
+	}
+
+	// 请求成功，调用成功回调，dataType为script时不执行成功回调
+	if ( transport.status === 200 && transport.dataType !== "script" ) {
+		transport.callbacks.success && transport.callbacks.success ( transport.response, transport.statusText, iceXHR );
+	}
+
+	// 请求错误调用error回调
+	else if ( transport.status === 500 ) {
+		transport.callbacks.error && transport.callbacks.error ( iceXHR, transport.statusText );
+	}
+
+	// 调用complete回调
+	transport.callbacks.complete && transport.callbacks.complete ( iceXHR, transport.statusText );
+}

@@ -191,7 +191,7 @@ export function extend ( ...args ) {
 	http://icejs.org/######
 */
 export function replaceAll ( str, search, replaces ) {
-	check ( arguments.length ).toBe ( 3 ).ifNot ( "function:replaceAll", "必须传入被替换字符串、查找替换的字符串和替换的字符串三个参数" ).do ();
+	check ( arguments.length ).be ( 3 ).ifNot ( "function:replaceAll", "必须传入被替换字符串、查找替换的字符串和替换的字符串三个参数" ).do ();
 	check ( str, search, replaces ).type ( "string" ).ifNot ( "function:replaceAll", "函数所有参数类型都必须为string" ).do ();
 
 	// 转义字符串中所有特殊的符号

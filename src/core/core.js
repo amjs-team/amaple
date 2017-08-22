@@ -1,8 +1,9 @@
 import configuration from "./configuration/core";
 import cache from "../cache/core";
 import single from "../single/core";
+import event from "../event/core";
 import { type, isEmpty, foreach, noop } from "../func/util";
-import { query } from "../func/node";
+import { query, attr } from "../func/node";
 import { matchFnArgs } from "../func/private";
 import { TYPE_PLUGIN, TYPE_DRIVER } from "../var/const";
 import slice from "../var/slice";
@@ -163,7 +164,7 @@ export default {
 		vm.view = slice.call ( moduleElem.childNodes ) || [];
     	
 		// 调用apply方法
-		vmData.apply.apply ( mc, applyDeps );
+		( vmData.apply || noop ).apply ( mc, applyDeps );
       
 		return vm;
 	},
@@ -253,7 +254,12 @@ export default {
 	    	}
 		} );
     	
-    	// 引入根模块内容
-    	single.includeModule ( query ( `*[${ single.aModule }=${ rootModuleName }]` );
+    	let rootModule = query ( `*[${ single.aModule }=${ rootModuleName }]` ),
+    		src = attr ( rootModule, single.aSrc ),
+    		moduleName = attr ( rootModule, single.aModule );
+    	if ( src && moduleName ) {
+		   	// 引入根模块内容
+		   	single.includeModule ( rootModule, src, moduleName );
+    	}
     }
 };

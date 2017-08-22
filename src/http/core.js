@@ -1,5 +1,12 @@
-import { extend } from "../func/util";
+import { extend, type, foreach } from "../func/util";
+import { attr } from "../func/node";
 import event from "../event/core";
+import Promise from "../promise/Promise";
+import ICEXMLHttpRequest from "./ICEXMLHttpRequest";
+import xhr from "./transport/xhr";
+import tranScript from "./transport/script";
+import jsonp from "./transport/jsonp";
+import upload from "./transport/upload";
 
 /**
 	Plugin http
@@ -33,7 +40,6 @@ function request ( method ) {
 		params, nohashUrl, hash,
 
 		// 相关正则表达式
-		rheader 		= /^(.*?):[ \t]*([^\r\n]*)$/mg,
 		rargs 			= /(\S+)=(\S+)&?/,
 		r20 			= /%20/g,
 		rhash 			= /#.*$/,
@@ -119,506 +125,37 @@ function request ( method ) {
 	    	}
 	    } ) ( method ),
 
-	    // ajax返回数据转换器
-	    ajaxConverters 	= {
-
-	    	text: function ( text ) {
-	    		return text;
-	    	},
-
-	    	json: function ( text ) {
-	    		return util.type ( text ) === "object" ? text : JSON.parse ( text );
-	    	},
-
-	    	script: function ( text ) {
-	    		util.scriptEval ( text );
-	    	}
-	    },
-
-	    /**
-	     * 请求回调调用
-	     *
-	     * @author JOU
-	     * @time   2017-05-21T21:26:06+0800
-	     * @param  {Object}                 iceXHR iceXHR自定义对象
-	     */
-	    complete = function ( iceXHR ) {
-
-	    	var transport = iceXHR.transport;
-
-	    	if ( transport.completed ) {
-	    		return;
-	    	}
-
-	    	transport.completed = true;
-
-			// 如果存在计时ID，则清除此
-			if ( transport.timeoutID ) {
-				window.clearTimeout( transport.timeoutID );
-			}
-
-			// 如果解析错误也会报错，并调用error
-			if ( transport.response ) {
-				try {
-					transport.response 	= ajaxConverters [ transport.dataType ] && ajaxConverters [ transport.dataType ] ( transport.response );
-				} catch ( e ) {
-					transport.status 	= 500;
-					transport.statusText = "Parse Error: " + e;
-				}
-			}
-
-	    	// 请求成功，调用成功回调，dataType为script时不执行成功回调
-	    	if ( transport.status === 200 && transport.dataType !== "script" ) {
-	    		transport.callbacks.success && transport.callbacks.success ( transport.response, transport.statusText, iceXHR );
-	    	}
-
-	    	// 请求错误调用error回调
-	    	else if ( transport.status === 500 ) {
-	    		transport.callbacks.error && transport.callbacks.error ( iceXHR, transport.statusText );
-	    	}
-
-	    	// 调用complete回调
-	    	transport.callbacks.complete && transport.callbacks.complete ( iceXHR, transport.statusText );
-	    },
-
 		//////////////////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////////////////
-		//////////////////////////////////////////////////////////////////////
-	    /** @type {Object} ajax传送器，根据数据类型 */
-	    ajaxTransports 		= {
-	    	xhr : function () {
-
-	    		return {
-
-	    			/**
-	    			 * ajax请求前设置参数，并发送请求
-	    			 *
-	    			 * @author JOU
-	    			 * @param  {Object}         options ajax设置参数对象
-	    			 * @param  {Object}         iceXHR  iceXHR自定义对象
-	    			 * @time   2017-05-13T23:22:19+0800
-	    			 */
-	    			send : function ( options, iceXHR ) {
-
-	    				var i, 
-	    					self = this,
-
-	    					// 获取xhr对象
-	    					xhr = this.xhr = ( function () {
-	    						try {
-	    							return new XMLHttpRequest ();
-	    						} catch ( e ) {}
-	    					} ) ();
-
-	    				if ( options.crossDomain && !"withCredentials" in xhr ) {
-	    					throw requestErr ( "crossDomain", "该浏览器不支持跨域请求" );
-	    				}
-
-	    				xhr.open ( options.method, options.url, options.async, options.username, options.password );
-
-	    				// 覆盖原有的mimeType
-						if ( options.mimeType && xhr.overrideMimeType ) {
-							xhr.overrideMimeType( options.mimeType );
-						}
-
-						xhr.setRequestHeader ( "X-Requested-With", "XMLHTTPRequest" );
-	                    for ( i in this.headers ) {
-	                        xhr.setRequestHeader ( i, this.headers [ i ] );
-	                    }
-
-	                    // 绑定请求中断回调
-	                    if ( util.type ( options.abort ) === "function" && event.support ( "abort", xhr ) ) {
-	                    	xhr.onabort = function () {
-	                    		options.abort ( this.statusText );
-	                    	}
-	                    }
-
-	                    if ( event.support ( "error", xhr ) ) {
-	                    	xhr.onload = xhr.onerror = function ( e ) {
-
-								iceXHR.transport.status = ( xhr.status >= 200 && xhr.status < 300 ) || xhr.status === 304 || xhr.status === 1223 ? 200 : 500;
-
-	                    		self.done ( iceXHR );
-	                    	}
-	                    }
-	                    else {
-	                    	xhr.onreadystatechange = function () {
-	                    		if ( xhr.readyState === XMLHttpRequest.DONE ) {
-
-	                    			// 兼容IE有时将204状态变为1223的问题
-	                    			iceXHR.transport.status = ( xhr.status >= 200 && xhr.status < 300 ) || xhr.status === 304 || xhr.status === 1223 ? 200 : 500;
-
-	                    			self.done ( iceXHR );
-
-	                    		}
-	                    	}
-	                    }
-
-	                    // 发送请求
-	                    try {
-	                    	xhr.send ( options.hasContent && options.data || null );
-	                    } catch ( e ) {
-	                    	throw requestErr ( "send", e );
-	                    }
-	    			},
-
-	    			/**
-	    			 * ajax请求完成后的处理
-	    			 *
-	    			 * @author JOU
-	    			 * @time   2017-05-14T02:37:38+0800
-	    			 * @param  {Object}                 iceXHR iceXHR自定义对象
-	    			 */
-	    			done : function ( iceXHR ) {
-
-	    				var xhr = this.xhr;
-
-	    				xhr.onload = xhr.onerror = xhr.onreadystatechange = null;
-
-    					// 获取所有返回头信息
-    					this.responseHeadersString = xhr.getAllResponseHeaders ();
-
-    					this.status 		= xhr.status;
-    					this.statusText 	= xhr.statusText;
-    					this.response 		= xhr.responseText;
-
-    					complete ( iceXHR );
-	    			},
-
-	    			/**
-	    			 * ajax请求中断
-	    			 *
-	    			 * @author JOU
-	    			 * @time   2017-05-21T23:40:08+0800
-	    			 */
-	    			abort : function () {
-	    				this.status 	= 0;
-	    				this.statusText = this.abortText;
-
-	    				xhr.abort && xhr.abort ();
-	    			}
-	    		};
-	    	},
-
-
-	    	// 动态执行script
-	    	script : function ( options ) {
-
-	    		var script;
-
-	    		return {
-
-	    			/**
-	    			 * 动态执行javascript
-	    			 *
-	    			 * @author JOU
-	    			 * @time   2017-05-21T17:52:31+0800
-	    			 * @param  {Object}         options ajax设置参数对象
-	    			 * @param  {Object}         iceXHR  iceXHR自定义对象
-	    			 */
-	    			send : function ( options, iceXHR ) {
-	    				var self 	= this;
-
-	    				script 		= document.createElement ( "script" );
-	    				script.src 	= options.url;
-
-
-	    				event.on ( script, "load error", function ( e ) {
-
-	    					if ( script.parentNode ) {
-	    						script.parentNode.removeChild ( script );
-	    					}
-
-							if ( e.type === "load" ) {
-								this.status 		= 200;
-								this.statusText 	= "success";
-							}
-							else {
-								this.status 		= 500;
-								this.statusText 	= "error";
-							}
-							self.done ( iceXHR );
-    					} );
-
-    					document.head.appendChild ( script );
-	    			},
-
-	    			/**
-	    			 * 完成或中断后的处理
-	    			 *
-	    			 * @author JOU
-	    			 * @time   2017-05-21T17:53:18+0800
-	    			 * @param  {Object}         iceXHR  iceXHR自定义对象
-	    			 */
-	    			done : function ( iceXHR ) {
-
-    					if ( options.dataType === "JSONP" ) {
-
-    						dataType = "json";
-
-    						if ( util.type ( window [ options.jsonpCallback ] ) !== "function" ) {
-    							this.status 	= 200;
-    							this.statusText = "success";
-    							this.response 	= window [ options.jsonpCallback ];
-    						}
-    						else {
-    							this.status 	= 500;
-    							this.statusText = "error";
-    						}
-    					}
-
-    					complete ( iceXHR );
-	    			},
-
-	    			/**
-	    			 * 请求中断处理
-	    			 *
-	    			 * @author JOU
-	    			 * @time   2017-05-21T23:41:31+0800
-	    			 */
-	    			abort : function () {
-	    				if ( script.parentNode ) {
-	    					script.parentNode.removeChild ( script );
-	    				}
-
-	    				this.status 		= 0;
-	    				this.statusText 	= this.abortText;
-
-	    				util.type ( options.abort ) === "function" && options.abort ( this.statusText );
-	    			}
-	    		};
-	    	},
-
-	    	// jsonp跨域请求
-	    	jsonp : function ( options ) {
-
-	    		var script, 
-	    			scriptExtend 	= ajaxTransports.script ( options ),
-	    			jsonpCallback 	= options.jsonpCallback = "jsonpCallback" + Date.now ();
-
-	    		window [ jsonpCallback ] = function ( result ) {
-	    			window [ jsonpCallback ] = result;
-	    		};
-
-	    		options.data += ( ( options.data ? "&" : "" ) + "callback=" + jsonpCallback );
-
-	    		return {
-	    			send : function ( options, iceXHR ) {
-	    				scriptExtend.send ( options, iceXHR );
-	    			},
-
-	    			done : function ( iceXHR ) {
-	    				scriptExtend.done ( iceXHR );
-	    			},
-
-	    			abort : function () {
-	    				scriptExtend.abort ();
-	    			}
-	    		};
-	    	},
-
-	    	// 文件异步上传传送器，在不支持FormData的旧版本浏览器中使用iframe刷新的方法模拟异步上传
-	    	upload : function () {
-
-	    		var uploadFrame = document.createElement ( "iframe" ),
-	    			id 			= "upload-iframe-unique-" + guid$ ();
-
-	    			uploadFrame.setAttribute ( "id", id );
-	    			uploadFrame.setAttribute ( "name", id );
-	    			uploadFrame.style.position 	= "absolute";
-	    			uploadFrame.style.top 		= "9999px";
-	    			uploadFrame.style.left 		= "9999px";
-	    			( document.body || document.documentElement ).appendChild ( uploadFrame );
-
-	    		return {
-
-	    			/**
-	    			 * 文件上传请求，在不支持FormData进行文件上传的时候会使用此方法来实现异步上传
-	    			 * 此方法使用iframe来模拟异步上传
-	    			 *
-	    			 * @author JOU
-	    			 * @time   2017-05-21T16:40:45+0800
-	    			 * @param  {Object}         options ajax设置参数对象
-	    			 * @param  {Object}         iceXHR  iceXHR自定义对象
-	    			 */
-	    			send : function ( options, iceXHR ) {
-	    				var self 		= this,
-
-	    					// 备份上传form元素的原有属性，当form提交后再使用备份还原属性
-	    					backup 		= {
-	    						action  : options.data.action  || "",
-	    						method  : options.data.method  || "",
-	    						enctypt : options.data.enctypt || "",
-	    						target  : options.data.target  || "",
-	    					};
-
-	    				// 绑定回调
-	    				event.on ( uploadFrame, "load", function () {
-
-	    					self.done ( iceXHR );
-	    				}, false, true );
-
-	    				// 设置form的上传属性
-	    				options.data.setAttribute ( "action", options.url );
-	    				options.data.setAttribute ( "method", "POST");
-	    				options.data.setAttribute ( "target", id );
-
-	    				// 当表单没有设置enctype时自行加上，此时需设置encoding为multipart/form-data才有效
-	    				if ( options.data.getAttribute ( "enctypt" ) !== "multipart/form-data" ) {
-	    					options.data.encoding = "multipart/form-data";
-	    				}
-
-	    				options.data.submit ();
-
-	    				// 还原form备份参数
-	    				util.foreach ( backup, function ( val, attr ) {
-	    					if ( val ) {
-	    						options.data.setAttribute ( attr, val );
-	    					}
-	    					else {
-	    						options.data.removeAttribute ( attr );
-	    					}
-	    				} );
-
-	    			},
-
-	    			/**
-	    			 * 上传完成的处理，主要工作是获取返回数据，移除iframe
-	    			 *
-	    			 * @author JOU
-	    			 * @time   2017-05-21T16:42:35+0800
-	    			 * @param  {Object}                 iceXHR iceXHR自定义对象
-	    			 */
-	    			done : function ( iceXHR ) {
-
-	    				// 获取返回数据
-    					var child, entity,
-    						doc 	= uploadFrame.contentWindow.document;
-    					if ( doc.body ) {
-
-    						this.status 	= 200;
-    						this.statusText = "success";
-
-    						// 当mimeType为 text/javascript或application/javascript时，浏览器会将内容放在pre标签中
-    						if ( ( child = doc.body.firstChild ) && child.nodeName.toUpperCase () === "PRE" && child.firstChild ) {
-    							this.response = child.innerHTML;
-    						}
-    						else {
-    							this.response = doc.body.innerHTML;
-    						}
-
-    						// 如果response中包含转义符，则将它们转换为普通字符
-    						if ( /&\S+;/.test (this.response) ) {
-    							entity 	= {
-    								lt 		: "<",
-    								gt 		: ">",
-    								nbsp 	: " ",
-    								amp 	: "&",
-    								quot 	: "\""
-    							};
-									this.response = this.response.replace ( /&(lt|gt|nbsp|amp|quot);/ig, function ( all, t ) {
-										return entity [ t ];
-									} );
-    						}
-    					}
-
-    					complete ( iceXHR );
-
-	    				// 移除iframe
-	    				uploadFrame.parentNode.removeChild (uploadFrame);
-	    			},
-
-	    			/**
-	    			 * 请求中断处理，此时无法中断
-	    			 *
-	    			 * @author JOU
-	    			 * @time   2017-05-21T23:42:09+0800
-	    			 */
-	    			abort : function () {}
-	    		};
-	    	}
-	    };
+		// ajax传送器，根据数据类型
+	    ajaxTransports = { xhr, script : tranScript, jsonp, upload };
 
 	/**
-	 * ajax异步请求方法实现
-	 *
-	 * @author JOU
-	 * @time   2017-05-11T23:14:13+0800
-	 * @return {Object}                         Promise对象
-	 */
+		[anonymous] ()
+	
+		Return Type:
+		Object
+		Promise对象
+	
+		Description:
+		ajax异步请求方法实现
+	
+		URL doc:
+		http://icejs.org/######
+	*/
 	return function () {
 
-		var // 合并参数
-			options 	= extendOptions ( arguments ),
+		let // 合并参数
+			options = extendOptions ( arguments ),
 
 			// 自定义xhr对象，用于统一处理兼容问题
-			iceXHR 		= {
-
-			// 请求传送器，根据不同的请求类型来选择不同的传送器进行请求
-			transport : null,
-
-			// 设置请求头
-			setRequestHeader : function ( header, value ) {
-
-				if ( !this.transport.completed ) {
-					this.transport.headers = this.transport.headers || {};
-					this.transport.headers [ header.toLowerCase () ] = value;
-				}
-			},
-
-			// 获取返回头
-			getResponseHeader : function ( header ) {
-
-				var match;
-
-				if ( this.transport.completed ) {
-					if ( !this.transport.respohseHeader ) {
-						this.transport.respohseHeader = {};
-						while ( match = rheader.exec ( this.transport.responseHeadersString || "" ) ) {
-							this.transport.respohseHeader [ match [ 1 ].toLowerCase () ] = match [ 2 ];
-						}
-					}
-
-					match = this.transport.responseHeader [ header ];
-				}
-
-				return match || null;
-			},
-
-			// 获取所有返回头信息
-			getAllResponseHeaders : function () {
-				return this.transport.completed ? this.transport.responseHeadersString : null;
-			},
-
-			// 设置mimeType
-			overrideMimeType : function ( mimetype ) {
-				if ( !this.transport.completed ) {
-					options.mimetype = mimetype;
-				}
-			},
-
-			// 请求超时触发
-			abort : function ( statusText ) {
-		        if ( this.transport ) {
-		        	this.transport.abortText = statusText || "abort";
-		            this.transport.abort ();
-		        }
-			},
-
-			// 绑定xhr回调事件
-			addEventListener : function ( type, callback ) {
-				if ( !this.transport.completed ) {
-					this.transport.callbacks = this.transport.callbacks || {};
-					this.transport.callbacks [ type ] = callback;
-				}
-			}
-		};
+			iceXHR = new ICEXMLHttpRequest ();
 
 
 		// 如果传入的data参数为数据对象，则将{k1: v1, k2: v2}转为以k1=v1&k2=v2
-		if ( util.type ( options.data ) === "object" ) {
+		if ( type ( options.data ) === "object" ) {
 
-			var args = [];
+			let args = [];
 
 			// 判断是否为表单对象
 			// 如果是则使用FormData来提交
@@ -626,26 +163,26 @@ function request ( method ) {
 			if ( options.data.nodeName && options.data.nodeName.toUpperCase () === "FORM" ) {
 
 				// 如果是表单对象则获取表单的提交方式，默认为POST
-				options.method = options.data.getAttribute ( "method" ) || "POST";
+				options.method = attr ( options.data, "method" ) || "POST";
 
 				// 当data为form对象时，如果也提供了src参数则优先使用src参数
-				options.url    = options.data.getAttribute ( "src" ) || options.url;
+				options.url    = attr ( options.data, "src" ) || options.url;
 
 				// 如果支持FormData则使用此对象进行数据提交
 				try {
 					options.data = new FormData ( options.data );
 				} catch ( e ) {
 
-					var hasFile,
-						formArray 	= slice.call ( options.data.elements );
+					let hasFile,
+						formArray 	= options.data.elements.slice ();
 
 					// 判断表单中是否含有上传文件
-					util.foreach ( formArray, function ( item ) {
+					foreach ( formArray, item => {
 						if ( item.type === "file" ) {
 							hasFile = true;
 							return false;
 						}
-						else if ( item.name && !item.getAttribute ( "disabled" ) && rsubmittable.test( item.nodeName ) && !rsubmitterTypes.test( item.type ) && ( item.checked || !rcheckableType.test( item.type ) ) ) {
+						else if ( item.name && !attr ( item, "disabled" ) && rsubmittable.test( item.nodeName ) && !rsubmitterTypes.test( item.type ) && ( item.checked || !rcheckableType.test( item.type ) ) ) {
 
 							args.push ( item.name + "=" + item.value.replace ( rCRLF, "\r\n" )  );
 						}
@@ -657,7 +194,7 @@ function request ( method ) {
 				}
 			}
 			else {
-				util.foreach ( options.data, function ( data, index ) {
+				foreach ( options.data, ( data, index ) => {
 					args.push ( index + "=" + data );
 				} );
 
@@ -697,7 +234,7 @@ function request ( method ) {
 		//////////////////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////////////////
 		//返回Promise对象
-		return new Promise ( function ( resolve, reject ) {
+		return new Promise ( ( resolve, reject ) => {
 
 			// 获取传送器名
 			// 根据上面判断，上传文件时如果支持FormData则使用此来实现上传，所以当data为form对象时，表示不支持FormData上传，需使用upload传送器实现上传
@@ -735,7 +272,7 @@ function request ( method ) {
 
 				options.url 	= nohashUrl + ( hash || "" );
 			}
-			else if ( options.data && util.type ( options.data ) === "string" && ( options.contentType || "" ).indexOf ( "application/x-www-form-urlencoded" ) === 0) {
+			else if ( options.data && type ( options.data ) === "string" && ( options.contentType || "" ).indexOf ( "application/x-www-form-urlencoded" ) === 0) {
 				options.data 	= options.data.replace ( r20, "+" );
 			}
 
@@ -748,17 +285,17 @@ function request ( method ) {
 	        iceXHR.setRequestHeader ( "Accept", accepts [ iceXHR.transport.dataType ] ? accepts [ iceXHR.transport.dataType ] + ", */*; q=0.01" : accepts [ "*" ] );
 
 	        // haders里面的首部
-	        for ( var i in options.headers ) {
-	            iceXHR.setRequestHeader ( i, options.headers [ i ] );
-	        }
+	        foreach ( options.headers, ( header, key ) => {
+	            iceXHR.setRequestHeader ( key, header );
+	        } );
 
 	        // 调用请求前回调函数
-	        if ( util.type ( options.beforeSend ) === "function" ) {
+	        if ( type ( options.beforeSend ) === "function" ) {
 	        	options.beforeSend ( iceXHR, options );
 	        }
 
 	        // 将事件绑定在iceXHR中
-			util.foreach ( [ "complete", "success", "error" ], function ( callbackName ) {
+			foreach ( [ "complete", "success", "error" ], callbackName => {
 
 				// 如果是success或error回调，则使用resolve或reject代替
 				if ( callbackName === "success" ) {
@@ -773,7 +310,7 @@ function request ( method ) {
 
 			// 处理超时
 	        if ( options.async && options.timeout > 0 ) {
-	            iceXHR.transport.timeoutID = setTimeout ( function () {
+	            iceXHR.transport.timeoutID = setTimeout ( () => {
 	                iceXHR.abort ( "timeout" );
 	            }, options.timeout );
 	        }

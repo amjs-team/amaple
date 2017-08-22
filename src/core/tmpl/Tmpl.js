@@ -87,16 +87,17 @@ extend ( Tmpl, 	{
     					let willBind = true;
     	
     					while ( ( elem = elem.parentNode ) !== document.body ) {
-        				if ( attr ( elem, single.aModule ) ) {
-            				willBind = false;
-            				break;
-            			}
-        			}
+        				    if ( attr ( elem, single.aModule ) ) {
+            				    willBind = false;
+            				    break;
+                            }
+                        }
     	
-    				if ( willBind ) {
-                    	single.requestEventBind ( elem );
+        				if ( willBind ) {
+                        	single.requestEventBind ( elem );
+                        }
                     }
-                	
+                    	
                 	// 加载有ice-src属性的module元素
                     // 过滤nodes数组本身带有的属性或方法
                     let moduleName = attr ( elem, single.aModule ),

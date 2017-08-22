@@ -13,7 +13,7 @@ import cache from "../cache/core";
 import http from "../http/core";
 import event from "../event/core";
 
-setTitle ( title ) {
+function setTitle ( title ) {
 	if ( title && document.title !== title ) {
     	document.title = title;
     }
@@ -79,7 +79,7 @@ export default function single ( url, moduleElem, data, method, timeout, before 
 
 		// aCache 			= attr ( module.entity, single.aCache );
 		// isCache 		= aCache === "true" || ( configuration.getConfigure ( redirectCache ) === true && aCache !== "false" );
-		isBase 			= attr ( module.entity, single.aBase ) !== "false" && configuration.getConfigure ( baseUrl ).length > 0;
+		isBase 			= attr ( module.entity, single.aBase ) !== "false" && configuration.getConfigure ( "baseUrl" ).length > 0;
 
 		// cache已有当前模块的缓存时，才使用缓存
 		// 根据不同的code来刷新不同模块也一定需要重新请求
@@ -94,14 +94,14 @@ export default function single ( url, moduleElem, data, method, timeout, before 
 		}
 		else {
 
-			fullUrl = configuration.getConfigure ( urlRule );
+			fullUrl = configuration.getConfigure ( "urlRule" );
 
 			// 通过url规则转换url，并通过ice-base来判断是否添加base路径
 			fullUrl = replaceAll ( fullUrl || "", modPlaceholder, moduleName );
 			fullUrl = replaceAll ( fullUrl || "", conPlaceholder, module.url );
 
 			hasSeparator = fullUrl.indexOf ( "/" );
-			fullUrl = isBase ? configuration.getConfigure ( baseUrl ) +  ( hasSeparator === 0 ? fullUrl.substr( 1 ) : fullUrl )
+			fullUrl = isBase ? configuration.getConfigure ( "baseUrl" ) +  ( hasSeparator === 0 ? fullUrl.substr( 1 ) : fullUrl )
 							  :
 							  hasSeparator === 0 ? fullUrl : "/" + fullUrl;
 							  

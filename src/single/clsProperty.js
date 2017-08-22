@@ -1,3 +1,5 @@
+import single from "./core";
+
 export default {
 
 	// window.history封装

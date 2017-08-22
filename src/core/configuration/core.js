@@ -34,11 +34,11 @@ export default function configuration ( params ) {
 	params.stateSymbol = allowState.indexOf ( params.stateSymbol ) === -1 ? allowState [ 0 ] : params.stateSymbol;
 	params.redirectCache = params.redirectCache !== false ? true : false;
 
-	paramStore = extend ( params, paramStore );
+	paramStore = extend ( paramStore, params );
 }
 
 extend ( configuration, {
 	getConfigure ( param ) {
-		return paramStore [ param ] || null;
+		return paramStore [ param ];
 	}
 } );
