@@ -8,6 +8,7 @@ import { TYPE_PLUGIN, TYPE_DRIVER } from "../var/const";
 import slice from "../var/slice";
 import check from "../check";
 import correctParam from "../correctParam";
+import ModuleCaller from "./ModuleCaller";
 import NodeLite from "./NodeLite";
 import ViewModel from "./ViewModel";
 import Tmpl from "./tmpl/Tmpl";
@@ -107,7 +108,21 @@ export default {
                 break;
         }
 	},
-
+	
+	/**
+		module ( moduleName: String, vmData: Object )
+		
+		Return Type:
+		Object
+		转换后的模块监听ViewModel对象
+		
+		Description:
+		初始化模块
+        初始化包括转换监听对象，动态绑定数据到视图层
+		
+		URL doc:
+		http://icejs.org/######
+	*/
 	module ( moduleName, vmData ) {
 
 		// 检查参数
@@ -121,23 +136,23 @@ export default {
 
 			// 获取init方法参数
 			initArgs 	= matchFnArgs ( vmData.init ),
+          	initDeps 	= initArgs.map ( plugin => cache.getPlugin ( plugin ) ),
 
 			// 获取apply方法参数
 			applyArgs 	= matchFnArgs ( vmData.apply || noop ),
+            applyDeps 	= applyArgs.map ( plugin => cache.getPlugin ( plugin ) ),
 
-
-
-
-			initDeps 	= initArgs.map ( plugin => cache.getPlugin ( plugin ) ),
-
-			parentVm = findParentVm ( moduleElem ) || {},
+			parent = findParentVm ( moduleElem ) || {},
+            
+            mc = new ModuleCaller ( { parent } ),
 
 			// 获取后初始化vm的init方法
 			// 对数据模型进行转换
-			vm = new ViewModel ( vmData.init.apply ( parentVm, initDeps ) ),
+			vm = new ViewModel ( vmData.init.apply ( mc, initDeps ) ),
 
 			// 使用vm解析模板
 			tmpl = new Tmpl ( moduleElem );
+    	mc.set ( { state : vm } );
 		
 		// 将当前vm保存在对应的模块根节点下，以便子模块寻找父模块的vm对象
 		moduleElem.__vm__ = vm;
@@ -146,9 +161,99 @@ export default {
 		tmpl.mount ( vm, true );
 
 		vm.view = slice.call ( moduleElem.childNodes ) || [];
-		// 查看是否有元素驱动器，有的话就加载驱动器对象
+    	
 		// 调用apply方法
-		 
+		vmData.apply.apply ( mc, applyDeps );
+      
 		return vm;
-	}
+	},
+	
+	/**
+		start ( rootModuleName: String )
+		
+		Return Type:
+		void
+		
+		Description:
+		以一个module作为起始点启动ice
+		
+		URL doc:
+		http://icejs.org/######
+	*/
+	start ( rootModuleName ) {
+    	
+    	// 后退/前进事件绑定
+		//
+		event.on ( window, "popstate", function ( event ) {
+			let
+	    // 取得在single中通过replaceState保存的state object
+	    		state 			= single.history.getState ( window.location.pathname ),
+
+	    		before 			= {},
+	    		after 			= {},
+	    		differentState  = {},
+
+	    		_modules 		= [];
+
+	    	if ( type ( state ) === "array" && state.length > 0 ) {
+
+    			foreach ( state, item => {
+
+    				_modules.push ( {
+    					url 	: item.url, 
+    					entity 	: item.module, 
+    					data 	: item.data
+    				} );
+    			} );
+
+	    		single ( _modules, null, null, null, null, null, null, null, null, true, true );
+	    	}
+	    	else {
+
+	    		// 获得跳转前的模块信息
+    			decomposeArray ( split.call ( single.history.signature, "/" ), ( key, value ) => {
+    				before [ key ] = value ;
+    			} );
+
+    			// 获得跳转后的模块信息
+    			decomposeArray ( split.call ( window.location.pathname, "/" ), ( key, value ) => {
+    				after [ key ]  = value ;
+    			} );
+
+
+	    		// 对比跳转前后url所体现的变化module信息，根据这些不同的模块进行加载模块内容
+	    		foreach ( after, ( afterItem, key ) => {
+	    			if ( before [ key ] !== afterItem ) {
+	    				differentState [ key ] = afterItem;
+	    			}
+	    		} );
+
+				foreach ( before, ( afterItem, key ) => {
+					if ( after [ key ] !== afterItem ) {
+						differentState [ key ] = null;
+					}
+				} );
+
+
+
+				// 根据对比跳转前后变化的module信息，遍历重新加载
+				foreach ( differentState, ( src, moduleName ) => {
+					_module = query ( `*[${ single.aModule }=${ moduleName }]` );
+
+					src 	  = src === null ? attr ( _module, single.aSrc ) : src;
+
+					_modules.push ( {
+    					url 	: src, 
+    					entity 	: _module, 
+    					data 	: null
+					} );
+				} );
+
+				single ( _modules, null, null, null, null, null, null, null, null, true, true );
+	    	}
+		} );
+    	
+    	// 引入根模块内容
+    	single.includeModule ( query ( `*[${ single.aModule }=${ rootModuleName }]` );
+    }
 };

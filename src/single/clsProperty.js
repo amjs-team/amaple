@@ -60,7 +60,7 @@ export default {
 		state : {},
 
 		// 状态记录标记
-		signature : null,
+		signature : window.location.pathname,
 
 		/**
 			setState ( key: String, value: Object, mode?: Boolean )
@@ -129,10 +129,10 @@ export default {
 		if ( filter === true ) {
 
 			// 过滤moduleRecord数组中不存在于当前页面中的模块记录
-			var _record = {};
+			let _record = {};
 
-			util.foreach ( single.moduleRecord, function ( recordItem, key ) {
-				util.type ( util.s ( "*[ice-module=" + key + "]" ) ) === "object" && ( _record [ key ] = recordItem );
+			foreach ( single.moduleRecord, function ( recordItem, key ) {
+				type ( query ( "*[ice-module=" + key + "]" ) ) === "object" && ( _record [ key ] = recordItem );
 			});
 
 			single.moduleRecord = _record;
@@ -157,7 +157,7 @@ export default {
 
 	
 	/**
-		getFormatModuleRecord ()
+		getFormatModuleRecord ( separator: String )
 	
 		Return Type:
 		String
@@ -168,59 +168,15 @@ export default {
 		URL doc:
 		http://icejs.org/######
 	*/
-	getFormatModuleRecord () {
+	getFormatModuleRecord ( separator ) {
 		var 
 			_array = [];
 
-		util.foreach ( single.moduleRecord, function ( recordItem, key ) {
-			push.call ( _array, key + ( config.params.moduleSeparator || "" ) + recordItem );
+		foreach ( single.moduleRecord, ( recordItem, key ) => {
+			_array.push ( key + ( separator || "" ) + recordItem );
 		} );
 
 
-		return "/" + join.call ( _array, "/" );
-	},
-
-	/**
-		requestEvent ( e: Object )
-	
-		Return Type:
-		void
-	
-		Description:
-		无刷新跳转的事件封装
-		预先绑定到同时具有href和ice-target的元素，或具有action和ice-target的form元素
-	
-		URL doc:
-		http://icejs.org/######
-	*/
-	requestEvent : function ( e ) {
-
-		var 
-
-			// 临时存储目标模块名称
-			_moduleName 	= this.getAttribute ( single.aTargetMod ),
-
-			src 			= this.getAttribute ( single.aHref ) || this.getAttribute ( single.aAction ),
-
-			// 获取当前按钮操作的模块
-			module			= util.s ( "*[" + single.aModule + "=" + _moduleName + "]" ),
-			method, data;
-
-		if ( this.nodeName === "FORM" ) {
-			method 			= "POST";
-			data 			= this;
-		}
-
-		e.preventDefault ();
-		if ( util.type ( module ) === "object" ) {
-
-			//  url, module, data, title, method, timeout, before, success, error, abort, pushStack, onpopstate 
-			// 当前模块路径与请求路径不相同时，调用single方法
-			getCurrentPath$ ( module ) === src || 
-			single ( src, module, data, config.params.header [ src ], method, null, null, null, null, null, true );
-		}
-		else {
-			throw moduleErr ( "module", "找不到" + _moduleName + "模块" );
-		}
+		return "/" + _array.join ( "/" );
 	}
 };

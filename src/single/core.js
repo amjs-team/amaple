@@ -1,14 +1,23 @@
 import { extend, type, foreach, replaceAll, noop, isPlainObject } from "../func/util";
 import { attr, html } from "../func/node";
-import { envErr } from "../error";
+import { getCurrentPath, setCurrentPath } from "../func/private";
+import { envErr, moduleErr } from "../error";
 import singleAttr from "./singleAttr";
 import clsProperty from "./clsProperty";
 import requestEventBind from "./requestEventBind";
 import compileModule from "./compileModule";
+import includeModule from "./includeModule";
 import configuration from "../core/configuration/core";
+import ice from "../core/core";
 import cache from "../cache/core";
 import http from "../http/core";
 import event from "../event/core";
+
+setTitle ( title ) {
+	if ( title && document.title !== title ) {
+    	document.title = title;
+    }
+}
 
 /**
 	single ( url: String|Object, moduleElem: DMOObject, data?: String|Object, method?:String, timeout?: Number, before?: Function, success?: Function, error?: Function, abort?: Function, pushStack?: Boolean, onpopstate?: Boolean )
@@ -32,14 +41,12 @@ import event from "../event/core";
 	URL doc:
 	http://icejs.org/######
 */
-export default function single ( url, moduleElem, data, method, timeout, before = noop, success = noop, error = noop, abort = noop, pushStack, onpopstate ) {
+export default function single ( url, moduleElem, data, method, timeout, before = noop, success = noop, error = noop, abort = noop, pushStack = false, onpopstate = false ) {
 
-	let moduleName, aCache, isCache, isBase, modules, historyMod, html,
+	let moduleName, aCache, isCache, isBase, modules, historyMod, html, title,
 
 		// 模块内容缓存key
 		directionKey, 
-
-
 		//////////////////////////////////////////////////
 		/// 请求url处理相关
 
@@ -57,10 +64,7 @@ export default function single ( url, moduleElem, data, method, timeout, before 
 		modPlaceholder = ":m",
 
 		// 模块内容标识占位符
-		conPlaceholder = ":v",
-
-		// 临时保存刷新前的title
-		currentTitle = document.title;
+		conPlaceholder = ":v";
 
 	// 判断传入的url的类型，如果是string，是普通的参数传递，即只更新一个模块的数据； 如果是array，它包括一个或多个模块更新的数据
 	// 需统一为modules数组
@@ -71,7 +75,7 @@ export default function single ( url, moduleElem, data, method, timeout, before 
 	foreach ( modules, ( module, i ) => {
 
 		moduleName 		= attr ( module.entity, single.aModule );
-		directionKey 	= moduleName + "_" + module.url;
+		directionKey 	= moduleName + module.url;
 
 		// aCache 			= attr ( module.entity, single.aCache );
 		// isCache 		= aCache === "true" || ( configuration.getConfigure ( redirectCache ) === true && aCache !== "false" );
@@ -79,9 +83,14 @@ export default function single ( url, moduleElem, data, method, timeout, before 
 
 		// cache已有当前模块的缓存时，才使用缓存
 		// 根据不同的code来刷新不同模块也一定需要重新请求
-		if ( historyMod = cache.getDirection ( directionKey ) ) {
-
-			html ( module.entity, historyMod );
+		if ( historyMod = cache.getDirection ( directionKey ) && !isPlainObject ( module.entity ) ) {
+        	let fragment = document.createDocumentFragment ();
+        	foreach ( historyMod.vm.view, childView => {
+				fragment.appendChild ( childView );
+            } );
+        	
+			html ( module.entity, fragment );
+        	title = title || historyMod.title;
 		}
 		else {
 
@@ -111,64 +120,63 @@ export default function single ( url, moduleElem, data, method, timeout, before 
 				},
 
 			} ).done ( ( moduleString, status, xhr ) => {
-
-            	// 解析请求module
-				compiler = compileModule ( moduleString );
             	if ( isPlainObject ( module.entity ) ) {
-                	module.entity = module.entity [ xhr.getResponseHeader ( "code" ) ];
+                	let code = xhr.getResponseHeader ( "code" ),
+                        _title;
+                	module.entity = module.entity [ code ];
+                	if ( !module.entity ) {
+                    	throw moduleErr ( "NotFind", "未找到code=" + code + "下的模块" );
+                    }
             	}
 				/////////////////////////////////////////////////////////
+            	// 编译module为可执行函数
 				// 将请求的html替换到module模块中
-				html ( module.entity, html );
-
+            	// 同时更新多个模块时，使用第一个模块的标题，如第一个模块没有标题则使用第二个模块的标题，以此类推。如所有模块都没有标题则不改变标题
+              	
+				_title = compileModule ( moduleString ) ( ice, html, cache, directionKey );
+            	title = title || _title
+              
+            	setTitle ( title );
 				/////////////////////////////////////////////////////////
-				// 如果需要缓存，则将html缓存起来
-				//
-				module.isCache === true && cache.addRedirect ( directionKey, html );
-
-				if ( compiler.title ) {
-                	document.title = compiler.title;
-				}
 
 				// 调用success回调
 				success ( module );
 			} ).fail ( error => {
             	error ( module, error );
 			} );
-
 		}
 
 
 		// 先保存上一页面的path用于上一页面的状态保存，再将模块的当前路径更新为刷新后的url
-		lastPath = getCurrentPath$ ( module.entity );
-		setCurrentPath$ ( module.entity, module.url );
+		lastPath = getCurrentPath ( module.entity );
+		setCurrentPath ( module.entity, module.url );
 
 		_state.push ( {
-			url 		: lastPath,
-			moduleName 	: moduleName,
-			data 		: module.data,
-			title 		: i === "0" ? currentTitle : undefined
+			url 	: lastPath,
+			module 	: module.entity,
+			data 	: module.data
 		} );
 
 		if ( pushStack === true ) {
 			single.setModuleRecord ( moduleName, module.url, true );
 		}
 	} );
+  
+	setTitle ( title );
 
 	// 判断是否调用pushState
-	if (pushStack === true) {
+	if ( pushStack === true ) {
 
 		// 需判断是否支持history API新特性
-		if (single.history.entity.pushState) {
+		if ( single.history.entity.pushState ) {
 
 
 			/////////////////////////////////////////////////////////
 			// 保存跳转前的页面状态
-			//
 			single.history.setState ( single.history.signature, _state, true );
 
 			if ( onpopstate !== true ) {
-				single.history.push ( null, modules [ 0 ].title, single.getFormatModuleRecord () );
+				single.history.push ( null, title, single.getFormatModuleRecord ( configuration.getConfigure ( moduleSeparator ) ) );
 			}
 
 			// 初始化一条将当前页的空值到single.history.state中
@@ -184,4 +192,4 @@ export default function single ( url, moduleElem, data, method, timeout, before 
 //////////////////////////////////////////
 // module无刷新跳转相关属性通用参数，为避免重复定义，统一挂载到single对象上
 // single相关静态变量与方法
-extend ( single, singleAttr, clsProperty, { requestEventBind } );
+extend ( single, singleAttr, clsProperty, { requestEventBind, includeModule } );

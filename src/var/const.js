@@ -12,4 +12,4 @@ export const TYPE_DRIVER = 4;
 export const rword = /\S+/g;
 
 // 变量正则表达式
-export const rvar = /^[^0-9]{1}[a-zA-Z0-9$_]*$/;
+export const rvar = /[^0-9]{1}[\w$]*/;

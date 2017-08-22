@@ -1,4 +1,4 @@
-import { type, foreach, isEmpty } from "./util";
+import { type, foreach, isEmpty, noop } from "./util";
 import slice from "../var/slice";
 import event from "../event/core";
 import check from "../check";
@@ -22,7 +22,7 @@ export function query ( selector, context, all ) {
 }
 
 /**
-	appendScript ( node: DOMObject, success: Function, error: Function )
+	appendScript ( node: DOMObject, success?: Function, error?: Function )
 
 	Return Type:
 	void
@@ -33,8 +33,8 @@ export function query ( selector, context, all ) {
 	URL doc:
 	http://icejs.org/######
 */
-export function appendScript ( node, success, error ) {
-	var script 	= document.createElement ( "script" );
+export function appendScript ( node, success = noop, error = noop ) {
+	let script 	= document.createElement ( "script" );
 	script.type = "text/javascript";
 
 	// 将node的所有属性转移到将要解析的script节点上
@@ -50,13 +50,14 @@ export function appendScript ( node, success, error ) {
 		// 绑定加载事件，加载完成后移除此元素
 		event.on ( script, "load readystatechange", function ( event ) {
 			if ( !this.readyState || this.readyState === "loaded" || this.raeadyState === "complete" ) {
-				success && success ( event );
+				success ( event );
 			}
 
 			script.parentNode.removeChild ( script );
 		} );
 
 		event.on ( script, "error", () => {
+        	error ();
 			script.parentNode.removeChild ( script );
 		} );
 
@@ -65,12 +66,13 @@ export function appendScript ( node, success, error ) {
 	else if ( node.text ) {
 		script.text = node.text || "";
 		document.head.appendChild ( script ).parentNode.removeChild ( script );
+    	success ();
 	}
 }
 
 
 /**
-	scriptEval ( code: Array|DOMScript|String )
+	scriptEval ( code: Array|DOMScript|String, callback?: Function )
 
 	Return Type:
 	void
@@ -83,46 +85,50 @@ export function appendScript ( node, success, error ) {
 	URL doc:
 	http://icejs.org/######
 */
-export function scriptEval ( code ) {
-	check ( code ).type ( "string", "array" ).or().prior ( function () {
+export function scriptEval ( code, callback = noop ) {
+	check ( code ).type ( "string", "array" ).or ().prior ( function () {
 		this.type ( "object" ).check ( code.nodeType ).be ( 1 ).check ( code.nodeName.toLowerCase () ).be ( "script" );
 	} ).ifNot ( "function scriptEval:code", "参数必须为javascript代码片段、script标签或script标签数组" ).do ();
 
-	var tcode = type ( code );
+	let tcode = type ( code );
 	if ( tcode === "string" ) {
 
-		var script 	= document.createElement ( "script" );
+		let script 	= document.createElement ( "script" );
 		script.type = "text/javascript";
 		script.text = code;
 
-		appendScript ( script );
+		appendScript ( script, callback );
 	}
 	else if ( tcode === "object" && code.nodeType === 1 && code.nodeName.toLowerCase () === "script" ) {
-		appendScript ( code );
+		appendScript ( code, callback );
 	}
 	else if ( tcode === "array" ) {
-		var scripts = code.slice ( 0 );
-		foreach ( code, _script => {
-			//删除数组中的当前值，以便于将剩下未执行的javascript通过回调函数传递
-			Array.prototype.splice.call ( scripts, 0, 1 );
+		let scripts = code.concat (),
+            length = scripts.length;
+    	
+    	if ( length > 0 ) {
+			foreach ( code, _script => {
+				// 删除数组中的当前值，以便于将剩下未执行的javascript通过回调函数传递
+				scripts.splice ( 0, 1 );
 			
-			if ( !_script.src ) {
-				 appendScript ( _script );
-			}
-			else {
-				// 通过script的回调函数去递归执行未执行的script标签
-				appendScript ( _script, () => {
-					scripts.length > 0 && scriptEval ( scripts );
-				});
+				if ( !_script.src ) {
+					appendScript ( _script, length === 0 ? callback : noop );
+				}
+				else {
+					// 通过script的回调函数去递归执行未执行的script标签
+					appendScript ( _script, length === 0 ? callback : () => {
+                    	scriptEval ( scripts, callback );
+                    } );
 
-				return false;
-			}
-		});
+					return false;
+				}
+			} );
+        }
 	}
 }
 
 /**
-	append ( context: DOMObject, node: DOMObject|DOMString|String )
+	append ( context: DOMObject, node: DOMObject|DOMString|DocumentFragmentObject|String, callback?: Function )
 
 	Return Type:
 	DOMObject
@@ -134,23 +140,23 @@ export function scriptEval ( code ) {
 	URL doc:
 	http://icejs.org/######
 */
-export function append ( context, node ) {
+export function append ( context, node, callback ) {
 	check ( context.nodeType ).toBe ( 1 ).ifNot ( "fn append:context", "context必须为DOM节点" ).do ();
 
-	var	rhtml 	= /<|&#?\w+;/,
-	 	telem	= type ( node ),
+	let	rhtml 	= /<|&#?\w+;/,
+	 	tnode	= type ( node ),
 		i 		= 0,
 
 		fragment, _elem, script,
 		nodes 	= [],
-		scripts = [];
+        scripts = [];
 
-	if ( telem === "string" && !rhtml.test ( node ) ) {
+	if ( tnode === "string" && !rhtml.test ( node ) ) {
 
 		// 插入纯文本，没有标签时的处理
 		nodes.push ( document.createTextNode ( node ) );
 	}
-	else if ( telem === "object" ) {
+	else if ( tnode === "object" ) {
 		node.nodeType && nodes.push ( node );
 	}
 	else {
@@ -174,21 +180,20 @@ export function append ( context, node ) {
 	foreach ( nodes, node => {
 		context.appendChild ( node );
 
-		if ( node.nodeType === 1 ) {
-			_elem = query ( "script", node, true ).concat ( node.nodeName === "SCRIPT" ? [ node ] : [] );
-
-			i = 0;
-			while ( script = _elem [ i++ ] ) {
-				// 将所有script标签放入scripts数组内等待执行
-				scripts.push ( script );
-			}
+		if ( node.nodeType === 1 || node.nodeTyle === 11 ) {
+        	
+        	// 将所有script标签放入scripts数组内等待执行
+			scripts = query ( "script", node, true ).concat ( node.nodeName === "SCRIPT" ? [ node ] : [] );
 		}
 	} );
 
 	// scripts数组不空则顺序执行script
-	isEmpty ( scripts ) || scriptEval ( scripts );
-
-	// 需控制新添加的html内容。。。。。。
+	if ( !isEmpty ( scripts ) ) {
+    	scriptEval ( scripts, callback );
+    }
+	else {
+    	callback ();
+    }
 
 	return context;
 }
@@ -220,7 +225,7 @@ export function clear ( context ) {
 }
 
 /**
-	html ( context: DOMObject, node: DOMObject|DOMString|String )
+	html ( context: DOMObject, node: DOMObject|DOMString|DocumentFragmentObject|String, callback?: Function )
 
 	Return Type:
 	DOMObject
@@ -233,9 +238,9 @@ export function clear ( context ) {
 	URL doc:
 	http://icejs.org/######
 */
-export function html ( context, node ) {
+export function html ( context, node, callback ) {
 	context = clear ( context );
-	context = append ( context, node );
+	context = append ( context, node, callback );
 
 	return context;
 }

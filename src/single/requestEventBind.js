@@ -21,7 +21,7 @@ function getModuleElem ( moduleName ) {
     	module = {};
     	foreach ( moduleName, ( name, code ) => {
         	if ( !( module [ code ] = query ( `*[${ single.aModule }=${ name }]` ) ) ) {
-            	throw moduleErr ( "module", `找不到${ name }模块` );
+            	throw moduleErr ( "NotFind", `找不到${ name }模块` );
             }
         } );
       
@@ -42,36 +42,23 @@ function getModuleElem ( moduleName ) {
     http://icejs.org/######
 */
 export default function requestEventBind ( elem ) {
-	if ( attr ( elem, single.aModule ) ) {
-    	let willBind = true;
-    	
-    	while ( ( elem = elem.parentNode ) !== document.body ) {
-        	if ( attr ( elem, single.aModule ) ) {
-            	willBind = false;
-            	break;
-            }
-        }
-    	
-    	if ( willBind ) {
-        	event ( elem, "click submit", e => {
-            	let target = e.target,
-                    moduleName = attr ( target, single.aTargetMod ),
-                    url = attr ( target, e.type.toLowerCase () === "submit" ? single.aAction : single.aHref ),
-                	method = e.type.toLowerCase () === "submit" ? attr ( target, "method" ) : null,
-                    moduleElem;
+    event ( elem, "click submit", e => {
+        let target = e.target,
+        	moduleName = attr ( target, single.aTargetMod ),
+        	url = attr ( target, e.type.toLowerCase () === "submit" ? single.aAction : single.aHref ),
+            method = e.type.toLowerCase () === "submit" ? attr ( target, "method" ) : null,
+            moduleElem;
 				
             	
-                if ( moduleName && url ) {
-                	e.preventDefault ();
+		if ( moduleName && url ) {
+        	e.preventDefault ();
                 	
-					moduleElem = getModuleElem ( moduleName );
+			moduleElem = getModuleElem ( moduleName );
                 	
-                	// 当前模块路径与请求路径不相同时，调用single方法
-            		if ( getCurrentPath ( moduleElem ) !== url ) {
-                    	single ( url, moduleElem, null, method, null, null, null, null, null, null, true );
-                    }
-        		}
-            } );
+            // 当前模块路径与请求路径不相同时，调用single方法
+           	if ( getCurrentPath ( moduleElem ) !== url ) {
+            	single ( url, moduleElem, null, method, null, null, null, null, null, true, false );
+            }
         }
-    }
+    } );
 }

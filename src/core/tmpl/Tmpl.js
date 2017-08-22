@@ -83,10 +83,27 @@ extend ( Tmpl, 	{
                 }
             	else {
                 	// 绑定元素请求或提交表单的事件
-                	single.requestEventBind ( elem );
+                	if ( attr ( elem, single.aModule ) ) {
+    					let willBind = true;
+    	
+    					while ( ( elem = elem.parentNode ) !== document.body ) {
+        				if ( attr ( elem, single.aModule ) ) {
+            				willBind = false;
+            				break;
+            			}
+        			}
+    	
+    				if ( willBind ) {
+                    	single.requestEventBind ( elem );
+                    }
                 	
-                	// 加载元素驱动器渲染元素
-                	// elementDriver.render ( elem );
+                	// 加载有ice-src属性的module元素
+                    // 过滤nodes数组本身带有的属性或方法
+                    let moduleName = attr ( elem, single.aModule ),
+                        src = attr ( elem, single.aSrc );
+					if ( moduleName && src ) {
+						single.includeModule ( elem, src, moduleName );
+					}
                 	
                 	foreach ( slice.call ( elem.attributes ), attr => {
                 		directive = rattr.exec ( attr.nodeName );
