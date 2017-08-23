@@ -4,7 +4,7 @@ import event from "../event/core";
 import Promise from "../promise/Promise";
 import ICEXMLHttpRequest from "./ICEXMLHttpRequest";
 import xhr from "./transport/xhr";
-import tranScript from "./transport/script";
+import script from "./transport/script";
 import jsonp from "./transport/jsonp";
 import upload from "./transport/upload";
 
@@ -32,15 +32,8 @@ import upload from "./transport/upload";
 */
 function request ( method ) {
 
-	let	// GET、POST时的默认参数
-		url, args, callback, dataType, 
-
-		transportName,
-
-		params, nohashUrl, hash,
-
+	const
 		// 相关正则表达式
-		rargs 			= /(\S+)=(\S+)&?/,
 		r20 			= /%20/g,
 		rhash 			= /#.*$/,
 		rts 			= /([?&])_=[^&]*/,
@@ -93,21 +86,13 @@ function request ( method ) {
 	    			// 纠正参数
 	    			// 1、如果没有传入args，则将callback的值给dataType，将args的值给callback，args设为undefined，
 	    			// 2、如果没有传入args和dataType，将args的值给callback，args设为undefined
-	    			if ( util.type ( callback ) === "string" && dataType === undefined ) {
-	    				dataType 				= callback;
-	    				callback 				= undefined;
-	    			}
-	    			if ( util.type ( args ) === "function" ) {
-	    				callback 				= args;
-	    				args 					= undefined;
-	    			}
-	    			else if ( rtype.test ( ( args || "" ).toUpperCase () ) ) {
-	    				dataType 				= args;
-	    				args 					= undefined;
-	    			}
-	    			// correctParam ( url, args, callback, dataType ).to (  )
+	    			correctParam ( args, callback, dataType ).to ( [ /=/, "object" ], "function", rtype ).done ( function () {
+                    	args = this.$1;
+                    	callback = this.$2;
+                    	dataType = this.$3;
+                    } );
 
-	    			/** @type {Object} get请求参数初始化 */
+	    			// get请求参数初始化
 	    			params = { 
 	    				url 	: url, 
 	    				args 	: args || undefined, 
@@ -128,8 +113,16 @@ function request ( method ) {
 		//////////////////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////////////////
 		// ajax传送器，根据数据类型
-	    ajaxTransports = { xhr, script : tranScript, jsonp, upload };
+	    ajaxTransports = { xhr, script, jsonp, upload };
+	
 
+	let	// GET、POST时的默认参数
+		url, args, callback, dataType, 
+
+		transportName,
+
+		params, nohashUrl, hash;
+	
 	/**
 		[anonymous] ()
 	
@@ -143,34 +136,35 @@ function request ( method ) {
 		URL doc:
 		http://icejs.org/######
 	*/
-	return function () {
+	return function ( ...args ) {
 
 		let // 合并参数
-			options = extendOptions ( arguments ),
+			options = extendOptions ( args ),
+            data = options.data,
 
 			// 自定义xhr对象，用于统一处理兼容问题
 			iceXHR = new ICEXMLHttpRequest ();
 
 
 		// 如果传入的data参数为数据对象，则将{k1: v1, k2: v2}转为以k1=v1&k2=v2
-		if ( type ( options.data ) === "object" ) {
+		if ( type ( data ) === "object" ) {
 
-			let args = [];
+			let _args = [];
 
 			// 判断是否为表单对象
 			// 如果是则使用FormData来提交
 			// 如果不支持FormData对象，则判断是否包含上传信息，如果不包含则将参数序列化出来post提交，如果包含，则使用iframe刷新的方法实现
-			if ( options.data.nodeName && options.data.nodeName.toUpperCase () === "FORM" ) {
+			if ( data.nodeName && data.nodeName.toUpperCase () === "FORM" ) {
 
 				// 如果是表单对象则获取表单的提交方式，默认为POST
-				options.method = attr ( options.data, "method" ) || "POST";
+				options.method = attr ( data, "method" ) || "POST";
 
 				// 当data为form对象时，如果也提供了src参数则优先使用src参数
-				options.url    = attr ( options.data, "src" ) || options.url;
+				options.url    = attr ( data, "src" ) || options.url;
 
 				// 如果支持FormData则使用此对象进行数据提交
 				try {
-					options.data = new FormData ( options.data );
+					options.data = new FormData ( data );
 				} catch ( e ) {
 
 					let hasFile,
@@ -184,21 +178,21 @@ function request ( method ) {
 						}
 						else if ( item.name && !attr ( item, "disabled" ) && rsubmittable.test( item.nodeName ) && !rsubmitterTypes.test( item.type ) && ( item.checked || !rcheckableType.test( item.type ) ) ) {
 
-							args.push ( item.name + "=" + item.value.replace ( rCRLF, "\r\n" )  );
+							_args.push ( item.name + "=" + item.value.replace ( rCRLF, "\r\n" )  );
 						}
 					} );
 
 					if ( !hasFile ) {
-						options.data = args.join ( "&" );
+						options.data = _args.join ( "&" );
 					}
 				}
 			}
 			else {
-				foreach ( options.data, ( data, index ) => {
-					args.push ( index + "=" + data );
+				foreach ( data, ( _data, index ) => {
+					_args.push ( index + "=" + _data );
 				} );
 
-				options.data = args.join ( "&" );
+				options.data = _args.join ( "&" );
 			}
 		}
 
@@ -354,5 +348,33 @@ export default {
 		URL doc:
 		http://icejs.org/######
 	*/
-	post : request ( "POST" )
+	post : request ( "POST" ),
+	
+	onrequest ( target, callback ) {
+    	
+    },
+	
+	onresponse ( target, callback ) {
+    	
+    },
+	
+	onsuccess ( target, callback ) {
+    	
+    },
+	
+	onerror ( target, callback ) {
+    	
+    },
+	
+	onabort ( target, callback ) {
+    	
+    },
+	
+	onprogress ( target, callback ) {
+    	
+    },
+	
+	onuploadresponse ( target, callback ) {
+    	
+    },
 };

@@ -13,6 +13,13 @@ import cache from "../cache/core";
 import http from "../http/core";
 import event from "../event/core";
 
+const 
+	// 模块名占位符
+	modPlaceholder = ":m",
+
+	// 模块内容标识占位符
+	conPlaceholder = ":v";
+
 function setTitle ( title ) {
 	if ( title && document.title !== title ) {
     	document.title = title;
@@ -59,13 +66,6 @@ export default function single ( url, moduleElem, data, method, timeout, before 
 
 		_state = [];
 
-	const 
-		// 模块名占位符
-		modPlaceholder = ":m",
-
-		// 模块内容标识占位符
-		conPlaceholder = ":v";
-
 	// 判断传入的url的类型，如果是string，是普通的参数传递，即只更新一个模块的数据； 如果是array，它包括一个或多个模块更新的数据
 	// 需统一为modules数组
 	modules = type ( url ) === "string" ? [ { url : url, entity : moduleElem, data : data } ] : url;
@@ -90,6 +90,7 @@ export default function single ( url, moduleElem, data, method, timeout, before 
             } );
         	
 			html ( module.entity, fragment );
+        	event.emit ( single.MODULE_UPDATE );
         	title = title || historyMod.title;
 		}
 		else {
@@ -104,6 +105,8 @@ export default function single ( url, moduleElem, data, method, timeout, before 
 			fullUrl = isBase ? configuration.getConfigure ( "baseUrl" ) +  ( hasSeparator === 0 ? fullUrl.substr( 1 ) : fullUrl )
 							  :
 							  hasSeparator === 0 ? fullUrl : "/" + fullUrl;
+        	
+        	event.emit ( single.MODULE_REQUEST );
 							  
 			// 请求模块跳转页面数据
 			http.request ( {
@@ -120,6 +123,7 @@ export default function single ( url, moduleElem, data, method, timeout, before 
 				},
 
 			} ).done ( ( moduleString, status, xhr ) => {
+            	event.emit ( single.MODULE_RESPONSE );
             	if ( isPlainObject ( module.entity ) ) {
                 	let code = xhr.getResponseHeader ( "code" ),
                         _title;
@@ -134,6 +138,8 @@ export default function single ( url, moduleElem, data, method, timeout, before 
             	// 同时更新多个模块时，使用第一个模块的标题，如第一个模块没有标题则使用第二个模块的标题，以此类推。如所有模块都没有标题则不改变标题
               	
 				_title = compileModule ( moduleString ) ( ice, html, cache, directionKey );
+            	event.emit ( single.MODULE_UPDATE );
+            	
             	title = title || _title
               
             	setTitle ( title );

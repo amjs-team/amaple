@@ -18,11 +18,11 @@ ice-title 				用于模块的<template>元素上，定义页面标题，如果�
 -----------------------------------------------------------
 ice-group				将元素进行分组，相同标签值的元素将会分为一组
 -----------------------------------------------------------
-onrequest				模块请求事件，发出请求前触发（模块事件），可使用模板引擎的:onrequest绑定
+onrequest				（待考虑）模块请求事件，发出请求前触发（模块事件），可使用模板引擎的:onrequest绑定
 -----------------------------------------------------------
-onresponse				模块响应事件，请求响应后触发（模块事件），可使用模板引擎的:onresponse绑定
+onresponse				（待考虑）模块响应事件，请求响应后触发（模块事件），可使用模板引擎的:onresponse绑定
 -----------------------------------------------------------
-onfinish				模块转向完成事件，模块填充新内容后触发（模块事件），可使用模板引擎的:onfinish绑定
+onupdate				模块更新事件，模块更新内容后触发（模块事件），可使用模板引擎的:onupdate绑定，也可使用event.on绑定
 -----------------------------------------------------------
 -----------------------------------------------------------
 
@@ -170,19 +170,19 @@ http.get(url:String[, args:String/Object][, callback:Function][, type:String])		
 -----------------------------------------------------------
 http.post(url:String[, data:String/Object][, callback:Function][, type:String])		post请求，返回promise对象
 -----------------------------------------------------------
-http.reqBefore([target:String/Object, callback: Function])		ajax请求开始前事件绑定
+http.onrequest([target:String/Object, callback: Function])		ajax请求开始前事件绑定
 -----------------------------------------------------------
-http.reqComplete([target:String/Object, callback: Function])	ajax请求完成事件绑定
+http.onresponse([target:String/Object, callback: Function])	ajax请求完成事件绑定
 -----------------------------------------------------------
-http.reqSuccess([target:String/Object, callback: Function])		ajax请求成功事件绑定
+http.onsuccess([target:String/Object, callback: Function])		ajax请求成功事件绑定
 -----------------------------------------------------------
-http.reqError([target:String/Object, callback: Function])		ajax请求失败事件绑定
+http.onerror([target:String/Object, callback: Function])		ajax请求失败事件绑定
 -----------------------------------------------------------
-http.reqAbort([target:String/Object, callback: Function])		ajax请求中断事件绑定
+http.onabort([target:String/Object, callback: Function])		ajax请求中断事件绑定
 -----------------------------------------------------------
-http.reqProgress([target:String/Object, callback: Function])	ajax请求响应进度事件绑定
+http.onprogress([target:String/Object, callback: Function])	ajax请求响应进度事件绑定
 -----------------------------------------------------------
-http.uploadProgress([target:String/Object, callback: Function])	ajax上传进度事件绑定
+http.onuploadprogress([target:String/Object, callback: Function])	ajax上传进度事件绑定
 -----------------------------------------------------------
 备注：以上7个ajax事件返回http对象，且可多次叠加绑定事件回调函数，target参数可选值为：
 								省略传入/0/""/undefined/null/false 	监听使用http插件发起的所有请求

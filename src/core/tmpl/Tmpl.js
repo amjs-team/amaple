@@ -75,7 +75,7 @@ extend ( Tmpl, 	{
         		// 处理:for
 				// 处理:if :else-if :else
 				// 处理{{ expression }}
-				// 处理:on、:onrequest :onresponse :onfinish事件
+				// 处理:on、:onrequest :onresponse :onupdate事件
 				// 处理:model
             	forAttrValue = Tmpl.preTreat ( elem );
             	if ( forAttrValue ) {

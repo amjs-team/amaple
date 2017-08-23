@@ -43,12 +43,14 @@
 
 						// watch中的this表示当前值
 						watch : function ( oldVal, newVal ) {
-							animate.step ( function ( eachVal ) {
-								this = eachVal.toFixed( 0 );
+                        	this.animate = new Animate ();
+                        	
+							this.animate.step ( function ( eachVal ) {
+								this.state.width = eachVal.toFixed( 0 );
 							} )
 							.Linear ( oldVal, newVal, function () {
 								console.log ( "completed" );
-							} );
+							}, true );
 						}
 					},
 

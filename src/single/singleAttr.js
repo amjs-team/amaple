@@ -6,5 +6,9 @@ export default {
 
 	aHref			: "href",
 	aAction 		: "action",
-	aTargetMod 		: "ice-target"
+	aTargetMod 		: "ice-target",
+	
+	MODULE_UPDATE 	: "update",
+	MODULE_REQUEST 	: "request",
+	MODULE_RESPONSE : "response"
 };
