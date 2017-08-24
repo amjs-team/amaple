@@ -62,12 +62,13 @@ extend ( check.prototype, {
         http://icejs.org/######
     */
 	prior ( priorCb ) {
-    	let i = this.condition.push ( "prior" ) - 1,
-            priorCondition;
-    	priorCb ( this );
-		priorCondition = this.condition.splice ( i, this.condition.length - i );
-
-    	check.compare.call ( this, [ check.calculate ( priorCondition.slice ( 1 ) ) ], _var => _var );
+    	let conditionBackup = this.condition;
+        this.condition = [];
+    	
+    	priorCb.call ( this );
+    	
+		conditionBackup.push ( this.condition );
+    	this.condition = conditionsBackup;
 
         return this;
     },
@@ -122,7 +123,6 @@ extend ( check.prototype, {
         URL doc:
         http://icejs.org/######
     */
-    // [true, "&&", false, "||", true]
     do () {
         
         // 如果值为false则抛出错误
@@ -144,8 +144,8 @@ extend ( check.prototype, {
         http://icejs.org/######
     */
     be ( ...vars ) {
-        check.compare.call ( this, vars, _var => {
-			return this.target === _var;
+        check.compare.call ( this, vars, ( target, _var ) => {
+			return target === _var;
         } );
 		
         return this;
@@ -164,8 +164,8 @@ extend ( check.prototype, {
         http://icejs.org/######
     */
     notBe ( ...vars ) {
-        check.compare.call ( this, vars, _var => {
-			return this.target !== _var;
+        check.compare.call ( this, vars, ( target, _var ) => {
+			return target !== _var;
         } );
 
         return this;
@@ -184,8 +184,8 @@ extend ( check.prototype, {
         http://icejs.org/######
     */
     type ( ...strs ) {
-        check.compare.call ( this, strs, str => {
-			return type ( this.target ) === str;
+        check.compare.call ( this, strs, ( target, str ) => {
+			return type ( target ) === str;
         } );
 
         return this;
@@ -204,8 +204,8 @@ extend ( check.prototype, {
         http://icejs.org/######
     */
     notType ( ...strs ) {
-        check.compare.call ( this, strs, _var => {
-			return type ( this.target ) !== _var;
+        check.compare.call ( this, strs, ( target, str ) => {
+			return type ( target ) !== str;
         } );
 
         return this;
@@ -214,16 +214,17 @@ extend ( check.prototype, {
 
 extend ( check, {
 	compare ( vars, compareFn ) {
+    	let target = this.target;
 		Array.prototype.push.apply ( this.condition, 
-            ( type ( this.condition [ this.condition.length - 1 ] ) === "boolean" ? [ "&&" ] : [] )
-            .concat ( ( () => {
+            ( type ( this.condition [ this.condition.length - 1 ] ) === "function" ? [ "&&" ] : [] )
+            .concat ( () => {
           		let res;
                 foreach ( vars, _var => {
-                    res = res || compareFn ( _var );
+                    res = res || compareFn ( target, _var );
                 } );
 
                 return res;
-        	} ) () ) 
+        	} )
         );
     },
 
@@ -235,17 +236,39 @@ extend ( check, {
         	throw checkErr ( "condition", "\"or()\"应该需要紧跟条件，而不能作为最后的条件调用方法" );
         }
         else if ( condition.length % 2 === 1 ) {
-            let res = condition [ 0 ];
-            for ( let i = 0; condition [ i ] !== undefined; i += 2 ) {
-                switch ( condition [ i+1 ] ) {
-                    case "&&":
-                        res = res && condition [ i+2 ];
-                        break;
-                    case "||":
-                        res = res || condition [ i+2 ];
-                        break;
+            let res = false,
+                symbol, titem, bool;
+            foreach ( condition, item => {
+            	titem = type ( item );
+            	
+            	if ( titem !== "string" ) {
+            		if ( titem === "array" ) {
+                		bool = check.calculate ( item );
+                	}
+            		else if ( titem === "function" ) {
+                		bool = item ();
+                	}
+                	
+                	switch ( symbol ) {
+                    	case "&&":
+                        	res = res && bool;
+                        	break;
+                    	case "||":
+                        	res = res || bool;
+                        	break;
+                    	default:
+                        	res = bool;
+                    }
                 }
-            }
+            	else {
+                	if ( ( item === "&&" && res === false ) || ( item === "||" && res === true ) ) {
+                        return false;
+                    }
+                	else {
+                		symbol = item;
+                    }
+                }
+            } );
           	
           	return res;
         }
