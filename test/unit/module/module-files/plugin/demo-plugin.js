@@ -1,5 +1,5 @@
 ice.use ( {
 	build () {
-		return {o:1};
+		return {o:2};
 	}
 } );

@@ -7,7 +7,7 @@ describe ( "module =>", () => {
 	} );
 
 	it ( "start the icejs", () => {
-		ice.configure ( { baseUrl : "module/module-files" } );
+		ice.configure ( { baseUrl : "module" } );
 		ice.start ( "test" );
 	} );
 } );

@@ -50,7 +50,7 @@ function setTitle ( title ) {
 */
 export default function single ( url, moduleElem, data, method, timeout, before = noop, success = noop, error = noop, abort = noop, pushStack = false, onpopstate = false ) {
 
-	let moduleName, aCache, isCache, isBase, modules, historyMod, html, title,
+	let moduleName, aCache, isCache, isBase, modules, historyMod, title,
 
 		// 模块内容缓存key
 		directionKey, 
@@ -90,7 +90,7 @@ export default function single ( url, moduleElem, data, method, timeout, before 
             } );
         	
 			html ( module.entity, fragment );
-        	event.emit ( single.MODULE_UPDATE );
+        	event.emit ( module.entity, single.MODULE_UPDATE );
         	title = title || historyMod.title;
 		}
 		else {
@@ -106,7 +106,10 @@ export default function single ( url, moduleElem, data, method, timeout, before 
 							  :
 							  hasSeparator === 0 ? fullUrl : "/" + fullUrl;
         	
-        	event.emit ( single.MODULE_REQUEST );
+        	// 如果在请求前不知道需要更新哪个模块时不触发请求事件回调
+        	if ( !isPlainObject ( module.entity ) ) {
+        		event.emit ( module.entity, single.MODULE_REQUEST );
+        	}
 							  
 			// 请求模块跳转页面数据
 			http.request ( {
@@ -123,7 +126,7 @@ export default function single ( url, moduleElem, data, method, timeout, before 
 				},
 
 			} ).done ( ( moduleString, status, xhr ) => {
-            	event.emit ( single.MODULE_RESPONSE );
+            	event.emit ( module.entity, single.MODULE_RESPONSE );
             	if ( isPlainObject ( module.entity ) ) {
                 	let code = xhr.getResponseHeader ( "code" ),
                         _title;
@@ -137,8 +140,8 @@ export default function single ( url, moduleElem, data, method, timeout, before 
 				// 将请求的html替换到module模块中
             	// 同时更新多个模块时，使用第一个模块的标题，如第一个模块没有标题则使用第二个模块的标题，以此类推。如所有模块都没有标题则不改变标题
               	
-				_title = compileModule ( moduleString ) ( ice, html, cache, directionKey );
-            	event.emit ( single.MODULE_UPDATE );
+				_title = compileModule ( moduleString ) ( ice, module.entity, html, cache, directionKey );
+            	event.emit ( module.entity, single.MODULE_UPDATE );
             	
             	title = title || _title
               

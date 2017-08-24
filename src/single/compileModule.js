@@ -4,19 +4,21 @@ import check from "../check";
 const 
 
 	// 模块编译正则表达式
-	rmodule 	= /^<Module(.*?)<\/Module>/,
-	rmoduleAttr = /^\s*(<Module)?(?:\s+([^\s"'<>/=]+))?(?:\s*(?:=)\s*(?:"([^"]*)"|'([^']*)'))?/,
+	rmodule 	= /^<Module[\s\S]+<\/Module>/,
+	rmoduleAttr = /^\s*(<Module\s+)?(?:([^\s"'<>/=]+))?(?:\s*(?:=)\s*(?:"([^"]*)"|'([^']*)'))?/,
 	rend 		= /^\s*>/,
 
-	rtemplate 	= /<template>(.*?)<\/template>/,
-	rstyle 		= /<style(:?.*?)>(.*?)<\/style>/,
-	rscript 	= /<script(:?.*?)>(.*?)<\/script>/,
-    rvmName 	= /([^0-9]{1}[\w$]*)\s*=\s*ice\s*\.\s*module/,
+	rtemplate 	= /<template>([\s\S]+)<\/template>/,
+	rstyle 		= /<style(?:.*?)>([\s\S]*)<\/style>/,
+	rscript 	= /<script(?:.*?)>([\s\S]+)<\/script>/,
+    rvmName 	= /([a-zA-Z$_]{1}[\w$]*)\s*=\s*ice\s*\.\s*module/,
 
 	rblank 		= />(\s+)</g,
+	rtext 		= /["'\/&]/g,
     risScoped 	= /^<style(?:.*?)scoped(?:.*?)/i,
     raddScoped 	= /\s*([^/@%{}]+)\s*{[^{}]+}/g,
 	rnoscoped 	= /^(from|to)\s*$/i,
+	rstyleblank = /(>\s*|\s*[{:;}]\s*|\s*<)/g,
 	raddModuleName = /ice\s*\.\s*module\s*\(/,
 
 	// 模块属性名
@@ -54,40 +56,47 @@ export default function compileModule ( moduleString ) {
 		}
 
 		// 匹配模板
-		layoutMatch = rtemplate.exec ( moduleString );
-		if ( layoutMatch ) {
-			view = viewMatch [ 1 ] || "";
+		viewMatch = rtemplate.exec ( moduleString );
+		if ( viewMatch ) {
+			moduleString = moduleString.replace ( viewMatch [ 0 ], "" );
+			view = ( viewMatch [ 1 ] || "" ).trim ();
 
-			// 去除所有标签间的空格
-			view.replace ( rblank, ( match, rep ) => match.replace ( rep, "" ) );
+			// 去除所有标签间的空格，并转义"和'符号
+			view = view.replace ( rblank, ( match, rep ) => match.replace ( rep, "" ) );
+			view = view.replace ( rtext, match => "\\" + match );
 		}
 
 		// 匹配样式
 		styleMatch = rstyle.exec ( moduleString );
 		if ( styleMatch ) {
-        	if ( risScoped.test ( styleMatch [ 1 ] ) ) {
+			moduleString = moduleString.replace ( styleMatch [ 0 ], "" );
+
+        	if ( risScoped.test ( styleMatch [ 0 ] ) ) {
             	const placeholder = "{{style}}";
 
-				style = styleMatch [ 1 ] || "";
+				style = ( styleMatch [ 1 ] || "" ).trim ();
 				styleMatch [ 0 ] = styleMatch [ 0 ].replace ( styleMatch [ 1 ], placeholder );
 
 				// 为每个样式添加模块前缀以达到控制范围的作用
-				style.replace ( raddScoped, ( match, rep ) => match.replace (rep, rnoscoped.test ( rep ) ? rep : `[${ singleAttr.aModule }=${ attrs [ attrBelong ] }] ` + rep ) );
+				style = style.replace ( raddScoped, ( match, rep ) => match.replace (rep, rnoscoped.test ( rep ) ? rep : `[${ singleAttr.aModule }=${ attrs [ attrBelong ] }] ` + rep ) );
 
 				style = styleMatch [ 0 ].replace ( placeholder, style );
             }
 			else {
             	style = styleMatch [ 0 ];
             }
+
+            // 去除所有标签间的空格
+            style = style.replace ( rstyleblank, match => match.replace ( /\s+/g, "" ) );
 		}
 
 		// 匹配js脚本
 		scriptMatch = rscript.exec ( moduleString );
 		if ( scriptMatch ) {
 
-			script = scriptMatch [ 1 ] || "";
+			script = ( scriptMatch [ 1 ] || "" ).trim ();
         	vmName = rvmName.exec ( script ) [ 1 ];
-			script = script.replace ( raddModuleName, match => `${ match }"attrs [ attrBelong ]",` );
+			script = script.replace ( raddModuleName, match => `${ match }"${ attrs [ attrBelong ] }",` );
 		}
 
 		////////////////////////////////////////////////////////
@@ -100,8 +109,8 @@ export default function compileModule ( moduleString ) {
 		////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////
 		/// 构造编译函数
-		moduleString = `var belong="${ attrs [ attrBelong ] }",title="${ attrs [ attrTitle ] || "" }",view="${ style }${ layout }";if(title){document.title=title;}html(module, view, function(){${ script };cache.pushDirection(directionName,{vm:${ vmName },title:title);});return title;`;
+		moduleString = `var belong="${ attrs [ attrBelong ] }",title="${ attrs [ attrTitle ] || "" }",view="${ style }${ view }";html(module, view, function(){${ script };});cache.pushDirection(directionName,{vm:${ vmName },title:title});return title;`;
 	}
   
-	return new Function ( "ice", "html", "cache", moduleString );
+	return new Function ( "ice", "module", "html", "cache", moduleString );
 }

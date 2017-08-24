@@ -102,7 +102,8 @@ module.exports = function(config) {
     concurrency: Infinity,
 
     proxies: {
-    	'/plugin/' : '/base/module/module-files/plugin/'
+    	'/plugin/' : '/base/module/module-files/plugin/',
+        '/module/' : '/base/module/module-files/module/'
     }
   })
 }

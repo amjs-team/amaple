@@ -33,9 +33,11 @@ let	// 创建事件触发对象时，根据事件类型来创建不同事件对�
 	http://icejs.org/######
 */
 function handler ( e ) {
-	let _listeners = this ? this [ expando ] [ e.type ] : cache.getEvent ( e.type );
+	let _listeners = this ? 
+		this [ expando ] ? this [ expando ] [ e.type ] : []
+		: cache.getEvent ( e.type );
 
-	foreach ( _listeners, listener => {
+	foreach ( _listeners || [], listener => {
 		listener.call ( this, e );
 
 		// 如果该回调函数只执行一次则移除
