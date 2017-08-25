@@ -127,9 +127,11 @@ export default function single ( url, moduleElem, data, method, timeout, before 
 
 			} ).done ( ( moduleString, status, xhr ) => {
             	event.emit ( module.entity, single.MODULE_RESPONSE );
+
             	if ( isPlainObject ( module.entity ) ) {
-                	let code = xhr.getResponseHeader ( "code" ),
-                        _title;
+
+                	let code = xhr.getResponseHeader ( "code" );
+
                 	module.entity = module.entity [ code ];
                 	if ( !module.entity ) {
                     	throw moduleErr ( "NotFind", "未找到code=" + code + "下的模块" );
@@ -140,7 +142,7 @@ export default function single ( url, moduleElem, data, method, timeout, before 
 				// 将请求的html替换到module模块中
             	// 同时更新多个模块时，使用第一个模块的标题，如第一个模块没有标题则使用第二个模块的标题，以此类推。如所有模块都没有标题则不改变标题
               	
-				_title = compileModule ( moduleString ) ( ice, module.entity, html, cache, directionKey );
+				let _title = compileModule ( moduleString ) ( ice, module.entity, html, cache, directionKey );
             	event.emit ( module.entity, single.MODULE_UPDATE );
             	
             	title = title || _title

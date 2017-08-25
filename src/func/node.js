@@ -86,8 +86,8 @@ export function appendScript ( node, success = noop, error = noop ) {
 	http://icejs.org/######
 */
 export function scriptEval ( code, callback = noop ) {
-	check ( code ).type ( "string", "array" ).or ().prior ( function () {
-		this.type ( "object" ).check ( code.nodeType ).be ( 1 ).check ( code.nodeName.toLowerCase () ).be ( "script" );
+	check ( code ).type ( "string", "array" ).or ().prior ( ( _this ) => {
+		_this.type ( "object" ).check ( code.nodeType ).be ( 1 ).check ( code.nodeName ).be ( "SCRIPT" );
 	} ).ifNot ( "function scriptEval:code", "参数必须为javascript代码片段、script标签或script标签数组" ).do ();
 
 	let tcode = type ( code );
@@ -104,21 +104,24 @@ export function scriptEval ( code, callback = noop ) {
 	}
 	else if ( tcode === "array" ) {
 		let scripts = code.concat (),
-            length = scripts.length;
+            _cb;
     	
-    	if ( length > 0 ) {
+    	if ( scripts.length > 0 ) {
 			foreach ( code, _script => {
 				// 删除数组中的当前值，以便于将剩下未执行的javascript通过回调函数传递
 				scripts.splice ( 0, 1 );
 			
 				if ( !_script.src ) {
-					appendScript ( _script, length === 0 ? callback : noop );
+					_cb = scripts.length === 0 ? callback : noop;
+					appendScript ( _script, _cb, _cb );
 				}
 				else {
-					// 通过script的回调函数去递归执行未执行的script标签
-					appendScript ( _script, length === 0 ? callback : () => {
+					_cb = scripts.length === 0 ? callback : () => {
                     	scriptEval ( scripts, callback );
-                    } );
+                    };
+
+					// 通过script的回调函数去递归执行未执行的script标签
+					appendScript ( _script, _cb, _cb );
 
 					return false;
 				}

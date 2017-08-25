@@ -65,10 +65,10 @@ extend ( check.prototype, {
     	let conditionBackup = this.condition;
         this.condition = [];
     	
-    	priorCb.call ( this );
+    	priorCb ( this );
     	
-		conditionBackup.push ( this.condition );
-    	this.condition = conditionsBackup;
+		Array.prototype.push.apply ( conditionBackup, /^(?:&&|\|\|)$/.test ( conditionBackup [ conditionBackup.length - 1 ] ) ? [ this.condition ] : [ "&&", this.condition ] );
+    	this.condition = conditionBackup;
 
         return this;
     },

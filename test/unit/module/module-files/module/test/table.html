@@ -1,4 +1,4 @@
-<Module :title="表格" :belong="main">
+<Module :title="表格" :belong="test">
 	
 
 	<!-- 模块页面模板 -->
@@ -6,9 +6,11 @@
 		<script src="../../component/EditTable.js"></script>
 		<script src="../../component/PageCtrl.js"></script>
 		<!-- 表格组件渲染 -->
-		<EditTable t-th="{{ title }}" t-tr="{{ content }}" />
+		<!-- <EditTable t-th="{{ title }}" t-tr="{{ content }}"></EditTable> -->
+		<div class="abc">{{ title }} {{ content }}</div>
+		<a href="#">666</a>
 		<!-- 翻页组件渲染 -->
-		<PageCtrl options="{{ pageCtrl }}" setPage="{{ setPage }}" />
+		<!-- <PageCtrl options="{{ pageCtrl }}" setPage="{{ setPage }}"></PageCtrl> -->
 	</template>
 	
 
@@ -45,11 +47,11 @@
 	<!-- 此模板对应的样式 -->
 	<style scoped>
 		a {
-			text-decoration: initial;
-			color: #666;
+			color: gray;
+			font-size: 20px;
 		}
-		#adc {
-			background: #098191;
+		div {
+			background: red;
 		}
 	</style>
 </Module>

@@ -19,8 +19,8 @@ import event from "./event";
 export default {
 	
 	// 添加插件缓存
-	pushPlugin ( name, plugin ) {
-		plugin.push ( name, plugin );
+	pushPlugin ( name, p ) {
+		plugin.push ( name, p );
 	},
 
 	// 获取已加载插件
@@ -29,8 +29,8 @@ export default {
 	},
 
 	// 添加元素驱动器缓存
-	pushDriver ( name, driver ) {
-		driver.push ( name, driver );
+	pushDriver ( name, d ) {
+		driver.push ( name, d );
 	},
 
 	// 获取已加载元素驱动器
@@ -39,8 +39,8 @@ export default {
 	},
 
 	// 添加跳转缓存模块
-	pushDirection ( name, direction ) {
-		direction.push ( name, direction )
+	pushDirection ( name, d ) {
+		direction.push ( name, d )
 	},
 
 	// 获取跳转缓存模块

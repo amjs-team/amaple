@@ -109,8 +109,8 @@ export default function compileModule ( moduleString ) {
 		////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////
 		/// 构造编译函数
-		moduleString = `var belong="${ attrs [ attrBelong ] }",title="${ attrs [ attrTitle ] || "" }",view="${ style }${ view }";html(module, view, function(){${ script };});cache.pushDirection(directionName,{vm:${ vmName },title:title});return title;`;
+		moduleString = `var belong="${ attrs [ attrBelong ] }",title="${ attrs [ attrTitle ] || "" }",view="${ view }${ style }";html(module, view, function(){${ script };cache.pushDirection(directionKey,{vm:${ vmName },title:title});});return title;`;
 	}
   
-	return new Function ( "ice", "module", "html", "cache", moduleString );
+	return new Function ( "ice", "module", "html", "cache", "directionKey", moduleString );
 }
