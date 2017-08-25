@@ -1,10 +1,7 @@
 <Module :title="表格" :belong="main">
 	
-
 	<!-- 模块页面模板 -->
 	<template>
-		<script src="../../component/EditTable.js"></script>
-		<script src="../../component/PageCtrl.js"></script>
 		<!-- 表格组件渲染 -->
 		<EditTable t-th="{{ title }}" t-tr="{{ content }}" />
 		<!-- 翻页组件渲染 -->
@@ -14,7 +11,10 @@
 
 	<!-- 此模板对应的数据 -->
 	<script>
-		var table = ice.module ( {
+    	var EditTable = import ( "../../component/EditTable" ), 
+        	PageCtrl = import ( "../../component/PageCtrl" );
+    	
+		var table = new ice.Module ( {
 			init : function () {
 				return {
 					// 绑定变量与绑定函数直接写返回对象内
