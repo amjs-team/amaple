@@ -151,7 +151,7 @@ extend ( Tmpl, 	{
             if ( firstChild && !forAttrValue ) {
                 watcherData = watcherData.concat ( Tmpl.mountElem ( firstChild, false ) );
             }
-        } while ( elem = elem.nextSibling )
+        } while ( ( elem = elem.nextSibling ) && !isRoot )
         return watcherData;
     },
 

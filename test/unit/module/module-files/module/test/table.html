@@ -3,12 +3,13 @@
 
 	<!-- 模块页面模板 -->
 	<template>
-		<script src="../../component/EditTable.js"></script>
-		<script src="../../component/PageCtrl.js"></script>
 		<!-- 表格组件渲染 -->
 		<!-- <EditTable t-th="{{ title }}" t-tr="{{ content }}"></EditTable> -->
 		<div class="abc">{{ title }} {{ content }}</div>
-		<a href="#">666</a>
+		<a :onclick="setPage">{{ btn }}</a>
+		<ul id="a87">
+			<li :for="t in title">{{ t }}</li>
+		</ul>
 		<!-- 翻页组件渲染 -->
 		<!-- <PageCtrl options="{{ pageCtrl }}" setPage="{{ setPage }}"></PageCtrl> -->
 	</template>
@@ -16,6 +17,9 @@
 
 	<!-- 此模板对应的数据 -->
 	<script>
+		var EditTable = import ( "../../component/EditTable" ), 
+			PageCtrl = import ( "../../component/PageCtrl" );
+
 		var table = ice.module ( {
 			init : function () {
 				return {
@@ -34,8 +38,10 @@
 						pageCount 	: 10,
 						current 	: "current"
 					},
+					btn: "Button",
 	            
 	            	setPage : function ( newVal ) {
+	            		console.log(this);
 	                	this.pageCtrl.currentPage = newVal;
 	                }
 				};
@@ -50,8 +56,14 @@
 			color: gray;
 			font-size: 20px;
 		}
-		div {
+		.abc {
 			background: red;
+		}
+		#a87 {
+			background: green;
+		}
+		#a87 li {
+			border: solid 1px #888;
 		}
 	</style>
 </Module>

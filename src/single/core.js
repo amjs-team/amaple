@@ -1,5 +1,5 @@
 import { extend, type, foreach, replaceAll, noop, isPlainObject } from "../func/util";
-import { attr, html } from "../func/node";
+import { attr, html, scriptEval } from "../func/node";
 import { getCurrentPath, setCurrentPath } from "../func/private";
 import { envErr, moduleErr } from "../error";
 import singleAttr from "./singleAttr";
@@ -142,7 +142,7 @@ export default function single ( url, moduleElem, data, method, timeout, before 
 				// 将请求的html替换到module模块中
             	// 同时更新多个模块时，使用第一个模块的标题，如第一个模块没有标题则使用第二个模块的标题，以此类推。如所有模块都没有标题则不改变标题
               	
-				let _title = compileModule ( moduleString ) ( ice, module.entity, html, cache, directionKey );
+				let _title = compileModule ( moduleString ) ( ice, module.entity, html, scriptEval, cache, directionKey );
             	event.emit ( module.entity, single.MODULE_UPDATE );
             	
             	title = title || _title

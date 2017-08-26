@@ -1,3 +1,4 @@
+import { isEmpty, foreach } from "../func/util";
 import singleAttr from "./singleAttr";
 import check from "../check";
 
@@ -9,9 +10,14 @@ const
 	rend 		= /^\s*>/,
 
 	rtemplate 	= /<template>([\s\S]+)<\/template>/,
+	rhtmlComment = /<!--(.*?)-->/g,
+	rscriptComment = /\/\/(.*?)\n|\/\*(.*?)\*\//g,
 	rstyle 		= /<style(?:.*?)>([\s\S]*)<\/style>/,
 	rscript 	= /<script(?:.*?)>([\s\S]+)<\/script>/,
-    rvmName 	= /([a-zA-Z$_]{1}[\w$]*)\s*=\s*ice\s*\.\s*module/,
+	rimport 	= /(?:(?:var|let|const)\s+)?([\w$-]+)\s*=\s*import\s*\(\s*"(.*?)"\s*\)\s*(?:,|;)/g,
+
+	rmoduleDef 	= /ice\s*\.\s*module\s*\(/,
+    rvmName 	= new RegExp ( "([a-zA-Z$_]{1}[\\w$]*)\\s*=\\s*" + rmoduleDef.source ),
 
 	rblank 		= />(\s+)</g,
 	rtext 		= /["'\/&]/g,
@@ -19,7 +25,8 @@ const
     raddScoped 	= /\s*([^/@%{}]+)\s*{[^{}]+}/g,
 	rnoscoped 	= /^(from|to)\s*$/i,
 	rstyleblank = /(>\s*|\s*[{:;}]\s*|\s*<)/g,
-	raddModuleName = /ice\s*\.\s*module\s*\(/,
+	
+	raddComponents = new RegExp ( rmoduleDef.source + "\\s*\\{" ),
 
 	// 模块属性名
 	attrBelong 	= ":belong",
@@ -41,6 +48,8 @@ export default function compileModule ( moduleString ) {
 	if ( rmodule.test ( moduleString ) ) {
 		let attrMatch, viewMatch, styleMatch, scriptMatch,
 			attrs = {},
+			scripts = {},
+			scriptVars = [],
 			view, style, script, vmName;
 
 		// 匹配出Module标签内的属性
@@ -94,9 +103,37 @@ export default function compileModule ( moduleString ) {
 		scriptMatch = rscript.exec ( moduleString );
 		if ( scriptMatch ) {
 
-			script = ( scriptMatch [ 1 ] || "" ).trim ();
-        	vmName = rvmName.exec ( script ) [ 1 ];
-			script = script.replace ( raddModuleName, match => `${ match }"${ attrs [ attrBelong ] }",` );
+			const matchScript = ( scriptMatch [ 1 ] || "" ).replace ( rscriptComment, match => "" );
+
+			// 获取需import的script
+			script = matchScript.replace ( rimport, ( match, rep1, rep2 ) => {
+				scripts [ rep1 ] = rep2;
+				return "";
+			} ).trim ();
+
+        	vmName = rvmName.exec ( script ) [ 1 ] || "";
+
+        	if ( !isEmpty ( scripts ) ) {
+
+        		let componentStr = [];
+        		foreach ( scripts, ( src, name ) => {
+
+        			// 去掉注释的html的代码
+        			const matchView = view.replace ( rhtmlComment, match => "" );
+
+        			// 只有在view中有使用的component才会被使用
+        			if ( new RegExp ( "<\s*" + name ).test ( matchView ) ) {
+        				componentStr.push ( `"${ name }"` );
+        			}
+        		} );
+
+        		// 需要组件时才将组件添加到对应模块中
+        		if ( !isEmpty ( componentStr ) ) {
+        			componentStr = `components:[${ componentStr.join( "," ) }],`;
+        			script = script.replace ( raddComponents, match => match + componentStr );
+        		}
+        	}
+			script = script.replace ( rmoduleDef, match => `${ match }"${ attrs [ attrBelong ] }",` );
 		}
 
 		////////////////////////////////////////////////////////
@@ -109,8 +146,19 @@ export default function compileModule ( moduleString ) {
 		////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////
 		/// 构造编译函数
-		moduleString = `var belong="${ attrs [ attrBelong ] }",title="${ attrs [ attrTitle ] || "" }",view="${ view }${ style }";html(module, view, function(){${ script };cache.pushDirection(directionKey,{vm:${ vmName },title:title});});return title;`;
+		foreach ( scripts, ( _s, n ) => {
+			scriptVars.push ( `${ n }:"${ _s }"` );
+		} );
+
+		moduleString = `var belong="${ attrs [ attrBelong ] }",title="${ attrs [ attrTitle ] || "" }",scripts={${ scriptVars.join ( "," ) }},view="${ view }${ style }";html(module, view, function(){`;
+
+		if ( !isEmpty ( scriptVars ) ) {
+			moduleString += `var scriptDOM = [];for (var i in scripts){var _s=document.createElement("script");_s.src = scripts[i];scriptDOM.push (_s);}scriptEval (scriptDOM, function(){${ script };cache.pushDirection(directionKey,{vm:${ vmName },title:title});});});return title;`;
+		}
+		else {
+			moduleString += `${ script };cache.pushDirection(directionKey,{vm:${ vmName },title:title});});return title;`
+		}
 	}
   
-	return new Function ( "ice", "module", "html", "cache", "directionKey", moduleString );
+	return new Function ( "ice", "module", "html", "scriptEval", "cache", "directionKey", moduleString );
 }
