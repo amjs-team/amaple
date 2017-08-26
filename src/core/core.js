@@ -125,7 +125,7 @@ export default {
 		http://icejs.org/######
 	*/
 	module ( moduleName, vmData ) {
-
+		
 		// 检查参数
 		check ( moduleName ).type ( "string" ).notBe ( "" ).ifNot ( "ice.module", "moduleName参数类型必须为string" ).do ();
 		check ( vmData ).type ( "object" ).check ( vmData.init ).type ( "function" ).ifNot ( "ice.module", "vmData参数必须为带有init方法的的object" ).do ();
