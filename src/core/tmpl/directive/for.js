@@ -83,7 +83,7 @@ export default {
             f.appendChild ( itemNode );
 
             // 为遍历克隆的元素挂载数据
-        	new Tmpl ( f ).mount ( vm, false, this.defineScoped ( scopedDefinition, vm ) );
+        	new Tmpl ( f ).mount ( vm, true, this.defineScoped ( scopedDefinition, vm ) );
 
             itemNode = f.firstChild;
             if ( itemNode.nodeName && itemNode.nodeName.toUpperCase () === "TEMPLATE" ) {

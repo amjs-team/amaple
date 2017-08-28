@@ -11,6 +11,8 @@ describe ( "module =>", () => {
 		new ice.Module ( "root", {
 			init () {
 				return {
+					title : "6665",
+					content : "content666",
 					resp : function () {
 						done ();
 						expect ( document.querySelector("[ice-module=test]").childNodes.length ).toBeGreaterThan ( 0 );

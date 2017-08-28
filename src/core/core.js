@@ -76,20 +76,7 @@ export default {
         }
 	},
 	
-	/**
-		class Module ( moduleName: String, vmData: Object )
-		
-		Return Type:
-		Object
-		Module对象
-		
-		Description:
-		创建模块对象初始化模块
-        初始化包括转换监听对象，动态绑定数据到视图层
-		
-		URL doc:
-		http://icejs.org/######
-	*/
+	// Module对象
 	Module,
 	
 	/**

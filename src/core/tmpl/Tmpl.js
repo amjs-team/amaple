@@ -30,7 +30,7 @@ export default function Tmpl ( tmplCode ) {
 extend ( Tmpl.prototype, {
 
     /**
-        mount ( vm: ViewModel, isRoot: Boolean, scoped?: Object )
+        mount ( vm: ViewModel, mountModule: Boolean, scoped?: Object )
     
         Return Type:
         void
@@ -41,8 +41,8 @@ extend ( Tmpl.prototype, {
         URL doc:
         http://icejs.org/######
     */
-	mount ( vm, isRoot, scoped ) {
-    	foreach ( Tmpl.mountElem ( this.tmplCode, isRoot ), ( data ) => {
+	mount ( vm, mountModule, scoped ) {
+    	foreach ( Tmpl.mountElem ( this.tmplCode, mountModule ), ( data ) => {
         	new ViewWatcher ( data.handler, data.targetNode, data.expr, vm, scoped );
         } );
     },
@@ -51,7 +51,7 @@ extend ( Tmpl.prototype, {
 extend ( Tmpl, 	{
 
     /**
-        mountElem ( elem: DOMObject, isRoot: Boolean )
+        mountElem ( elem: DOMObject, mountModule: Boolean )
     
         Return Type:
         watcherData
@@ -64,14 +64,14 @@ extend ( Tmpl, 	{
         URL doc:
         http://icejs.org/######
     */
-	mountElem ( elem, isRoot ) {
+	mountElem ( elem, mountModule ) {
     	const rattr = /^:([\$\w]+)$/;
         let directive, handler, targetNode, expr, forAttrValue, firstChild,
             watcherData = [],
             rexpr = /{{\s*(.*?)\s*}}/;
 		
     	do {
-        	if ( elem.nodeType === 1 && !isRoot ) {
+        	if ( elem.nodeType === 1 && mountModule ) {
             	
         		// 处理:for
 				// 处理:if :else-if :else
@@ -151,9 +151,9 @@ extend ( Tmpl, 	{
             
             firstChild = elem.firstChild || elem.content && elem.content.firstChild;
             if ( firstChild && !forAttrValue ) {
-                watcherData = watcherData.concat ( Tmpl.mountElem ( firstChild, false ) );
+                watcherData = watcherData.concat ( Tmpl.mountElem ( firstChild, true ) );
             }
-        } while ( ( elem = elem.nextSibling ) && !isRoot )
+        } while ( ( elem = elem.nextSibling ) && mountModule )
         return watcherData;
     },
 

@@ -27,8 +27,8 @@ function findParentVm ( elem ) {
 
 	let parentVm = null;
 	while ( elem.parentNode ) {
-		if ( elem.__module__ instanceof ViewModel ) {
-			parentVm = elem.__module__;
+		if ( elem.__module__ && elem.__module__.vm instanceof ViewModel ) {
+			parentVm = elem.__module__.vm;
 			break;
 		}
 
@@ -38,14 +38,27 @@ function findParentVm ( elem ) {
 	return parentVm;
 }
 
+/**
+	Module ( moduleName: String, vmData: Object, forceMount: Boolean )
 
-export default function Module ( moduleName, vmData ) {
+	Return Type:
+	Object
+	Module对象
+
+	Description:
+	创建模块对象初始化模块
+    初始化包括转换监听对象，动态绑定数据到视图层
+
+	URL doc:
+	http://icejs.org/######
+*/
+export default function Module ( moduleName, vmData = { init: function () { return {}; } }, forceMount = false ) {
 
 	newClassCheck ( this, Module );
     	
 	// 检查参数
-	check ( moduleName ).type ( "string" ).notBe ( "" ).ifNot ( "ice.module", "moduleName参数类型必须为string" ).do ();
-	check ( vmData ).type ( "object" ).check ( vmData.init ).type ( "function" ).ifNot ( "ice.module", "vmData参数必须为带有init方法的的object" ).do ();
+	check ( moduleName ).type ( "string" ).notBe ( "" ).ifNot ( "ice.Module", "moduleName参数类型必须为string" ).do ();
+	check ( vmData ).type ( "object" ).check ( vmData.init ).type ( "function" ).ifNot ( "ice.Module", "vmData参数必须为带有init方法的的object" ).do ();
   	
   	/////////////////////////////////
   	/////////////////////////////////
@@ -60,7 +73,7 @@ export default function Module ( moduleName, vmData ) {
 		applyArgs 	= matchFnArgs ( vmData.apply || noop ),
         applyDeps 	= applyArgs.map ( plugin => cache.getPlugin ( plugin ) ),
 
-		parent = findParentVm ( moduleElem ) || {},
+		parent = findParentVm ( moduleElem ),
         
         mc = new ModuleCaller ( { parent } ),
 
@@ -79,7 +92,9 @@ export default function Module ( moduleName, vmData ) {
 	moduleElem.__module__ = this;
 
 	// 解析模板，挂载数据
-	tmpl.mount ( vm, true );
+	// 如果forceMount为true则强制挂载moduleElem
+	// 如果parent为对象时表示此模块不是最上层模块，不需挂载
+	tmpl.mount ( vm, forceMount || !parent );
 	
 	// 调用apply方法
 	( vmData.apply || noop ).apply ( mc, applyDeps );

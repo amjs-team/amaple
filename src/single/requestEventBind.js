@@ -42,7 +42,7 @@ function getModuleElem ( moduleName ) {
     http://icejs.org/######
 */
 export default function requestEventBind ( elem ) {
-    event ( elem, "click submit", e => {
+    event.on ( elem, "click submit", e => {
         let target = e.target,
         	moduleName = attr ( target, single.aTargetMod ),
         	url = attr ( target, e.type.toLowerCase () === "submit" ? single.aAction : single.aHref ),
