@@ -1,8 +1,9 @@
 import slice from "../../var/slice";
 import { extend, foreach } from "../../func/util";
 import { attr } from "../../func/node";
-import single from "../../single/core";
-import elementDriver from "../driver/elementDriver";
+import singleAttr from "../../single/singleAttr";
+import includeModule from "../../single/includeModule";
+import requestEventBind from "../../single/requestEventBind";
 import Subscriber from "../Subscriber";
 import ViewWatcher from "../ViewWatcher";
 import directiveIf from "./directive/if";
@@ -83,27 +84,28 @@ extend ( Tmpl, 	{
                 }
             	else {
                 	// 绑定元素请求或提交表单的事件
-                	if ( attr ( elem, single.aModule ) ) {
-    					let willBind = true;
-    	
-    					while ( ( elem = elem.parentNode ) !== document.body ) {
-        				    if ( attr ( elem, single.aModule ) ) {
+                	if ( attr ( elem, singleAttr.aModule ) ) {
+    					let willBind = true,
+                            _elem = elem;
+    	               
+    					while ( ( _elem = _elem.parentNode ) !== document.body ) {
+        				    if ( attr ( _elem, singleAttr.aModule ) && _elem.__module__ ) {
             				    willBind = false;
             				    break;
                             }
                         }
     	
         				if ( willBind ) {
-                        	single.requestEventBind ( elem );
+                        	requestEventBind ( _elem );
                         }
                     }
                     	
                 	// 加载有ice-src属性的module元素
                     // 过滤nodes数组本身带有的属性或方法
-                    let moduleName = attr ( elem, single.aModule ),
-                        src = attr ( elem, single.aSrc );
+                    let moduleName = attr ( elem, singleAttr.aModule ),
+                        src = attr ( elem, singleAttr.aSrc );
 					if ( moduleName && src ) {
-						single.includeModule ( elem, src, moduleName );
+						includeModule ( elem, src, moduleName );
 					}
                 	
                 	foreach ( slice.call ( elem.attributes ), attr => {

@@ -11,12 +11,12 @@ const
 
 	rtemplate 	= /<template>([\s\S]+)<\/template>/,
 	rhtmlComment = /<!--(.*?)-->/g,
-	rscriptComment = /\/\/(.*?)\n|\/\*(.*?)\*\//g,
+	rscriptComment = /\/\/(.*?)\n|\/\*([\s\S]*?)\*\//g,
 	rstyle 		= /<style(?:.*?)>([\s\S]*)<\/style>/,
 	rscript 	= /<script(?:.*?)>([\s\S]+)<\/script>/,
 	rimport 	= /(?:(?:var|let|const)\s+)?([\w$-]+)\s*=\s*import\s*\(\s*"(.*?)"\s*\)\s*(?:,|;)/g,
 
-	rmoduleDef 	= /ice\s*\.\s*module\s*\(/,
+	rmoduleDef 	= /new\s*ice\s*\.\s*Module\s*\(/,
     rvmName 	= new RegExp ( "([a-zA-Z$_]{1}[\\w$]*)\\s*=\\s*" + rmoduleDef.source ),
 
 	rblank 		= />(\s+)</g,
@@ -111,7 +111,7 @@ export default function compileModule ( moduleString ) {
 				return "";
 			} ).trim ();
 
-        	vmName = rvmName.exec ( script ) [ 1 ] || "";
+        	vmName = ( rvmName.exec ( script ) || [ "", "" ] ) [ 1 ];
 
         	if ( !isEmpty ( scripts ) ) {
 
@@ -153,10 +153,10 @@ export default function compileModule ( moduleString ) {
 		moduleString = `var belong="${ attrs [ attrBelong ] }",title="${ attrs [ attrTitle ] || "" }",scripts={${ scriptVars.join ( "," ) }},view="${ view }${ style }";html(module, view, function(){`;
 
 		if ( !isEmpty ( scriptVars ) ) {
-			moduleString += `var scriptDOM = [];for (var i in scripts){var _s=document.createElement("script");_s.src = scripts[i];scriptDOM.push (_s);}scriptEval (scriptDOM, function(){${ script };cache.pushDirection(directionKey,{vm:${ vmName },title:title});});});return title;`;
+			moduleString += `var scriptDOM = [];for (var i in scripts){var _s=document.createElement("script");_s.src = scripts[i];scriptDOM.push (_s);}scriptEval (scriptDOM, function(){${ script };cache.pushDirection(directionKey,{vm:${ vmName || "\"\"" },title:title});});});return title;`;
 		}
 		else {
-			moduleString += `${ script };cache.pushDirection(directionKey,{vm:${ vmName },title:title});});return title;`
+			moduleString += `${ script };cache.pushDirection(directionKey,{vm:${ vmName || "\"\"" },title:title});});return title;`
 		}
 	}
   

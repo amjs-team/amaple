@@ -25,7 +25,7 @@ function convertState ( value, subs, context ) {
 function initMethod ( methods, context ) {
 	foreach ( methods, ( method, key ) => {
 		context [ key ] = function ( ...args ) {
-			method.apply ( this, args );
+			method.apply ( context, args );
 		};
 	} );
 }

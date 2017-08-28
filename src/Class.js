@@ -1,8 +1,9 @@
-import { foreach, isEmpty, type } from "./func/util";
+import { foreach, isEmpty, type, noop } from "./func/util";
 import { classErr } from "./error";
 
 const 
-	rconstructor = /^(?:constructor\s*|function\s*)?\((.*?)\)\s*(?:=>\s*)?{([\s\S]*)}$/;
+	rconstructor = /^(?:constructor\s*|function\s*)?\((.*?)\)\s*(?:=>\s*)?{([\s\S]*)}$/,
+	rscriptComment = /\/\/(.*?)\n|\/\*([\s\S]*?)\*\//g;
 
 /**
 	newClassCheck ( object: Object, constructor: Function )
@@ -16,7 +17,7 @@ const
 	URL doc:
 	http://icejs.org/######
 */
-function newClassCheck ( object, constructor ) {
+export function newClassCheck ( object, constructor ) {
 	if ( !( object instanceof constructor ) ) {
 		throw classErr ( "define", "Cannot call a class as a function" );
 	}
@@ -58,6 +59,7 @@ function defineMemberFunction ( constructor, proto ) {
 }
 
 function inherits ( subClass, superClass ) {
+
     // Object.create第二个参数修复子类的constructor
     subClass.prototype = Object.create ( superClass && superClass.prototype, {
         constructor : {
@@ -78,9 +80,9 @@ function getSuperConstructorReturn ( subInstance, constructorReturn ) {
 	return constructorReturn && ( tcr === "function" || tcr === "object" ) ? constructorReturn : subInstance;
 }
 
-function defineSuper ( subInstance, superConstructor ) {
+function defineSuper ( subInstance, superConstructor, superReturn ) {
 	subInstance.__super = () => {
-		superConstructor.apply ( subInstance, arguments );
+		superReturn.value = superConstructor.apply ( subInstance, arguments );
 		delete subInstance.__super;
 	};
 }
@@ -110,22 +112,28 @@ export default function Class ( clsName ) {
 	let _superClass;
 
 	function classDefiner ( proto ) {
-		let constructMatch = rconstructor.exec ( proto.constructor && proto.constructor.toString () || "" ) || [],
-			fnBody = `return function ${ clsName } (`,
+
+		proto.constructor = proto.constructor || noop;
+
+		let fnBody = `return function ${ clsName } (`,
 			mustNew = `newClassCheck(this, ${ clsName });`,
-            codeNoComment = ( constructMatch [ 2 ] || "" ).replace ( rscriptComment, match => "" ),
+			constructMatch = rconstructor.exec ( proto.constructor.toString () || "" ) || [],
+
+			args = constructMatch [ 1 ] || "",
+            codeNoComment = ( constructMatch [ 2 ] || "" ).replace ( rscriptComment, match => "" ).trim (),
 			classFn;
 
-        	
+        fnBody += `${ args }){`;
+
         // 此类有继承另一个类的时候
         if ( _superClass !== undefined ) {
             	
-            fnBody += `(${ constructMatch [ 1 ] || "" }) {${ mustNew }inherits(${ clsName },superClass);var __superReturn;`;
+            fnBody += `${ mustNew }var __superReturn = {};`;
         	
         	if ( constructMatch [ 2 ] ) {
             	const 
                 	ruseThisBeforeCallSuper = /[\s{;]this\s*\.[\s\S]+this\.__super/,
-                	raddReceiver = /[\s{;]this.__super\s*\(/,
+                	rsuperCount = /[\s{;]?this.__super\s*\(/,
                 	rscriptComment = /\/\/(.*?)\n|\/\*(.*?)\*\//g;
             	
             	if ( ruseThisBeforeCallSuper.test ( codeNoComment ) ) {
@@ -133,31 +141,34 @@ export default function Class ( clsName ) {
             	}
             	
             	let superCallCount = 0;
-            	codeNoComment = codeNoComment.replace ( raddReceiver, match => {
+            	codeNoComment = codeNoComment.replace ( rsuperCount, match => {
                 	superCallCount ++;
-                    return "__superReturn=" + match;
+                    return match;
                 } );
          		
             	if ( superCallCount === 0 ) {
-                	throw classErr ( "constructor", "" );
+                	throw classErr ( "constructor", "Must call \"this.__super()\" in subclass before accessing \"this\" or returning from subclass constructor" );
                 }
             	else if ( superCallCount > 1 ) {
-                	throw classErr ( "constructor", "" );
+                	throw classErr ( "constructor", "\"this.__super()\" may only be called once" );
                 }
             	
-        		fnBody += `defineSuper(this,(${ clsName }.__proto__ || Object.getPrototypeOf(${ clsName })))`;
+        		fnBody += `defineSuper(this,(${ clsName }.__proto__ || Object.getPrototypeOf(${ clsName })), __superReturn);`;
             }
         	else {
-            	fnBody += `__superReturn = (${ clsName }.__proto__ || Object.getPrototypeOf(${ clsName })).call(this);`;
+            	fnBody += `__superReturn.value = (${ clsName }.__proto__ || Object.getPrototypeOf(${ clsName })).call(this);`;
             }
+
+            fnBody += `constructor.call(this${ args && "," + args });return getSuperConstructorReturn(this,__superReturn.value);}`;
+
+            classFn = new Function ( "constructor", "newClassCheck", "defineSuper", "getSuperConstructorReturn", fnBody ) ( proto.constructor, newClassCheck, defineSuper, getSuperConstructorReturn );
+
+            inherits ( classFn, _superClass );
 		}
 		else {
-			fnBody += `){${ mustNew }}`;
+			fnBody += `${ mustNew }constructor.call(this${ args && "," + args });}`;
+			classFn = new Function ( "constructor", "newClassCheck", fnBody ) ( proto.constructor, newClassCheck );
 		}
-    	
-    	fnBody += `${ codeNoComment };return getSuperConstructorReturn(this,__superReturn)}`;
-
-		classFn = new Function ( "newClassCheck", "inherits", "getSuperConstructorReturn", "superClass", fnBody ) ( newClassCheck, inherits, getSuperConstructorReturn, _superClass );
 
     	delete proto.constructor;
     	

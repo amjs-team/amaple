@@ -1,12 +1,11 @@
 <Module :title="表格" :belong="test">
 	
-
 	<!-- 模块页面模板 -->
 	<template>
 		<!-- 表格组件渲染 -->
 		<!-- <EditTable t-th="{{ title }}" t-tr="{{ content }}"></EditTable> -->
 		<div class="abc">{{ title }} {{ content }}</div>
-		<a :onclick="setPage">{{ btn }}</a>
+		<a href="login" ice-target="test">{{ btn }}</a>
 		<ul id="a87">
 			<li :for="t in title">{{ t }}</li>
 		</ul>
@@ -17,10 +16,10 @@
 
 	<!-- 此模板对应的数据 -->
 	<script>
-		var EditTable = import ( "../../component/EditTable" ), 
-			PageCtrl = import ( "../../component/PageCtrl" );
+		// var EditTable = import ( "../../component/EditTable" ), 
+			// PageCtrl = import ( "../../component/PageCtrl" );
 
-		var table = ice.module ( {
+		var table = new ice.Module ( {
 			init : function () {
 				return {
 					// 绑定变量与绑定函数直接写返回对象内
@@ -40,9 +39,9 @@
 					},
 					btn: "Button",
 	            
-	            	setPage : function ( newVal ) {
-	            		console.log(this);
-	                	this.pageCtrl.currentPage = newVal;
+	            	setPage : function ( event, btn ) {
+	            		console.log(event.currentTarget, btn);
+	                	this.content.push ( ["Sex"] );
 	                }
 				};
 			}

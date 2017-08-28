@@ -2,17 +2,12 @@ import configuration from "./configuration/core";
 import cache from "../cache/core";
 import single from "../single/core";
 import event from "../event/core";
-import { type, isEmpty, foreach, noop } from "../func/util";
+import { type, foreach, noop } from "../func/util";
 import { query, attr } from "../func/node";
 import { matchFnArgs } from "../func/private";
 import { TYPE_PLUGIN, TYPE_DRIVER } from "../var/const";
-import slice from "../var/slice";
 import check from "../check";
-import correctParam from "../correctParam";
-import ModuleCaller from "./ModuleCaller";
-import NodeLite from "./NodeLite";
-import ViewModel from "./ViewModel";
-import Tmpl from "./tmpl/Tmpl";
+import Module from "./Module";
 
 
 /////////////////////////////////
@@ -41,35 +36,6 @@ function filterDeps ( deps, args ) {
 	} );
 
 	return _deps;
-}
-
-/**
-	findParentVm ( elem: DOMObject )
-
-	Return Type:
-	Object|Null
-	父模块的vm对象
-	没有找到则返回null
-
-	Description:
-	获取父模块的vm对象
-
-	URL doc:
-	http://icejs.org/######
-*/
-function findParentVm ( elem ) {
-
-	let parentVm = null;
-	while ( elem.parentNode ) {
-		if ( elem.__vm__ instanceof ViewModel ) {
-			parentVm = elem.__vm__;
-			break;
-		}
-
-		elem = elem.parentNode;
-	}
-
-	return parentVm;
 }
 
 
@@ -111,63 +77,20 @@ export default {
 	},
 	
 	/**
-		module ( moduleName: String, vmData: Object )
+		class Module ( moduleName: String, vmData: Object )
 		
 		Return Type:
 		Object
-		转换后的模块监听ViewModel对象
+		Module对象
 		
 		Description:
-		初始化模块
+		创建模块对象初始化模块
         初始化包括转换监听对象，动态绑定数据到视图层
 		
 		URL doc:
 		http://icejs.org/######
 	*/
-	module ( moduleName, vmData ) {
-		
-		// 检查参数
-		check ( moduleName ).type ( "string" ).notBe ( "" ).ifNot ( "ice.module", "moduleName参数类型必须为string" ).do ();
-		check ( vmData ).type ( "object" ).check ( vmData.init ).type ( "function" ).ifNot ( "ice.module", "vmData参数必须为带有init方法的的object" ).do ();
-      	
-      	/////////////////////////////////
-      	/////////////////////////////////
-      	///
-		let moduleElem 	= query ( "*[" + single.aModule + "=" + moduleName + "]" ),
-
-			// 获取init方法参数
-			initArgs 	= matchFnArgs ( vmData.init ),
-          	initDeps 	= initArgs.map ( plugin => cache.getPlugin ( plugin ) ),
-
-			// 获取apply方法参数
-			applyArgs 	= matchFnArgs ( vmData.apply || noop ),
-            applyDeps 	= applyArgs.map ( plugin => cache.getPlugin ( plugin ) ),
-
-			parent = findParentVm ( moduleElem ) || {},
-            
-            mc = new ModuleCaller ( { parent } ),
-
-			// 获取后初始化vm的init方法
-			// 对数据模型进行转换
-			vm = new ViewModel ( vmData.init.apply ( mc, initDeps ) ),
-
-			// 使用vm解析模板
-			tmpl = new Tmpl ( moduleElem );
-    	mc.set ( { state : vm } );
-		
-		// 将当前vm保存在对应的模块根节点下，以便子模块寻找父模块的vm对象
-		moduleElem.__vm__ = vm;
-
-		// 解析模板，挂载数据
-		tmpl.mount ( vm, true );
-
-		vm.view = slice.call ( moduleElem.childNodes ) || [];
-    	
-		// 调用apply方法
-		( vmData.apply || noop ).apply ( mc, applyDeps );
-      
-		return vm;
-	},
+	Module,
 	
 	/**
 		start ( rootModuleName: String )

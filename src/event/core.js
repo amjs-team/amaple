@@ -87,6 +87,7 @@ export default event = {
 				attr ( elem, eventType, "" );
 
 				support = type ( elem [ eventType ] ) === "function";
+				attr ( elem, eventType, null );
 			}
 		}
 
