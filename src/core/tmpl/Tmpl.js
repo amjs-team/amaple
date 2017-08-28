@@ -42,7 +42,7 @@ extend ( Tmpl.prototype, {
         http://icejs.org/######
     */
 	mount ( vm, mountModule, scoped ) {
-    	foreach ( Tmpl.mountElem ( this.tmplCode, mountModule ), ( data ) => {
+    	foreach ( Tmpl.mountElem ( this.tmplCode, mountModule ).call ( this ), ( data ) => {
         	new ViewWatcher ( data.handler, data.targetNode, data.expr, vm, scoped );
         } );
     },
@@ -153,7 +153,7 @@ extend ( Tmpl, 	{
             if ( firstChild && !forAttrValue ) {
                 watcherData = watcherData.concat ( Tmpl.mountElem ( firstChild, true ) );
             }
-        } while ( ( elem = elem.nextSibling ) && mountModule )
+        } while ( ( elem = elem.nextSibling ) && !this )
         return watcherData;
     },
 

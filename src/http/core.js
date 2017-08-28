@@ -354,7 +354,7 @@ export default {
     	
     },
 	
-	onresponse ( target, callback ) {
+	oncomplete ( target, callback ) {
     	
     },
 	
@@ -374,7 +374,7 @@ export default {
     	
     },
 	
-	onuploadresponse ( target, callback ) {
+	onuploadprogress ( target, callback ) {
     	
     },
 };

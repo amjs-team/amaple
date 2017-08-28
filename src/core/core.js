@@ -164,12 +164,6 @@ export default {
 	    	}
 		} );
     	
-    	let rootModule = query ( `*[${ single.aModule }=${ rootModuleName }]` ),
-    		src = attr ( rootModule, single.aSrc ),
-    		moduleName = attr ( rootModule, single.aModule );
-    	if ( src && moduleName ) {
-		   	// 引入根模块内容
-		   	single.includeModule ( rootModule, src, moduleName );
-    	}
+    	new this.Module ( "rootModuleName" );
     }
 };
