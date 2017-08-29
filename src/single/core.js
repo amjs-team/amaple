@@ -83,7 +83,7 @@ export default function single ( url, moduleElem, data, method, timeout, before 
 
 		// cache已有当前模块的缓存时，才使用缓存
 		// 根据不同的code来刷新不同模块也一定需要重新请求
-		if ( historyMod = cache.getDirection ( directionKey ) && !isPlainObject ( module.entity ) ) {
+		if ( ( historyMod = cache.getDirection ( directionKey ) ) && !isPlainObject ( module.entity ) ) {
         	let fragment = document.createDocumentFragment ();
         	foreach ( historyMod.vm.view, childView => {
 				fragment.appendChild ( childView );
@@ -187,7 +187,7 @@ export default function single ( url, moduleElem, data, method, timeout, before 
 			single.history.setState ( single.history.signature, _state, true );
 
 			if ( onpopstate !== true ) {
-				single.history.push ( null, title, single.getFormatModuleRecord ( configuration.getConfigure ( moduleSeparator ) ) );
+				single.history.push ( null, title, single.getFormatModuleRecord ( configuration.getConfigure ( "moduleSeparator" ) ) );
 			}
 
 			// 初始化一条将当前页的空值到single.history.state中

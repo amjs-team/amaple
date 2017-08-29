@@ -1,3 +1,5 @@
+import { foreach, type } from "../func/util";
+import { query } from "../func/node";
 import single from "./core";
 
 export default {

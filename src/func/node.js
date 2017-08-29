@@ -244,7 +244,7 @@ export function clear ( context ) {
 	URL doc:
 	http://icejs.org/######
 */
-export function html ( context, node, callback ) {
+export function html ( context, node, callback = noop ) {
 	context = clear ( context );
 	context = append ( context, node, callback );
 

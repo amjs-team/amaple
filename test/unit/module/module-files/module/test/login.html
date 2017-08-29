@@ -1,16 +1,19 @@
 <Module :title="登录" :belong="test">
 	<template>
 		<div>
-			<form name="login_form" method="post" ice-target="root">
+			<form action="table" name="login_form" method="post" ice-target="test">
 				<ul>
 					<li>
-						<input type="text" name="user_name" :model="userName" />
+						<label>{{ luserName }}</label><input type="text" name="user_name" :model="userName" />
+						<span>{{ userName }}</span>
 					</li>
 					<li>
-						<input type="password" name="password" :model="password" />
+						<label>{{ lpwd }}</label><input type="password" name="password" :model="password" />
+						<span>{{ password }}</span>
 					</li>
 					<li>
-						<SubmitButton text="{{ btnOpts.btnText }}" />
+						<!-- <SubmitButton text="{{ btnOpts.btnText }}" /> -->
+						<input type="submit" value="{{ btnOpts.btnText }}">
 					</li>
 				</ul>
 			</form>
@@ -28,6 +31,8 @@
 			init : function ( animate ) {
 
 				return {
+					luserName : "用户名",
+					lpwd : "密码",
 					userName 	: "",
 					password 	: "",
 					btnOpts 	: {

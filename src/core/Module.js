@@ -1,6 +1,7 @@
 import { noop } from "../func/util";
 import { query } from "../func/node";
 import slice from "../var/slice";
+import cache from "../cache/core";
 import { newClassCheck } from "../Class.js";
 import ModuleCaller from "./ModuleCaller";
 import ViewModel from "./ViewModel";
@@ -39,7 +40,7 @@ function findParentVm ( elem ) {
 }
 
 /**
-	Module ( moduleName: String, vmData: Object, forceMount: Boolean )
+	Module ( moduleName: String, vmData: Object )
 
 	Return Type:
 	Object
@@ -52,7 +53,7 @@ function findParentVm ( elem ) {
 	URL doc:
 	http://icejs.org/######
 */
-export default function Module ( moduleName, vmData = { init: function () { return {}; } }, forceMount = false ) {
+export default function Module ( moduleName, vmData = { init: function () { return {}; } } ) {
 
 	newClassCheck ( this, Module );
     	
@@ -94,7 +95,7 @@ export default function Module ( moduleName, vmData = { init: function () { retu
 	// 解析模板，挂载数据
 	// 如果forceMount为true则强制挂载moduleElem
 	// 如果parent为对象时表示此模块不是最上层模块，不需挂载
-	tmpl.mount ( vm, forceMount || !parent );
+	tmpl.mount ( vm, !parent );
 	
 	// 调用apply方法
 	( vmData.apply || noop ).apply ( mc, applyDeps );
