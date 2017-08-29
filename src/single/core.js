@@ -20,10 +20,101 @@ const
 	// 模块内容标识占位符
 	conPlaceholder = ":v";
 
-function setTitle ( title ) {
-	if ( title && document.title !== title ) {
-    	document.title = title;
+
+/**
+	updateModule ( moduleUpdates: Array, errorModule: Object|undefined, titles: Array, state: Array, pushStack: Boolean, onpopstate: Boolean )
+
+	Return Type:
+	void
+
+	Description:
+	使用更新函数更新模块内容
+    更新页面标题并更新url
+    如果更新的模块中有错误模块信息则只更新错误模块
+
+	URL doc:
+	http://icejs.org/######
+*/
+function updateModule ( moduleUpdates, errorModule, titles, state, pushStack, onpopstate ) {
+	if ( errorModule ) {
+    	const moduleName = Object.keys ( errorModule ) [ 0 ];
+        single ( errorModule [ moduleName ], query ( `*[${ single.aModule }=${ moduleName }]` ), undefined, undefined, undefined, undefined, undefined, undefined, undefined, true, false );
     }
+	else {
+    	foreach ( moduleUpdates, updateFn => {
+    		updateFn ();
+    	} );
+    	
+    	// 同时更新多个模块时，使用第一个模块的标题，如第一个模块没有标题则使用第二个模块的标题，以此类推。如所有模块都没有标题则不改变标题
+    	let title;
+    	foreach ( titles, t => {
+        	if ( t ) {
+        		title = t;
+            	return false;
+            }
+        } );
+    	
+    	if ( title && document.title !== title ) {
+    		document.title = title;
+    	}
+    }
+	
+	
+	// 判断是否调用pushState
+	if ( pushStack === true ) {
+
+		// 需判断是否支持history API新特性
+		if ( single.history.entity.pushState ) {
+
+          /////////////////////////////////////////////////////////
+			// 保存跳转前的页面状态
+			single.history.setState ( single.history.signature, state, true );
+
+			if ( onpopstate !== true ) {
+				single.history.push ( null, title, single.getFormatModuleRecord ( configuration.getConfigure ( "moduleSeparator" ) ) );
+			}
+
+			// 初始化一条将当前页的空值到single.history.state中
+			single.history.setState ( window.location.pathname, null );
+			
+		}
+		else {
+			throw envErr ( "History API", "浏览器不支持HTML5 History API" );
+		}
+	}
+}
+
+/**
+	dataToStr ( data?: Object|String )
+
+	Return Type:
+	void
+
+	Description:
+	将请求参数转换为字符串供缓存key使用
+
+	URL doc:
+	http://icejs.org/######
+*/
+function dataToStr ( data ) {
+	if ( type ( data ) === "string" ) {
+    	let dataArr = data.split ( "&" ),
+            kv;
+    	data = {};
+    	
+    	foreach ( dataArr, item => {
+        	kv = item.split ( "=" );
+        	data [ kv [ 0 ].trim () ] = kv [ 1 ].trim ();
+        } );
+    }
+	
+	let keys = Object.keys ( data ).sort (),
+        str = "";
+	foreach ( keys, k => {
+    	str += k + data [ k ];
+    } );
+
+	return str;
 }
 
 /**
@@ -50,8 +141,11 @@ function setTitle ( title ) {
 */
 export default function single ( url, moduleElem, data, method, timeout, before = noop, success = noop, error = noop, abort = noop, pushStack = false, onpopstate = false ) {
 
-	let moduleName, aCache, isCache, isBase, modules, historyMod, title,
-
+	let moduleName, isCache, isBase, modules, historyMod, 
+        titles = [],
+		
+        direction = configuration.getConfigure ( "direction" ),
+        
 		// 模块内容缓存key
 		directionKey, 
 		//////////////////////////////////////////////////
@@ -63,6 +157,10 @@ export default function single ( url, moduleElem, data, method, timeout, before 
 
 		// 上一页面的路径
 		lastPath,
+        
+        lastAjaxUpdateIndex,
+        moduleUpdates = [],
+        moduleError,
 
 		_state = [];
 
@@ -74,27 +172,32 @@ export default function single ( url, moduleElem, data, method, timeout, before 
 	// 循环modules，依次更新模块
 	foreach ( modules, ( module, i ) => {
 
-		moduleName 		= attr ( module.entity, single.aModule );
-		directionKey 	= moduleName + module.url;
+		moduleName = attr ( module.entity, single.aModule );
+		directionKey = moduleName + module.url + dataToStr ( module.data );
+    	isCache = attr ( module.entity, single.aCache );
 
-		// aCache 			= attr ( module.entity, single.aCache );
-		// isCache 		= aCache === "true" || ( configuration.getConfigure ( redirectCache ) === true && aCache !== "false" );
-		isBase 			= attr ( module.entity, single.aBase ) !== "false" && configuration.getConfigure ( "baseUrl" ).length > 0;
-
-		// cache已有当前模块的缓存时，才使用缓存
-		// 根据不同的code来刷新不同模块也一定需要重新请求
-		if ( ( historyMod = cache.getDirection ( directionKey ) ) && !isPlainObject ( module.entity ) ) {
-        	let fragment = document.createDocumentFragment ();
-        	foreach ( historyMod.vm.view, childView => {
-				fragment.appendChild ( childView );
-            } );
+		// 模块强制缓存或者全局使用缓存并且模块没有强制不使用缓存
+    	// 并且请求不为post
+    	// 并且已有缓存
+    	// 并且缓存未过期
+    	// cache已有当前模块的缓存时，才使用缓存
+		if ( ( isCache === "true" || direction.cache === true && isCache !== "false" ) ) && method.toUpperCase () !== "POST" && ( historyMod = cache.getDirection ( directionKey ) ) && historyMod.time + direction.expired > Date.now () ) {
+            moduleUpdates.push ( () => {
+            	let fragment = document.createDocumentFragment ();
+    			foreach ( historyMod.vm.view, childView => {
+					fragment.appendChild ( childView );
+        		} );
         	
-			html ( module.entity, fragment );
-        	event.emit ( module.entity, single.MODULE_UPDATE );
-        	title = title || historyMod.title;
+				html ( module.entity, fragment );
+    			event.emit ( module.entity, single.MODULE_UPDATE );
+            } );
+        	titles [ i ] = historyMod.title;
 		}
 		else {
-
+        	lastAjaxUpdateIndex = i;
+        	
+			isBase = attr ( module.entity, single.aBase ) !== "false" && configuration.getConfigure ( "baseUrl" ).length > 0;
+        	
 			fullUrl = configuration.getConfigure ( "urlRule" );
 
 			// 通过url规则转换url，并通过ice-base来判断是否添加base路径
@@ -102,14 +205,12 @@ export default function single ( url, moduleElem, data, method, timeout, before 
 			fullUrl = replaceAll ( fullUrl || "", conPlaceholder, module.url );
 
 			hasSeparator = fullUrl.indexOf ( "/" );
-			fullUrl = isBase ? configuration.getConfigure ( "baseUrl" ) +  ( hasSeparator === 0 ? fullUrl.substr( 1 ) : fullUrl )
+			fullUrl = isBase ? configuration.getConfigure ( "baseUrl" ) +  ( hasSeparator === 0 ? fullUrl.substr( 1 ) : fullUrl )m
 							  :
 							  hasSeparator === 0 ? fullUrl : "/" + fullUrl;
         	
-        	// 如果在请求前不知道需要更新哪个模块时不触发请求事件回调
-        	if ( !isPlainObject ( module.entity ) ) {
-        		event.emit ( module.entity, single.MODULE_REQUEST );
-        	}
+        	// 触发请求事件回调
+        	event.emit ( module.entity, single.MODULE_REQUEST );
 							  
 			// 请求模块跳转页面数据
 			http.request ( {
@@ -121,37 +222,39 @@ export default function single ( url, moduleElem, data, method, timeout, before 
 				beforeSend 	: function () {
 					before ( module );
 				},
-				abort: function () {
+				abort		: function () {
 					abort ( module );
 				},
 
 			} ).done ( ( moduleString, status, xhr ) => {
-            	event.emit ( module.entity, single.MODULE_RESPONSE );
-
-            	if ( isPlainObject ( module.entity ) ) {
-
-                	let code = xhr.getResponseHeader ( "code" );
-
-                	module.entity = module.entity [ code ];
-                	if ( !module.entity ) {
-                    	throw moduleErr ( "NotFind", "未找到code=" + code + "下的模块" );
-                    }
-            	}
+            	
+            	const 
+                	code = Number ( xhr.getResponseHeader ( "code" ) ),
+                    errorConfig = configuration.getConfigure ( "page" + code );
+            	let errorModule;
+            	
+            	if ( ( code === 404 || code === 500 ) && type ( errorConfig ) === "object" ) {
+                	errorModule = errorConfig;
+                }
+            	
 				/////////////////////////////////////////////////////////
             	// 编译module为可执行函数
 				// 将请求的html替换到module模块中
-            	// 同时更新多个模块时，使用第一个模块的标题，如第一个模块没有标题则使用第二个模块的标题，以此类推。如所有模块都没有标题则不改变标题
-              	
-				let _title = compileModule ( moduleString ) ( ice, module.entity, html, scriptEval, cache, directionKey );
-            	event.emit ( module.entity, single.MODULE_UPDATE );
+                let compileInfo = compileModule ( moduleString );
+            	titles [ i ] = compileInfo.title;
             	
-            	title = title || _title
-              
-            	setTitle ( title );
-				/////////////////////////////////////////////////////////
-
-				// 调用success回调
-				success ( module );
+            	moduleUpdates.push ( () => {
+                	event.emit ( module.entity, single.MODULE_RESPONSE );
+            		compileInfo.updateFn ( ice, module.entity, html, scriptEval, cache, directionKey );
+                	event.emit ( module.entity, single.MODULE_UPDATE );
+                	// 调用success回调
+					success ( module );
+                } );
+            	
+				///////////////////////////////////////////
+            	if ( i === lastAjaxUpdateIndex ) {
+                	updateModule ( moduleUpdates, errorModule, titles, _state, pushStack, onpopstate );
+                }
 			} ).fail ( error => {
             	error ( module, error );
 			} );
@@ -172,32 +275,11 @@ export default function single ( url, moduleElem, data, method, timeout, before 
 			single.setModuleRecord ( moduleName, module.url, true );
 		}
 	} );
-  
-	setTitle ( title );
-
-	// 判断是否调用pushState
-	if ( pushStack === true ) {
-
-		// 需判断是否支持history API新特性
-		if ( single.history.entity.pushState ) {
-
-
-			/////////////////////////////////////////////////////////
-			// 保存跳转前的页面状态
-			single.history.setState ( single.history.signature, _state, true );
-
-			if ( onpopstate !== true ) {
-				single.history.push ( null, title, single.getFormatModuleRecord ( configuration.getConfigure ( "moduleSeparator" ) ) );
-			}
-
-			// 初始化一条将当前页的空值到single.history.state中
-			single.history.setState ( window.location.pathname, null );
-			
-		}
-		else {
-			throw envErr ( "History API", "浏览器不支持HTML5 History API" );
-		}
-	}
+	
+	// 如果没有ajax模块则直接更新模块
+	if ( lastAjaxUpdateIndex === undefined ) {
+    	updateModule ( moduleUpdates, undefined, titles, _state, pushStack, onpopstate );
+    }
 }
 
 //////////////////////////////////////////

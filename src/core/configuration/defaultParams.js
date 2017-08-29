@@ -7,15 +7,15 @@ export default {
 	baseUrl : "",
 
 	// url地址中的状态标识符，如http://...@login表示当前页面在login的状态
-	stateSymbol : allowState [ 0 ],
+	// stateSymbol : allowState [ 0 ],
 
 	// 跳转相关配置
-	// direction : {
+	direction : {
 
-	// 	// 是否开启跳转缓存，默认开启。跳转缓存是当页面无刷新跳转时的缓存跳转数据，当此页面实时性较低时建议开启，以提高相应速度
-	// 	cache : true,
-	// 	max : 10
-	// },
+	// 是否开启跳转缓存，默认开启。跳转缓存是当页面无刷新跳转时的缓存跳转数据，当此页面实时性较低时建议开启，以提高相应速度
+		cache : true,
+    	expired : 0
+	},
 
 	// url中模块名称与模块内容标识的分隔符，默认为"-"
 	moduleSeparator : "-",

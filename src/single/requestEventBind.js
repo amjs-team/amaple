@@ -6,32 +6,34 @@ import event from "../event/core";
 import { moduleErr } from "../error";
 
 function getModuleElem ( targetModule ) {
-	let module;
+	return query ( `*[${ single.aModule }=${ targetModule }]` );
+	
+	// let module;
 
     // ice-target属性的值为一个模块的名称
-	if ( /^[^\:,\s]+$/.test ( targetModule) ) {
-    	module = query ( `*[${ single.aModule }=${ targetModule }]` );
-    }
-	else {
+	//if ( /^[^\:,\s]+$/.test ( targetModule) ) {
+    	// module = query ( `*[${ single.aModule }=${ targetModule }]` );
+    // }
+	// else {
 
         // ice-target属性的值为多个模块的名称
-    	try {
-        	targetModule = "{" + targetModule.replace ( /[^:,\s]+/g, match => "\"" + match + "\"" ) + "}";
-        	targetModule = JSON.parse ( targetModule );
-        }
-    	catch ( e ) {
-        	throw moduleErr ( "parse", "目标模块字符串解析异常，请检查格式是否为code1:mod1,code2:mod2 …" );
-        }
+    	// try {
+        	// targetModule = "{" + targetModule.replace ( /[^:,\s]+/g, match => "\"" + match + "\"" ) + "}";
+        	// targetModule = JSON.parse ( targetModule );
+        // }
+    	// catch ( e ) {
+        	// throw moduleErr ( "parse", "目标模块字符串解析异常，请检查格式是否为code1:mod1,code2:mod2 …" );
+        // }
     	
-    	module = {};
-    	foreach ( targetModule, ( name, code ) => {
-        	if ( !( module [ code ] = query ( `*[${ single.aModule }=${ name }]` ) ) ) {
-            	throw moduleErr ( "NotFind", `找不到${ name }模块` );
-            }
-        } );
-    }
+    	//module = {};
+    	// foreach ( targetModule, ( name, code ) => {
+        	// if ( !( module [ code ] = query ( `*[${ single.aModule }=${ name }]` ) ) ) {
+            	// throw moduleErr ( "NotFind", `找不到${ name }模块` );
+            // }
+        // } );
+    // }
 
-    return module;
+    // return module;
 }
 
 /**
