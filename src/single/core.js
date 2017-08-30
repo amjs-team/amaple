@@ -35,18 +35,20 @@ const
 	URL doc:
 	http://icejs.org/######
 */
-function updateModule ( moduleUpdates, errorModule, titles, state, pushStack, onpopstate ) {
+function updateModule ( moduleUpdates, errorModule, state, pushStack, onpopstate ) {
 	if ( errorModule ) {
     	const moduleName = Object.keys ( errorModule ) [ 0 ];
         single ( errorModule [ moduleName ], query ( `*[${ single.aModule }=${ moduleName }]` ), undefined, undefined, undefined, undefined, undefined, undefined, undefined, true, false );
     }
 	else {
+		let titles = [],
+			titleItem, title;
     	foreach ( moduleUpdates, updateFn => {
-    		updateFn ();
+    		titleItem = updateFn ();
+    		titles [ titleItem.index ] = titleItem.title;
     	} );
     	
     	// 同时更新多个模块时，使用第一个模块的标题，如第一个模块没有标题则使用第二个模块的标题，以此类推。如所有模块都没有标题则不改变标题
-    	let title;
     	foreach ( titles, t => {
         	if ( t ) {
         		title = t;
@@ -71,7 +73,7 @@ function updateModule ( moduleUpdates, errorModule, titles, state, pushStack, on
 			single.history.setState ( single.history.signature, state, true );
 
 			if ( onpopstate !== true ) {
-				single.history.push ( null, title, single.getFormatModuleRecord ( configuration.getConfigure ( "moduleSeparator" ) ) );
+				single.history.push ( null, null, single.getFormatModuleRecord ( configuration.getConfigure ( "moduleSeparator" ) ) );
 			}
 
 			// 初始化一条将当前页的空值到single.history.state中
@@ -108,11 +110,13 @@ function dataToStr ( data ) {
         } );
     }
 	
-	let keys = Object.keys ( data ).sort (),
-        str = "";
-	foreach ( keys, k => {
-    	str += k + data [ k ];
-    } );
+	let keys, str = "";
+	if ( type ( data ) === "object" ) {
+		keys = Object.keys ( data ).sort ();
+		foreach ( keys, k => {
+	    	str += k + data [ k ];
+	    } );
+	}
 
 	return str;
 }
@@ -141,8 +145,7 @@ function dataToStr ( data ) {
 */
 export default function single ( url, moduleElem, data, method, timeout, before = noop, success = noop, error = noop, abort = noop, pushStack = false, onpopstate = false ) {
 
-	let moduleName, isCache, isBase, modules, historyMod, 
-        titles = [],
+	let moduleName, isCache, isBase, modules, historyMod,
 		
         direction = configuration.getConfigure ( "direction" ),
         
@@ -181,7 +184,8 @@ export default function single ( url, moduleElem, data, method, timeout, before 
     	// 并且已有缓存
     	// 并且缓存未过期
     	// cache已有当前模块的缓存时，才使用缓存
-		if ( ( isCache === "true" || direction.cache === true && isCache !== "false" ) ) && method.toUpperCase () !== "POST" && ( historyMod = cache.getDirection ( directionKey ) ) && historyMod.time + direction.expired > Date.now () ) {
+		if ( ( isCache === "true" || direction.cache === true && isCache !== "false" ) && ( !method || method.toUpperCase () !== "POST" ) && ( historyMod = cache.getDirection ( directionKey ) ) && ( direction.expired === 0 || historyMod.time + direction.expired > Date.now () ) ) {
+
             moduleUpdates.push ( () => {
             	let fragment = document.createDocumentFragment ();
     			foreach ( historyMod.vm.view, childView => {
@@ -190,8 +194,12 @@ export default function single ( url, moduleElem, data, method, timeout, before 
         	
 				html ( module.entity, fragment );
     			event.emit ( module.entity, single.MODULE_UPDATE );
+
+    			return {
+    				index : i,
+    				title : historyMod.title
+    			};
             } );
-        	titles [ i ] = historyMod.title;
 		}
 		else {
         	lastAjaxUpdateIndex = i;
@@ -205,7 +213,7 @@ export default function single ( url, moduleElem, data, method, timeout, before 
 			fullUrl = replaceAll ( fullUrl || "", conPlaceholder, module.url );
 
 			hasSeparator = fullUrl.indexOf ( "/" );
-			fullUrl = isBase ? configuration.getConfigure ( "baseUrl" ) +  ( hasSeparator === 0 ? fullUrl.substr( 1 ) : fullUrl )m
+			fullUrl = isBase ? configuration.getConfigure ( "baseUrl" ) +  ( hasSeparator === 0 ? fullUrl.substr( 1 ) : fullUrl )
 							  :
 							  hasSeparator === 0 ? fullUrl : "/" + fullUrl;
         	
@@ -226,11 +234,9 @@ export default function single ( url, moduleElem, data, method, timeout, before 
 					abort ( module );
 				},
 
-			} ).done ( ( moduleString, status, xhr ) => {
-            	
-            	const 
-                	code = Number ( xhr.getResponseHeader ( "code" ) ),
-                    errorConfig = configuration.getConfigure ( "page" + code );
+			} ).done ( ( moduleString, code ) => {
+
+            	const errorConfig = configuration.getConfigure ( "page" + code );
             	let errorModule;
             	
             	if ( ( code === 404 || code === 500 ) && type ( errorConfig ) === "object" ) {
@@ -240,20 +246,25 @@ export default function single ( url, moduleElem, data, method, timeout, before 
 				/////////////////////////////////////////////////////////
             	// 编译module为可执行函数
 				// 将请求的html替换到module模块中
-                let compileInfo = compileModule ( moduleString );
-            	titles [ i ] = compileInfo.title;
+                let updateFn = compileModule ( moduleString );
             	
             	moduleUpdates.push ( () => {
                 	event.emit ( module.entity, single.MODULE_RESPONSE );
-            		compileInfo.updateFn ( ice, module.entity, html, scriptEval, cache, directionKey );
+            		let title = updateFn ( ice, module.entity, html, scriptEval, cache, directionKey );
                 	event.emit ( module.entity, single.MODULE_UPDATE );
+
                 	// 调用success回调
 					success ( module );
+
+					return {
+						index : i,
+						title : title
+					};
                 } );
             	
 				///////////////////////////////////////////
             	if ( i === lastAjaxUpdateIndex ) {
-                	updateModule ( moduleUpdates, errorModule, titles, _state, pushStack, onpopstate );
+                	updateModule ( moduleUpdates, errorModule, _state, pushStack, onpopstate );
                 }
 			} ).fail ( error => {
             	error ( module, error );
@@ -278,7 +289,7 @@ export default function single ( url, moduleElem, data, method, timeout, before 
 	
 	// 如果没有ajax模块则直接更新模块
 	if ( lastAjaxUpdateIndex === undefined ) {
-    	updateModule ( moduleUpdates, undefined, titles, _state, pushStack, onpopstate );
+    	updateModule ( moduleUpdates, undefined, _state, pushStack, onpopstate );
     }
 }
 

@@ -78,10 +78,11 @@ function request ( method ) {
 	    		// request请求时，参数肯定是一个对象，直接返回
 	    		if ( method ) {
 
-	    			url 		= options [ 0 ];
-	    			args 		= options [ 1 ];
-	    			callback 	= options [ 2 ];
-	    			dataType 	= options [ 3 ];
+	    			let
+	    				url 		= options [ 0 ];
+	    				args 		= options [ 1 ];
+	    				callback 	= options [ 2 ];
+	    				dataType 	= options [ 3 ];
 
 	    			// 纠正参数
 	    			// 1、如果没有传入args，则将callback的值给dataType，将args的值给callback，args设为undefined，
@@ -95,9 +96,9 @@ function request ( method ) {
 	    			// get请求参数初始化
 	    			params = { 
 	    				url 	: url, 
-	    				args 	: args || undefined, 
-	    				success : callback || undefined,
-	    				dataType: dataType || undefined,
+	    				args 	: args, 
+	    				success : callback,
+	    				dataType: dataType,
 	    				method 	: method
 	    			};
 	    		}
@@ -158,7 +159,7 @@ function request ( method ) {
 
 				// 如果是表单对象则获取表单的提交方式，默认为POST
 				options.method = attr ( data, "method" ) || "POST";
-
+				
 				// 当data为form对象时，如果也提供了src参数则优先使用src参数
 				options.url    = attr ( data, "src" ) || options.url;
 
@@ -198,19 +199,19 @@ function request ( method ) {
 
 		// 将method字符串转为大写以统一字符串为大写，以便下面判断
 		// 再将统一后的method传入查看是不是POST提交
-		options.hasContent 	= !rnoContent.test ( options.method = options.method.toUpperCase () );
+		options.hasContent = !rnoContent.test ( options.method = options.method.toUpperCase () );
 
 		// 将dataType字符串转为大写
 		// 如传入的dataType不符合rtype定义的，则默认为TEXT
-		options.dataType 	= rtype.test ( options.dataType = ( options.dataType || "" ).toUpperCase () ) ? options.dataType : "TEXT";
+		options.dataType = rtype.test ( options.dataType = ( options.dataType || "" ).toUpperCase () ) ? options.dataType : "TEXT";
 
 		// 修正timeout参数
-		options.timeout 	= options.timeout > 0 ? options.timeout : 0;
+		options.timeout = options.timeout > 0 ? options.timeout : 0;
 
 
 		// 是否跨域
 		if ( !options.crossDomain ) {
-			var originAnchor 	= document.createElement ( "a" ),
+			let originAnchor 	= document.createElement ( "a" ),
 				urlAnchor 	 	= document.createElement ( "a" );
 
 			originAnchor.href 	= location.href;
@@ -218,7 +219,7 @@ function request ( method ) {
 			try {
 				options.crossDomain = originAnchor.protocol + "//" + originAnchor.host !==
 									urlAnchor.protocol + "//" + urlAnchor.host;
-			} catch(e) {
+			} catch ( e ) {
 				options.crossDomain = true;
 			}
 		}

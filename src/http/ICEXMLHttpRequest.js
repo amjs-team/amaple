@@ -1,4 +1,4 @@
-import { extend } from "../func/util";
+import { extend, noop } from "../func/util";
 
 const rheader = /^(.*?):[ \t]*([^\r\n]*)$/mg;
 
@@ -130,7 +130,7 @@ extend ( ICEXMLHttpRequest.prototype, {
 	addEventListener ( type, callback ) {
 		if ( !this.transport.completed ) {
 			this.transport.callbacks = this.transport.callbacks || {};
-			this.transport.callbacks [ type ] = callback;
+			this.transport.callbacks [ type ] = callback || noop;
 		}
 	}
 } );

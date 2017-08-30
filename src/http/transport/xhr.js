@@ -57,7 +57,7 @@ export default function () {
             if ( event.support ( "error", xhr ) ) {
             	xhr.onload = xhr.onerror = function ( e ) {
 
-					iceXHR.transport.status = ( xhr.status >= 200 && xhr.status < 300 ) || xhr.status === 304 || xhr.status === 1223 ? 200 : 500;
+					iceXHR.transport.status = xhr.status === 1223 ? 204 : xhr.status;
 
             		self.done ( iceXHR );
             	}
@@ -67,7 +67,7 @@ export default function () {
             		if ( xhr.readyState === XMLHttpRequest.DONE ) {
 
             			// 兼容IE有时将204状态变为1223的问题
-            			iceXHR.transport.status = ( xhr.status >= 200 && xhr.status < 300 ) || xhr.status === 304 || xhr.status === 1223 ? 200 : 500;
+            			iceXHR.transport.status = xhr.status === 1223 ? 204 : xhr.status;
 
             			self.done ( iceXHR );
 

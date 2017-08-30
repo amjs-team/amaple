@@ -5,8 +5,6 @@ export default {
 	directions : {},
 
 	/**
-		direction
-
 		push ( name: String, direction: DOMString|DOMObject )
 	
 		Return Type:
@@ -19,13 +17,7 @@ export default {
 		http://icejs.org/######
 	*/
 	push : function ( name, direction ) {
-
-		if (!this.directions.hasOwnProperty ( name ) ) {
-			this.directions [ name ] = direction;
-		}
-		else {
-			throw moduleErr ( "module", name + "页面模块已存在" );
-		}
+		this.directions [ name ] = direction;
 	},
 
 	/**

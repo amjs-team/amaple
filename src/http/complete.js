@@ -43,15 +43,15 @@ export default function complete ( iceXHR ) {
 	}
 
 	// 请求成功，调用成功回调，dataType为script时不执行成功回调
-	if ( transport.status === 200 && transport.dataType !== "script" ) {
-		transport.callbacks.success && transport.callbacks.success ( transport.response, transport.statusText, iceXHR );
+	if ( ( ( transport.status >= 200 && transport.status < 300 ) || transport.status === 304 ) && transport.dataType !== "script" ) {
+		transport.callbacks.success ( transport.response, transport.status, transport.statusText, iceXHR );
 	}
 
 	// 请求错误调用error回调
-	else if ( transport.status === 500 ) {
-		transport.callbacks.error && transport.callbacks.error ( iceXHR, transport.statusText );
+	else if ( transport.status === 404 || transport.status === 500 ) {
+		transport.callbacks.error ( iceXHR, transport.status, transport.statusText );
 	}
 
 	// 调用complete回调
-	transport.callbacks.complete && transport.callbacks.complete ( iceXHR, transport.statusText );
+	transport.callbacks.complete ( iceXHR, transport.statusText );
 }

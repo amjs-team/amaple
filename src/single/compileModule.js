@@ -153,15 +153,12 @@ export default function compileModule ( moduleString ) {
 		moduleString = `var belong="${ attrs [ attrBelong ] }",title="${ attrs [ attrTitle ] || "" }",scripts={${ scriptVars.join ( "," ) }},view="${ view }${ style }";html(module, view, function(){`;
 
 		if ( !isEmpty ( scriptVars ) ) {
-			moduleString += `var scriptDOM = [];for (var i in scripts){var _s=document.createElement("script");_s.src = scripts[i];scriptDOM.push (_s);}scriptEval (scriptDOM, function(){${ script };cache.pushDirection(directionKey,{vm:${ vmName || "\"\"" },title:title});});});return title;`;
+			moduleString += `var scriptDOM = [];for (var i in scripts){var _s=document.createElement("script");_s.src = scripts[i];scriptDOM.push (_s);}scriptEval (scriptDOM, function(){${ script };cache.pushDirection(directionKey,{vm:${ vmName || "\"\"" },title:title,time:Date.now()});});});return title;`;
 		}
 		else {
-			moduleString += `${ script };cache.pushDirection(directionKey,{vm:${ vmName || "\"\"" },title:title});});`
+			moduleString += `${ script };cache.pushDirection(directionKey,{vm:${ vmName || "\"\"" },title:title});});return title;`
 		}
 	}
   
-	return {
-    	title : attrs [ attrTitle ] || "",
-    	updateFn : new Function ( "ice", "module", "html", "scriptEval", "cache", "directionKey", moduleString )
-    };
+	return new Function ( "ice", "module", "html", "scriptEval", "cache", "directionKey", moduleString );
 }
