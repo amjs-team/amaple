@@ -9,10 +9,26 @@
 	<script src="src/assert/ice.min.0.1.0.js"></script>
 </head>
 <body>
-	<div class="wrap" ice-module="wrap" ice-src="root"></div>
+	<div class="wrap" ice-module></div>
 </body>
 <script>
-	ice.start ( "wrap" );
+	ice.startRouter ( "wrap", {
+    	history : ice.BROWSER_HISTORY // ice.HASH, ice.AUTO
+    	module : {
+        	cache : true,
+        	expired : 3000
+        },
+    	routes : function ( Router ) {
+        	Router.route ( "/settings", "setting" ).children ( function ( ChildRouter, Redirector ) {
+				Redirector.from ( "" ).to ( "profile" );
+				ChildRouter.module ( "menu" ).route ( ":page", "menu" );
+				// 或者可写成 ChildRouter.module ( "menu" ).route ( [ "profile", "admin", "keys" ... ], menu );
+            	
+				ChildRouter.module ( "main" ).route ( ":page", "{{page}}" );
+				ChildRouter.module ( "footer" ).route ( ":page", "footer" );
+			} );
+    	}
+    } );
 	
 	
 	// function(crystals, language, animate, http) {

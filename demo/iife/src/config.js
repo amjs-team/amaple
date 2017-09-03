@@ -1,3 +1,6 @@
 ice.config ( {
-	directionCache: false,
+	moduleCache: false,
+	router : {
+    	
+    }
 } );

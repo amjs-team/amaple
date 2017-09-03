@@ -35,10 +35,10 @@ const
 	URL doc:
 	http://icejs.org/######
 */
-function updateModule ( moduleUpdates, errorModule, state, pushStack, onpopstate ) {
-	if ( errorModule ) {
-    	const moduleName = Object.keys ( errorModule ) [ 0 ];
-        single ( errorModule [ moduleName ], query ( `*[${ single.aModule }=${ moduleName }]` ), undefined, undefined, undefined, undefined, undefined, undefined, undefined, true, false );
+function updateModule ( moduleUpdates, moduleError, state, pushStack, onpopstate ) {
+	if ( moduleError ) {
+    	const moduleName = Object.keys ( moduleError ) [ 0 ];
+        single ( moduleError [ moduleName ], query ( `*[${ single.aModule }=${ moduleName }]` ), undefined, undefined, undefined, undefined, undefined, undefined, undefined, true, false );
     }
 	else {
 		let titles = [],
@@ -233,16 +233,13 @@ export default function single ( url, moduleElem, data, method, timeout, before 
 				abort		: function () {
 					abort ( module );
 				},
+            	complete 	: function () {
+                	if ( i === lastAjaxUpdateIndex ) {
+                		updateModule ( moduleUpdates, moduleError, _state, pushStack, onpopstate );
+                	}
+                }
 
-			} ).done ( ( moduleString, code ) => {
-
-            	const errorConfig = configuration.getConfigure ( "page" + code );
-            	let errorModule;
-            	
-            	if ( ( code === 404 || code === 500 ) && type ( errorConfig ) === "object" ) {
-                	errorModule = errorConfig;
-                }
-            	
+			} ).done ( moduleString => {
 				/////////////////////////////////////////////////////////
             	// 编译module为可执行函数
 				// 将请求的html替换到module模块中
@@ -261,12 +258,13 @@ export default function single ( url, moduleElem, data, method, timeout, before 
 						title : title
 					};
                 } );
+			} ).fail ( ( iceXHR, errorCode ) => {
+            	const errorConfig = configuration.getConfigure ( "page" + errorCode );
             	
-				///////////////////////////////////////////
-            	if ( i === lastAjaxUpdateIndex ) {
-                	updateModule ( moduleUpdates, errorModule, _state, pushStack, onpopstate );
-                }
-			} ).fail ( error => {
+            	if ( type ( errorConfig ) === "object" ) {
+                	moduleError = errorConfig;
+                }
+            	
             	error ( module, error );
 			} );
 		}
@@ -289,7 +287,7 @@ export default function single ( url, moduleElem, data, method, timeout, before 
 	
 	// 如果没有ajax模块则直接更新模块
 	if ( lastAjaxUpdateIndex === undefined ) {
-    	updateModule ( moduleUpdates, undefined, _state, pushStack, onpopstate );
+    	updateModule ( moduleUpdates, moduleError, _state, pushStack, onpopstate );
     }
 }
 
