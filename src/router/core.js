@@ -1,6 +1,7 @@
 import { extend, foreach } from "../func/util";
 import check from "../check";
 import { RouterErr } from "../error";
+import Structure from "../core/tmpl/Structure";
 
 
 export default function Router ( finger ) {
@@ -18,34 +19,34 @@ extend ( Router.prototype, {
             }
         } );
     	
-    	this.route = {
-        	module : moduleName,
-        	path : {}
+    	this.module = {
+        	name : moduleName,
+        	routes : []
         };
     	this.finger.push ( this.route );
     	
     	return this;
     },
 	
-	route ( pathExpr, modulePath ) {
-    	if ( !this.route ) {
+	route ( pathExpr, modulePath, childDefineFunc ) {
+    	if ( !this.module ) {
         	throw RouterErr ( "Router.module", "调用route()前必须先调用module()定义模块路由" );
         }
     	
-    	this.route.path [ modulePath ] = Router.pathToRegexp ( pathExpr );
+    	this.module.routes.push ( {
+        	modulePath : modulePath,
+        	path : Router.pathToRegexp ( pathExpr ),
+        
+        if ( type ( childDefineFunc ) === "function" ) {
+        	this.module.children = [];
+    		childDefineFunc ( new Router ( this.route.children ) );
+        }
     	
     	return this;
     },
 	
 	defaultRoute ( modulePath ) {
     	this.route ( "", modulePath );
-    	
-    	return this;
-    },
-	
-	children ( childDefineFunc ) {
-    	this.route.children = [];
-    	childDefineFunc ( new Router ( this.route.children ) );
     	
     	return this;
     },
@@ -92,37 +93,60 @@ extend ( Router, {
     },
 
     // 路由路径嵌套模型
-    // [
-      //  { module: "default" path: { "setting": { regexp: /^\/setting(?:\/)?/ } }, children: [
-        //    { module: "header" path: { ":footer": "menu" } },
-        //    { module: "main" path: { ":footer": "{{ page }}" } },
-        //    { module: "footer" path: { ":footer": "footer" } }
-       // ] }
-    // ]
     // /settings => /\/settings/、/settings/:page => /\/settings/([^\\/]+?)/、/settings/:page(\d+)
-	matchRoutes ( path ) {
-        // [ { modulePath: "setting", param: {} } ]
-        let routePath = [],
-            matchPath, moduleItem;
+	matchRoutes ( path, param, routeTree = this.routeTree, parent = null ) {
+        // [ { module: "...", modulePath: "...", parent: ..., param: {}, children: [ {...}, {...} ] } ]
+        let routes = [],
+            moduleItem;
 
-        foreach ( this.routeTree, route => {
-            foreach ( route.path, ( pathReg, modulePath ) => {
-
+        foreach ( routeTree, route => {
+            foreach ( route.routes, pathReg => {
+            	let matchPath = [],
+                    isContinue = true;
+            	
+            	moduleItem = {
+                	name : route.name,
+                	modulePath : modulePath,
+                	parent : parent
+                };
+                moduleItem.param = moduleItem.param || {};
 
                 if ( matchPath = path.match ( pathReg.regexp ) ) {
-                    moduleItem = {
-                        module : route.module,
-                        modulePath : modulePath;
-                    };
-
-                    moduleItem.param = moduleItem.param || {};
+                	isContinue = false;
                     foreach ( pathReg.params, ( i, paramName ) => {
-                        moduleItem.param [ paramName ] = matchPath [ i ];
+                        param [ paramName ] = matchPath [ i ];
                     } );
 
-                    routePath.push ( moduleItem );
+                    routes.push ( moduleItem );
                 }
+            	
+            	if ( type ( pathReg.children ) === "array" ) {
+                	let children = this.matchRoutes ( matchPath [ 0 ] ? path.replace ( matchPath [ 0 ], "" ) : path, pathReg.children, moduleItem );
+                	
+                	if ( !isEmpty ( children ) ) {
+                    	moduleItem.children = children;
+                    	if ( routes.indexOf ( moduleItem ) <= -1 ) {
+                    		routes.push ( moduleItem );
+                        }
+                    }
+                }
+            	
+            	return isContinue;
             } );
         } );
+    
+    	return routes;
+    },
+    
+    matchSearch ( searchStr ) {
+    	let search = {},
+            kv;
+    	
+    	foreach ( searchStr.split ( "&" ), searchItem => {
+        	kv = searchItem.split ( "=" );
+        	search [ kv [ 0 ] ] = kv [ 1 ];
+        } );
+    
+    	return search;
     }
 } );

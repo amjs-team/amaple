@@ -93,9 +93,26 @@ export default {
 
     	// 执行routes配置路由
     	( routerConfig.routes || noop ) ( new Router ( Router.routeTree ) );
-
+		
+    	routerConfig.history = routerConfig.history || this.AUTO;
+    	let historyEvent;
+    	switch ( routerConfig.history ) {
+        	case this.AUTO :
+            	if ( window.history.pushState ) {
+                	historyEvent = "popstate";
+                }
+            	else {
+                	historyEvent = "hashchange";
+                }
+            	break;
+        	case this.HASH :
+            	historyEvent = "hashchange";
+            	break;
+        	case this.BROWSER_HISTORY :
+            	historyEvent = "popstate";
+        }
     	// 根据history的值进行初始化popstate或hashchange事件
-		event.on ( window, "popstate", function ( event ) {
+		event.on ( window, historyEvent, event => {
 			let
 	    // 取得在single中通过replaceState保存的state object
 	    		state 			= single.history.getState ( window.location.pathname ),
@@ -161,10 +178,18 @@ export default {
 				single ( _modules, null, null, null, null, null, null, null, null, true, true );
 	    	}
 		} );
-
+		
+    	let location = {
+        	param : {},
+        	action : "NONE"
+        };
+    	
     	// Router.matchRoutes()匹配当前路径需要更新的模块
     	// Tmpl.render()渲染对应模块
-    	const Tmpl.render ( Router.matchRoutes ( window.location.pathname ) );
+    	location.routes = Router.matchRoutes ( window.location.pathname, location.param );
+		location.search = Router.matchSearch ( window.location.search );
+    	
+    	Tmpl.render ( location );
     },
 
 	install ( structure ) {
