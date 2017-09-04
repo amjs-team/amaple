@@ -3,16 +3,6 @@ import check from "../check";
 import { RouterErr } from "../error";
 
 
-// 路由路径嵌套模型
-// [
-  //  { module: "default" path: { "/settings": "setting" }, children: [
-    //    { module: "header" path: { ":footer": "menu" } },
-    //    { module: "main" path: { ":footer": "{{ page }}" } },
-    //    { module: "footer" path: { ":footer": "footer" } }
-   // ] }
-// ]
-
-
 export default function Router ( finger ) {
 	this.finger = finger;
 }
@@ -42,7 +32,7 @@ extend ( Router.prototype, {
         	throw RouterErr ( "Router.module", "调用route()前必须先调用module()定义模块路由" );
         }
     	
-    	this.route.path [ pathExpr ] = modulePath;
+    	this.route.path [ modulePath ] = Router.pathToRegexp ( pathExpr );
     	
     	return this;
     },
@@ -87,7 +77,52 @@ extend ( Router.prototype, {
 
 extend ( Router, {
 	routeTree : [],
-	matchesRoutes () {
-    	
+
+    pathToRegexp ( path ) {
+        let i = 1,
+            pathObj = {};
+
+        pathObj.regexp = new RegExp ( "^" + path.replace ( "/", "\\/" ).replace ( /:([\w$]+)(?:(\(.*?\)))?/g, ( match, rep1, rep2 ) => {
+            pathObj.params [ rep1 ] = i++;
+
+            return rep2 || "([^\\/]+?)";
+        } ) + "(?:\\/)?", "i" );
+
+        return pathObj;
     },
+
+    // 路由路径嵌套模型
+    // [
+      //  { module: "default" path: { "setting": { regexp: /^\/setting(?:\/)?/ } }, children: [
+        //    { module: "header" path: { ":footer": "menu" } },
+        //    { module: "main" path: { ":footer": "{{ page }}" } },
+        //    { module: "footer" path: { ":footer": "footer" } }
+       // ] }
+    // ]
+    // /settings => /\/settings/、/settings/:page => /\/settings/([^\\/]+?)/、/settings/:page(\d+)
+	matchRoutes ( path ) {
+        // [ { modulePath: "setting", param: {} } ]
+        let routePath = [],
+            matchPath, moduleItem;
+
+        foreach ( this.routeTree, route => {
+            foreach ( route.path, ( pathReg, modulePath ) => {
+
+
+                if ( matchPath = path.match ( pathReg.regexp ) ) {
+                    moduleItem = {
+                        module : route.module,
+                        modulePath : modulePath;
+                    };
+
+                    moduleItem.param = moduleItem.param || {};
+                    foreach ( pathReg.params, ( i, paramName ) => {
+                        moduleItem.param [ paramName ] = matchPath [ i ];
+                    } );
+
+                    routePath.push ( moduleItem );
+                }
+            } );
+        } );
+    }
 } );

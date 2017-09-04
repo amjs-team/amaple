@@ -49,7 +49,8 @@ export function noop () {}
 */
 export function foreach ( target, callback ) {
 
-	if ( ( target.length || Object.keys ( target ).length ) <= 0 ) {
+	// 判断目标变量是否可被变量
+	if ( !target || ( target.length || Object.keys ( target ).length ) <= 0 ) {
 		return;
 	}
 

@@ -12,7 +12,7 @@
 	<div class="wrap" ice-module></div>
 </body>
 <script>
-	ice.startRouter ( "wrap", {
+	ice.startRouter ( {
     	history : ice.BROWSER_HISTORY // ice.HASH, ice.AUTO
     	module : {
         	cache : true,
@@ -24,7 +24,7 @@
 				ChildRouter.module ( "menu" ).route ( ":page", "menu" );
 				// 或者可写成 ChildRouter.module ( "menu" ).route ( [ "profile", "admin", "keys" ... ], menu );
             	
-				ChildRouter.module ( "main" ).route ( ":page", "{{page}}" );
+				ChildRouter.module ( "main" ).route ( ":page", "{{ page }}" );
 				ChildRouter.module ( "footer" ).route ( ":page", "footer" );
 			} );
     	}

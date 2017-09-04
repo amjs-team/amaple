@@ -5,9 +5,10 @@ import event from "../event/core";
 import { type, foreach, noop } from "../func/util";
 import { query, attr } from "../func/node";
 import { matchFnArgs } from "../func/private";
-import { TYPE_PLUGIN, TYPE_DRIVER } from "../var/const";
 import check from "../check";
+import correctParam from "../correctParam";
 import Module from "./Module";
+import Router from "../router/core";
 
 
 /////////////////////////////////
@@ -41,46 +42,24 @@ function filterDeps ( deps, args ) {
 
 /////////////////////////////////
 export default {
-	configure : configuration,
 
-	install ( structure ) {
-    	
-		// 查看是否有deps，有的时候，value类型分为以下情况：
-		// 1、若value为string，则使用cache.componentCreater方法获取插件，如果没有则使用模块加载器加载
-		// 2、若value为object，则调用use构建插件
-		// 判断是plugin还是driver，存入相应的cache中并返回
-    	
-    	check ( structure.build ).type ( "function" ).or ().check ( structure.init ).type ( "function" ).ifNot ( "plugin-driver", "plugin必须包含build方法，driver必须包含init方法" ).do ();
-      
-    	let deps = structure.deps || {},
-            moduleType = structure.build ? TYPE_PLUGIN :TYPE_DRIVER,
-            moduleInfo = Loader.getCurrentDep (),
-            args;
-    	
-        switch ( moduleType ) {
-            case TYPE_PLUGIN:
-                args = matchFnArgs ( structure.build );
-            	deps = filterDeps ( deps, args );
-    			depend ( moduleInfo || {}, deps, ( depObject ) => {
-                	cache.pushPlugin ( moduleInfo.name, structure.build.apply ( null, args.map ( arg => depObject [ arg ] ) ) );
-                } );
-            	
-                break;
-            case TYPE_DRIVER:
-                args = matchFnArgs ( structure.apply ).slice ( 1 ).concat ( matchFnArgs ( structure.init ) );
-            	deps = filterDeps ( deps, args );
-          		cache.pushDriver ( structure );
-    			depend ( Loader.TopName, deps, noop );
-            	
-                break;
-        }
-	},
-	
+	// 路由模式，启动路由时可进行模式配置
+	// 自动选择路由模式(默认)
+	// 在支持html5 history API时使用新特性，不支持的情况下自动回退到hash模式
+	AUTO : 0,
+
+	// 强制使用hash模式
+	HASH : 1,
+
+	// 强制使用html5 history API模式
+	// 使用此模式时需注意：在不支持新特新的浏览器中是不能正常使用的
+	BROWSER_HISTORY : 2,
+		
 	// Module对象
 	Module,
 	
 	/**
-		start ( rootModuleName: String )
+		start ( rootModuleName: String, routerConfig: Object )
 		
 		Return Type:
 		void
@@ -91,10 +70,31 @@ export default {
 		URL doc:
 		http://icejs.org/######
 	*/
-	start ( rootModuleName ) {
-    	
-    	// 后退/前进事件绑定
-		//
+	startRouter ( rootModuleName, routerConfig = {} ) {
+
+		// 纠正参数
+		correctParam ( rootModuleName, routerConfig ).to ( "string", "object" ).done ( function () {
+			this.$1 = rootModuleName;
+			this.$2 = routerConfig;
+		} );
+
+		if ( rootModuleName !== undefined ) {
+			check ( rootModuleName ).type ( "string" ).notBe ( "" ).ifNot ( "ice.startRouter", "当rootModuleName传入参数时，必须是不为空的字符串" ).do ();
+		}
+
+		check ( routerConfig ).type ( "object" ).ifNot ( "ice.startRouter", "当routerConfig传入参数时，必须为object类型" ).do ();
+
+
+    	// 将baseURL、module配置信息进行保存
+    	configuration ( {
+    		baseURL : routerConfig.baseURL,
+    		module : routerConfig.module
+    	} );
+
+    	// 执行routes配置路由
+    	( routerConfig.routes || noop ) ( new Router ( Router.routeTree ) );
+
+    	// 根据history的值进行初始化popstate或hashchange事件
 		event.on ( window, "popstate", function ( event ) {
 			let
 	    // 取得在single中通过replaceState保存的state object
@@ -145,8 +145,6 @@ export default {
 					}
 				} );
 
-
-
 				// 根据对比跳转前后变化的module信息，遍历重新加载
 				foreach ( differentState, ( src, moduleName ) => {
 					_module = query ( `*[${ single.aModule }=${ moduleName }]` );
@@ -163,7 +161,42 @@ export default {
 				single ( _modules, null, null, null, null, null, null, null, null, true, true );
 	    	}
 		} );
+
+    	// Router.matchRoutes()匹配当前路径需要更新的模块
+    	// Tmpl.render()渲染对应模块
+    	const Tmpl.render ( Router.matchRoutes ( window.location.pathname ) );
+    },
+
+	install ( structure ) {
     	
-    	new this.Module ( "rootModuleName" );
-    }
+		// 查看是否有deps，有的时候，value类型分为以下情况：
+		// 1、若value为string，则使用cache.componentCreater方法获取插件，如果没有则使用模块加载器加载
+		// 2、若value为object，则调用use构建插件
+		// 判断是plugin还是driver，存入相应的cache中并返回
+    	
+    	check ( structure.build ).type ( "function" ).or ().check ( structure.init ).type ( "function" ).ifNot ( "plugin-driver", "plugin必须包含build方法，driver必须包含init方法" ).do ();
+      
+    	let deps = structure.deps || {},
+            moduleType = structure.build ? TYPE_PLUGIN :TYPE_DRIVER,
+            moduleInfo = Loader.getCurrentDep (),
+            args;
+    	
+        switch ( moduleType ) {
+            case TYPE_PLUGIN:
+                args = matchFnArgs ( structure.build );
+            	deps = filterDeps ( deps, args );
+    			depend ( moduleInfo || {}, deps, ( depObject ) => {
+                	cache.pushPlugin ( moduleInfo.name, structure.build.apply ( null, args.map ( arg => depObject [ arg ] ) ) );
+                } );
+            	
+                break;
+            case TYPE_DRIVER:
+                args = matchFnArgs ( structure.apply ).slice ( 1 ).concat ( matchFnArgs ( structure.init ) );
+            	deps = filterDeps ( deps, args );
+          		cache.pushDriver ( structure );
+    			depend ( Loader.TopName, deps, noop );
+            	
+                break;
+        }
+	}
 };

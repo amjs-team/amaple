@@ -1,6 +1,5 @@
 import allowState from "./allowState";
 import defaultParams from "./defaultParams";
-import { configErr } from "../../error";
 import { type, isEmpty, extend } from "../../func/util";
 
 let paramStore = defaultParams;
@@ -19,16 +18,11 @@ let paramStore = defaultParams;
 */
 export default function configuration ( params ) {
 
-	// 配置参数的类型固定为object
-	if ( type ( params ) !== "object" || isEmpty( params ) ) {
-		throw configErr ( "params", "配置参数要求为非空object" );
-	}
+	const _type = type ( params.baseURL );
 
-	let _type = type ( params.baseUrl );
-
-	params.baseUrl = _type === "string" ? params.baseUrl : 
-				   _type === "function" ? params.baseUrl () : "";
-	params.baseUrl = params.baseUrl.substr ( -1, 1 ) === "/" ? params.baseUrl : params.baseUrl + "/";
+	params.baseURL = _type === "string" ? params.baseURL : 
+				   _type === "function" ? params.baseURL () : "";
+	params.baseURL = params.baseURL.substr ( -1, 1 ) === "/" ? params.baseURL : params.baseURL + "/";
 
 
 	params.stateSymbol = allowState.indexOf ( params.stateSymbol ) === -1 ? allowState [ 0 ] : params.stateSymbol;
