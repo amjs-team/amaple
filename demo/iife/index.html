@@ -19,7 +19,7 @@
         	expired : 3000
         },
     	routes : function ( Router ) {
-        	Router.route ( "/settings", "setting" ).children ( function ( ChildRouter, Redirector ) {
+        	Router.module ().route ( "/settings", "setting", function ( ChildRouter, Redirector ) {
 				Redirector.from ( "" ).to ( "profile" );
 				ChildRouter.module ( "menu" ).route ( ":page", "menu" );
 				// 或者可写成 ChildRouter.module ( "menu" ).route ( [ "profile", "admin", "keys" ... ], menu );

@@ -1,4 +1,4 @@
-import { extend, foreach } from "../func/util";
+import { extend, foreach, type, isEmpty } from "../func/util";
 import check from "../check";
 import { RouterErr } from "../error";
 import Structure from "../core/tmpl/Structure";
@@ -14,32 +14,36 @@ extend ( Router.prototype, {
     	
     	
     	foreach ( this.finger, routeItem => {
-        	if ( routeItem.module === this.moduleName ) {
+        	if ( routeItem.name === moduleName ) {
             	throw RouterErr ( "moduleName", "同级模块的名字不能重复" );
             }
         } );
     	
-    	this.module = {
+    	this.routeItem = {
         	name : moduleName,
         	routes : []
         };
-    	this.finger.push ( this.route );
+    	this.finger.push ( this.routeItem );
     	
     	return this;
     },
 	
 	route ( pathExpr, modulePath, childDefineFunc ) {
-    	if ( !this.module ) {
+        check ( pathExpr ).type ( "string", "array" ).ifNot ( "Router.route", "pathExpr参数必须为字符串或数组" );
+
+    	if ( !this.routeItem ) {
         	throw RouterErr ( "Router.module", "调用route()前必须先调用module()定义模块路由" );
         }
     	
-    	this.module.routes.push ( {
-        	modulePath : modulePath,
-        	path : Router.pathToRegexp ( pathExpr ),
+        let route = {
+            modulePath : modulePath,
+            path : Router.pathToRegexp ( pathExpr )
+        };
+    	this.routeItem.routes.push ( route );
         
         if ( type ( childDefineFunc ) === "function" ) {
-        	this.module.children = [];
-    		childDefineFunc ( new Router ( this.route.children ) );
+        	route.children = [];
+    		childDefineFunc ( new Router ( route.children ) );
         }
     	
     	return this;
@@ -60,17 +64,15 @@ extend ( Router.prototype, {
             }
         } );
     	
-    	if ( redirect ) {
-        	redirect.redirect [ from ] = to;
+    	if ( !redirect ) {
+            redirect = {
+                redirect : []
+            };
+
+            this.finger.push ( redirect );
         }
-    	else {
-        	redirect = {
-        		redirect : {}
-        	};
-        	
-        	redirect.redirect [ from ] = to;
-    		this.finger.push ( redirect );
-        }
+
+    	redirect.redirect.push ( { from, to } );
     	
     	return this;
 	}
@@ -79,15 +81,24 @@ extend ( Router.prototype, {
 extend ( Router, {
 	routeTree : [],
 
-    pathToRegexp ( path ) {
+    pathToRegexp ( pathExpr ) {
         let i = 1,
-            pathObj = {};
+            pathObj = { param : {} },
 
-        pathObj.regexp = new RegExp ( "^" + path.replace ( "/", "\\/" ).replace ( /:([\w$]+)(?:(\(.*?\)))?/g, ( match, rep1, rep2 ) => {
-            pathObj.params [ rep1 ] = i++;
+            // 如果路径表达式为""时需在结尾增加"$"符号才能正常匹配到
+            endRegexp = "(?:\\/)?" + ( pathExpr === "" ? "$" : "" );
 
-            return rep2 || "([^\\/]+?)";
-        } ) + "(?:\\/)?", "i" );
+        // 如果pathExpr为数组，则需预处理
+        if ( type ( pathExpr ) === "array" ) {
+            pathExpr = "(" + pathExpr.join ( "|" ) + ")";;
+            i ++;
+        }
+
+        pathObj.regexp = new RegExp ( "^" + pathExpr.replace ( "/", "\\/" ).replace ( /:([\w$]+)(?:(\(.*?\)))?/g, ( match, rep1, rep2 ) => {
+            pathObj.param [ rep1 ] = i++;
+
+            return rep2 || "([^\\/]+)";
+        } ) + endRegexp, "i" );
 
         return pathObj;
     },
@@ -101,19 +112,18 @@ extend ( Router, {
 
         foreach ( routeTree, route => {
             foreach ( route.routes, pathReg => {
-            	let matchPath = [],
+            	let matchPath,
                     isContinue = true;
             	
             	moduleItem = {
                 	name : route.name,
-                	modulePath : modulePath,
+                	modulePath : pathReg.modulePath,
                 	parent : parent
                 };
-                moduleItem.param = moduleItem.param || {};
 
-                if ( matchPath = path.match ( pathReg.regexp ) ) {
+                if ( matchPath = path.match ( pathReg.path.regexp ) ) {
                 	isContinue = false;
-                    foreach ( pathReg.params, ( i, paramName ) => {
+                    foreach ( pathReg.path.param, ( i, paramName ) => {
                         param [ paramName ] = matchPath [ i ];
                     } );
 
@@ -121,7 +131,7 @@ extend ( Router, {
                 }
             	
             	if ( type ( pathReg.children ) === "array" ) {
-                	let children = this.matchRoutes ( matchPath [ 0 ] ? path.replace ( matchPath [ 0 ], "" ) : path, pathReg.children, moduleItem );
+                	let children = this.matchRoutes ( matchPath ? path.replace ( matchPath [ 0 ], "" ) : path, param, pathReg.children, moduleItem );
                 	
                 	if ( !isEmpty ( children ) ) {
                     	moduleItem.children = children;

@@ -211,8 +211,21 @@ extend ( Tmpl, 	{
         return attr ( elem, ":for" );
     },
 	
+    /**
+        render ( location: Object )
+    
+        Return Type:
+        void
+    
+        Description:
+        根据location对象渲染出对应的模块
+    
+        URL doc:
+        http://icejs.org/######
+    */
 	render ( location ) {
     	const nextStructure = new Structure ( location.routes );
+        
     	if ( Structure.current ) {
     		Structure.current.update ( nextStructure );
         }

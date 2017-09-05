@@ -1,4 +1,4 @@
-import { extend } from "../func/util";
+import { extend } from "../../func/util";
 
 // [
   //  { module: obj1, name: "default", moduleNode: node1, parent: null, children: [
@@ -8,10 +8,12 @@ import { extend } from "../func/util";
    // ] }
 // ]
 
-export default function Structure () {
+export default function Structure ( routes ) {
 	
 }
 
 extend ( Structure.prototype, {
-	
+	update ( structure ) {
+
+	}
 } );
