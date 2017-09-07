@@ -1,6 +1,8 @@
 import configuration from "./configuration/core";
 import cache from "../cache/core";
 import single from "../single/core";
+import iceHistory from "../single/iceHistory";
+import { AUTO, HASH_HISTORY, BROWSER_HISTORY } from "../single/historyMode";
 import event from "../event/core";
 import { type, foreach, noop } from "../func/util";
 import { query, attr } from "../func/node";
@@ -9,6 +11,7 @@ import check from "../check";
 import correctParam from "../correctParam";
 import Module from "./Module";
 import Router from "../router/core";
+import Structure from "./Tmpl/Structure";
 
 
 /////////////////////////////////
@@ -46,14 +49,14 @@ export default {
 	// 路由模式，启动路由时可进行模式配置
 	// 自动选择路由模式(默认)
 	// 在支持html5 history API时使用新特性，不支持的情况下自动回退到hash模式
-	AUTO : 0,
+	AUTO,
 
 	// 强制使用hash模式
-	HASH : 1,
+	HASH_HISTORY,
 
 	// 强制使用html5 history API模式
 	// 使用此模式时需注意：在不支持新特新的浏览器中是不能正常使用的
-	BROWSER_HISTORY : 2,
+	BROWSER_HISTORY,
 		
 	// Module对象
 	Module,
@@ -84,115 +87,74 @@ export default {
 
 		check ( routerConfig ).type ( "object" ).ifNot ( "ice.startRouter", "当routerConfig传入参数时，必须为object类型" ).do ();
 
-
+    	// 执行routes配置路由
+    	( routerConfig.routes || noop ) ( new Router ( Router.routeTree ) );
+		
+    	routerConfig.history = routerConfig.history || AUTO;
+    	if ( routerConfig.history === AUTO ) {
+        	if ( iceHistory.supportNewApi () ) {
+                routerConfig.history = BROWSER_HISTORY;
+            }
+            else {
+                routerConfig.history = HASH_HISTORY;
+            }
+        }
+    	
+    	iceHistory.initHistory ( routerConfig.history );
+    	
     	// 将baseURL、module配置信息进行保存
     	configuration ( {
     		baseURL : routerConfig.baseURL,
     		module : routerConfig.module
     	} );
-
-    	// 执行routes配置路由
-    	( routerConfig.routes || noop ) ( new Router ( Router.routeTree ) );
+    	
+    	// 当使用hash模式时纠正路径
+    	const 
+        	location = window.location,
+        	href = location.href,
+            host = location.protocol + "//" + location.host + "/";
 		
-    	routerConfig.history = routerConfig.history || this.AUTO;
-    	let historyEvent;
-    	switch ( routerConfig.history ) {
-        	case this.AUTO :
-            	if ( window.history.pushState ) {
-                	historyEvent = "popstate";
-                }
-            	else {
-                	historyEvent = "hashchange";
-                }
-            	break;
-        	case this.HASH :
-            	historyEvent = "hashchange";
-            	break;
-        	case this.BROWSER_HISTORY :
-            	historyEvent = "popstate";
+    	if ( routerConfig.history === HASH && href !== host && href.indexOf ( host + "#" ) === -1 ) {
+        	if ( location.hash ) {
+        		location.hash = "";
+            }
+            
+            location.replace ( href.replace ( host, host + "#/" ) );
         }
-    	// 根据history的值进行初始化popstate或hashchange事件
-		event.on ( window, historyEvent, event => {
-			let
-	    // 取得在single中通过replaceState保存的state object
-	    		state 			= single.history.getState ( window.location.pathname ),
-
-	    		before 			= {},
-	    		after 			= {},
-	    		differentState  = {},
-
-	    		_modules 		= [];
-
-	    	if ( type ( state ) === "array" && state.length > 0 ) {
-
-    			foreach ( state, item => {
-
-    				_modules.push ( {
-    					url 	: item.url, 
-    					entity 	: item.module, 
-    					data 	: item.data
-    				} );
-    			} );
-
-	    		single ( _modules, null, null, null, null, null, null, null, null, true, true );
-	    	}
-	    	else {
-
-	    		// 获得跳转前的模块信息
-    			decomposeArray ( split.call ( single.history.signature, "/" ), ( key, value ) => {
-    				before [ key ] = value ;
-    			} );
-
-    			// 获得跳转后的模块信息
-    			decomposeArray ( split.call ( window.location.pathname, "/" ), ( key, value ) => {
-    				after [ key ]  = value ;
-    			} );
-
-
-	    		// 对比跳转前后url所体现的变化module信息，根据这些不同的模块进行加载模块内容
-	    		foreach ( after, ( afterItem, key ) => {
-	    			if ( before [ key ] !== afterItem ) {
-	    				differentState [ key ] = afterItem;
-	    			}
-	    		} );
-
-				foreach ( before, ( afterItem, key ) => {
-					if ( after [ key ] !== afterItem ) {
-						differentState [ key ] = null;
-					}
-				} );
-
-				// 根据对比跳转前后变化的module信息，遍历重新加载
-				foreach ( differentState, ( src, moduleName ) => {
-					_module = query ( `*[${ single.aModule }=${ moduleName }]` );
-
-					src 	  = src === null ? attr ( _module, single.aSrc ) : src;
-
-					_modules.push ( {
-    					url 	: src, 
-    					entity 	: _module, 
-    					data 	: null
-					} );
-				} );
-
-				single ( _modules, null, null, null, null, null, null, null, null, true, true );
-	    	}
-		} );
-		
-    	let location = {
-        	param : {},
-        	action : "NONE"
-        };
+    	
+    	let path, search;
+    	if ( routerConfig.history === HASH ) {
+        	path = ( location.hash.match ( /#([^?]+)/ ) || [] ) [ 1 ];
+        	search = ( location.hash.match ( /?(.*)$/ ) || [] ) [ 1 ];
+        }
+    	else if ( routerConfig.history === BROWSER_HISTORY ) {
+        	path = location.pathname;
+        	search = location.search.substr ( 1 );
+        }
     	
     	// Router.matchRoutes()匹配当前路径需要更新的模块
     	// Tmpl.render()渲染对应模块
-    	location.routes = Router.matchRoutes ( window.location.pathname, location.param );
-		location.search = Router.matchSearch ( window.location.search );
+    	const location = {
+        	path,
+        	nextStructure : Router.matchRoutes ( this.path, this.param ),
+        	param : {},
+        	search : Router.matchSearch ( search ),
+        	action : "NONE"
+        };
+        
+    	// 更新currentPage结构体对象，如果为空表示页面刚刷新，将nextStructure直接赋值给currentPage
+    	if ( Structure.currentPage ) {
+    		Structure.currentPage.update ( location.nextStructure );
+        }
+    	else {
+        	Structure.currentPage = location.nextStructure;
+        }
     	
-    	Tmpl.render ( location );
+    	// 根据更新后的页面结构体渲染新视图
+    	Structure.currentPage.render ( location );
     },
 
-	install ( structure ) {
+	install ( pluginDefiniton ) {
     	
 		// 查看是否有deps，有的时候，value类型分为以下情况：
 		// 1、若value为string，则使用cache.componentCreater方法获取插件，如果没有则使用模块加载器加载

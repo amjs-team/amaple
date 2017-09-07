@@ -26,9 +26,9 @@ describe ( "router =>", () => {
 		expect ( routes [ 0 ].name ).toBe ( "default" );
 		expect ( routes [ 0 ].modulePath ).toBe ( "setting" );
 		expect ( routes [ 0 ].children.length ).toBe ( 3 );
-		expect ( routes [ 0 ].children [ 0 ] ).toEqual ( { name: "menu", modulePath: "menu", parent: routes [ 0 ] } );
-		expect ( routes [ 0 ].children [ 1 ] ).toEqual ( { name: "main", modulePath: "main.profile", parent: routes [ 0 ] } );
-		expect ( routes [ 0 ].children [ 2 ] ).toEqual ( { name: "footer", modulePath: "footer", parent: routes [ 0 ] } );
+		expect ( routes [ 0 ].children [ 0 ] ).toEqual ( { name: "menu", modulePath: "menu" } );
+		expect ( routes [ 0 ].children [ 1 ] ).toEqual ( { name: "main", modulePath: "main.profile" } );
+		expect ( routes [ 0 ].children [ 2 ] ).toEqual ( { name: "footer", modulePath: "footer" } );
 	} );
 
 	it ( "matches a path that contains sub route but not contain root route", () => {
@@ -39,7 +39,7 @@ describe ( "router =>", () => {
 		expect ( routes [ 0 ].name ).toBe ( "default" );
 		expect ( routes [ 0 ].modulePath ).toBe ( "setting" );
 		expect ( routes [ 0 ].children.length ).toBe ( 1 );
-		expect ( routes [ 0 ].children [ 0 ] ).toEqual ( { name: "main", modulePath: "main.admin", parent: routes [ 0 ] } );
+		expect ( routes [ 0 ].children [ 0 ] ).toEqual ( { name: "main", modulePath: "main.admin" } );
 	} );
 
 	it ( "matches a path that contains root route and empty sub route", () => {
@@ -50,9 +50,9 @@ describe ( "router =>", () => {
 		expect ( routes [ 0 ].name ).toBe ( "default" );
 		expect ( routes [ 0 ].modulePath ).toBe ( "setting" );
 		expect ( routes [ 0 ].children.length ).toBe ( 3 );
-		expect ( routes [ 0 ].children [ 0 ] ).toEqual ( { name: "menu", modulePath: "menu1", parent: routes [ 0 ] } );
-		expect ( routes [ 0 ].children [ 1 ] ).toEqual ( { name: "main", modulePath: "main.account", parent: routes [ 0 ] } );
-		expect ( routes [ 0 ].children [ 2 ] ).toEqual ( { name: "footer", modulePath: "footer1", parent: routes [ 0 ] } );
+		expect ( routes [ 0 ].children [ 0 ] ).toEqual ( { name: "menu", modulePath: "menu1" } );
+		expect ( routes [ 0 ].children [ 1 ] ).toEqual ( { name: "main", modulePath: "main.account" } );
+		expect ( routes [ 0 ].children [ 2 ] ).toEqual ( { name: "footer", modulePath: "footer1" } );
 	} );
 
 	it ( "matches a path that has params", () => {

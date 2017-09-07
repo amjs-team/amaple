@@ -35,7 +35,7 @@ const
 	URL doc:
 	http://icejs.org/######
 */
-function updateModule ( moduleUpdates, moduleError, state, pushStack, onpopstate ) {
+function updateModule ( moduleUpdates, moduleError, state ) {
 	if ( moduleError ) {
     	const moduleName = Object.keys ( moduleError ) [ 0 ];
         single ( moduleError [ moduleName ], query ( `*[${ single.aModule }=${ moduleName }]` ), undefined, undefined, undefined, undefined, undefined, undefined, undefined, true, false );
@@ -60,30 +60,6 @@ function updateModule ( moduleUpdates, moduleError, state, pushStack, onpopstate
     		document.title = title;
     	}
     }
-	
-	
-	// 判断是否调用pushState
-	if ( pushStack === true ) {
-
-		// 需判断是否支持history API新特性
-		if ( single.history.entity.pushState ) {
-
-          /////////////////////////////////////////////////////////
-			// 保存跳转前的页面状态
-			single.history.setState ( single.history.signature, state, true );
-
-			if ( onpopstate !== true ) {
-				single.history.push ( null, null, single.getFormatModuleRecord ( configuration.getConfigure ( "moduleSeparator" ) ) );
-			}
-
-			// 初始化一条将当前页的空值到single.history.state中
-			single.history.setState ( window.location.pathname, null );
-			
-		}
-		else {
-			throw envErr ( "History API", "浏览器不支持HTML5 History API" );
-		}
-	}
 }
 
 /**
@@ -143,7 +119,7 @@ function dataToStr ( data ) {
 	URL doc:
 	http://icejs.org/######
 */
-export default function single ( url, moduleElem, data, method, timeout, before = noop, success = noop, error = noop, abort = noop, pushStack = false, onpopstate = false ) {
+export default function single ( url, moduleElem, data, method, timeout, before = noop, success = noop, error = noop, abort = noop ) {
 
 	let moduleName, isCache, isBase, modules, historyMod,
 		
@@ -279,15 +255,11 @@ export default function single ( url, moduleElem, data, method, timeout, before 
 			module 	: module.entity,
 			data 	: module.data
 		} );
-
-		if ( pushStack === true ) {
-			single.setModuleRecord ( moduleName, module.url, true );
-		}
 	} );
 	
 	// 如果没有ajax模块则直接更新模块
 	if ( lastAjaxUpdateIndex === undefined ) {
-    	updateModule ( moduleUpdates, moduleError, _state, pushStack, onpopstate );
+    	updateModule ( moduleUpdates, moduleError, _state );
     }
 }
 

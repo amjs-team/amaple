@@ -72,7 +72,7 @@ extend ( Router.prototype, {
             this.finger.push ( redirect );
         }
 
-    	redirect.redirect.push ( { from, to } );
+    	redirect.redirect.push ( { Router.pathToRegexp ( from, "redirect" ), to } );
     	
     	return this;
 	}
@@ -81,12 +81,17 @@ extend ( Router.prototype, {
 extend ( Router, {
 	routeTree : [],
 
-    pathToRegexp ( pathExpr ) {
+    pathToRegexp ( pathExpr, from ) {
         let i = 1,
             pathObj = { param : {} },
-
+			
+            // 如果path为redirect中的from，则不需加结尾的“/”匹配式
             // 如果路径表达式为""时需在结尾增加"$"符号才能正常匹配到
-            endRegexp = "(?:\\/)?" + ( pathExpr === "" ? "$" : "" );
+            endRegexp = from === "redirect"
+        	? ""
+        	: "(?:\\/)?" + ( pathExpr === ""
+            	? "$"
+                : "" );
 
         // 如果pathExpr为数组，则需预处理
         if ( type ( pathExpr ) === "array" ) {
@@ -108,30 +113,56 @@ extend ( Router, {
 	matchRoutes ( path, param, routeTree = this.routeTree, parent = null ) {
         // [ { module: "...", modulePath: "...", parent: ..., param: {}, children: [ {...}, {...} ] } ]
         let routes = [],
-            moduleItem;
+            entityItem;
+    	
+    	foreach ( routeTree, route => {
+        	if ( route.hasOwnProperty ( "redirect" ) {
+                let isContinue = true;
+                
+                foreach ( route.redirect, redirect => {
+                	
+                	path = path.replace ( redirect.from.regexp, ...match => {
+                		isContinue = false;
+                		let to;
+                		
+                		foreach ( redirect.from.param, ( i, paramName ) => {
+                        	to = to.replace ( `:${ paramName }`, matchPath [ i ] );
+                        } );
+          				
+          				return to;
+                	} );
+      				
+      				return isContinue;
+                } );
+  				
+  				return false;
+        	}
+        } );
 
         foreach ( routeTree, route => {
             foreach ( route.routes, pathReg => {
             	let matchPath,
                     isContinue = true;
             	
-            	moduleItem = {
+            	entityItem = {
                 	name : route.name,
                 	modulePath : pathReg.modulePath,
-                	parent : parent
+                	moduleNode : null,
+                	module : null,
+                	parent
                 };
 
                 if ( matchPath = path.match ( pathReg.path.regexp ) ) {
                 	isContinue = false;
                     foreach ( pathReg.path.param, ( i, paramName ) => {
-                        param [ paramName ] = matchPath [ i ];
+                        param [ route.name ] [ paramName ] = matchPath [ i ];
                     } );
 
                     routes.push ( moduleItem );
                 }
             	
             	if ( type ( pathReg.children ) === "array" ) {
-                	let children = this.matchRoutes ( matchPath ? path.replace ( matchPath [ 0 ], "" ) : path, param, pathReg.children, moduleItem );
+                	let children = this.matchRoutes ( matchPath ? path.replace ( matchPath [ 0 ], "" ) : path, param, pathReg.children, entityItem );
                 	
                 	if ( !isEmpty ( children ) ) {
                     	moduleItem.children = children;
@@ -145,7 +176,13 @@ extend ( Router, {
             } );
         } );
     
-    	return routes;
+		// 最顶层时返回一个Structure对象
+		if ( parent === null ) {
+        	return new Structure ( routes );
+        }
+		else {
+    		return routes;
+        }
     },
     
     matchSearch ( searchStr ) {

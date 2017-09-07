@@ -163,35 +163,19 @@ export function append ( context, node, callback ) {
 		node.nodeType && nodes.push ( node );
 	}
 	else {
-		// fragment = document.createDocumentFragment (),
-		// _elem = fragment.appendChild ( document.createElement ( "div" ) );
+		fragment = document.createDocumentFragment (),
 		_elem = document.createElement ( "div" );
 
 		// 将node字符串插入_elem中等待处理
 		_elem.innerHTML = node;
 
-		for ( ; i < _elem.childNodes.length; i ++ ) {
-			nodes.push ( _elem.childNodes [ i ] );
-		}
+		foreach ( _elem.childNodes, child => {
+			fragment.appendChild ( child );
+		} );
+		scripts = query ( "script", fragment, true );
 
-		scripts = query ( "script", _elem, true );
-
-		// 清空_elem
-		_elem.textContent = "";
-
-		// 清空fragment并依次插入元素
-		// fragment.textContent = "";
+		context.appendChild ( fragment );
 	}
-	
-	foreach ( nodes, node => {
-		context.appendChild ( node );
-
-		// if ( node.nodeType === 1 || node.nodeTyle === 11 ) {
-        	
-        	// 将所有script标签放入scripts数组内等待执行
-			// scripts = query ( "script", node, true ).concat ( node.nodeName === "SCRIPT" ? [ node ] : [] );
-		// }
-	} );
 
 	// scripts数组不空则顺序执行script
 	if ( !isEmpty ( scripts ) ) {
