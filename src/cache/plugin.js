@@ -1,12 +1,24 @@
-import { type, foreach } from "../func/util";
-
 export default {
 
 	plugins : {},
 
 	/**
-		plugin
+		push ( name: String )
+	
+		Return Type:
+		void
+	
+		Description:
+		查看是否存在指定插件
+	
+		URL doc:
+		http://icejs.org/######
+	*/
+	has ( name ) {
+		return !!this.plugins [ name ];
+	},
 
+	/**
 		push ( name: String, plugin: Object|Function )
 	
 		Return Type:
@@ -18,24 +30,8 @@ export default {
 		URL doc:
 		http://icejs.org/######
 	*/
-	push : function ( name, plugin ) {
-
-		if ( name && type ( name ) === "string" ) {
-			var _plugin = {};
-
-			_plugin [ name ] = plugin;
-			plugin = _plugin;
-		}
-		
-		// 遍历插件对象组依次缓存
-		foreach ( plugin, ( item, name ) => {
-			if ( !this.plugins.hasOwnProperty ( name ) ) {
-				this.plugins [ name ] = item;
-			}
-			else {
-				throw moduleErr ( "plugin", name + "插件已存在" );
-			}
-		} );
+	push ( name, plugin ) {
+		this.plugins [ name ] = plugin;
 	},
 
 	/**
@@ -51,7 +47,7 @@ export default {
 		URL doc:
 		http://icejs.org/######
 	*/
-	get : function ( name ) {
+	get ( name ) {
 		return this.plugins [ name ] || null;
 	}
 };

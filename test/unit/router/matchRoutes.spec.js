@@ -7,6 +7,8 @@ describe ( "router =>", () => {
 	beforeEach ( () => {
 		routeTree = [];
 		const router = new Router ( routeTree );
+
+		"/settings/account/name"
     	router.module ().route ( "/settings", "setting", function ( childRouter ) {
 			childRouter.redirect ( "", "profile" );
 			childRouter.module ( "menu" ).defaultRoute ( "menu1" ).route ( ":page", "menu" );
@@ -19,54 +21,63 @@ describe ( "router =>", () => {
 
 	it ( "matches a path that contains root route and sub route", () => {
 		let param = {},
-			routes = Router.matchRoutes ( "/settings/profile", param, routeTree );
-
+			structure = Router.matchRoutes ( "/settings/profile", param, routeTree ),
+			routes = structure.entity;
 
 		expect ( routes.length ).toBe ( 1 );
 		expect ( routes [ 0 ].name ).toBe ( "default" );
 		expect ( routes [ 0 ].modulePath ).toBe ( "setting" );
 		expect ( routes [ 0 ].children.length ).toBe ( 3 );
-		expect ( routes [ 0 ].children [ 0 ] ).toEqual ( { name: "menu", modulePath: "menu" } );
-		expect ( routes [ 0 ].children [ 1 ] ).toEqual ( { name: "main", modulePath: "main.profile" } );
-		expect ( routes [ 0 ].children [ 2 ] ).toEqual ( { name: "footer", modulePath: "footer" } );
+		expect ( routes [ 0 ].children [ 0 ] ).toEqual ( { name: "menu", modulePath: "menu", moduleNode: null, module: null, parent: routes [ 0 ] } );
+		expect ( routes [ 0 ].children [ 1 ] ).toEqual ( { name: "main", modulePath: "main.profile", moduleNode: null, module: null, parent: routes [ 0 ] } );
+		expect ( routes [ 0 ].children [ 2 ] ).toEqual ( { name: "footer", modulePath: "footer", moduleNode: null, module: null, parent: routes [ 0 ] } );
 	} );
 
 	it ( "matches a path that contains sub route but not contain root route", () => {
 		let param = {},
-			routes = Router.matchRoutes ( "/admin", param, routeTree );
+			structure = Router.matchRoutes ( "/admin", param, routeTree ),
+			routes = structure.entity;
 
 		expect ( routes.length ).toBe ( 1 );
 		expect ( routes [ 0 ].name ).toBe ( "default" );
 		expect ( routes [ 0 ].modulePath ).toBe ( "setting" );
 		expect ( routes [ 0 ].children.length ).toBe ( 1 );
-		expect ( routes [ 0 ].children [ 0 ] ).toEqual ( { name: "main", modulePath: "main.admin" } );
+		expect ( routes [ 0 ].children [ 0 ] ).toEqual ( { name: "main", modulePath: "main.admin", moduleNode: null, module: null, parent: routes [ 0 ] } );
 	} );
 
 	it ( "matches a path that contains root route and empty sub route", () => {
 		let param = {},
-			routes = Router.matchRoutes ( "/settings/", param, routeTree );
+			structure = Router.matchRoutes ( "/settings/", param, routeTree ),
+			routes = structure.entity;
 
 		expect ( routes.length ).toBe ( 1 );
 		expect ( routes [ 0 ].name ).toBe ( "default" );
 		expect ( routes [ 0 ].modulePath ).toBe ( "setting" );
 		expect ( routes [ 0 ].children.length ).toBe ( 3 );
-		expect ( routes [ 0 ].children [ 0 ] ).toEqual ( { name: "menu", modulePath: "menu1" } );
-		expect ( routes [ 0 ].children [ 1 ] ).toEqual ( { name: "main", modulePath: "main.account" } );
-		expect ( routes [ 0 ].children [ 2 ] ).toEqual ( { name: "footer", modulePath: "footer1" } );
+		expect ( routes [ 0 ].children [ 0 ] ).toEqual ( { name: "menu", modulePath: "menu", moduleNode: null, module: null, parent: routes [ 0 ] } );
+		expect ( routes [ 0 ].children [ 1 ] ).toEqual ( { name: "main", modulePath: "main.profile", moduleNode: null, module: null, parent: routes [ 0 ] } );
+		expect ( routes [ 0 ].children [ 2 ] ).toEqual ( { name: "footer", modulePath: "footer", moduleNode: null, module: null, parent: routes [ 0 ] } );
 	} );
 
 	it ( "matches a path that has params", () => {
 		let param = {},
-			routes = Router.matchRoutes ( "/settings/testpage", param, routeTree );
+			structure = Router.matchRoutes ( "/settings/testpage", param, routeTree ),
+			routes = structure.entity;
 
-		expect ( Object.keys ( param ).length ).toBe ( 1 );
-		expect ( param.page ).toBe ( "testpage" );
-
-		routes = Router.matchRoutes ( "/settings/account/name", param, routeTree );
-
-		console.log(routes);
 		expect ( Object.keys ( param ).length ).toBe ( 2 );
-		expect ( param.a ).toBe ( "account" );
-		expect ( param.b ).toBe ( "name" );
+		expect ( Object.keys ( param.default ).length ).toBe ( 0 );
+		expect ( Object.keys ( param.menu ).length ).toBe ( 1 );
+		expect ( param.menu.page ).toBe ( "testpage" );
+
+		structure = Router.matchRoutes ( "/settings/account/name", param, routeTree ),
+		routes = structure.entity;
+		
+		expect ( Object.keys ( param ).length ).toBe ( 3 );
+		expect ( Object.keys ( param.default ).length ).toBe ( 0 );
+		expect ( Object.keys ( param.menu ).length ).toBe ( 1 );
+		expect ( param.menu.page ).toBe ( "account" );
+		expect ( Object.keys ( param.footer ).length ).toBe ( 2 );
+		expect ( param.footer.a ).toBe ( "account" );
+		expect ( param.footer.b ).toBe ( "name" );
 	} );
 } );

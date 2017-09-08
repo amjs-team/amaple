@@ -1,12 +1,5 @@
 import { foreach, type } from "./util";
 
-///////////////////////////////
-///							///
-///     内部调用，外部不可见   ///
-///                         ///
-///////////////////////////////
-
-
 /**
 	urlTransform ( str: String, mode: Boolean )
 
@@ -22,91 +15,14 @@ import { foreach, type } from "./util";
 	http://icejs.org/######
 */
 export function urlTransform ( str, mode ) {
-	mode 					= !!mode;
+	mode = !!mode;
 
-	var rpoint 				= /\./g,
-		rsep 				= /\//g,
-		point 				= ".",
-		separation 			= "/";
-		
+	let rpoint = /\./g,
+		rsep = /\//g,
+		point = ".",
+		separation = "/";
 
 	return mode ? str.replace( rsep, point) : str.replace ( rpoint, separation );
-}
-
-/**
-	setCurrentPath ( module: DOMObject, path: String )
-
-	Return Type:
-	void
-
-	Description:
-	设置module当前加载的路径，用于无刷新跳转时获取替换前的路径，以在后退或前进操作时找到上一个状态所对应的路径
-
-	URL doc:
-	http://icejs.org/######
-*/
-export function setCurrentPath ( module, path ) {
-	module.currentPath = path;
-}
-
-/**
-	getCurrentPath ( module: DOMObject )
-
-	Return Type:
-	String
-
-	Description:
-	获取module当前加载的路径，用于无刷新跳转时获取替换前的路径，以在后退或前进操作时找到上一个状态所对应的路径
-
-	URL doc:
-	http://icejs.org/######
-*/
-export function getCurrentPath ( module ) {
-	return module.currentPath || "";
-}
-
-/**
-	decomposeArray ( array: Array, callback: Function )
-
-	Return Type:
-	void
-
-	Description:
-	将一个数组以相邻的两个值为一组分解出来并传入回调函数中
-	此方法将不改变原数组
-	当前一个值为空时则跳过
-
-	URL doc:
-	http://icejs.org/######
-*/
-export function decomposeArray ( array, callback ) {
-
-	// 复制array的副本到_array中
-	// 此地方直接使用“=”时只是引用，如果改变tmpArr也将改变原数组
-	var _array = [].concat ( array ),
-
-		_arr;
-
-	if ( config.params.moduleSeparator === "/" ) {
-		for ( var i = 0; i < _array.length; ) {
-			if ( _array [ i ] !== "" ) {
-				callback ( _array[ i ], _array[ i + 1 ] || "" );
-
-				i += 2;
-			}
-			else {
-				i ++;
-			}
-		}
-	}
-	else {
-		foreach ( _array, function ( arr ) {
-			if ( arr !== "" ) {
-				_arr = arr.split ( config.params.moduleSeparator );
-				callback ( _arr [ 0 ], _arr [ 1 ] );
-			}
-		} );
-	}
 }
 
 /**
@@ -137,4 +53,38 @@ export function matchFnArgs ( fn ) {
 				|| "" )
 			.split ( "," ).filter ( item => !!item ).map ( item => item.trim () )
     		: [];
+}
+
+/**
+	getHashPathname ( hash: String )
+
+	Return Type:
+	String
+	hash模式下的pathname
+
+	Description:
+	获取hash模式下的pathname
+
+	URL doc:
+	http://icejs.org/######
+*/
+export function getHashPathname ( hash ) {
+	return ( hash.match ( /#([^?]*)$/ ) || [ "", "" ] ) [ 1 ];
+}
+
+/**
+	getHashSearch ( hash: String )
+
+	Return Type:
+	String
+	hash模式下的search
+
+	Description:
+	获取hash模式下的search
+
+	URL doc:
+	http://icejs.org/######
+*/
+export function getHashSearch ( hash ) {
+	return ( hash.match ( /\?(.*)$/ ) || [] ) [ 1 ];
 }

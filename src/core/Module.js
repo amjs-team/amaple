@@ -6,7 +6,7 @@ import { newClassCheck } from "../Class.js";
 import ModuleCaller from "./ModuleCaller";
 import ViewModel from "./ViewModel";
 import Tmpl from "./tmpl/Tmpl";
-import singleAttr from "../single/singleAttr";
+import iceAttr from "../single/iceAttr";
 import check from "../check";
 import { matchFnArgs } from "../func/private";
 
@@ -64,7 +64,7 @@ export default function Module ( moduleName, vmData = { init: function () { retu
   	/////////////////////////////////
   	/////////////////////////////////
   	///
-	let moduleElem 	= query ( `*[${ singleAttr.aModule }=${ moduleName }]` ),
+	let moduleElem 	= query ( `*[${ iceAttr.module }=${ moduleName }]` ),
 
 		// 获取init方法参数
 		initArgs 	= matchFnArgs ( vmData.init ),

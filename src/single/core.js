@@ -1,25 +1,14 @@
-import { extend, type, foreach, replaceAll, noop, isPlainObject } from "../func/util";
+import { type, foreach, noop } from "../func/util";
 import { attr, html, scriptEval } from "../func/node";
-import { getCurrentPath, setCurrentPath } from "../func/private";
 import { envErr, moduleErr } from "../error";
-import singleAttr from "./singleAttr";
-import clsProperty from "./clsProperty";
-import requestEventBind from "./requestEventBind";
+import { MODULE_UPDATE, MODULE_REQUEST, MODULE_RESPONSE } from "../var/const";
 import compileModule from "./compileModule";
-import includeModule from "./includeModule";
+import iceAttr from "./iceAttr";
 import configuration from "../core/configuration/core";
 import ice from "../core/core";
 import cache from "../cache/core";
 import http from "../http/core";
 import event from "../event/core";
-
-const 
-	// 模块名占位符
-	modPlaceholder = ":m",
-
-	// 模块内容标识占位符
-	conPlaceholder = ":v";
-
 
 /**
 	updateModule ( moduleUpdates: Array, errorModule: Object|undefined, titles: Array, state: Array, pushStack: Boolean, onpopstate: Boolean )
@@ -121,149 +110,113 @@ function dataToStr ( data ) {
 */
 export default function single ( url, moduleElem, data, method, timeout, before = noop, success = noop, error = noop, abort = noop ) {
 
-	let moduleName, isCache, isBase, modules, historyMod,
-		
-        direction = configuration.getConfigure ( "direction" ),
+	let historyMod,
         
-		// 模块内容缓存key
-		directionKey, 
-		//////////////////////////////////////////////////
-		/// 请求url处理相关
-
-		// 完整请求url初始化
-		fullUrl, 
-		hasSeparator,
-
-		// 上一页面的路径
-		lastPath,
-        
-        lastAjaxUpdateIndex,
         moduleUpdates = [],
         moduleError,
 
 		_state = [];
 
-	// 判断传入的url的类型，如果是string，是普通的参数传递，即只更新一个模块的数据； 如果是array，它包括一个或多个模块更新的数据
-	// 需统一为modules数组
-	modules = type ( url ) === "string" ? [ { url : url, entity : moduleElem, data : data } ] : url;
 
-	
-	// 循环modules，依次更新模块
-	foreach ( modules, ( module, i ) => {
+	// 更新模块
+	const 
+		moduleName = attr ( moduleElem, iceAttr.module ),
 
-		moduleName = attr ( module.entity, single.aModule );
-		directionKey = moduleName + module.url + dataToStr ( module.data );
-    	isCache = attr ( module.entity, single.aCache );
+		// 模块内容缓存key
+		moduleKey = moduleName + url + dataToStr ( data ),
+		isCache = attr ( moduleElem, iceAttr.cache ),
+		moduleConfig = configuration.getConfigure ( "module" );
 
-		// 模块强制缓存或者全局使用缓存并且模块没有强制不使用缓存
-    	// 并且请求不为post
-    	// 并且已有缓存
-    	// 并且缓存未过期
-    	// cache已有当前模块的缓存时，才使用缓存
-		if ( ( isCache === "true" || direction.cache === true && isCache !== "false" ) && ( !method || method.toUpperCase () !== "POST" ) && ( historyMod = cache.getDirection ( directionKey ) ) && ( direction.expired === 0 || historyMod.time + direction.expired > Date.now () ) ) {
+	// 模块强制缓存或者全局使用缓存并且模块没有强制不使用缓存
+	// 并且请求不为post
+	// 并且已有缓存
+	// 并且缓存未过期
+	// cache已有当前模块的缓存时，才使用缓存
+	if (
+		( isCache === "true" || moduleConfig.cache === true && isCache !== "false" )
+		&& ( !method || method.toUpperCase () !== "POST" )
+		&& ( historyMod = cache.getModule ( moduleKey ) )
+		&& ( moduleConfig.expired === 0 || historyMod.time + moduleConfig.expired > Date.now () )
+	) {
+        moduleUpdates.push ( () => {
+        	let fragment = document.createDocumentFragment ();
+			foreach ( historyMod.vm.view, childView => {
+				fragment.appendChild ( childView );
+    		} );
+    	
+			html ( moduleElem, fragment );
+			event.emit ( moduleElem, MODULE_UPDATE );
 
-            moduleUpdates.push ( () => {
-            	let fragment = document.createDocumentFragment ();
-    			foreach ( historyMod.vm.view, childView => {
-					fragment.appendChild ( childView );
-        		} );
+			return {
+				index : i,
+				title : historyMod.title
+			};
+        } );
+	}
+	else {
+
+		const 
+			baseURL = configuration.getConfigure ( "baseURL" ),
+			isBase = attr ( moduleElem, iceAttr.base ) !== "false" && baseURL.length > 0,
+			hasSeparator = url.indexOf ( "/" ),
+
+			// 完整请求url初始化
+			fullUrl = isBase 
+					? baseURL + ( hasSeparator === 0 ? url.substr ( 1 ) : url )
+					: url;
+    	
+    	// 触发请求事件回调
+    	event.emit ( moduleElem, MODULE_REQUEST );
+						  
+		// 请求模块跳转页面数据
+		http.request ( {
+
+			url 		: fullUrl, 
+			data 		: data || "",
+			method 		: /^(GET|POST)$/i.test ( method ) ? method.toUpperCase () : "GET",
+			timeout 	: timeout || 0,
+			beforeSend 	: () => {
+				before ( moduleElem );
+			},
+			abort		: () => {
+				abort ( moduleElem );
+			},
+        	complete 	: () => {
+            		updateModule ( moduleUpdates, moduleError, _state );
+            }
+		} ).done ( moduleString => {
+
+			/////////////////////////////////////////////////////////
+        	// 编译module为可执行函数
+			// 将请求的html替换到module模块中
+            let updateFn = compileModule ( moduleString );
         	
-				html ( module.entity, fragment );
-    			event.emit ( module.entity, single.MODULE_UPDATE );
+        	moduleUpdates.push ( () => {
+            	event.emit ( moduleElem, MODULE_RESPONSE );
+        		let title = updateFn ( ice, moduleElem, html, scriptEval, cache, moduleKey );
+            	event.emit ( moduleElem, MODULE_UPDATE );
 
-    			return {
-    				index : i,
-    				title : historyMod.title
-    			};
+            	// 调用success回调
+				success ( moduleElem );
+
+				return {
+					index : i,
+					title : title
+				};
             } );
-		}
-		else {
-        	lastAjaxUpdateIndex = i;
+		} ).fail ( ( iceXHR, errorCode ) => {
+        	const errorConfig = configuration.getConfigure ( "page" + errorCode );
         	
-			isBase = attr ( module.entity, single.aBase ) !== "false" && configuration.getConfigure ( "baseUrl" ).length > 0;
+        	if ( type ( errorConfig ) === "object" ) {
+            	moduleError = errorConfig;
+               }
         	
-			fullUrl = configuration.getConfigure ( "urlRule" );
-
-			// 通过url规则转换url，并通过ice-base来判断是否添加base路径
-			fullUrl = replaceAll ( fullUrl || "", modPlaceholder, moduleName );
-			fullUrl = replaceAll ( fullUrl || "", conPlaceholder, module.url );
-
-			hasSeparator = fullUrl.indexOf ( "/" );
-			fullUrl = isBase ? configuration.getConfigure ( "baseUrl" ) +  ( hasSeparator === 0 ? fullUrl.substr( 1 ) : fullUrl )
-							  :
-							  hasSeparator === 0 ? fullUrl : "/" + fullUrl;
-        	
-        	// 触发请求事件回调
-        	event.emit ( module.entity, single.MODULE_REQUEST );
-							  
-			// 请求模块跳转页面数据
-			http.request ( {
-
-				url 		: fullUrl, 
-				data 		: module.data || "",
-				method 		: /^(GET|POST)$/i.test ( method ) ? method.toUpperCase () : "GET",
-				timeout 	: timeout || 0,
-				beforeSend 	: function () {
-					before ( module );
-				},
-				abort		: function () {
-					abort ( module );
-				},
-            	complete 	: function () {
-                	if ( i === lastAjaxUpdateIndex ) {
-                		updateModule ( moduleUpdates, moduleError, _state, pushStack, onpopstate );
-                	}
-                }
-
-			} ).done ( moduleString => {
-				/////////////////////////////////////////////////////////
-            	// 编译module为可执行函数
-				// 将请求的html替换到module模块中
-                let updateFn = compileModule ( moduleString );
-            	
-            	moduleUpdates.push ( () => {
-                	event.emit ( module.entity, single.MODULE_RESPONSE );
-            		let title = updateFn ( ice, module.entity, html, scriptEval, cache, directionKey );
-                	event.emit ( module.entity, single.MODULE_UPDATE );
-
-                	// 调用success回调
-					success ( module );
-
-					return {
-						index : i,
-						title : title
-					};
-                } );
-			} ).fail ( ( iceXHR, errorCode ) => {
-            	const errorConfig = configuration.getConfigure ( "page" + errorCode );
-            	
-            	if ( type ( errorConfig ) === "object" ) {
-                	moduleError = errorConfig;
-                }
-            	
-            	error ( module, error );
-			} );
-		}
-
-
-		// 先保存上一页面的path用于上一页面的状态保存，再将模块的当前路径更新为刷新后的url
-		lastPath = getCurrentPath ( module.entity );
-		setCurrentPath ( module.entity, module.url );
-
-		_state.push ( {
-			url 	: lastPath,
-			module 	: module.entity,
-			data 	: module.data
+        	error ( moduleElem, error );
 		} );
-	} );
+	}
 	
 	// 如果没有ajax模块则直接更新模块
 	if ( lastAjaxUpdateIndex === undefined ) {
     	updateModule ( moduleUpdates, moduleError, _state );
     }
 }
-
-//////////////////////////////////////////
-// module无刷新跳转相关属性通用参数，为避免重复定义，统一挂载到single对象上
-// single相关静态变量与方法
-extend ( single, singleAttr, clsProperty, { requestEventBind, includeModule } );

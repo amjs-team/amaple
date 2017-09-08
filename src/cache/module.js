@@ -2,22 +2,22 @@ import { type, foreach } from "../func/util";
 
 export default {
 
-	directions : {},
+	modules : {},
 
 	/**
-		push ( name: String, direction: DOMString|DOMObject )
+		push ( name: String, module: DOMString|DOMObject )
 	
 		Return Type:
 		void
 	
 		Description:
-		添加跳转缓存模块
+		添加页面模块缓存
 	
 		URL doc:
 		http://icejs.org/######
 	*/
-	push : function ( name, direction ) {
-		this.directions [ name ] = direction;
+	push : function ( name, module ) {
+		this.modules [ name ] = module;
 	},
 
 	/**
@@ -28,12 +28,12 @@ export default {
 		缓存模块
 	
 		Description:
-		获取跳转缓存模块，没有找打则返回null
+		获取页面模块缓存，没有找到则返回null
 	
 		URL doc:
 		http://icejs.org/######
 	*/
 	get : function ( name ) {
-		return this.directions [ name ] || null;
+		return this.modules [ name ] || null;
 	}
 };

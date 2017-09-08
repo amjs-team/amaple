@@ -1,6 +1,6 @@
 import plugin from "./plugin";
 import driver from "./driver";
-import direction from "./direction";
+import module from "./module";
 import event from "./event";
 
 /**
@@ -18,6 +18,11 @@ import event from "./event";
 */
 export default {
 	
+	// 查看是否存在指定插件
+	hasPlugin ( name ) {
+		return plugin.has ( name );
+	},
+
 	// 添加插件缓存
 	pushPlugin ( name, p ) {
 		plugin.push ( name, p );
@@ -38,14 +43,14 @@ export default {
 		return driver.get ( name );
 	},
 
-	// 添加跳转缓存模块
-	pushDirection ( name, d ) {
-		direction.push ( name, d )
+	// 添加页面模块缓存
+	pushModule ( name, d ) {
+		module.push ( name, d )
 	},
 
-	// 获取跳转缓存模块
-	getDirection ( name ) {
-		return direction.get ( name );
+	// 获取页面模块缓存
+	getModule ( name ) {
+		return module.get ( name );
 	},
 
 	// 添加非元素事件缓存

@@ -1,46 +1,17 @@
+import { type, foreach, noop, isEmpty } from "../func/util";
+import { query, attr } from "../func/node";
+import { getHashPathname, getHashSearch } from "../func/private";
 import configuration from "./configuration/core";
 import cache from "../cache/core";
 import single from "../single/core";
-import iceHistory from "../single/iceHistory";
-import { AUTO, HASH_HISTORY, BROWSER_HISTORY } from "../single/historyMode";
+import iceHistory from "../single/history/iceHistory";
+import { AUTO, HASH_HISTORY, BROWSER_HISTORY } from "../single/history/historyMode";
 import event from "../event/core";
-import { type, foreach, noop } from "../func/util";
-import { query, attr } from "../func/node";
-import { matchFnArgs } from "../func/private";
 import check from "../check";
 import correctParam from "../correctParam";
 import Module from "./Module";
 import Router from "../router/core";
 import Structure from "./Tmpl/Structure";
-
-
-/////////////////////////////////
-
-/**
-	filterDeps ( deps: Object, args: Array )
-
-	Return Type:
-	Object
-	过滤后deps对象
-
-	Description:
-	过滤deps中未被接收的依赖项
-
-	URL doc:
-	http://icejs.org/######
-*/
-function filterDeps ( deps, args ) {
-	let _deps = {};
-	
-	// 过滤多余的依赖项
-	foreach ( deps, ( item, key ) => {
-		if ( args.indexOf ( key ) > -1 ) {
-			_deps [ key ] = item;
-		}
-	} );
-
-	return _deps;
-}
 
 
 /////////////////////////////////
@@ -110,26 +81,25 @@ export default {
     	
     	// 当使用hash模式时纠正路径
     	const 
-        	location = window.location,
-        	href = location.href,
-            host = location.protocol + "//" + location.host + "/";
+        	href = window.location.href,
+			host = window.location.protocol + "//" + window.location.host + "/";
 		
     	if ( routerConfig.history === HASH && href !== host && href.indexOf ( host + "#" ) === -1 ) {
-        	if ( location.hash ) {
-        		location.hash = "";
+        	if ( window.location.hash ) {
+        		window.location.hash = "";
             }
             
-            location.replace ( href.replace ( host, host + "#/" ) );
+            window.location.replace ( href.replace ( host, host + "#/" ) );
         }
     	
     	let path, search;
     	if ( routerConfig.history === HASH ) {
-        	path = ( location.hash.match ( /#([^?]+)/ ) || [] ) [ 1 ];
-        	search = ( location.hash.match ( /?(.*)$/ ) || [] ) [ 1 ];
+        	path = getHashPathname ( window.location.hash );
+        	search = getHashSearch ( window.location.hash );
         }
     	else if ( routerConfig.history === BROWSER_HISTORY ) {
-        	path = location.pathname;
-        	search = location.search.substr ( 1 );
+        	path = window.location.pathname;
+        	search = window.location.search.substr ( 1 );
         }
     	
     	// Router.matchRoutes()匹配当前路径需要更新的模块
@@ -154,36 +124,32 @@ export default {
     	Structure.currentPage.render ( location );
     },
 
+ 	/**
+		install ( pluginDefinition: Object )
+		
+		Return Type:
+		void
+		
+		Description:
+		安装插件
+		插件定义对象必须拥有build方法
+		若插件安装后会返回一个对象，则可在模块或组件的生命周期钩子函数中直接使用插件名引入，框架会自动注入对应插件
+		
+		URL doc:
+		http://icejs.org/######
+	*/
 	install ( pluginDefiniton ) {
+		check ( pluginDefiniton.name ).type ( "string" ).notBe ( "" ).check ( cache.hasPlugin ( pluginDefiniton.name ) ).be ( true ).ifNot ( "pluginDefiniton.name", "plugin安装对象必须定义name属性以表示此插件的名称，且不能与已有插件名称重复" ).do ();
+    	check ( pluginDefiniton.build ).type ( "function" ).ifNot ( "pluginDefiniton.build", "plugin安装对象必须包含build方法" ).do ();
     	
-		// 查看是否有deps，有的时候，value类型分为以下情况：
-		// 1、若value为string，则使用cache.componentCreater方法获取插件，如果没有则使用模块加载器加载
-		// 2、若value为object，则调用use构建插件
-		// 判断是plugin还是driver，存入相应的cache中并返回
-    	
-    	check ( structure.build ).type ( "function" ).or ().check ( structure.init ).type ( "function" ).ifNot ( "plugin-driver", "plugin必须包含build方法，driver必须包含init方法" ).do ();
-      
-    	let deps = structure.deps || {},
-            moduleType = structure.build ? TYPE_PLUGIN :TYPE_DRIVER,
-            moduleInfo = Loader.getCurrentDep (),
-            args;
-    	
-        switch ( moduleType ) {
-            case TYPE_PLUGIN:
-                args = matchFnArgs ( structure.build );
-            	deps = filterDeps ( deps, args );
-    			depend ( moduleInfo || {}, deps, ( depObject ) => {
-                	cache.pushPlugin ( moduleInfo.name, structure.build.apply ( null, args.map ( arg => depObject [ arg ] ) ) );
-                } );
-            	
-                break;
-            case TYPE_DRIVER:
-                args = matchFnArgs ( structure.apply ).slice ( 1 ).concat ( matchFnArgs ( structure.init ) );
-            	deps = filterDeps ( deps, args );
-          		cache.pushDriver ( structure );
-    			depend ( Loader.TopName, deps, noop );
-            	
-                break;
-        }
+    	const depNames = matchFnArgs ( pluginDefiniton.build );
+    	let deps = [];
+    	if ( !isEmpty ( depNames ) ) {
+    		foreach ( depNames, name => {
+    			deps.push ( cache.getPlugin ( name ) );
+    		} );
+    	}
+
+        cache.pushPlugin ( pluginDefiniton.name, pluginDefiniton.build.apply ( this, deps ) );
 	}
 };

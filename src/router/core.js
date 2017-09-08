@@ -72,7 +72,7 @@ extend ( Router.prototype, {
             this.finger.push ( redirect );
         }
 
-    	redirect.redirect.push ( { Router.pathToRegexp ( from, "redirect" ), to } );
+    	redirect.redirect.push ( { from: Router.pathToRegexp ( from, "redirect" ), to } );
     	
     	return this;
 	}
@@ -86,12 +86,10 @@ extend ( Router, {
             pathObj = { param : {} },
 			
             // 如果path为redirect中的from，则不需加结尾的“/”匹配式
-            // 如果路径表达式为""时需在结尾增加"$"符号才能正常匹配到
-            endRegexp = from === "redirect"
-        	? ""
-        	: "(?:\\/)?" + ( pathExpr === ""
-            	? "$"
-                : "" );
+            endRegexp = from === "redirect" ? "" : "(?:\\/)?";
+
+        // 如果路径表达式为""时需在结尾增加"$"符号才能正常匹配到
+        endRegexp += pathExpr === "" ? "$" : "";
 
         // 如果pathExpr为数组，则需预处理
         if ( type ( pathExpr ) === "array" ) {
@@ -116,14 +114,14 @@ extend ( Router, {
             entityItem;
     	
     	foreach ( routeTree, route => {
-        	if ( route.hasOwnProperty ( "redirect" ) {
+        	if ( route.hasOwnProperty ( "redirect" ) ) {
                 let isContinue = true;
                 
                 foreach ( route.redirect, redirect => {
                 	
-                	path = path.replace ( redirect.from.regexp, ...match => {
+                	path = path.replace ( redirect.from.regexp, ( ...match ) => {
                 		isContinue = false;
-                		let to;
+                		let to = redirect.to;
                 		
                 		foreach ( redirect.from.param, ( i, paramName ) => {
                         	to = to.replace ( `:${ paramName }`, matchPath [ i ] );
@@ -154,20 +152,22 @@ extend ( Router, {
 
                 if ( matchPath = path.match ( pathReg.path.regexp ) ) {
                 	isContinue = false;
+
+                    param [ route.name ] = param [ route.name ] || {};
                     foreach ( pathReg.path.param, ( i, paramName ) => {
                         param [ route.name ] [ paramName ] = matchPath [ i ];
                     } );
 
-                    routes.push ( moduleItem );
+                    routes.push ( entityItem );
                 }
             	
             	if ( type ( pathReg.children ) === "array" ) {
                 	let children = this.matchRoutes ( matchPath ? path.replace ( matchPath [ 0 ], "" ) : path, param, pathReg.children, entityItem );
                 	
                 	if ( !isEmpty ( children ) ) {
-                    	moduleItem.children = children;
-                    	if ( routes.indexOf ( moduleItem ) <= -1 ) {
-                    		routes.push ( moduleItem );
+                    	entityItem.children = children;
+                    	if ( routes.indexOf ( entityItem ) <= -1 ) {
+                    		routes.push ( entityItem );
                         }
                     }
                 }

@@ -1,5 +1,5 @@
 import { isEmpty, foreach } from "../func/util";
-import singleAttr from "./singleAttr";
+import iceAttr from "./iceAttr";
 import check from "../check";
 
 const 
@@ -87,7 +87,7 @@ export default function compileModule ( moduleString ) {
 				styleMatch [ 0 ] = styleMatch [ 0 ].replace ( styleMatch [ 1 ], placeholder );
 
 				// 为每个样式添加模块前缀以达到控制范围的作用
-				style = style.replace ( raddScoped, ( match, rep ) => match.replace (rep, rnoscoped.test ( rep ) ? rep : `[${ singleAttr.aModule }=${ attrs [ attrBelong ] }] ` + rep ) );
+				style = style.replace ( raddScoped, ( match, rep ) => match.replace (rep, rnoscoped.test ( rep ) ? rep : `[${ iceAttr.module }=${ attrs [ attrBelong ] }] ` + rep ) );
 
 				style = styleMatch [ 0 ].replace ( placeholder, style );
             }

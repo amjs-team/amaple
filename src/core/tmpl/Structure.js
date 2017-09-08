@@ -2,7 +2,8 @@ import { extend, forech, type } from "../../func/util";
 import { query } from "../../func/node";
 import { moduleErr } from "../../error";
 import single from "../../single/core";
-import iceHistory from "../../single/iceHistory";
+import iceAttr from "../../single/iceAttr";
+import iceHistory from "../../single/history/iceHistory";
 
 // [
   //  { module: obj1, name: "default", moduleNode: node1, parent: null, children: [
@@ -16,7 +17,7 @@ function loopRender ( entity ) {
 	let moduleNode;
 	foreach ( entity, route => {
     	if ( !route.hasOwnProperty ( "notUpdate" ) ) {
-    		moduleNode = route.moduleNode || query ( `[${ single.aModule }=${ route.name === "default" ? "''" : route.name }]` );
+    		moduleNode = route.moduleNode || query ( `[${ iceAttr.module }=${ route.name === "default" ? "''" : route.name }]` );
     		if ( !moduleNode ) {
         		throw moduleErr ( "moduleNode", `找不到加载路径为"${ route.modulePath }"的模块node` );
         	}
@@ -34,7 +35,7 @@ function loopRender ( entity ) {
 	} );
 }
 
-export default function Structure ( routes ) {
+export default function Structure ( entity ) {
     this.entity = entity;
 }
 
@@ -44,7 +45,7 @@ extend ( Structure.prototype, {
 			y = structure.entity,
             find;
     	
-    	if ( ( x && !y ) || ( !x && y ) {
+    	if ( ( x && !y ) || ( !x && y ) ) {
 			x = y;
         }
         else if ( x && y ) {
@@ -114,6 +115,9 @@ extend ( Structure.prototype, {
             	break;
         	case "REPLACE":
             	iceHistory.replace ( location.structure, location.path );
+
+            case "POP":
+
             	
         		break;
         	case "NONE":
