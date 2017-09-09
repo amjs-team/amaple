@@ -40,7 +40,7 @@ function findParentVm ( elem ) {
 }
 
 /**
-	Module ( moduleName: String, vmData: Object )
+	Module ( moduleName: String|DOMObject, vmData: Object )
 
 	Return Type:
 	Object
@@ -53,19 +53,24 @@ function findParentVm ( elem ) {
 	URL doc:
 	http://icejs.org/######
 */
-export default function Module ( moduleName, vmData = { init: function () { return {}; } } ) {
+export default function Module ( module, vmData = { init: function () { return {}; } } ) {
 
 	newClassCheck ( this, Module );
-    	
+	
+	let moduleElem
+    if ( type ( module ) === "string" ) {
+    	moduleElem = query ( `*[${ iceAttr.module }=${ moduleName }]` );
+    else if ( module.nodeType === 1 || module.nodeType === 3 || module.nodeType === 8 ) {
+    	moduleElem = module;
+    }
+      	
 	// 检查参数
-	check ( moduleName ).type ( "string" ).notBe ( "" ).ifNot ( "ice.Module", "moduleName参数类型必须为string" ).do ();
+	check ( moduleElem.nodeType ).be ( 1, 3, 8 ).ifNot ( "ice.Module", "module参数可传入模块元素的ice-module属性值或直接传入需挂在模块元素" ).do ();
 	check ( vmData ).type ( "object" ).check ( vmData.init ).type ( "function" ).ifNot ( "ice.Module", "vmData参数必须为带有init方法的的object" ).do ();
   	
   	/////////////////////////////////
   	/////////////////////////////////
-  	///
-	let moduleElem 	= query ( `*[${ iceAttr.module }=${ moduleName }]` ),
-
+	let
 		// 获取init方法参数
 		initArgs 	= matchFnArgs ( vmData.init ),
       	initDeps 	= initArgs.map ( plugin => cache.getPlugin ( plugin ) ),

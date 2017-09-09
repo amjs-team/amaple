@@ -1,5 +1,6 @@
 import { envErr } from "../../error";
 import event from "../../event/core";
+import Structure from "../../core/tmpl/Structure";
 
 export default {
 	
@@ -8,21 +9,16 @@ export default {
 	
 	init () {
     	event.on ( window, "popstate", e => {
-
-    	   	// Tmpl.render()渲染对应模块
-    	   	const location = {
-    	       	path : window.location.pathname,
-    	       	nextStructure : this.getState (),
-    	       	// param : {},
-    	       	// search : Router.matchSearch ( search ),
-    	       	action : "POP"
-			};
     	       
-    	   	// 更新currentPage结构体对象，如果为空表示页面刚刷新，将nextStructure直接赋值给currentPage
-    		Structure.currentPage.update ( location.nextStructure );
+    		// 更新currentPage结构体对象，如果为空表示页面刚刷新，将nextStructure直接赋值给currentPage
+    		Structure.currentPage.update ( this.getState () );
     	   	
     	   	// 根据更新后的页面结构体渲染新视图
-    	   	Structure.currentPage.render ( location );
+    	   	Structure.currentPage.render ( {
+            	// param : {},
+    	       	// search : Router.matchSearch ( search ),
+    	       	action : "POP"
+            } );
         } );
     	
     	return this;

@@ -52,63 +52,18 @@ function updateModule ( moduleUpdates, moduleError, state ) {
 }
 
 /**
-	dataToStr ( data?: Object|String )
+	single ( url: String|Object, moduleNode: DMOObject, param?: Object, data?: String|Object, method?:String, timeout?: Number, before?: Function, success?: Function, error?: Function, abort?: Function )
 
 	Return Type:
 	void
 
 	Description:
-	将请求参数转换为字符串供缓存key使用
+	根据path请求跳转模块数据并更新对应的moduleNode（moduleNode为模块节点）
 
 	URL doc:
 	http://icejs.org/######
 */
-function dataToStr ( data ) {
-	if ( type ( data ) === "string" ) {
-    	let dataArr = data.split ( "&" ),
-            kv;
-    	data = {};
-    	
-    	foreach ( dataArr, item => {
-        	kv = item.split ( "=" );
-        	data [ kv [ 0 ].trim () ] = kv [ 1 ].trim ();
-        } );
-    }
-	
-	let keys, str = "";
-	if ( type ( data ) === "object" ) {
-		keys = Object.keys ( data ).sort ();
-		foreach ( keys, k => {
-	    	str += k + data [ k ];
-	    } );
-	}
-
-	return str;
-}
-
-/**
-	single ( url: String|Object, moduleElem: DMOObject, data?: String|Object, method?:String, timeout?: Number, before?: Function, success?: Function, error?: Function, abort?: Function, pushStack?: Boolean, onpopstate?: Boolean )
-
-	Return Type:
-	void
-
-	Description:
-	根据url请求html并将html放入module（module为模块节点）
-	如果pushStack为true则将url和title压入history栈内。如果pushStack不为true，则不压入history栈内
-	浏览器前进/后退调用时，不调用pushState方法
-	
-	此函数可通过第一个参数传入数组的方式同时更新多个模块
-	多模块同时更新时的参数格式为：
-	[
-		{url: url1, entity: moduleElem1, data: data1},
-		{url: url2, entity: moduleElem2, data: data2},
-		...
-	], timeout, before, success, error, abort, pushStack, onpopstate
-
-	URL doc:
-	http://icejs.org/######
-*/
-export default function single ( url, moduleElem, data, method, timeout, before = noop, success = noop, error = noop, abort = noop ) {
+export default function single ( path, moduleNode, param, data, method, timeout, before = noop, success = noop, error = noop, abort = noop ) {
 
 	let historyMod,
         
@@ -120,12 +75,20 @@ export default function single ( url, moduleElem, data, method, timeout, before 
 
 	// 更新模块
 	const 
-		moduleName = attr ( moduleElem, iceAttr.module ),
-
-		// 模块内容缓存key
-		moduleKey = moduleName + url + dataToStr ( data ),
-		isCache = attr ( moduleElem, iceAttr.cache ),
-		moduleConfig = configuration.getConfigure ( "module" );
+		moduleName = attr ( moduleNode, iceAttr.module ),
+		isCache = attr ( moduleNode, iceAttr.cache ),
+		moduleConfig = configuration.getConfigure ( "module" ),
+        
+        baseURL = configuration.getConfigure ( "baseURL" ),
+        isBase = attr ( moduleElem, iceAttr.base ) !== "false" && baseURL.length > 0,
+		hasSeparator = url.indexOf ( "/" ),
+		path = isBase 
+				? baseURL + ( hasSeparator === 0 ? path.substr ( 1 ) : path )
+				: path,
+		,
+        pathAnchor = document.createElement ( "a" );
+	pathAnchor.href = path;
+	path = pathAnchor.pathname;
 
 	// 模块强制缓存或者全局使用缓存并且模块没有强制不使用缓存
 	// 并且请求不为post
@@ -135,7 +98,7 @@ export default function single ( url, moduleElem, data, method, timeout, before 
 	if (
 		( isCache === "true" || moduleConfig.cache === true && isCache !== "false" )
 		&& ( !method || method.toUpperCase () !== "POST" )
-		&& ( historyMod = cache.getModule ( moduleKey ) )
+		&& ( historyMod = cache.getModule ( path ) )
 		&& ( moduleConfig.expired === 0 || historyMod.time + moduleConfig.expired > Date.now () )
 	) {
         moduleUpdates.push ( () => {
@@ -144,8 +107,8 @@ export default function single ( url, moduleElem, data, method, timeout, before 
 				fragment.appendChild ( childView );
     		} );
     	
-			html ( moduleElem, fragment );
-			event.emit ( moduleElem, MODULE_UPDATE );
+			html ( moduleNode, fragment );
+			event.emit ( moduleNode, MODULE_UPDATE );
 
 			return {
 				index : i,
@@ -154,16 +117,6 @@ export default function single ( url, moduleElem, data, method, timeout, before 
         } );
 	}
 	else {
-
-		const 
-			baseURL = configuration.getConfigure ( "baseURL" ),
-			isBase = attr ( moduleElem, iceAttr.base ) !== "false" && baseURL.length > 0,
-			hasSeparator = url.indexOf ( "/" ),
-
-			// 完整请求url初始化
-			fullUrl = isBase 
-					? baseURL + ( hasSeparator === 0 ? url.substr ( 1 ) : url )
-					: url;
     	
     	// 触发请求事件回调
     	event.emit ( moduleElem, MODULE_REQUEST );
@@ -171,15 +124,15 @@ export default function single ( url, moduleElem, data, method, timeout, before 
 		// 请求模块跳转页面数据
 		http.request ( {
 
-			url 		: fullUrl, 
-			data 		: data || "",
+			url 		: path,
 			method 		: /^(GET|POST)$/i.test ( method ) ? method.toUpperCase () : "GET",
+        	data 		: data,
 			timeout 	: timeout || 0,
 			beforeSend 	: () => {
-				before ( moduleElem );
+				before ( moduleNode );
 			},
 			abort		: () => {
-				abort ( moduleElem );
+				abort ( moduleNode );
 			},
         	complete 	: () => {
             		updateModule ( moduleUpdates, moduleError, _state );
@@ -189,15 +142,15 @@ export default function single ( url, moduleElem, data, method, timeout, before 
 			/////////////////////////////////////////////////////////
         	// 编译module为可执行函数
 			// 将请求的html替换到module模块中
-            let updateFn = compileModule ( moduleString );
+            const updateFn = compileModule ( moduleString );
         	
         	moduleUpdates.push ( () => {
-            	event.emit ( moduleElem, MODULE_RESPONSE );
-        		let title = updateFn ( ice, moduleElem, html, scriptEval, cache, moduleKey );
-            	event.emit ( moduleElem, MODULE_UPDATE );
+            	event.emit ( moduleNode, MODULE_RESPONSE );
+        		let title = updateFn ( ice, moduleNode, html, scriptEval, cache, path );
+            	event.emit ( moduleNode, MODULE_UPDATE );
 
             	// 调用success回调
-				success ( moduleElem );
+				success ( moduleNode );
 
 				return {
 					index : i,
@@ -211,7 +164,7 @@ export default function single ( url, moduleElem, data, method, timeout, before 
             	moduleError = errorConfig;
                }
         	
-        	error ( moduleElem, error );
+        	error ( moduleNode, error );
 		} );
 	}
 	

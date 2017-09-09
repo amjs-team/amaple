@@ -13,24 +13,38 @@ import iceHistory from "../../single/history/iceHistory";
    // ] }
 // ]
 
-function loopRender ( entity ) {
-	let moduleNode;
+function loopRender ( entity, param, search ) {
+	let toRender = false;
 	foreach ( entity, route => {
-    	if ( !route.hasOwnProperty ( "notUpdate" ) ) {
-    		moduleNode = route.moduleNode || query ( `[${ iceAttr.module }=${ route.name === "default" ? "''" : route.name }]` );
+    	if ( route.hasOwnProperty ( "notUpdate" ) ) {
+        	if ( route.hasOwnProperty ( "forcedRender" ) {
+                toRender = true;
+            }
+    		else {
+                // 比较新旧param和search对象中的值，如果有改变则调用paramUpdated和searchUpdated
+                // foreach 
+            	// route.module.
+            }
+            
+            delete route.notUpdate;
+        }
+    	else {
+        	toRender = true;
+        }
+        
+        // 需更新模块与强制重新渲染模块进行渲染
+        if ( toRender ) {
+        	const moduleNode = route.moduleNode || query ( `[${ iceAttr.module }=${ route.name === "default" ? "''" : route.name }]` );
     		if ( !moduleNode ) {
         		throw moduleErr ( "moduleNode", `找不到加载路径为"${ route.modulePath }"的模块node` );
         	}
     	
         	// 无刷新跳转组件调用来完成无刷新跳转
-			single ( route.modulePath, moduleNode, undefined, undefined, undefined, undefined, () => {
+			single ( route.modulePath, moduleNode, param [ route.name ], search, undefined, undefined, undefined, () => {
         		if ( type ( route.children ) === "array" ) {
         			loopRender ( route.children );
         		}
         	} );
-        }
-    	else {
-        	delete route.notUpdate;
         }
 	} );
 }
@@ -104,24 +118,28 @@ extend ( Structure.prototype, {
         http://icejs.org/######
     */
 	render ( location ) {
-    	const entity = this.entity;
+    	const locationGuide = {
+        	structure : location.structure, 
+        	param : location.param,
+        	search : location.search
+        };
     	
-    	loopRender ( entity );
+    	loopRender ( this.entity, location.param, location.search );
     	
     	switch ( location.action ) {
         	case "PUSH":
-            	iceHistory.push ( location.structure, location.path );
+            	iceHistory.push ( locationGuide, location.path );
             	
             	break;
         	case "REPLACE":
-            	iceHistory.replace ( location.structure, location.path );
-
-            case "POP":
-
+            	iceHistory.replace ( locationGuide, location.path );
             	
         		break;
         	case "NONE":
-            	iceHistory.saveState ( location.path, location.structure );
+            	iceHistory.saveState ( location.path, locationGuide );
+            	break;
+        	case "POP":
+            	// do nothing
         }
     },
 } );

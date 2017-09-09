@@ -75,7 +75,12 @@ extend ( Router.prototype, {
     	redirect.redirect.push ( { from: Router.pathToRegexp ( from, "redirect" ), to } );
     	
     	return this;
-	}
+	},
+	
+	forcedRender () {
+    	this.routeItem.forcedRender = null;
+    	return this;
+    }
 } );
 
 extend ( Router, {
@@ -149,6 +154,10 @@ extend ( Router, {
                 	module : null,
                 	parent
                 };
+            	
+            	if ( route.hasOwnProperty ( forcedRender ) ) {
+                	entityItem.forcedRender = route.forcedRender;
+                }
 
                 if ( matchPath = path.match ( pathReg.path.regexp ) ) {
                 	isContinue = false;
