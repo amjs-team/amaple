@@ -1,6 +1,6 @@
 import { foreach, type, noop } from "../../func/util";
 import { query } from "../../func/node";
-import { getHashPathname } from "../../func/private";
+import { getPathname } from "../../func/private";
 import configuration from "../../core/configuration/core";
 import { HASH_HISTORY, BROWSER_HISTORY } from "./historyMode";
 import browserHistory from "./browserHistory";
@@ -71,7 +71,7 @@ export default {
 		href = buildURL ( href, url );
 		window.location.replace ( href );
 		
-		this.saveState ( getHashPathname ( href ), state );
+		this.saveState ( getPathname (), state );
 	},
 
 	/**
@@ -91,7 +91,7 @@ export default {
 		hash = buildURL ( hash || "#/", url );
 		window.location.hash = hash;
 		
-		this.saveState ( getHashPathname ( href ), state );
+		this.saveState ( getPathname (), state );
 	},
 
 	////////////////////////////////////
@@ -128,6 +128,6 @@ export default {
 		http://icejs.org/######
 	*/
 	getState ( pathname ) {
-		return this.states [ pathname || getHashPathname ( window.location.hash ) ];
+		return this.states [ pathname || getPathname () ];
 	}
 };

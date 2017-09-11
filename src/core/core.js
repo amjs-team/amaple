@@ -1,6 +1,6 @@
 import { type, foreach, noop, isEmpty } from "../func/util";
 import { query, attr } from "../func/node";
-import { getHashPathname, getHashSearch } from "../func/private";
+import { getPathname, getSearch } from "../func/private";
 import configuration from "./configuration/core";
 import cache from "../cache/core";
 import single from "../single/core";
@@ -92,33 +92,18 @@ export default {
             window.location.replace ( href.replace ( host, host + "#/" ) );
         }
     	
-    	let path, search;
-    	if ( routerConfig.history === HASH ) {
-        	path = getHashPathname ( window.location.hash );
-        	search = getHashSearch ( window.location.hash );
-        }
-    	else if ( routerConfig.history === BROWSER_HISTORY ) {
-        	path = window.location.pathname;
-        	search = window.location.search.substr ( 1 );
-        }
-    	
-    	// Router.matchRoutes()匹配当前路径需要更新的模块
-    	// Tmpl.render()渲染对应模块
+
     	const location = {
-        	path,
+        	path : getPathname (),
         	nextStructure : Router.matchRoutes ( this.path, this.param ),
         	param : {},
-        	search : Router.matchSearch ( search ),
+        	search : Router.matchSearch ( getSearch () ),
         	action : "NONE"
         };
-        
+
+    	// Router.matchRoutes()匹配当前路径需要更新的模块
     	// 更新currentPage结构体对象，如果为空表示页面刚刷新，将nextStructure直接赋值给currentPage
-    	if ( Structure.currentPage ) {
-    		Structure.currentPage.update ( location.nextStructure );
-        }
-    	else {
-        	Structure.currentPage = location.nextStructure;
-        }
+    	Structure.currentPage = Structure.currentPage ? Structure.currentPage.update ( location.nextStructure ) : location.nextStructure;
     	
     	// 根据更新后的页面结构体渲染新视图
     	Structure.currentPage.render ( location );

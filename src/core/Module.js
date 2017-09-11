@@ -1,5 +1,6 @@
-import { noop } from "../func/util";
+import { noop, guid } from "../func/util";
 import { query } from "../func/node";
+import { matchFnArgs } from "../func/private";
 import slice from "../var/slice";
 import cache from "../cache/core";
 import { newClassCheck } from "../Class.js";
@@ -8,7 +9,8 @@ import ViewModel from "./ViewModel";
 import Tmpl from "./tmpl/Tmpl";
 import iceAttr from "../single/iceAttr";
 import check from "../check";
-import { matchFnArgs } from "../func/private";
+import Structure from "./tmpl/Structure";
+
 
 /**
 	findParentVm ( elem: DOMObject )
@@ -57,7 +59,7 @@ export default function Module ( module, vmData = { init: function () { return {
 
 	newClassCheck ( this, Module );
 	
-	let moduleElem
+	let moduleElem;
     if ( type ( module ) === "string" ) {
     	moduleElem = query ( `*[${ iceAttr.module }=${ moduleName }]` );
     else if ( module.nodeType === 1 || module.nodeType === 3 || module.nodeType === 8 ) {
@@ -70,18 +72,33 @@ export default function Module ( module, vmData = { init: function () { return {
   	
   	/////////////////////////////////
   	/////////////////////////////////
-	let
+	const
 		// 获取init方法参数
-		initArgs 	= matchFnArgs ( vmData.init ),
-      	initDeps 	= initArgs.map ( plugin => cache.getPlugin ( plugin ) ),
+		initArgs = matchFnArgs ( vmData.init ),
+      	initDeps = initArgs.map ( plugin => cache.getPlugin ( plugin ) ),
 
 		// 获取apply方法参数
-		applyArgs 	= matchFnArgs ( vmData.apply || noop ),
-        applyDeps 	= applyArgs.map ( plugin => cache.getPlugin ( plugin ) ),
+		applyArgs = matchFnArgs ( vmData.apply || noop ),
+        applyDeps = applyArgs.map ( plugin => cache.getPlugin ( plugin ) );
 
-		parent = findParentVm ( moduleElem ),
-        
-        mc = new ModuleCaller ( { parent } ),
+	let parentVm;
+	if ( Structure.currentPage ) {
+
+		// 单页模式时，使用Structure.currentPage.getCurrentParentVm ()获取父级vm
+		parentVm = Structure.currentPage.getCurrentParentVm ();
+	}
+	else {
+
+		// 普通模式时，使用向上寻找DOM的形式获取父级vm
+		parentVm = findParentVm ( moduleElem );
+		
+		// 将当前Module对象保存在对应的模块根节点下，以便子模块寻找父模块的Module对象
+		moduleElem.__module__ = this;
+	}
+
+
+	const
+        mc = new ModuleCaller ( { parentVm } ),
 
 		// 获取后初始化vm的init方法
 		// 对数据模型进行转换
@@ -93,15 +110,19 @@ export default function Module ( module, vmData = { init: function () { return {
 	this.vm = vm;
 	this.view = slice.call ( moduleElem.childNodes ) || [];
 	mc.set ( { state : vm } );
-	
-	// 将当前Module对象保存在对应的模块根节点下，以便子模块寻找父模块的Module对象
-	moduleElem.__module__ = this;
 
 	// 解析模板，挂载数据
 	// 如果forceMount为true则强制挂载moduleElem
-	// 如果parent为对象时表示此模块不是最上层模块，不需挂载
-	tmpl.mount ( vm, !parent );
+	// 如果parentVm为对象时表示此模块不是最上层模块，不需挂载
+	tmpl.mount ( vm, !parentVm );
 	
 	// 调用apply方法
 	( vmData.apply || noop ).apply ( mc, applyDeps );
 }
+
+extend ( Module, {
+	identifier : "ice-identifier",
+	getIdentifier () {
+		return "module" + guid ();
+	}
+} )

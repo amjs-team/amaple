@@ -80,11 +80,24 @@ extend ( Router.prototype, {
 	forcedRender () {
     	this.routeItem.forcedRender = null;
     	return this;
+    },
+
+    error404 ( path404 ) {
+        Router.errorPaths.error404 = path404;
+    },
+
+    error500 ( path500 ) {
+        Router.errorPaths.error500 = path500;
     }
 } );
 
 extend ( Router, {
 	routeTree : [],
+    errorPaths: {},
+
+    getError ( errorCode ) {
+        return this.errorPaths [ "error" + errorCode ];
+    },
 
     pathToRegexp ( pathExpr, from ) {
         let i = 1,
@@ -113,7 +126,7 @@ extend ( Router, {
 
     // 路由路径嵌套模型
     // /settings => /\/settings/、/settings/:page => /\/settings/([^\\/]+?)/、/settings/:page(\d+)
-	matchRoutes ( path, param, routeTree = this.routeTree, parent = null ) {
+	matchRoutes ( path, param, routeTree = this.routeTree, parent = null, matchError404 ) {
         // [ { module: "...", modulePath: "...", parent: ..., param: {}, children: [ {...}, {...} ] } ]
         let routes = [],
             entityItem;
@@ -187,7 +200,14 @@ extend ( Router, {
     
 		// 最顶层时返回一个Structure对象
 		if ( parent === null ) {
-        	return new Structure ( routes );
+
+            // 如果没有匹配到任何更新模块则匹配404页面路径
+            if ( isEmpty ( routes ) && Router.errorPaths.error404 && !matchError404 ) {
+                return this.matchRoutes ( Router.errorPaths.error404, param, undefined, undefined, true );
+            }
+            else {
+                return new Structure ( routes );
+            }
         }
 		else {
     		return routes;

@@ -83,6 +83,7 @@ extend ( Tmpl, 	{
                 	watcherData.push ( { handler : Tmpl.directives.for, targetNode : elem, expr : forAttrValue } );
                 }
             	else {
+                    
                 	// 绑定元素请求或提交表单的事件
                 	if ( attr ( elem, iceAttr.module ) ) {
     					let willBind = true,

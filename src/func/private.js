@@ -56,35 +56,51 @@ export function matchFnArgs ( fn ) {
 }
 
 /**
-	getHashPathname ( hash: String )
+	getPathname ()
 
 	Return Type:
 	String
-	hash模式下的pathname
+	pathname
 
 	Description:
-	获取hash模式下的pathname
+	hash兼容模式下获取pathname
 
 	URL doc:
 	http://icejs.org/######
 */
-export function getHashPathname ( hash ) {
-	return ( hash.match ( /#([^?]*)$/ ) || [ "", "" ] ) [ 1 ];
+export function getPathname () {
+	let pathname = ( window.location.hash.match ( /#([^?]*)$/ ) || [ "", "" ] ) [ 1 ];
+
+	if ( !pathname ) {
+		// const pathAnchor = document.createElement ( "a" );
+		// pathAnchor.href = path;
+		// path = pathAnchor.pathname;
+		pathname = window.location.pathname;
+	}
+
+	return pathname;
 }
 
 /**
-	getHashSearch ( hash: String )
+	getSearch ()
 
 	Return Type:
 	String
-	hash模式下的search
+	search
 
 	Description:
-	获取hash模式下的search
+	hash兼容模式下获取search
 
 	URL doc:
 	http://icejs.org/######
 */
-export function getHashSearch ( hash ) {
-	return ( hash.match ( /\?(.*)$/ ) || [] ) [ 1 ];
+export function getSearch () {
+
+	let search = ( window.location.hash.match ( /\?(.*)$/ ) || [] ) [ 1 ];
+
+	if ( !search ) {
+		search = window.location.search.substr ( 1 );
+	}
+
+	return search;
 }
