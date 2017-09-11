@@ -9,14 +9,15 @@ export default {
 	
 	init () {
     	event.on ( window, "popstate", e => {
-    	       
+    	    const locationGuide = this.getState ();
+        	
     		// 更新currentPage结构体对象，如果为空表示页面刚刷新，将nextStructure直接赋值给currentPage
-    		Structure.currentPage.update ( this.getState () );
+    		Structure.currentPage.update ( locationGuide.structure );
     	   	
     	   	// 根据更新后的页面结构体渲染新视图
     	   	Structure.currentPage.render ( {
-            	// param : {},
-    	       	// search : Router.matchSearch ( search ),
+            	param : locationGuide.param,
+    	       	search : locationGuide.search,
     	       	action : "POP"
             } );
         } );

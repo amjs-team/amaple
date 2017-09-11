@@ -28,21 +28,24 @@ export default {
 	
 	init () {
     	event.on ( window, "hashchange", e => {
-
-    	   	// Tmpl.render()渲染对应模块
-    	   	const location = {
-    	       	path : getHashPathname ( window.location.hash ),
-    	       	nextStructure : this.getState (),
-    	       	// param : {},
-    	       	// search : Router.matchSearch ( search ),
-    	       	action : "POP"
-			};
-    	       
+        	
+        	// 如果this.pushOrRepalce为true表示为跳转触发
+        	if ( this.pushOrReplace === true ) {
+            	this,pushOrReplace = false;
+            	return;
+            }
+        	
+    	    const locationGuide = this.getState ();
+        	
     	   	// 更新currentPage结构体对象，如果为空表示页面刚刷新，将nextStructure直接赋值给currentPage
-    		Structure.currentPage.update ( location.nextStructure );
+    		Structure.currentPage.update ( locationGuide.structure );
     	   	
     	   	// 根据更新后的页面结构体渲染新视图
-    	   	Structure.currentPage.render ( location );
+    	   	Structure.currentPage.render ( {
+            	param : locationGuide.param,
+            	search : locationGuide.search,
+            	action : "POP"
+            } );
         } );
     	
     	return this;
@@ -61,6 +64,9 @@ export default {
 		http://icejs.org/######
 	*/
 	replace ( state, url ) {
+		this.pushOrReplace = true;
+		this.saveState ( getPathname (), state );
+		
 		const rhash = /#.*$/;
 		let href = window.location.href;
 	  
@@ -70,8 +76,6 @@ export default {
 		
 		href = buildURL ( href, url );
 		window.location.replace ( href );
-		
-		this.saveState ( getPathname (), state );
 	},
 
 	/**
@@ -87,11 +91,12 @@ export default {
 		http://icejs.org/######
 	*/
 	push ( state, title, url ) {
+    	this.pushOrReplace = true;
+    	this.saveState ( getPathname (), state );
+    	
 		let hash = window.location.hash;
 		hash = buildURL ( hash || "#/", url );
 		window.location.hash = hash;
-		
-		this.saveState ( getPathname (), state );
 	},
 
 	////////////////////////////////////

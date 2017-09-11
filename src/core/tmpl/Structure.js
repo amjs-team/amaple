@@ -1,5 +1,5 @@
 import { extend, forech, type } from "../../func/util";
-import { query } from "../../func/node";
+import { query, attr } from "../../func/node";
 import { moduleErr } from "../../error";
 import single from "../../single/core";
 import ModuleLoader from "../../single/ModuleLoader";
@@ -86,41 +86,36 @@ extend ( Structure.prototype, {
         URL doc:
         http://icejs.org/######
     */
-    signCurrentRender ( structureItem ) {
+    signCurrentRender ( structureItem, param, search ) {
+    	structureItem.param = param;
+    	structureItem.search = search;
         this.currentRender = structureItem;
     },
-
-    /**
-        getCurrentParentVm ()
-    
-        Return Type:
-        Object
-        父级模块的vm
-    
-        Description:
-        获取父级模块的vm
-    
-        URL doc:
-        http://icejs.org/######
-    */
-    getCurrentParentVm () {
-        return this.currentRender && this.currentRender.parent.module.vm || {};
+	
+	getCurrentRender () {
+    	return this.currentRender;
     },
 
     /**
-        saveCurrentModuleNode ( node: DOMObject )
+        saveSubModuleNode ( node: DOMObject )
     
         Return Type:
         void
     
         Description:
-        保存扫描到的模块节点对象
+        保存扫描到的模块节点对象以便下次使用时直接获取
     
         URL doc:
         http://icejs.org/######
     */
-    saveCurrentModuleNode ( node ) {
-        this.currentRender.moduleNode = node;
+    saveSubModuleNode ( node ) {
+    	foreach ( this.currentRender.children, child => {
+        	if ( child.name === ( attr ( node, iceAttr.module ) || "default" ) && !child.moduleNode ) {
+            	child.moduleNode = elem;
+            	
+                break;
+            }
+        } );
     },
 	
 	/**

@@ -281,6 +281,8 @@ extend ( ModuleLoader, {
 			&& ( moduleConfig.expired === 0 || historyModule.time + moduleConfig.expired > Date.now () )
 		) {
 	        this.saveModuleUpdateFn ( () => {
+            	Structure.currentPage.signCurrentRender ( currentStructure, param, data );
+            	
 	        	const title = historyModule.updateFn ( ice, moduleNode, currentStructure, html, scriptEval );
 				event.emit ( moduleNode, MODULE_UPDATE );
 
@@ -316,10 +318,13 @@ extend ( ModuleLoader, {
 	            const updateFn = compileModule ( moduleString );
 
 	            // 缓存模块更新函数
-	            cache.pushModule ( path, updateFn );
+	            cache.pushModule ( path, { updateFn, time : Date.now () } );
 	        	
 	        	this.saveModuleUpdateFn ( () => {
 	            	event.emit ( moduleNode, MODULE_RESPONSE );
+                	
+                	Structure.currentPage.signCurrentRender ( currentStructure, param, data );
+                	
 	        		const title = updateFn ( ice, moduleNode, currentStructure, html, scriptEval );
 	            	event.emit ( moduleNode, MODULE_UPDATE );
 
