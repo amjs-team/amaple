@@ -1,41 +1,11 @@
 import iceAttr from "./iceAttr";
 import { attr, query } from "../func/node";
-import { getCurrentPath } from "../func/private";
+import { buildURL } from "../func/private";
 import { type } from "../func/util";
 import event from "../event/core";
 import Router from "../router/core";
+import iceHistory from "./history/iceHistory";
 import { moduleErr } from "../error";
-
-function getModuleElem ( targetModule ) {
-	return query ( `*[${ single.aModule }=${ targetModule }]` );
-	
-	// let module;
-
-    // ice-target属性的值为一个模块的名称
-	//if ( /^[^\:,\s]+$/.test ( targetModule) ) {
-    	// module = query ( `*[${ single.aModule }=${ targetModule }]` );
-    // }
-	// else {
-
-        // ice-target属性的值为多个模块的名称
-    	// try {
-        	// targetModule = "{" + targetModule.replace ( /[^:,\s]+/g, match => "\"" + match + "\"" ) + "}";
-        	// targetModule = JSON.parse ( targetModule );
-        // }
-    	// catch ( e ) {
-        	// throw moduleErr ( "parse", "目标模块字符串解析异常，请检查格式是否为code1:mod1,code2:mod2 …" );
-        // }
-    	
-    	//module = {};
-    	// foreach ( targetModule, ( name, code ) => {
-        	// if ( !( module [ code ] = query ( `*[${ single.aModule }=${ name }]` ) ) ) {
-            	// throw moduleErr ( "NotFind", `找不到${ name }模块` );
-            // }
-        // } );
-    // }
-
-    // return module;
-}
 
 /**
     requestEventBind ( elem: DOMObject )
@@ -53,17 +23,18 @@ export default function requestEventBind ( elem ) {
     event.on ( elem, "click submit", e => {
         const 
             target = e.target,
-        	path = attr ( target, e.type.toLowerCase () === "submit" ? iceAttr.action : iceAttr.href ),
+        	path = iceHistory.history.buildURL ( attr ( target, e.type.toLowerCase () === "submit" ? iceAttr.action : iceAttr.href ) ),
             method = e.type.toLowerCase () === "submit" ? attr ( target, "method" ) : undefined,
-            nextStructure = Router.matchRoutes ( getPathname ( path ), this.param );
+            param = {},
+        	nextStructure = Router.matchRoutes ( path, param );
 
-		if ( targetModule && path ) {
+		if ( !nextStructure.isEmptyStructure () ) {
         	e.preventDefault ();
 
             const location = {
-                path : ,
-                nextStructure : Router.matchRoutes ( this.path, this.param ),
-                param : {},
+                path,
+                nextStructure : nextStructure,
+                param,
                 search : Router.matchSearch ( getSearch () ),
                 action : "NONE"
             };

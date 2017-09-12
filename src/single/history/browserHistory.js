@@ -104,5 +104,45 @@ export default {
 	*/
 	getState ( pathname ) {
 		return this.states [ pathname || window.location.pathname ];
+	},
+	
+	/**
+		buildURL ( path: String, mode: String )
+		
+		Return Type:
+		String
+    	构建完成后的新url
+		
+		Description:
+		使用path与当前pathname构建新的pathname
+        mode为true时不返回hash的开头“#”
+        
+    	构建规则与普通跳转的构建相同，当新path以“/”开头时则从原url的根目录开始替换，当新path不以“/”老头时，以原url最后一个“/”开始替换
+
+		URL doc:
+		http://icejs.org/######
+	*/
+	buildURL ( path ) {
+    	const pathAnchor = document.createElement ( "a" );
+		pathAnchor.href = path;
+		
+		return pathAnchor.pathname;
+	},
+  
+	/**
+	getPathname ()
+
+	Return Type:
+	String
+	pathname
+
+	Description:
+	获取pathname
+
+	URL doc:
+	http://icejs.org/######
+*/
+	getPathname () {
+		return window.location.pathname;
 	}
 };

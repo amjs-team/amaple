@@ -1,10 +1,6 @@
 import { foreach, type, noop } from "../../func/util";
 import { query } from "../../func/node";
-<<<<<<< HEAD
-import { getPathname, buildHashURL } from "../../func/private";
-=======
-import { getPathname } from "../../func/private";
->>>>>>> origin/master
+import { getPathname, buildURL } from "../../func/private";
 import configuration from "../../core/configuration/core";
 import { HASH_HISTORY, BROWSER_HISTORY } from "./historyMode";
 import browserHistory from "./browserHistory";
@@ -51,7 +47,7 @@ export default {
 	replace ( state, url ) {
 		this.pushOrReplace = true;
 
-		const hashPathname = buildHashURL ( url );
+		const hashPathname = buildURL ( url, "hash" );
 		window.location.replace ( hashPathname );
 
 		this.saveState ( getPathname (), state );
@@ -72,7 +68,7 @@ export default {
 	push ( state, title, url ) {
     	this.pushOrReplace = true;
 
-		const hashPathname = buildHashURL ( url );
+		const hashPathname = buildURL ( url, "hash" );
 		window.location.hash = hashPathname;
 
 		this.saveState ( getPathname (), state );
@@ -113,5 +109,46 @@ export default {
 	*/
 	getState ( pathname ) {
 		return this.states [ pathname || getPathname () ];
-	}
+	},
+	
+	/**
+		buildURL ( path: String, mode: String )
+		
+		Return Type:
+		String
+    	构建完成后的新url
+		
+		Description:
+		使用path与hash pathname构建新的pathname
+        mode为true时不返回hash的开头“#”
+        
+    	构建规则与普通跳转的构建相同，当新path以“/”开头时则从原url的根目录开始替换，当新path不以“/”老头时，以原url最后一个“/”开始替换
+
+		URL doc:
+		http://icejs.org/######
+	*/
+	buildURL ( path, mode ) {
+		let pathname = ( window.location.hash || "#/" ).replace ( path.substr ( 0, 1 ) === "/" ? /#(.*)$/ : /(?:\/)([^\/]*)?$/, ( match, rep ) => {
+			return match.replace ( rep, "" ) + path;
+		} );
+    
+    	return mode === true ? pathname.substr ( 0, 1 ) : pathname;
+	},
+	
+	/**
+		getPathname ()
+
+		Return Type:
+		String
+		pathname
+
+		Description:
+		获取pathname
+
+		URL doc:
+		http://icejs.org/######
+	*/
+	getPathname () {
+    	return ( window.location.hash.match ( /#([^?]*)$/ ) || [ "", "" ] ) [ 1 ];
+    }
 };
