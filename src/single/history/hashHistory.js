@@ -1,6 +1,10 @@
 import { foreach, type, noop } from "../../func/util";
 import { query } from "../../func/node";
+<<<<<<< HEAD
 import { getPathname, buildHashURL } from "../../func/private";
+=======
+import { getPathname } from "../../func/private";
+>>>>>>> origin/master
 import configuration from "../../core/configuration/core";
 import { HASH_HISTORY, BROWSER_HISTORY } from "./historyMode";
 import browserHistory from "./browserHistory";
@@ -46,8 +50,8 @@ export default {
 	*/
 	replace ( state, url ) {
 		this.pushOrReplace = true;
-		
-		const hashPathname = buildHashURL ( url, hash || "#/" );
+
+		const hashPathname = buildHashURL ( url );
 		window.location.replace ( hashPathname );
 
 		this.saveState ( getPathname (), state );
@@ -67,8 +71,8 @@ export default {
 	*/
 	push ( state, title, url ) {
     	this.pushOrReplace = true;
-    	
-		const hashPathname = buildHashURL ( url, hash || "#/" );
+
+		const hashPathname = buildHashURL ( url );
 		window.location.hash = hashPathname;
 
 		this.saveState ( getPathname (), state );

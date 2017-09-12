@@ -56,6 +56,7 @@ export function matchFnArgs ( fn ) {
 }
 
 /**
+<<<<<<< HEAD
 	buildHashURL ( path: String )
 		
 	Return Type:
@@ -77,6 +78,9 @@ export default function buildHashURL ( path ) {
 
 /**
 	getPathname ( path?: String )
+=======
+	getPathname ()
+>>>>>>> origin/master
 
 	Return Type:
 	String
