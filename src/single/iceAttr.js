@@ -6,5 +6,4 @@ export default {
 
 	href			: "href",
 	action 			: "action",
-	targetMod 		: "ice-target"
 };

@@ -1,8 +1,9 @@
-import single from "./core";
+import iceAttr from "./iceAttr";
 import { attr, query } from "../func/node";
 import { getCurrentPath } from "../func/private";
 import { type } from "../func/util";
 import event from "../event/core";
+import Router from "../router/core";
 import { moduleErr } from "../error";
 
 function getModuleElem ( targetModule ) {
@@ -45,26 +46,33 @@ function getModuleElem ( targetModule ) {
     Description:
     为最外层模块对象绑定请求动作的事件代理
 
-    URL doc:
+    url doc:
     http://icejs.org/######
 */
 export default function requestEventBind ( elem ) {
     event.on ( elem, "click submit", e => {
-        let target = e.target,
-        	targetModule = attr ( target, single.aTargetMod ),
-        	url = attr ( target, e.type.toLowerCase () === "submit" ? single.aAction : single.aHref ),
+        const 
+            target = e.target,
+        	path = attr ( target, e.type.toLowerCase () === "submit" ? iceAttr.action : iceAttr.href ),
             method = e.type.toLowerCase () === "submit" ? attr ( target, "method" ) : undefined,
-            moduleElem;
-				
-            	
-		if ( targetModule && url ) {
+            nextStructure = Router.matchRoutes ( getPathname ( path ), this.param );
+
+		if ( targetModule && path ) {
         	e.preventDefault ();
+
+            const location = {
+                path : ,
+                nextStructure : Router.matchRoutes ( this.path, this.param ),
+                param : {},
+                search : Router.matchSearch ( getSearch () ),
+                action : "NONE"
+            };
                 	
 			moduleElem = getModuleElem ( targetModule );
                 	
             // 当前模块路径与请求路径不相同时，调用single方法
-           	if ( getCurrentPath ( moduleElem ) !== url ) {
-            	single ( url, moduleElem, undefined, method, undefined, undefined, undefined, undefined, undefined, true, false );
+           	if ( getCurrentPath ( moduleElem ) !== path ) {
+            	single ( path, moduleElem, undefined, method, undefined, undefined, undefined, undefined, undefined, true, false );
             }
         }
     } );

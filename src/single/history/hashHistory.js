@@ -1,55 +1,39 @@
 import { foreach, type, noop } from "../../func/util";
 import { query } from "../../func/node";
-import { getHashPathname } from "../../func/private";
+import { getPathname, buildHashURL } from "../../func/private";
 import configuration from "../../core/configuration/core";
 import { HASH_HISTORY, BROWSER_HISTORY } from "./historyMode";
 import browserHistory from "./browserHistory";
-
-/**
-	buildURL ( url: String, newPath: String )
-		
-	Return Type:
-	String
-    构建完成后的新url
-		
-	Description:
-	使用原完整url和新相对path构建新路径
-    构建规则与普通跳转的构建相同，当新path以“/”开头时则从原url的根目录开始替换，当新path不以“/”老头时，以原url最后一个“/”开始替换		
-	URL doc:
-	http://icejs.org/######
-*/
-function buildURL ( url, newPath ) {
-	return href.replace ( newPath.substr ( 0, 1 ) === "/" ? /#(.*)$/ : /(?:\/)([^\/]*)?$/, ( match, rep ) => {
-		return match.replace ( rep, "" ) + newPath;
-	} );
-}
 
 export default {
 	
 	init () {
     	event.on ( window, "hashchange", e => {
-
-    	   	// Tmpl.render()渲染对应模块
-    	   	const location = {
-    	       	path : getHashPathname ( window.location.hash ),
-    	       	nextStructure : this.getState (),
-    	       	// param : {},
-    	       	// search : Router.matchSearch ( search ),
-    	       	action : "POP"
-			};
-    	       
+        	
+        	// 如果this.pushOrRepalce为true表示为跳转触发
+        	if ( this.pushOrReplace === true ) {
+            	this,pushOrReplace = false;
+            	return;
+            }
+        	
+    	    const locationGuide = this.getState ();
+        	
     	   	// 更新currentPage结构体对象，如果为空表示页面刚刷新，将nextStructure直接赋值给currentPage
-    		Structure.currentPage.update ( location.nextStructure );
+    		Structure.currentPage.update ( locationGuide.structure );
     	   	
     	   	// 根据更新后的页面结构体渲染新视图
-    	   	Structure.currentPage.render ( location );
+    	   	Structure.currentPage.render ( {
+            	param : locationGuide.param,
+            	search : locationGuide.search,
+            	action : "POP"
+            } );
         } );
     	
     	return this;
     },
 
 	/**
-		replace ( state: Object, url: String )
+		replace ( state: Any, url: String )
 		
 		Return Type:
 		void
@@ -61,21 +45,16 @@ export default {
 		http://icejs.org/######
 	*/
 	replace ( state, url ) {
-		const rhash = /#.*$/;
-		let href = window.location.href;
-	  
-		if ( !rhash.test ( href ) ) {
-			href += "#/";
-		}
+		this.pushOrReplace = true;
 		
-		href = buildURL ( href, url );
-		window.location.replace ( href );
-		
-		this.saveState ( getHashPathname ( href ), state );
+		const hashPathname = buildHashURL ( url, hash || "#/" );
+		window.location.replace ( hashPathname );
+
+		this.saveState ( getPathname (), state );
 	},
 
 	/**
-		push ( state: Object, url: String )
+		push ( state: Any, url: String )
 		
 		Return Type:
 		void
@@ -87,11 +66,12 @@ export default {
 		http://icejs.org/######
 	*/
 	push ( state, title, url ) {
-		let hash = window.location.hash;
-		hash = buildURL ( hash || "#/", url );
-		window.location.hash = hash;
-		
-		this.saveState ( getHashPathname ( href ), state );
+    	this.pushOrReplace = true;
+    	
+		const hashPathname = buildHashURL ( url, hash || "#/" );
+		window.location.hash = hashPathname;
+
+		this.saveState ( getPathname (), state );
 	},
 
 	////////////////////////////////////
@@ -128,6 +108,6 @@ export default {
 		http://icejs.org/######
 	*/
 	getState ( pathname ) {
-		return this.states [ pathname || getHashPathname ( window.location.hash ) ];
+		return this.states [ pathname || getPathname () ];
 	}
 };

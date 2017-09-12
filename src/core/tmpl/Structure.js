@@ -1,7 +1,8 @@
-import { extend, forech, type } from "../../func/util";
-import { query } from "../../func/node";
+import { extend, forech, type, isEmpty } from "../../func/util";
+import { query, attr } from "../../func/node";
 import { moduleErr } from "../../error";
 import single from "../../single/core";
+import ModuleLoader from "../../single/ModuleLoader";
 import iceAttr from "../../single/iceAttr";
 import iceHistory from "../../single/history/iceHistory";
 
@@ -13,41 +14,8 @@ import iceHistory from "../../single/history/iceHistory";
    // ] }
 // ]
 
-function loopRender ( entity, param, search ) {
-	let toRender = false;
-	foreach ( entity, route => {
-    	if ( route.hasOwnProperty ( "notUpdate" ) ) {
-        	if ( route.hasOwnProperty ( "forcedRender" ) {
-                toRender = true;
-            }
-    		else {
-                // 比较新旧param和search对象中的值，如果有改变则调用paramUpdated和searchUpdated
-                // foreach 
-            	// route.module.
-            }
-            
-            delete route.notUpdate;
-        }
-    	else {
-        	toRender = true;
-        }
-        
-        // 需更新模块与强制重新渲染模块进行渲染
-        if ( toRender ) {
-        	const moduleNode = route.moduleNode || query ( `[${ iceAttr.module }=${ route.name === "default" ? "''" : route.name }]` );
-    		if ( !moduleNode ) {
-        		throw moduleErr ( "moduleNode", `找不到加载路径为"${ route.modulePath }"的模块node` );
-        	}
-    	
-        	// 无刷新跳转组件调用来完成无刷新跳转
-			single ( route.modulePath, moduleNode, param [ route.name ], search, undefined, undefined, undefined, () => {
-        		if ( type ( route.children ) === "array" ) {
-        			loopRender ( route.children );
-        		}
-        	} );
-        }
-	} );
-}
+
+
 
 export default function Structure ( entity ) {
     this.entity = entity;
@@ -104,6 +72,81 @@ extend ( Structure.prototype, {
         	return x;
         }
 	},
+
+    /**
+        isEmptyStructure ()
+    
+        Return Type:
+        Boolean
+        是否为空结构
+    
+        Description:
+        判断此结构对象是否为空
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    isEmptyStructure () {
+        return isEmpty ( this.entity );
+    },
+
+    /**
+        signCurrentRender ( structureItem: Object )
+    
+        Return Type:
+        void
+    
+        Description:
+        标记当前正在渲染的页面结构项
+        这样可以使创建Module对象时获取父级的vm，和保存扫描到的moduleNode
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    signCurrentRender ( structureItem, param, search ) {
+    	structureItem.param = param;
+    	structureItem.search = search;
+        this.currentRender = structureItem;
+    },
+	
+    /**
+        getCurrentRender ()
+    
+        Return Type:
+        Object
+        当前结构项
+    
+        Description:
+        获取当前正在渲染的页面结构项
+    
+        URL doc:
+        http://icejs.org/######
+    */
+	getCurrentRender () {
+    	return this.currentRender;
+    },
+
+    /**
+        saveSubModuleNode ( node: DOMObject )
+    
+        Return Type:
+        void
+    
+        Description:
+        保存扫描到的模块节点对象以便下次使用时直接获取
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    saveSubModuleNode ( node ) {
+    	foreach ( this.currentRender.children, child => {
+        	if ( child.name === ( attr ( node, iceAttr.module ) || "default" ) && !child.moduleNode ) {
+            	child.moduleNode = elem;
+            	
+                return false;
+            }
+        } );
+    },
 	
 	/**
         render ( location: Object )
@@ -118,13 +161,19 @@ extend ( Structure.prototype, {
         http://icejs.org/######
     */
 	render ( location ) {
-    	const locationGuide = {
-        	structure : location.structure, 
-        	param : location.param,
-        	search : location.search
-        };
+    	const 
+            locationGuide = {
+        	   structure : location.nextStructure, 
+        	   param : location.param,
+        	   search : location.search
+            },
+
+            // 使用模块加载器来加载更新模块
+            moduleLoader = new ModuleLoader ();
     	
-    	loopRender ( this.entity, location.param, location.search );
+        moduleLoader.load ( this, { param : location.param, search : location.search } );
+
+    	// loopRender.call ( this, new ModuleLoader (), location.param, location.search );
     	
     	switch ( location.action ) {
         	case "PUSH":
@@ -137,6 +186,7 @@ extend ( Structure.prototype, {
         		break;
         	case "NONE":
             	iceHistory.saveState ( location.path, locationGuide );
+
             	break;
         	case "POP":
             	// do nothing

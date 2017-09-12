@@ -1,5 +1,6 @@
-import { noop } from "../func/util";
+import { noop, guid } from "../func/util";
 import { query } from "../func/node";
+import { matchFnArgs } from "../func/private";
 import slice from "../var/slice";
 import cache from "../cache/core";
 import { newClassCheck } from "../Class.js";
@@ -8,7 +9,8 @@ import ViewModel from "./ViewModel";
 import Tmpl from "./tmpl/Tmpl";
 import iceAttr from "../single/iceAttr";
 import check from "../check";
-import { matchFnArgs } from "../func/private";
+import Structure from "./tmpl/Structure";
+
 
 /**
 	findParentVm ( elem: DOMObject )
@@ -28,7 +30,7 @@ function findParentVm ( elem ) {
 
 	let parentVm = null;
 	while ( elem.parentNode ) {
-		if ( elem.__module__ && elem.__module__.vm instanceof ViewModel ) {
+		if ( elem.__module__ ) {
 			parentVm = elem.__module__.vm;
 			break;
 		}
@@ -57,9 +59,10 @@ export default function Module ( module, vmData = { init: function () { return {
 
 	newClassCheck ( this, Module );
 	
-	let moduleElem
+	let moduleElem;
     if ( type ( module ) === "string" ) {
     	moduleElem = query ( `*[${ iceAttr.module }=${ moduleName }]` );
+    }
     else if ( module.nodeType === 1 || module.nodeType === 3 || module.nodeType === 8 ) {
     	moduleElem = module;
     }
@@ -70,38 +73,67 @@ export default function Module ( module, vmData = { init: function () { return {
   	
   	/////////////////////////////////
   	/////////////////////////////////
-	let
+	const
 		// 获取init方法参数
-		initArgs 	= matchFnArgs ( vmData.init ),
-      	initDeps 	= initArgs.map ( plugin => cache.getPlugin ( plugin ) ),
+		initArgs = matchFnArgs ( vmData.init ),
+      	initDeps = initArgs.map ( plugin => cache.getPlugin ( plugin ) ),
 
 		// 获取apply方法参数
-		applyArgs 	= matchFnArgs ( vmData.apply || noop ),
-        applyDeps 	= applyArgs.map ( plugin => cache.getPlugin ( plugin ) ),
+		applyArgs = matchFnArgs ( vmData.apply || noop ),
+        applyDeps = applyArgs.map ( plugin => cache.getPlugin ( plugin ) ),
+        caller = new ModuleCaller ();
 
-		parent = findParentVm ( moduleElem ),
-        
-        mc = new ModuleCaller ( { parent } ),
+	let parent;
+	if ( Structure.currentPage ) {
 
+		// 单页模式时，使用Structure.currentPage.getCurrentParentVm()获取父级的vm
+		const currentRender = Structure.currentPage.getCurrentRender ();
+    	parent = currentRender.parent && currentRender.parent.module.vm;
+    
+    	caller.set ( {
+        	param : currentRender.param,
+        	search : currentRrnder.search
+        } );
+    	
+     	// 参数传递过来后可移除，以免与下一次传递的参数混淆
+    	delete currentRender.param;
+        delete currentRender.search;
+	}
+	else {
+
+		// 普通模式时，使用向上寻找DOM的形式获取父级vm
+		parent = findParentVm ( moduleElem );
+		
+		// 将当前Module对象保存在对应的模块根节点下，以便子模块寻找父模块的Module对象
+		moduleElem.__module__ = this;
+	}
+    caller.set ( { parent } );
+    
+    const
+	
 		// 获取后初始化vm的init方法
 		// 对数据模型进行转换
-		vm = new ViewModel ( vmData.init.apply ( mc, initDeps ) ),
+		vm = new ViewModel ( vmData.init.apply ( caller, initDeps ) ),
 
 		// 使用vm解析模板
 		tmpl = new Tmpl ( moduleElem );
 	
 	this.vm = vm;
 	this.view = slice.call ( moduleElem.childNodes ) || [];
-	mc.set ( { state : vm } );
-	
-	// 将当前Module对象保存在对应的模块根节点下，以便子模块寻找父模块的Module对象
-	moduleElem.__module__ = this;
+	caller.set ( { state : vm } );
 
 	// 解析模板，挂载数据
 	// 如果forceMount为true则强制挂载moduleElem
-	// 如果parent为对象时表示此模块不是最上层模块，不需挂载
-	tmpl.mount ( vm, !parent );
+	// 如果parentVm为对象时表示此模块不是最上层模块，不需挂载
+	tmpl.mount ( vm, !parentVm );
 	
 	// 调用apply方法
-	( vmData.apply || noop ).apply ( mc, applyDeps );
+	( vmData.apply || noop ).apply ( caller, applyDeps );
 }
+
+extend ( Module, {
+	identifier : "ice-identifier",
+	getIdentifier () {
+		return "module" + guid ();
+	}
+} )

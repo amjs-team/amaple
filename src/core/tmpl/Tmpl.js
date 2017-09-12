@@ -12,6 +12,7 @@ import directiveExpr from "./directive/expr";
 import directiveOn from "./directive/on";
 import directiveModel from "./directive/model";
 import { runtimeErr } from "../../error";
+import Structure from "./Structure";
 
 /**
     Plugin Tmpl
@@ -76,37 +77,25 @@ extend ( Tmpl, 	{
         		// 处理:for
 				// 处理:if :else-if :else
 				// 处理{{ expression }}
-				// 处理:on、:onrequest :onresponse :onupdate事件
+				// 处理:on
 				// 处理:model
             	forAttrValue = Tmpl.preTreat ( elem );
             	if ( forAttrValue ) {
                 	watcherData.push ( { handler : Tmpl.directives.for, targetNode : elem, expr : forAttrValue } );
                 }
             	else {
-                	// 绑定元素请求或提交表单的事件
-                	if ( attr ( elem, iceAttr.module ) ) {
-    					let willBind = true,
-                            _elem = elem;
-    	               
-    					while ( ( _elem = _elem.parentNode ) !== document.body ) {
-        				    if ( attr ( _elem, iceAttr.module ) && _elem.__module__ ) {
-            				    willBind = false;
-            				    break;
-                            }
-                        }
+                    
+                	const moduleName = attr ( elem, iceAttr.module );
+                	if ( Stucture.currentPage && type ( moduleString ) === "string" ) {
+                    	const currentStructure = Structure.currentPage.getCurrentRender ();
+                    	currentStructure.saveSubModuleNode ( elem );
     	
-        				if ( willBind ) {
-                        	requestEventBind ( _elem );
+        				if ( !currentStructure.parent ) {
+                            
+                            // 绑定元素请求或提交表单的事件
+                        	requestEventBind ( elem );
                         }
                     }
-                    	
-                	// 加载有ice-src属性的module元素
-                    // 过滤nodes数组本身带有的属性或方法
-                    let moduleName = attr ( elem, iceAttr.module ),
-                        src = attr ( elem, iceAttr.src );
-					if ( moduleName && src ) {
-						includeModule ( elem, src, moduleName );
-					}
                 	
                 	foreach ( slice.call ( elem.attributes ), attr => {
                 		directive = rattr.exec ( attr.nodeName );

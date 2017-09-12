@@ -1,5 +1,6 @@
 import { isEmpty, foreach } from "../func/util";
-import iceAttr from "./iceAttr";
+import { attr } from "../func/node";
+import Module from "../core/Module";
 import check from "../check";
 
 const 
@@ -29,7 +30,6 @@ const
 	raddComponents = new RegExp ( rmoduleDef.source + "\\s*\\{" ),
 
 	// 模块属性名
-	attrBelong 	= ":belong",
 	attrTitle 	= ":title";
 
 /**
@@ -87,7 +87,7 @@ export default function compileModule ( moduleString ) {
 				styleMatch [ 0 ] = styleMatch [ 0 ].replace ( styleMatch [ 1 ], placeholder );
 
 				// 为每个样式添加模块前缀以达到控制范围的作用
-				style = style.replace ( raddScoped, ( match, rep ) => match.replace (rep, rnoscoped.test ( rep ) ? rep : `[${ iceAttr.module }=${ attrs [ attrBelong ] }] ` + rep ) );
+				style = style.replace ( raddScoped, ( match, rep ) => match.replace (rep, rnoscoped.test ( rep ) ? rep : `[${ Module.identifier }=${ attr ( moduleNode, Module.identifier ) }] ` + rep ) );
 
 				style = styleMatch [ 0 ].replace ( placeholder, style );
             }
@@ -133,13 +133,12 @@ export default function compileModule ( moduleString ) {
         			script = script.replace ( raddComponents, match => match + componentStr );
         		}
         	}
-			script = script.replace ( rmoduleDef, match => `${ match }"${ attrs [ attrBelong ] }",` );
+			script = script.replace ( rmoduleDef, match => `${ match }"fragment",` );
 		}
 
 		////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////
 		/// 检查参数
-		check ( attrs [ "belong" ] ).notBe ( "", null, undefined ).ifNot ( "module:belong", "<Module>内的belong为必须属性，它代表所属的模块名" ).do ();
 		check ( view ).notBe ( "" ).ifNot ( "module:template", "<Module>内的<template>为必须子元素，它的内部DOM tree代表模块的页面布局" ).do ();
 		check ( script ).notBe ( "" ).ifNot ( "module:script", "<Module>内的<script>为必须子元素，它的内部js代码用于初始化模块的页面布局" ).do ();
 
@@ -150,15 +149,18 @@ export default function compileModule ( moduleString ) {
 			scriptVars.push ( `${ n }:"${ _s }"` );
 		} );
 
-		moduleString = `var belong="${ attrs [ attrBelong ] }",title="${ attrs [ attrTitle ] || "" }",scripts={${ scriptVars.join ( "," ) }},view="${ view }${ style }";html(module, view, function(){`;
+		moduleString = `var title="${ attrs [ attrTitle ] || "" }",scripts={${ scriptVars.join ( "," ) }},view="${ view }${ style }";`;
+		const buildView = `var div=document.createElement("div");fragment=document.createDocumentFragment();div.innerHTML=view;for(var i=0;i<div.childNodes.length;i++){fragment.appendChild(div.childNodes[i]);}`;
 
 		if ( !isEmpty ( scriptVars ) ) {
-			moduleString += `var scriptDOM = [];for (var i in scripts){var _s=document.createElement("script");_s.src = scripts[i];scriptDOM.push (_s);}scriptEval (scriptDOM, function(){${ script };cache.pushDirection(directionKey,{vm:${ vmName || "\"\"" },title:title,time:Date.now()});});});return title;`;
+			moduleString += `var scriptDOM = [];for (var i in scripts){var _s=document.createElement("script");_s.src = scripts[i];scriptDOM.push (_s);}scriptEval (scriptDOM, function(){${ buildView }${ script };currentStructure.module=${ vmName };html(moduleNode,fragment);});`;
 		}
 		else {
-			moduleString += `${ script };cache.pushDirection(directionKey,{vm:${ vmName || "\"\"" },title:title});});return title;`
+			moduleString += `${ buildView }${ script };currentStructure.module=${ vmName };html(moduleNode,fragment);});`
 		}
+
+		moduleString += "return title;";
 	}
   
-	return new Function ( "ice", "module", "html", "scriptEval", "cache", "directionKey", moduleString );
+	return new Function ( "ice", "moduleNode", "currentStructure", "html", "scriptEval", moduleString );
 }

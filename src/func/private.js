@@ -56,35 +56,87 @@ export function matchFnArgs ( fn ) {
 }
 
 /**
-	getHashPathname ( hash: String )
-
+	buildHashURL ( path: String )
+		
 	Return Type:
 	String
-	hash模式下的pathname
-
+    构建完成后的新url
+		
 	Description:
-	获取hash模式下的pathname
+	使用path与当前hash构建新的hash pathname
+    构建规则与普通跳转的构建相同，当新path以“/”开头时则从原url的根目录开始替换，当新path不以“/”老头时，以原url最后一个“/”开始替换
 
 	URL doc:
 	http://icejs.org/######
 */
-export function getHashPathname ( hash ) {
-	return ( hash.match ( /#([^?]*)$/ ) || [ "", "" ] ) [ 1 ];
+export default function buildHashURL ( path ) {
+	return ( window.location.hash || "#/" ).replace ( path.substr ( 0, 1 ) === "/" ? /#(.*)$/ : /(?:\/)([^\/]*)?$/, ( match, rep ) => {
+		return match.replace ( rep, "" ) + path;
+	} );
 }
 
 /**
-	getHashSearch ( hash: String )
+	getPathname ( path?: String )
 
 	Return Type:
 	String
-	hash模式下的search
+	pathname
 
 	Description:
-	获取hash模式下的search
+	hash兼容模式下获取pathname
 
 	URL doc:
 	http://icejs.org/######
 */
-export function getHashSearch ( hash ) {
-	return ( hash.match ( /\?(.*)$/ ) || [] ) [ 1 ];
+export function getPathname ( path ) {
+	let pathname;
+
+	// 获取当前路径的pathname
+	if ( !path ) {
+		pathname = ( window.location.hash.match ( /#([^?]*)$/ ) || [ "", "" ] ) [ 1 ];
+
+		if ( !pathname ) {
+			pathname = window.location.pathname;
+		}
+	}
+
+	// 获取使用path构造后的路径pathname
+	else {
+		if ( path.substr ( 0, 1 ) === "/" ) {
+			pathname = path;
+		}
+		else {
+			buildHashURL ( path );
+
+			// const pathAnchor = document.createElement ( "a" );
+			// pathAnchor.href = path;
+			// path = pathAnchor.pathname;
+		}
+	}
+
+	return pathname;
+}
+
+/**
+	getSearch ()
+
+	Return Type:
+	String
+	search
+
+	Description:
+	hash兼容模式下获取search
+
+	URL doc:
+	http://icejs.org/######
+*/
+export function getSearch () {
+
+	let search = ( window.location.hash.match ( /\?(.*)$/ ) || [] ) [ 1 ];
+
+	if ( !search ) {
+		search = window.location.search.substr ( 1 );
+	}
+
+	return search;
 }

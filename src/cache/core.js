@@ -1,5 +1,4 @@
 import plugin from "./plugin";
-import driver from "./driver";
 import module from "./module";
 import event from "./event";
 
@@ -31,16 +30,6 @@ export default {
 	// 获取已加载插件
 	getPlugin ( name ) {
 		return plugin.get ( name );
-	},
-
-	// 添加元素驱动器缓存
-	pushDriver ( name, d ) {
-		driver.push ( name, d );
-	},
-
-	// 获取已加载元素驱动器
-	getDriver ( name ) {
-		return driver.get ( name );
 	},
 
 	// 添加页面模块缓存
