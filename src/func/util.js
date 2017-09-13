@@ -35,14 +35,17 @@ export function type ( arg ) {
 export function noop () {}
 
 /**
-	foreach ( target: Array|Object, callback: Function )
+	foreach ( target: Array|Object|ArrayLike, callback: Function )
 
 	Return Type:
 	Boolean
-	是否继续循环，如果返回false，则跳出循环
+	是否继续跳出外层循环，如果返回false，则继续跳出循环
 
 	Description:
 	遍历数组或对象
+    可遍历带有length的类数组对象如NodeList对象，如果遍历对象为空或不可遍历，则直接返回
+    
+    回调函数中返回false跳出此循环，且此返回值会在foreach中返回，在需跳出多层循环时return foreach (...)实现
 
 	URL doc:
 	http://icejs.org/######
@@ -82,6 +85,8 @@ export function foreach ( target, callback ) {
 			}
 		}
 	}
+	
+	return isContinue;
 }
 
 /**

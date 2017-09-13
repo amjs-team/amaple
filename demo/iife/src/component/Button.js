@@ -30,10 +30,10 @@ ice.Class ( "Button" ).extends ( ice.Component ) ( {
 	apply : function ( http ) {
 		http
 		.reqBefore ( "self", function () {
-			this.method.loadStart ();
+			this.action.loadStart ();
 		} )
 		.reqComplete ( "self", function () {
-			this.method.loadEnd ();
+			this.action.loadEnd ();
 		} );
 	}
 } );

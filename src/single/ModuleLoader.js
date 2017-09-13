@@ -31,6 +31,28 @@ function loopFlush ( moduleUpdateContext ) {
 	return title;
 }
 
+function compareArgs ( newArgs, originalArgs ) {
+	const len = Object.keys ( newArgs ).length;
+	
+	let isChanged = false;
+    if ( len !== Object.keys ( originalArgs ).length ) {
+    	isChanged = true;
+	}
+    else {
+    	if ( len > 0 ) {
+    		foreach ( newArgs, ( newVal, key ) => {
+            	if ( newVal !== originalArgs [ key ] ) {
+                	isChanged = true;
+                
+                	return false;
+                }
+            } );
+        }
+    }
+	
+	return isChanged;
+}
+
 /**
 	ModuleLoader ( name: String, load: Object )
 
@@ -138,9 +160,18 @@ extend ( ModuleLoader.prototype, {
 		            toRender = true;
 		        }
 		        else {
-		            // 比较新旧param和search对象中的值，如果有改变则调用paramUpdated和searchUpdated
-		            // foreach 
-		            // route.module.
+                	
+		            // 比较新旧param和get,post对象中的值，如果有改变则调用paramChanged和queryChanged
+                    if ( compareArgs ( args.param, route.module.caller.param ) ).{
+                    	route.module.caller.param = args.param;
+                    	route.module.paramChanged ();
+                    }
+                	
+                	if ( compareArgs ( args.get, route.module.caller.get ) || compareArgs ( args.post, route.module.caller.post ) ) {
+                    	route.module.caller.get= args.get;
+                    	route.module.caller.post = args.post;
+                		route.module.queryChanged ();
+                    }
 		        }
 		        
 		        delete route.notUpdate;

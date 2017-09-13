@@ -81,7 +81,7 @@ export default function Module ( module, vmData = { init: function () { return {
 		// 获取apply方法参数
 		applyArgs = matchFnArgs ( vmData.apply || noop ),
         applyDeps = applyArgs.map ( plugin => cache.getPlugin ( plugin ) ),
-        caller = new ModuleCaller ();
+        caller = this.caller = new ModuleCaller ();
 
 	let parent;
 	if ( Structure.currentPage ) {
@@ -132,13 +132,33 @@ export default function Module ( module, vmData = { init: function () { return {
 	// 如果parentVm为对象时表示此模块不是最上层模块，不需挂载
 	tmpl.mount ( vm, !parent );
 	
+	this.initLifeCycle ( caller );
+	
 	// 调用apply方法
 	( vmData.apply || noop ).apply ( caller, applyDeps );
 }
 
+extend ( Module.prototype, {
+	initLifeCycle ( caller ) {
+    	const lifeCycleContainer = {};
+    	
+    	foreach ( Module.lifeCycle, cycleItem => {
+        	lifeCycleContainer [ cycleItem ] = this.vm [ cycleItem ] || noop;
+        	this [ cycleItem ] = () => {
+            	lifeCycleContainer [ cycleItem ].call ( caller );
+            }
+        	
+        	delete this.vm [ cycleItem ];
+        } );
+    }
+} );
+
 extend ( Module, {
 	identifier : "ice-identifier",
+	
 	getIdentifier () {
 		return "module" + guid ();
-	}
+	},
+	
+	lifeCycle : [ "queryChanged", "paramChanged" ]
 } )
