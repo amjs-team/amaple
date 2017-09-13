@@ -160,7 +160,8 @@ export function append ( context, node, callback ) {
 		nodes.push ( document.createTextNode ( node ) );
 	}
 	else if ( tnode === "object" ) {
-		node.nodeType && nodes.push ( node );
+		// node.nodeType && nodes.push ( node );
+		context.appendChild(node);
 	}
 	else {
 		fragment = document.createDocumentFragment (),

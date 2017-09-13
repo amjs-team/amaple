@@ -1,5 +1,6 @@
-import { type, extend, foreach, noop } from "../func/util";
-import { attr, html, scriptEval } from "../func/node";
+import { type, extend, foreach, noop, isPlainObject, isEmpty } from "../func/util";
+import { query, attr, html, scriptEval } from "../func/node";
+import { serialize } from "../func/private";
 import { envErr, moduleErr } from "../error";
 import { MODULE_UPDATE, MODULE_REQUEST, MODULE_RESPONSE } from "../var/const";
 import compileModule from "./compileModule";
@@ -11,6 +12,7 @@ import http from "../http/core";
 import event from "../event/core";
 import Module from "../core/Module";
 import Router from "../router/core";
+import Structure from "../core/tmpl/Structure";
 
 
 function loopFlush ( moduleUpdateContext ) {
@@ -54,7 +56,7 @@ export default function ModuleLoader () {
 }
 
 
-extend ( Loader.prototype, {
+extend ( ModuleLoader.prototype, {
 
 	/**
 		addWaiting ( name: String )
@@ -152,7 +154,7 @@ extend ( Loader.prototype, {
 
 		        // 如果结构中没有模块节点则查找DOM树获取节点
 		        if ( !route.moduleNode ) {
-		            const moduleNode = query ( `[${ iceAttr.module }=${ route.name === "default" ? "''" : route.name }]`, route.parent.moduleNode || undefined );
+		            const moduleNode = query ( `[${ iceAttr.module }=${ route.name === "default" ? "''" : route.name }]`, route.parent && route.parent.moduleNode || undefined );
 
 		            if ( moduleNode ) {
 		                route.moduleNode = moduleNode;
@@ -175,15 +177,15 @@ extend ( Loader.prototype, {
 		        this.addWaiting ( moduleIdentifier );
 
 		        // 将基于当前相对路径的路径统一为相对于根目录的路径
-				const pathAnchor = document.createElement ( "a" );
-				pathAnchor.href = route.modulePath || "";
+				// const pathAnchor = document.createElement ( "a" );
+				// pathAnchor.href = route.modulePath || "";
 
 				// 标记模块更新函数容器的层级
 				// 这样在actionLoad函数中调用saveModuleUpdateFuncs保存更新函数时可以保存到对应的位置
-				this.signModuleHierarchy ( this.currentHierarchy );
+				this.signModuleHierarchy ( currentHierarchy );
 
 		        // 无刷新跳转组件调用来完成无刷新跳转
-		        ModuleLoader.actionLoad.call ( this, pathAnchor.pathname, route.moduleNode, route, args.param [ route.name ], args.search );
+		        ModuleLoader.actionLoad.call ( this, route.modulePath, route.moduleNode, route, args.param [ route.name ], args.get, args.post );
 		    }
 
 		    // 此模块下还有子模块需更新
@@ -242,18 +244,21 @@ extend ( Loader.prototype, {
 extend ( ModuleLoader, {
 
 	/**
-		actionLoad ( url: String|Object, moduleNode: DMOObject, currentStructure: Object, param?: Object, data?: String|Object, method?:String, timeout?: Number, before?: Function, success?: Function, error?: Function, abort?: Function )
+		actionLoad ( url: String|Object, moduleNode: DMOObject, currentStructure: Object, param?: Object, args?: Object, data?: Object, method?:String, timeout?: Number, before?: Function, success?: Function, error?: Function, abort?: Function )
 
 		Return Type:
 		void
 
 		Description:
 		根据path请求跳转模块数据并更新对应的moduleNode（moduleNode为模块节点）
+		param为路径匹配到的参数
+		args参数为get请求参数，会将此参数添加到path后
+		data为post参数，直接提交给http的data
 
 		URL doc:
 		http://icejs.org/######
 	*/
-	actionLoad ( path, moduleNode, currentStructure, param, data, method, timeout, before = noop, success = noop, error = noop, abort = noop ) {
+	actionLoad ( path, moduleNode, currentStructure, param, args, data, method, timeout, before = noop, success = noop, error = noop, abort = noop ) {
 
 
 		const 
@@ -262,12 +267,16 @@ extend ( ModuleLoader, {
 			moduleConfig = configuration.getConfigure ( "module" ),
 	        
 	        baseURL = configuration.getConfigure ( "baseURL" ),
-	        isBase = attr ( moduleElem, iceAttr.base ) !== "false" && baseURL.length > 0,
-			hasSeparator = url.indexOf ( "/" );
+	        isBase = attr ( moduleNode, iceAttr.base ) !== "false" && baseURL.length > 0,
+			hasSeparator = path.indexOf ( "/" );
 
-		path = isBase 
+
+		//////////////////////////////////////////////////
+		//////////////////////////////////////////////////
+		//////////////////////////////////////////////////
+		path = ( isBase 
 			? baseURL + ( hasSeparator === 0 ? path.substr ( 1 ) : path )
-			: path;
+			: path ) + configuration.getConfigure ( "moduleSuffix" ) + args;
 
 		const historyModule = cache.getModule ( path );
 
@@ -283,9 +292,9 @@ extend ( ModuleLoader, {
 			&& ( moduleConfig.expired === 0 || historyModule.time + moduleConfig.expired > Date.now () )
 		) {
 	        this.saveModuleUpdateFn ( () => {
-            	Structure.currentPage.signCurrentRender ( currentStructure, param, data );
+            	Structure.currentPage.signCurrentRender ( currentStructure, param, args, isPlainObject ( data ) ? data : serialize ( data ) );
             	
-	        	const title = historyModule.updateFn ( ice, moduleNode, currentStructure, html, scriptEval );
+	        	const title = historyModule.updateFn ( ice, moduleNode, html, scriptEval );
 				event.emit ( moduleNode, MODULE_UPDATE );
 
 				return title;
@@ -297,7 +306,7 @@ extend ( ModuleLoader, {
 		else {
 	    	
 	    	// 触发请求事件回调
-	    	event.emit ( moduleElem, MODULE_REQUEST );
+	    	event.emit ( moduleNode, MODULE_REQUEST );
 							  
 			// 请求模块跳转页面数据
 			http.request ( {
@@ -325,9 +334,9 @@ extend ( ModuleLoader, {
 	        	this.saveModuleUpdateFn ( () => {
 	            	event.emit ( moduleNode, MODULE_RESPONSE );
                 	
-                	Structure.currentPage.signCurrentRender ( currentStructure, param, data );
+                	Structure.currentPage.signCurrentRender ( currentStructure, param, args, isPlainObject ( data ) ? data : serialize ( data ) );
                 	
-	        		const title = updateFn ( ice, moduleNode, currentStructure, html, scriptEval );
+	        		const title = updateFn ( ice, moduleNode, html, scriptEval );
 	            	event.emit ( moduleNode, MODULE_UPDATE );
 
 	            	// 调用success回调
@@ -335,6 +344,9 @@ extend ( ModuleLoader, {
 
 					return title;
 	            } );
+
+	            // 获取模块更新函数完成后在等待队列中移除
+	    		this.delWaiting ( attr ( moduleNode, Module.identifier ) );
 			} ).fail ( ( iceXHR, errorCode ) => {
 
 				// 保存错误信息并立即刷新

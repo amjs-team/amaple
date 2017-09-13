@@ -168,7 +168,7 @@ extend ( Router, {
                 	parent
                 };
             	
-            	if ( route.hasOwnProperty ( forcedRender ) ) {
+            	if ( route.hasOwnProperty ( "forcedRender" ) ) {
                 	entityItem.forcedRender = route.forcedRender;
                 }
 
@@ -212,17 +212,5 @@ extend ( Router, {
 		else {
     		return routes;
         }
-    },
-    
-    matchSearch ( searchStr ) {
-    	let search = {},
-            kv;
-    	
-    	foreach ( searchStr.split ( "&" ), searchItem => {
-        	kv = searchItem.split ( "=" );
-        	search [ kv [ 0 ] ] = kv [ 1 ];
-        } );
-    
-    	return search;
     }
 } );

@@ -1,6 +1,5 @@
 import { foreach, type, noop } from "../../func/util";
 import { query } from "../../func/node";
-import { getPathname, buildURL } from "../../func/private";
 import configuration from "../../core/configuration/core";
 import { HASH_HISTORY, BROWSER_HISTORY } from "./historyMode";
 import browserHistory from "./browserHistory";
@@ -47,10 +46,10 @@ export default {
 	replace ( state, url ) {
 		this.pushOrReplace = true;
 
-		const hashPathname = buildURL ( url, "hash" );
+		const hashPathname = this.buildURL ( url );
 		window.location.replace ( hashPathname );
 
-		this.saveState ( getPathname (), state );
+		this.saveState ( this.getPathname (), state );
 	},
 
 	/**
@@ -68,10 +67,10 @@ export default {
 	push ( state, title, url ) {
     	this.pushOrReplace = true;
 
-		const hashPathname = buildURL ( url, "hash" );
+		const hashPathname = this.buildURL ( url );
 		window.location.hash = hashPathname;
 
-		this.saveState ( getPathname (), state );
+		this.saveState ( this.getPathname (), state );
 	},
 
 	////////////////////////////////////
@@ -108,7 +107,7 @@ export default {
 		http://icejs.org/######
 	*/
 	getState ( pathname ) {
-		return this.states [ pathname || getPathname () ];
+		return this.states [ pathname || this.getPathname () ];
 	},
 	
 	/**
@@ -150,5 +149,22 @@ export default {
 	*/
 	getPathname () {
     	return ( window.location.hash.match ( /#([^?]*)$/ ) || [ "", "" ] ) [ 1 ];
+    },
+
+    /**
+    	getQuery ( path?: String )
+
+    	Return Type:
+    	String
+    	get请求参数
+
+    	Description:
+		获取get请求参数
+
+    	URL doc:
+    	http://icejs.org/######
+    */
+	getQuery ( path ) {
+		return ( ( path || window.location.hash ).match ( /\?(.*)$/ ) || [ "" ] ) [ 0 ];
     }
 };

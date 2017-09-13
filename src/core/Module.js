@@ -1,6 +1,6 @@
-import { noop, guid } from "../func/util";
+import { noop, guid, extend, type } from "../func/util";
 import { query } from "../func/node";
-import { matchFnArgs } from "../func/private";
+import { matchFnArgs, parseGetQuery } from "../func/private";
 import slice from "../var/slice";
 import cache from "../cache/core";
 import { newClassCheck } from "../Class.js";
@@ -61,14 +61,14 @@ export default function Module ( module, vmData = { init: function () { return {
 	
 	let moduleElem;
     if ( type ( module ) === "string" ) {
-    	moduleElem = query ( `*[${ iceAttr.module }=${ moduleName }]` );
+    	moduleElem = query ( `*[${ iceAttr.module }=${ module }]` );
     }
-    else if ( module.nodeType === 1 || module.nodeType === 3 || module.nodeType === 8 ) {
+    else if ( module.nodeType === 1 || module.nodeType === 3 || module.nodeType === 11 ) {
     	moduleElem = module;
     }
       	
 	// 检查参数
-	check ( moduleElem.nodeType ).be ( 1, 3, 8 ).ifNot ( "ice.Module", "module参数可传入模块元素的ice-module属性值或直接传入需挂在模块元素" ).do ();
+	check ( moduleElem.nodeType ).be ( 1, 3, 11 ).ifNot ( "ice.Module", "module参数可传入模块元素的ice-module属性值或直接传入需挂在模块元素" ).do ();
 	check ( vmData ).type ( "object" ).check ( vmData.init ).type ( "function" ).ifNot ( "ice.Module", "vmData参数必须为带有init方法的的object" ).do ();
   	
   	/////////////////////////////////
@@ -92,12 +92,17 @@ export default function Module ( module, vmData = { init: function () { return {
     
     	caller.set ( {
         	param : currentRender.param,
-        	search : currentRrnder.search
+        	get : parseGetQuery ( currentRender.get ),
+        	post : currentRender.post
         } );
     	
      	// 参数传递过来后可移除，以免与下一次传递的参数混淆
     	delete currentRender.param;
-        delete currentRender.search;
+        delete currentRender.get;
+        delete currentRender.post;
+
+        // 将此Module对象保存到页面结构体的对应位置中
+        currentRender.module = this;
 	}
 	else {
 
@@ -125,7 +130,7 @@ export default function Module ( module, vmData = { init: function () { return {
 	// 解析模板，挂载数据
 	// 如果forceMount为true则强制挂载moduleElem
 	// 如果parentVm为对象时表示此模块不是最上层模块，不需挂载
-	tmpl.mount ( vm, !parentVm );
+	tmpl.mount ( vm, !parent );
 	
 	// 调用apply方法
 	( vmData.apply || noop ).apply ( caller, applyDeps );

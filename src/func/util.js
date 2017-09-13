@@ -155,7 +155,7 @@ export function extend ( ...args ) {
 		if ( ttarget === "array" ) {
 			if ( targ === "array" || targ === "object" ) {
 				foreach ( arg, function ( arg ) {
-					if ( !inArray ( target, arg ) ) {
+					if ( target.indexOf ( arg ) <= -1 ) {
 						target.push ( arg );
 					}
 				} );

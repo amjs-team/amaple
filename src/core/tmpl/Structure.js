@@ -1,7 +1,6 @@
 import { extend, forech, type, isEmpty } from "../../func/util";
 import { query, attr } from "../../func/node";
 import { moduleErr } from "../../error";
-import single from "../../single/core";
 import ModuleLoader from "../../single/ModuleLoader";
 import iceAttr from "../../single/iceAttr";
 import iceHistory from "../../single/history/iceHistory";
@@ -91,21 +90,22 @@ extend ( Structure.prototype, {
     },
 
     /**
-        signCurrentRender ( structureItem: Object )
+        signCurrentRender ( structureItem: Object, param: Object, args: String, data: Object )
     
         Return Type:
         void
     
         Description:
-        标记当前正在渲染的页面结构项
+        标记当前正在渲染的页面结构项并传递对应的参数到正在渲染的模块内
         这样可以使创建Module对象时获取父级的vm，和保存扫描到的moduleNode
     
         URL doc:
         http://icejs.org/######
     */
-    signCurrentRender ( structureItem, param, search ) {
+    signCurrentRender ( structureItem, param, args, data ) {
     	structureItem.param = param;
-    	structureItem.search = search;
+    	structureItem.get = args;
+        structureItem.post = data;
         this.currentRender = structureItem;
     },
 	
@@ -165,15 +165,14 @@ extend ( Structure.prototype, {
             locationGuide = {
         	   structure : location.nextStructure, 
         	   param : location.param,
-        	   search : location.search
+        	   get : location.get,
+               post : location.post
             },
 
             // 使用模块加载器来加载更新模块
             moduleLoader = new ModuleLoader ();
     	
-        moduleLoader.load ( this, { param : location.param, search : location.search } );
-
-    	// loopRender.call ( this, new ModuleLoader (), location.param, location.search );
+        moduleLoader.load ( this, { param : location.param, get : location.get, post : location.post } );
     	
     	switch ( location.action ) {
         	case "PUSH":

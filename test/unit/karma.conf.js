@@ -19,7 +19,7 @@ module.exports = function(config) {
     files: [
         'context.js',
     	{
-        	pattern : 'module/module-files/**/*',
+        	pattern : 'loadModule/module-files/**/*',
         	watched : false,
         	included : false,
         	served : true,
@@ -102,8 +102,8 @@ module.exports = function(config) {
     concurrency: Infinity,
 
     proxies: {
-    	'/plugin/' : '/base/module/module-files/plugin/',
-        '/module/' : '/base/module/module-files/module/'
+    	'/plugin/' : '/base/loadModule/module-files/plugin/',
+        '/module/' : '/base/loadModule/module-files/module/'
     }
   })
 }

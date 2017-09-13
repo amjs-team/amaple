@@ -144,5 +144,22 @@ export default {
 */
 	getPathname () {
 		return window.location.pathname;
-	}
+	},
+
+	/**
+    	getQuery ( path?: String )
+
+    	Return Type:
+    	String
+    	get请求参数对象
+
+    	Description:
+		获取get请求参数
+
+    	URL doc:
+    	http://icejs.org/######
+    */
+	getQuery ( path ) {
+		return path && ( path.match ( /\?(.*)$/ ) || [ "" ] ) [ 0 ] || window.location.search;
+    }
 };

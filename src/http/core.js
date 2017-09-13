@@ -1,5 +1,6 @@
 import { extend, type, foreach } from "../func/util";
 import { attr } from "../func/node";
+import { serialize } from "../func/private";
 import event from "../event/core";
 import Promise from "../promise/Promise";
 import ICEXMLHttpRequest from "./ICEXMLHttpRequest";
@@ -42,11 +43,6 @@ function request ( method ) {
 
 		// ajax支持的返回类型正则表达式
 		rtype 			= /^(?:TEXT|JSON|SCRIPT|JSONP)$/,
-
-		rcheckableType 	= ( /^(?:checkbox|radio)$/i ),
-		rsubmitterTypes = /^(?:submit|button|image|reset|file)$/i,
-		rsubmittable 	= /^(?:input|select|textarea|keygen)/i,
-		rCRLF 			= /\r?\n/g,
 
 		accepts 		= {
 			"*" 		: ["*/"] + ["*"], // 避免被压缩
@@ -107,7 +103,7 @@ function request ( method ) {
 	    		}
 
 	    		// 合并参数
-	    		return extend ( {}, defaultOptions, params );
+	    		return extend ( defaultOptions, params );
 	    	}
 	    } ) ( method ),
 
@@ -150,8 +146,6 @@ function request ( method ) {
 		// 如果传入的data参数为数据对象，则将{k1: v1, k2: v2}转为以k1=v1&k2=v2
 		if ( type ( data ) === "object" ) {
 
-			let _args = [];
-
 			// 判断是否为表单对象
 			// 如果是则使用FormData来提交
 			// 如果不支持FormData对象，则判断是否包含上传信息，如果不包含则将参数序列化出来post提交，如果包含，则使用iframe刷新的方法实现
@@ -168,33 +162,30 @@ function request ( method ) {
 					options.data = new FormData ( data );
 				} catch ( e ) {
 
-					let hasFile,
-						formArray 	= options.data.elements.slice ();
+					let hasFile;
 
 					// 判断表单中是否含有上传文件
-					foreach ( formArray, item => {
-						if ( item.type === "file" ) {
+					foreach ( data.elements.slice (), inputItem => {
+						if ( inputItem.type === "file" ) {
 							hasFile = true;
 							return false;
-						}
-						else if ( item.name && !attr ( item, "disabled" ) && rsubmittable.test( item.nodeName ) && !rsubmitterTypes.test( item.type ) && ( item.checked || !rcheckableType.test( item.type ) ) ) {
-
-							_args.push ( item.name + "=" + item.value.replace ( rCRLF, "\r\n" )  );
 						}
 					} );
 
 					if ( !hasFile ) {
-						options.data = _args.join ( "&" );
+
+						// 如果表单中不包含上传文件，则序列化表单数据以供xhr提交
+						options.data = serialize ( data );
 					}
 				}
 			}
-			else {
-				foreach ( data, ( _data, index ) => {
-					_args.push ( index + "=" + _data );
-				} );
 
-				options.data = _args.join ( "&" );
-			}
+			let args = [];
+			foreach ( options.data, ( _data, index ) => {
+				args.push ( index + "=" + _data );
+			} );
+
+			options.data = args.join ( "&" );
 		}
 
 		// 将method字符串转为大写以统一字符串为大写，以便下面判断
@@ -246,29 +237,29 @@ function request ( method ) {
 			}
 			
 			// 获取传送器对象，当没有匹配到传送器时统一使用xhr
-			iceXHR.transport 	= ( ajaxTransports [ transportName ] ||  ajaxTransports.xhr  ) ( options );
+			iceXHR.transport = ( ajaxTransports [ transportName ] ||  ajaxTransports.xhr  ) ( options );
 
 			// 小写dataType
 			iceXHR.transport.dataType = options.dataType.toLowerCase ();
 
 			// 当请求为GET或HEAD时，拼接参数和cache为false时的时间戳
 			if ( !options.hasContent ) {
-				nohashUrl 		= options.url.replace ( rhash, "" );
+				nohashUrl = options.url.replace ( rhash, "" );
 
 				// 获取url中的hash
-				hash 			= options.url.slice ( nohashUrl.length );
+				hash = options.url.slice ( nohashUrl.length );
 
 				// 拼接data
-				nohashUrl 		+= options.data ? ( rquery.test ( nohashUrl ) ? "&" : "?" ) + options.data : "";
+				nohashUrl += options.data ? ( rquery.test ( nohashUrl ) ? "&" : "?" ) + options.data : "";
 
 				// 处理cache参数，如果为false则需要在参数后添加时间戳参数
-				nohashUrl 		= nohashUrl.replace ( rts, "" );
-				nohashUrl 		+= options.cache === false ? ( rquery.test ( nohashUrl ) ? "&" : "?" ) + "_=" + Date.now () : "";
+				nohashUrl = nohashUrl.replace ( rts, "" );
+				nohashUrl += options.cache === false ? ( rquery.test ( nohashUrl ) ? "&" : "?" ) + "_=" + Date.now () : "";
 
-				options.url 	= nohashUrl + ( hash || "" );
+				options.url = nohashUrl + ( hash || "" );
 			}
 			else if ( options.data && type ( options.data ) === "string" && ( options.contentType || "" ).indexOf ( "application/x-www-form-urlencoded" ) === 0) {
-				options.data 	= options.data.replace ( r20, "+" );
+				options.data = options.data.replace ( r20, "+" );
 			}
 
 			// 设置Content-Type

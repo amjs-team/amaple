@@ -1,8 +1,7 @@
 import slice from "../../var/slice";
-import { extend, foreach } from "../../func/util";
+import { extend, foreach, type } from "../../func/util";
 import { attr } from "../../func/node";
 import iceAttr from "../../single/iceAttr";
-import includeModule from "../../single/includeModule";
 import requestEventBind from "../../single/requestEventBind";
 import Subscriber from "../Subscriber";
 import ViewWatcher from "../ViewWatcher";
@@ -86,7 +85,7 @@ extend ( Tmpl, 	{
             	else {
                     
                 	const moduleName = attr ( elem, iceAttr.module );
-                	if ( Stucture.currentPage && type ( moduleString ) === "string" ) {
+                	if ( Structure.currentPage && type ( moduleName ) === "string" ) {
                     	const currentStructure = Structure.currentPage.getCurrentRender ();
                     	currentStructure.saveSubModuleNode ( elem );
     	

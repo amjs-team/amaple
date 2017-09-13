@@ -21,10 +21,11 @@ import { moduleErr } from "../error";
 */
 export default function requestEventBind ( elem ) {
     event.on ( elem, "click submit", e => {
+
         const 
             target = e.target,
         	path = iceHistory.history.buildURL ( attr ( target, e.type.toLowerCase () === "submit" ? iceAttr.action : iceAttr.href ) ),
-            method = e.type.toLowerCase () === "submit" ? attr ( target, "method" ) : undefined,
+            method = e.type.toLowerCase () === "submit" ? attr ( target, "method" ) : "get",
             param = {},
         	nextStructure = Router.matchRoutes ( path, param );
 
@@ -35,16 +36,17 @@ export default function requestEventBind ( elem ) {
                 path,
                 nextStructure : nextStructure,
                 param,
-                search : Router.matchSearch ( getSearch () ),
-                action : "NONE"
+                get : iceHistory.history.getQuery ( path ),
+                post : method.toLowerCase () === "post" ? target : {},
+                action : "PUSH"
             };
+
+            // 更新currentPage结构体对象
+            Structure.currentPage.update ( location.nextStructure );
+            
+            // 根据更新后的页面结构体渲染新视图
+            Structure.currentPage.render ( location );
                 	
-			moduleElem = getModuleElem ( targetModule );
-                	
-            // 当前模块路径与请求路径不相同时，调用single方法
-           	if ( getCurrentPath ( moduleElem ) !== path ) {
-            	single ( path, moduleElem, undefined, method, undefined, undefined, undefined, undefined, undefined, true, false );
-            }
         }
     } );
 }

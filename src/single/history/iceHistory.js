@@ -72,5 +72,37 @@ export default {
     	if ( this.history ) {
 			this.history.push ( state, url );
 		}
+	},
+
+	/**
+		setState ( pathname: String, state: Any )
+		
+		Return Type:
+		void
+		
+		Description:
+		保存pathname下的状态
+		
+		URL doc:
+		http://icejs.org/######
+	*/
+	saveState ( pathname, state ) {
+		this.history.saveState ( pathname, state );
+	},
+
+	/**
+		getState ( pathname?: String )
+		
+		Return Type:
+		Object
+		
+		Description:
+		获取对应记录
+		
+		URL doc:
+		http://icejs.org/######
+	*/
+	getState ( pathname ) {
+		return this.history.getState ( pathname );
 	}
 };

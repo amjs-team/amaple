@@ -18,7 +18,6 @@ const
 	rimport 	= /(?:(?:var|let|const)\s+)?([\w$-]+)\s*=\s*import\s*\(\s*"(.*?)"\s*\)\s*(?:,|;)/g,
 
 	rmoduleDef 	= /new\s*ice\s*\.\s*Module\s*\(/,
-    rvmName 	= new RegExp ( "([a-zA-Z$_]{1}[\\w$]*)\\s*=\\s*" + rmoduleDef.source ),
 
 	rblank 		= />(\s+)</g,
 	rtext 		= /["'\/&]/g,
@@ -50,7 +49,7 @@ export default function compileModule ( moduleString ) {
 			attrs = {},
 			scripts = {},
 			scriptVars = [],
-			view, style, script, vmName;
+			view, style, script;
 
 		// 匹配出Module标签内的属性
 		while ( !rend.test ( moduleString ) ) {
@@ -111,8 +110,6 @@ export default function compileModule ( moduleString ) {
 				return "";
 			} ).trim ();
 
-        	vmName = ( rvmName.exec ( script ) || [ "", "" ] ) [ 1 ];
-
         	if ( !isEmpty ( scripts ) ) {
 
         		let componentStr = [];
@@ -133,7 +130,7 @@ export default function compileModule ( moduleString ) {
         			script = script.replace ( raddComponents, match => match + componentStr );
         		}
         	}
-			script = script.replace ( rmoduleDef, match => `${ match }"fragment",` );
+			script = script.replace ( rmoduleDef, match => `${ match }fragment,` );
 		}
 
 		////////////////////////////////////////////////////////
@@ -153,14 +150,14 @@ export default function compileModule ( moduleString ) {
 		const buildView = `var div=document.createElement("div");fragment=document.createDocumentFragment();div.innerHTML=view;for(var i=0;i<div.childNodes.length;i++){fragment.appendChild(div.childNodes[i]);}`;
 
 		if ( !isEmpty ( scriptVars ) ) {
-			moduleString += `var scriptDOM = [];for (var i in scripts){var _s=document.createElement("script");_s.src = scripts[i];scriptDOM.push (_s);}scriptEval (scriptDOM, function(){${ buildView }${ script };currentStructure.module=${ vmName };html(moduleNode,fragment);});`;
+			moduleString += `var scriptDOM = [];for (var i in scripts){var _s=document.createElement("script");_s.src = scripts[i];scriptDOM.push (_s);}scriptEval (scriptDOM, function(){${ buildView }${ script };html(moduleNode,fragment);`;
 		}
 		else {
-			moduleString += `${ buildView }${ script };currentStructure.module=${ vmName };html(moduleNode,fragment);});`
+			moduleString += `${ buildView }${ script };html(moduleNode,fragment);`
 		}
 
 		moduleString += "return title;";
 	}
   
-	return new Function ( "ice", "moduleNode", "currentStructure", "html", "scriptEval", moduleString );
+	return new Function ( "ice", "moduleNode", "html", "scriptEval", moduleString );
 }

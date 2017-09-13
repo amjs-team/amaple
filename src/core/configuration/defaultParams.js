@@ -17,9 +17,5 @@ export default {
     	expired : 0
 	},
 
-	// 定义404页面显示模块及请求地址，格式为{moduleName: 404url}
-	// page404 : "",
-
-	// 定义500页面显示模块及请求地址，格式为{moduleName: 500url}
-	// page500 : ""
+	moduleSuffix : ".ice",
 };

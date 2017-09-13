@@ -56,25 +56,63 @@ export function matchFnArgs ( fn ) {
 }
 
 /**
-	getSearch ()
+	serialize ( form: DOMObject )
 
 	Return Type:
-	String
-	search
+	Object
+	序列化后表单信息对象
 
 	Description:
-	hash兼容模式下获取search
+	将表单内的信息序列化为表单信息对象
 
 	URL doc:
 	http://icejs.org/######
 */
-export function getSearch () {
-
-	let search = ( window.location.hash.match ( /\?(.*)$/ ) || [] ) [ 1 ];
-
-	if ( !search ) {
-		search = window.location.search.substr ( 1 );
+export function serialize ( form ) {
+	if ( !form.nodeName || form.nodeName.toUpperCase () !== "FORM" ) {
+		return form;
 	}
 
-	return search;
+	const 
+		rcheckableType 	= ( /^(?:checkbox|radio)$/i ),
+		rsubmitterTypes = /^(?:submit|button|image|reset|file)$/i,
+		rsubmittable 	= /^(?:input|select|textarea|keygen)/i,
+		rCRLF 			= /\r?\n/g,
+
+		inputs 			= form.elements.slice (),
+		formObject 		= {};
+
+	// 判断表单中是否含有上传文件
+	foreach ( inputs, inputItem => {
+		if ( inputItem.name && !attr ( inputItem, "disabled" ) && rsubmittable.test( inputItem.nodeName ) && !rsubmitterTypes.test( inputItem.type ) && ( inputItem.checked || !rcheckableType.test( inputItem.type ) ) ) {
+
+			formObject [ name ] = inputItem.value.replace ( rCRLF, "\r\n" );
+		}
+	} );
+
+	return formObject;
 }
+
+/**
+	parseGetQuery ( getString: String )
+
+	Return Type:
+	Object
+	解析后的get参数对象
+
+	Description:
+	将形如“?a=1&b=2”的get参数解析为参数对象
+
+	URL doc:
+	http://icejs.org/######
+*/
+export function parseGetQuery ( getString ) {
+    	const getObject = {};
+    	let kv;
+    	foreach ( ( getString.substr( 0, 1 ) === "?" ? getString.substr( 1 ) : getString ).split ( "&" ), getObjectItem => {
+        	kv = getObjectItem.split ( "=" );
+        	getObject [ kv [ 0 ] ] = kv [ 1 ] || "";
+        } );
+    
+    	return getObject;
+    }
