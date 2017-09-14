@@ -72,71 +72,14 @@ export default function Promise ( resolver ) {
 	// 判断resolver是否为处理函数体
 	check ( resolver ).type ( "function" ).ifNot ( "function Promise", "构造函数需传入一个函数参数" ).do ();
 
-	// Promise的三种状态定义
-	let PENDING 			= 0,
-		FULFILLED			= 1,
-		REJECTED 			= 2,
-
 		// 预定义的Promise对象对应的处理函数体信息
-		args,
-		_reason,
-		state 				= PENDING,
-		handlers 			= [];
+	this.args,
+	this.reason,
+	this.state = Promise.PENDING,
+	this.handlers = [];
 
 	/**
-		_isThenable ( value: Object|Function )
-	
-		Return Type:
-		Boolean
-		是thenable对象返回true，否则返回false
-	
-		Description:
-		用于判断对象是否为thenable对象（即是否包含then方法）
-	
-		URL doc:
-		http://icejs.org/######
-	*/
-	this._isThenable = value => {
-		let t = type ( value );
-			if ( value && ( t === "object" || t === "function" ) ) {
-				let then = value.then;
-				if ( type ( then ) === "function" ) {
-					return true;
-				}
-		  }
-
-		  return false;
-	};
-
-	/**
-		handler ( handler: Object )
-	
-		Return Type:
-		void
-	
-		Description:
-		根据Promise对象来对回调函数做出相应处理
-		当状态为Pending时，将回调函数保存于promise.handlers数组中待调用
-		当状态为Fulfilled时，执行onFulfilled方法
-		当状态为Rejected时，执行onRejected方法
-	
-		URL doc:
-		http://icejs.org/######
-	*/
-	this.handle = handler => {
-		if ( state === PENDING ) {
-			handlers.push ( handler );
-		}
-		else if ( state === FULFILLED && type ( handler.onFulfilled ) === "function" ) {
-			handler.onFulfilled.apply ( null, args );
-		}
-		else if ( state === REJECTED && type ( handler.onRejected ) === "function" ) {
-			handler.onRejected.apply ( null, _reason );
-		}
-	};
-
-	/**
-		_resolve ( arg1?: any, arg2?: any ... )
+		resolve ( arg1?: any, arg2?: any ... )
 	
 		Return Type:
 		void
@@ -149,19 +92,19 @@ export default function Promise ( resolver ) {
 		URL doc:
 		http://icejs.org/######
 	*/
-	function _resolve ( ..._args ) {
-		if ( state === PENDING ) {
-			state = FULFILLED;
-			args = _args;
+	function resolve ( ..._args ) {
+		if ( this.state === Promise.PENDING ) {
+			this.state = Promise.FULFILLED;
+			this.args = _args;
 			
-			foreach ( handlers,  item => {
-				item.onFulfilled && item.onFulfilled.apply ( null, args );
+			foreach ( this.handlers,  handler => {
+				handler.onFulfilled && handler.onFulfilled.apply ( null, this.args );
 			} );
 		}
-	}
+	},
 
 	/**
-		_reject ( arg1?: any, arg2?: any ... )
+		reject ( arg1?: any, arg2?: any ... )
 	
 		Return Type:
 		void
@@ -174,19 +117,19 @@ export default function Promise ( resolver ) {
 		URL doc:
 		http://icejs.org/######
 	*/
-	function _reject ( ...args ) {
+	function reject ( ...args ) {
 
-		if ( state === PENDING ) {
-			state = REJECTED;
-			_reason	= args;
+		if ( this.state === Promise.PENDING ) {
+			this.state = Promise.REJECTED;
+			this._reason = args;
 
-			foreach ( handlers, item => {
-				item.onRejected && item.onRejected.apply ( null, _reason );
+			foreach ( this.handlers, handler => {
+				handler.onRejected && handler.onRejected.apply ( null, this._reason );
 			} );
 		}
 	}
 
-	resolver ( _resolve, _reject );
+	resolver ( resolve, reject );
 }
 
 // Promise原型对象
@@ -211,22 +154,18 @@ extend ( Promise.prototype, {
 		return new Promise ( ( resolve, reject ) => {
 			this.handle ( {
 				onFulfilled () {
-					let result = type ( onFulfilled ) === "function" && onFulfilled.apply ( null, arguments ) || arguments;
-					if ( this._isThenable ( result ) ) {
+					const result = type ( onFulfilled ) === "function" && onFulfilled.apply ( null, arguments ) || arguments;
+					if ( this.isThenable ( result ) ) {
 						result.then (
-							() => {
-								resolve ();
-							},
-							reason => {
-								reject ( reason );
-							}
+							() => { resolve (); },
+							reason => { reject ( reason ); }
 						);
 					}
 				},
 
 
 				onRejected ( reason ) {
-					let result = type ( onRejected ) === "function" && onRejected ( reason ) || reason;
+					const result = type ( onRejected ) === "function" && onRejected ( reason ) || reason;
 					reject ( result );
 				}
 			});
@@ -289,6 +228,58 @@ extend ( Promise.prototype, {
 		} );
 
 		return this;
+	},
+
+	/**
+		isThenable ( value: Object|Function )
+	
+		Return Type:
+		Boolean
+		是thenable对象返回true，否则返回false
+	
+		Description:
+		用于判断对象是否为thenable对象（即是否包含then方法）
+	
+		URL doc:
+		http://icejs.org/######
+	*/
+	isThenable ( value ) {
+		const t = type ( value );
+			if ( value && ( t === "object" || t === "function" ) ) {
+				const then = value.then;
+				if ( type ( then ) === "function" ) {
+					return true;
+				}
+		  }
+
+		  return false;
+	},
+
+	/**
+		handler ( handler: Object )
+	
+		Return Type:
+		void
+	
+		Description:
+		根据Promise对象来对回调函数做出相应处理
+		当状态为Pending时，将回调函数保存于promise.handlers数组中待调用
+		当状态为Fulfilled时，执行onFulfilled方法
+		当状态为Rejected时，执行onRejected方法
+	
+		URL doc:
+		http://icejs.org/######
+	*/
+	handle ( handler ) {
+		if ( this.state === Promise.PENDING ) {
+			this.handlers.push ( handler );
+		}
+		else if ( this.state === Promise.FULFILLED && type ( this.handler.onFulfilled ) === "function" ) {
+			this.handler.onFulfilled.apply ( null, this.args );
+		}
+		else if ( this.state === Promise.REJECTED && type ( this.handler.onRejected ) === "function" ) {
+			this.handler.onRejected.apply ( null, this._reason );
+		}
 	}
 
 } );
@@ -312,5 +303,10 @@ extend ( Promise, {
 	*/
 	when () {
 
-	}
+	},
+
+	// Promise的三种状态定义
+	PENDING : 0,
+	FULFILLED : 1,
+	REJECTED : 2,
 } );

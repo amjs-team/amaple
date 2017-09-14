@@ -1,4 +1,4 @@
-import { noop, guid, extend, type } from "../func/util";
+import { noop, guid, extend, type, foreach } from "../func/util";
 import { query } from "../func/node";
 import { matchFnArgs, parseGetQuery } from "../func/private";
 import slice from "../var/slice";

@@ -6,6 +6,7 @@ import event from "../event/core";
 import Router from "../router/core";
 import iceHistory from "./history/iceHistory";
 import { moduleErr } from "../error";
+import Structure from "../core/tmpl/Structure";
 
 /**
     requestEventBind ( elem: DOMObject )

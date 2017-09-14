@@ -107,7 +107,7 @@ extend ( Router, {
             endRegexp = from === "redirect" ? "" : "(?:\\/)?";
 
         // 如果路径表达式为""时需在结尾增加"$"符号才能正常匹配到
-        endRegexp += pathExpr === "" ? "$" : "";
+        endRegexp += pathExpr === "" || pathExpr === "/" ? "$" : "";
 
         // 如果pathExpr为数组，则需预处理
         if ( type ( pathExpr ) === "array" ) {

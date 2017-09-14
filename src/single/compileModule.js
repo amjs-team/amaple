@@ -32,7 +32,7 @@ const
 	attrTitle 	= ":title";
 
 /**
-	compileModule ( moduleString: String )
+	compileModule ( moduleString: String, moduleNode: DOMObject )
 
 	Return Type:
 	Function
@@ -43,7 +43,7 @@ const
 	URL doc:
 	http://icejs.org/######
 */
-export default function compileModule ( moduleString ) {
+export default function compileModule ( moduleString, moduleNode ) {
 	if ( rmodule.test ( moduleString ) ) {
 		let attrMatch, viewMatch, styleMatch, scriptMatch,
 			attrs = {},
@@ -147,7 +147,7 @@ export default function compileModule ( moduleString ) {
 		} );
 
 		moduleString = `var title="${ attrs [ attrTitle ] || "" }",scripts={${ scriptVars.join ( "," ) }},view="${ view }${ style }";`;
-		const buildView = `var div=document.createElement("div");fragment=document.createDocumentFragment();div.innerHTML=view;for(var i=0;i<div.childNodes.length;i++){fragment.appendChild(div.childNodes[i]);}`;
+		const buildView = `var div=document.createElement("div"),fragment=document.createDocumentFragment(),nodes=[];div.innerHTML=view;nodes=Array.prototype.slice.call(div.childNodes);for(var i=0;i<nodes.length;i++){fragment.appendChild(nodes[i]);}`;
 
 		if ( !isEmpty ( scriptVars ) ) {
 			moduleString += `var scriptDOM = [];for (var i in scripts){var _s=document.createElement("script");_s.src = scripts[i];scriptDOM.push (_s);}scriptEval (scriptDOM, function(){${ buildView }${ script };html(moduleNode,fragment);`;

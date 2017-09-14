@@ -2,6 +2,7 @@ import { type, foreach, noop, isEmpty } from "../func/util";
 import { query, attr } from "../func/node";
 import configuration from "./configuration/core";
 import cache from "../cache/core";
+import requestEventBind from "../single/requestEventBind";
 import iceHistory from "../single/history/iceHistory";
 import { AUTO, HASH_HISTORY, BROWSER_HISTORY } from "../single/history/historyMode";
 import event from "../event/core";
@@ -89,6 +90,9 @@ export default {
             
             window.location.replace ( href.replace ( host, host + "#/" ) );
         }
+
+        // 绑定元素请求或提交表单的事件到body元素上
+        requestEventBind ( document.body );
     	
 
     	const 

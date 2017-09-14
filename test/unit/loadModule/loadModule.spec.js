@@ -14,7 +14,7 @@ describe ( "ice test =>", () => {
 			moduleSuffix: ".html",
 			baseURL : "module",
 			routes : function ( Router ) {
-				Router.module ().route ( "/", "test/login" );
+				Router.module ().route ( "/debug", "test/table" ).route( "/login", "test/login" );
 			}
 		} )
 	} );

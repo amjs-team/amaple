@@ -107,12 +107,14 @@ export function serialize ( form ) {
 	http://icejs.org/######
 */
 export function parseGetQuery ( getString ) {
-    	const getObject = {};
-    	let kv;
-    	foreach ( ( getString.substr( 0, 1 ) === "?" ? getString.substr( 1 ) : getString ).split ( "&" ), getObjectItem => {
-        	kv = getObjectItem.split ( "=" );
-        	getObject [ kv [ 0 ] ] = kv [ 1 ] || "";
-        } );
-    
-    	return getObject;
-    }
+	const getObject = {};
+	if ( getString ) {
+		let kv;
+		foreach ( ( getString.substr( 0, 1 ) === "?" ? getString.substr( 1 ) : getString ).split ( "&" ), getObjectItem => {
+	    	kv = getObjectItem.split ( "=" );
+	    	getObject [ kv [ 0 ] ] = kv [ 1 ] || "";
+	    } );
+	}
+
+	return getObject;
+}

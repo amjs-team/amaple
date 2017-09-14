@@ -1,4 +1,4 @@
-import { extend, forech, type, isEmpty } from "../../func/util";
+import { extend, foreach, type, isEmpty } from "../../func/util";
 import { query, attr } from "../../func/node";
 import { moduleErr } from "../../error";
 import ModuleLoader from "../../single/ModuleLoader";
@@ -21,7 +21,7 @@ export default function Structure ( entity ) {
 }
 
 extend ( Structure.prototype, {
-	update ( location ) {
+	update ( structure ) {
     	let x = this.entity,
 			y = structure.entity,
             find;
@@ -38,7 +38,8 @@ extend ( Structure.prototype, {
                 		if ( xItem.modulePath !== yItem.modulePath ) {
                     	
                     		// 模块名相同但模块内容不同的时候表示此模块需更新为新模块及子模块内容
-                    		x.splice ( j, 1, yItem );
+                    		xItem.modulePath = yItem.modulePath;
+                            xItem.module = null;
                     	}
                 		else {
                     	

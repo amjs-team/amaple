@@ -153,7 +153,9 @@ extend ( ModuleLoader.prototype, {
 	*/
 	load ( structure, args, currentHierarchy = this.moduleUpdateContext ) {
 
-		let toRender = false;
+		let toRender = false,
+			param;
+
 		foreach ( structure.entity, route => {
 		    if ( route.hasOwnProperty ( "notUpdate" ) ) {
 		        if ( route.hasOwnProperty ( "forcedRender" ) ) {
@@ -161,9 +163,10 @@ extend ( ModuleLoader.prototype, {
 		        }
 		        else {
                 	
+                	param = args.param [ route.name ];
 		            // 比较新旧param和get,post对象中的值，如果有改变则调用paramChanged和queryChanged
-                    if ( compareArgs ( args.param, route.module.caller.param ) ).{
-                    	route.module.caller.param = args.param;
+                    if ( compareArgs ( param, route.module.caller.param ) ) {
+                    	route.module.caller.param = param;
                     	route.module.paramChanged ();
                     }
                 	
@@ -357,7 +360,7 @@ extend ( ModuleLoader, {
 				/////////////////////////////////////////////////////////
 	        	// 编译module为可执行函数
 				// 将请求的html替换到module模块中
-	            const updateFn = compileModule ( moduleString );
+	            const updateFn = compileModule ( moduleString, moduleNode );
 
 	            // 缓存模块更新函数
 	            cache.pushModule ( path, { updateFn, time : Date.now () } );

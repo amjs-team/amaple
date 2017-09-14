@@ -2,7 +2,6 @@ import slice from "../../var/slice";
 import { extend, foreach, type } from "../../func/util";
 import { attr } from "../../func/node";
 import iceAttr from "../../single/iceAttr";
-import requestEventBind from "../../single/requestEventBind";
 import Subscriber from "../Subscriber";
 import ViewWatcher from "../ViewWatcher";
 import directiveIf from "./directive/if";
@@ -84,16 +83,11 @@ extend ( Tmpl, 	{
                 }
             	else {
                     
+                    // 将子模块元素保存到页面结构体中以便下次直接获取使用
                 	const moduleName = attr ( elem, iceAttr.module );
                 	if ( Structure.currentPage && type ( moduleName ) === "string" ) {
                     	const currentStructure = Structure.currentPage.getCurrentRender ();
                     	currentStructure.saveSubModuleNode ( elem );
-    	
-        				if ( !currentStructure.parent ) {
-                            
-                            // 绑定元素请求或提交表单的事件
-                        	requestEventBind ( elem );
-                        }
                     }
                 	
                 	foreach ( slice.call ( elem.attributes ), attr => {
