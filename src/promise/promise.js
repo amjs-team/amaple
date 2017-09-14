@@ -1,4 +1,4 @@
-import { type, foreach, extend } from "../func/util";
+import { type, foreach, extend, noop } from "../func/util";
 import check from "../check";
 
 
@@ -73,10 +73,11 @@ export default function Promise ( resolver ) {
 	check ( resolver ).type ( "function" ).ifNot ( "function Promise", "构造函数需传入一个函数参数" ).do ();
 
 		// 预定义的Promise对象对应的处理函数体信息
-	this.args,
-	this.reason,
-	this.state = Promise.PENDING,
-	this.handlers = [];
+	let
+		resolveArgs,
+		rejectArgs,
+		state = Promise.PENDING,
+		handlers = [];
 
 	/**
 		resolve ( arg1?: any, arg2?: any ... )
@@ -92,13 +93,13 @@ export default function Promise ( resolver ) {
 		URL doc:
 		http://icejs.org/######
 	*/
-	function resolve ( ..._args ) {
-		if ( this.state === Promise.PENDING ) {
-			this.state = Promise.FULFILLED;
-			this.args = _args;
+	function resolve ( ...args ) {
+		if ( state === Promise.PENDING ) {
+			state = Promise.FULFILLED;
+			resolveArgs = args;
 			
-			foreach ( this.handlers,  handler => {
-				handler.onFulfilled && handler.onFulfilled.apply ( null, this.args );
+			foreach ( handlers,  handler => {
+            	( handler.onFulfilled || noop ).apply ( null, args );
 			} );
 		}
 	},
@@ -119,15 +120,42 @@ export default function Promise ( resolver ) {
 	*/
 	function reject ( ...args ) {
 
-		if ( this.state === Promise.PENDING ) {
-			this.state = Promise.REJECTED;
-			this._reason = args;
+		if ( state === Promise.PENDING ) {
+			state = Promise.REJECTED;
+			rejectArgs = args;
 
-			foreach ( this.handlers, handler => {
-				handler.onRejected && handler.onRejected.apply ( null, this._reason );
+			foreach ( handlers, handler => {
+				( handler.onRejected || noop ).apply ( null, args );
 			} );
 		}
 	}
+	
+	/**
+		handler ( handler: Object )
+	
+		Return Type:
+		void
+	
+		Description:
+		根据Promise对象来对回调函数做出相应处理
+		当状态为Pending时，将回调函数保存于promise.handlers数组中待调用
+		当状态为Fulfilled时，执行onFulfilled方法
+		当状态为Rejected时，执行onRejected方法
+	
+		URL doc:
+		http://icejs.org/######
+	*/
+	this.handle = handler => {
+		if ( state === Promise.PENDING ) {
+			handlers.push ( handler );
+		}
+		else if ( state === Promise.FULFILLED ) {
+			( handler.onFulfilled || noop ).apply ( null, resolveArgs );
+		}
+		else if ( state === Promise.REJECTED ) {
+			( handler.onRejected || noop ).apply ( null, rejectArgs );
+		}
+	};
 
 	resolver ( resolve, reject );
 }
@@ -153,23 +181,22 @@ extend ( Promise.prototype, {
 
 		return new Promise ( ( resolve, reject ) => {
 			this.handle ( {
-				onFulfilled () {
-					const result = type ( onFulfilled ) === "function" && onFulfilled.apply ( null, arguments ) || arguments;
-					if ( this.isThenable ( result ) ) {
+				onFulfilled ( ...args ) {
+					const result = type ( onFulfilled ) === "function" && onFulfilled.apply ( null, args ) || args;
+					if ( Promise.isThenable ( result ) ) {
 						result.then (
-							() => { resolve (); },
-							reason => { reject ( reason ); }
+							( ...args ) => { resolve.apply ( null, args ); },
+							( ...args ) => { reject.apply ( null, args ); }
 						);
 					}
 				},
 
 
-				onRejected ( reason ) {
-					const result = type ( onRejected ) === "function" && onRejected ( reason ) || reason;
-					reject ( result );
+				onRejected ( ...args ) {
+					( type ( onRejected ) === "function" ? onRejected || noop ) .apply ( null, args );
 				}
-			});
-		});
+			} );
+		} );
 	},
 
 	/**
@@ -228,8 +255,36 @@ extend ( Promise.prototype, {
 		} );
 
 		return this;
-	},
+	}
 
+} );
+
+
+extend ( Promise, {
+	
+	// Promise的三种状态定义
+	PENDING : 0,
+	FULFILLED : 1,
+	REJECTED : 2,
+
+	/**
+		when ( promise1: Object, promise2?: Object, promise3?: Object ... )
+	
+		Return Type:
+		void
+	
+		Description:
+		存储准备调用的promise对象，用于多个异步请求并发协作时使用。
+		此函数会等待传入的promise对象的状态发生变化再做具体的处理
+		传入参数为不定个数Promise的对象
+	
+		URL doc:
+		http://icejs.org/######
+	*/
+	when () {
+
+	},
+	
 	/**
 		isThenable ( value: Object|Function )
 	
@@ -253,60 +308,5 @@ extend ( Promise.prototype, {
 		  }
 
 		  return false;
-	},
-
-	/**
-		handler ( handler: Object )
-	
-		Return Type:
-		void
-	
-		Description:
-		根据Promise对象来对回调函数做出相应处理
-		当状态为Pending时，将回调函数保存于promise.handlers数组中待调用
-		当状态为Fulfilled时，执行onFulfilled方法
-		当状态为Rejected时，执行onRejected方法
-	
-		URL doc:
-		http://icejs.org/######
-	*/
-	handle ( handler ) {
-		if ( this.state === Promise.PENDING ) {
-			this.handlers.push ( handler );
-		}
-		else if ( this.state === Promise.FULFILLED && type ( this.handler.onFulfilled ) === "function" ) {
-			this.handler.onFulfilled.apply ( null, this.args );
-		}
-		else if ( this.state === Promise.REJECTED && type ( this.handler.onRejected ) === "function" ) {
-			this.handler.onRejected.apply ( null, this._reason );
-		}
 	}
-
-} );
-
-
-extend ( Promise, {
-
-	/**
-		when ( promise1: Object, promise2?: Object, promise3?: Object ... )
-	
-		Return Type:
-		void
-	
-		Description:
-		存储准备调用的promise对象，用于多个异步请求并发协作时使用。
-		此函数会等待传入的promise对象的状态发生变化再做具体的处理
-		传入参数为不定个数Promise的对象
-	
-		URL doc:
-		http://icejs.org/######
-	*/
-	when () {
-
-	},
-
-	// Promise的三种状态定义
-	PENDING : 0,
-	FULFILLED : 1,
-	REJECTED : 2,
 } );

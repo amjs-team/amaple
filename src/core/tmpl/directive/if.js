@@ -3,7 +3,7 @@ import { foreach, type } from "../../../func/util";
 import slice from "../../../var/slice";
 import Tmpl from "../Tmpl";
 
-export default {
+Tmpl.defineDirective ( "if", {
 	name : "if",
 
     /**
@@ -22,7 +22,6 @@ export default {
     */
 	before () {
 		let elem = this.node;
-        attr ( elem, ":if", null );
 		
     	this.expr = "[" + elem.conditions.join ( "," ) + "]";
     	this.replacement = elem.ownerDocument.createTextNode ( "" );
@@ -33,7 +32,7 @@ export default {
       
     	foreach ( elem.conditionElems, nextSib => {
             if ( nextSib !== elem ) {
-                new Tmpl ( nextSib ).mount ( this.vm, true, this.scoped );
+                this.tmpl.mount ( nextSib, true, this.scoped );
             }
         } );
     },
@@ -62,7 +61,7 @@ export default {
         foreach ( conditions, ( cond, i ) => {
         	if ( cond ) {
                 if ( conditionElems [ i ].templateNodes ) {
-                    let f = elem.ownerDocument.createDocumentFragment ();
+                    const f = elem.ownerDocument.createDocumentFragment ();
                     foreach ( conditionElems [ i ].templateNodes, node => {
                         if ( node.parentNode !== parent ) {
                             f.appendChild ( node );
@@ -115,4 +114,4 @@ export default {
             this.currentNode = _cNode;
         }
     }
-};
+} );

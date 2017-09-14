@@ -6,7 +6,17 @@ function Component () {
 }
 
 extend ( Component.prototype, {
-	defineComponent () {
+	__render__ () {
     	
-    }
+    },
+	
+	__initLifeCycle__ () {
+    
+    },
+	
+	__initAction__ () {
+    	
+    },
+	
+	
 } );

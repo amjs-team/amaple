@@ -1,7 +1,8 @@
 import { attr } from "../../../func/node";
 import { type, foreach } from "../../../func/util";
+import Tmpl from "../Tmpl";
 
-export default {
+Tmpl.defineDirective ( "expr", {
 
     /**
         before ()
@@ -81,4 +82,4 @@ export default {
             }
         }
     }
-};
+} );

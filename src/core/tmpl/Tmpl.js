@@ -11,6 +11,7 @@ import directiveOn from "./directive/on";
 import directiveModel from "./directive/model";
 import { runtimeErr } from "../../error";
 import Structure from "./Structure";
+import Component from "../component/core";
 
 /**
     Plugin Tmpl
@@ -22,14 +23,19 @@ import Structure from "./Structure";
     URL doc:
     http://icejs.org/######
 */
-export default function Tmpl ( tmplCode ) {
-	this.tmplCode = tmplCode;
+export default function Tmpl ( vm, components ) {
+	this.vm = vm;
+	this.components = {};
+	
+	foreach ( components, comp => {
+    	this.components [ comp.name.toLowerCase () ] = comp;
+    } );
 }
 
 extend ( Tmpl.prototype, {
 
     /**
-        mount ( vm: ViewModel, mountModule: Boolean, scoped?: Object )
+        mount ( tmplNode: DOMObject, mountModule: Boolean, scoped?: Object )
     
         Return Type:
         void
@@ -40,10 +46,14 @@ extend ( Tmpl.prototype, {
         URL doc:
         http://icejs.org/######
     */
-	mount ( vm, mountModule, scoped ) {
-    	foreach ( Tmpl.mountElem.call ( this, this.tmplCode, mountModule ), ( data ) => {
-        	new ViewWatcher ( data.handler, data.targetNode, data.expr, vm, scoped );
+	mount ( tmplNode, mountModule, scoped ) {
+    	foreach ( Tmpl.mountElem ( tmplNode, mountModule, true ), data => {
+        	new ViewWatcher ( data.handler, data.targetNode, data.expr, this, scoped );
         } );
+    },
+	
+	getComponent ( name ) {
+    	return this.components [ name ];
     },
 } );
 
@@ -63,7 +73,7 @@ extend ( Tmpl, 	{
         URL doc:
         http://icejs.org/######
     */
-	mountElem ( elem, mountModule ) {
+	mountElem ( elem, mountModule, isRoot = false ) {
     	const rattr = /^:([\$\w]+)$/;
         let directive, handler, targetNode, expr, forAttrValue, firstChild,
             watcherData = [],
@@ -71,6 +81,16 @@ extend ( Tmpl, 	{
 		
     	do {
         	if ( elem.nodeType === 1 && mountModule ) {
+            	
+        		// 处理组件元素
+    			// 局部没有找到组件则查找全局组件
+    			const ComponentDerivative = this.getComponent ( elem.nodeName ) || Component.getGlobalComponent ( elem.nodeName );
+    			if ( ComponentDerivative.__proto__.name === "Component" ) {
+        			const comp = new ComponentDerivative ();
+        			this.compInstances.push ( comp );
+                	
+                	elem = comp.__render_ ( elem, this.getViewModel () );
+        		}
             	
         		// 处理:for
 				// 处理:if :else-if :else
@@ -131,11 +151,18 @@ extend ( Tmpl, 	{
                 }
             }
             
-            firstChild = elem.firstChild || elem.content && elem.content.firstChild;
-            if ( firstChild && !forAttrValue ) {
-                watcherData = watcherData.concat ( Tmpl.mountElem ( firstChild, true ) );
+        	if ( elem.isComponent ) {
+            	if ( elem.canRender ( elem ) {
+            		Component.render( elem );
+                }
             }
-        } while ( this.tmplCode !== elem && ( elem = elem.nextSibling ) )
+        	else {
+            	firstChild = elem.firstChild || elem.content && elem.content.firstChild;
+            	if ( firstChild && !forAttrValue ) {
+                	watcherData = watcherData.concat ( Tmpl.mountElem ( firstChild, true ) );
+            	}
+            }
+        } while ( !isRoot && ( elem = elem.nextSibling ) )
         return watcherData;
     },
 
@@ -154,6 +181,7 @@ extend ( Tmpl, 	{
         http://icejs.org/######
     */
 	preTreat ( elem ) {
+    	
     	let nextSib, parent, 
             _if = ":if",
             _elseif = ":else-if",
@@ -191,12 +219,21 @@ extend ( Tmpl, 	{
         
         return attr ( elem, ":for" );
     },
+      
+    renderTemplate ( elem ) {
+		if ( elem && elem.nodeName && elem.nodeName.toUpperCase () === "TEMPLATE" ) {
+        	const f = document.createDocumentFragment ();
+        	foreach ( elem.content && elem.content.childNodes || elem.childNodes, childNode => {
+            	f.appendChild ( node );
+    		} );
+        	
+        	elem = f;
+    	}
+    
+    	return elem;
+    },
 	
-	directives : {
-        for : directiveFor,
-        if : directiveIf,
-        expr : directiveExpr,
-        on : directiveOn,
-        model : directiveModel
+	defineDirective ( name, directice ) {
+    	this.directives [ name ] = directive;
     }
 } );

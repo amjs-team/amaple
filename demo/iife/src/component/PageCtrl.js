@@ -1,7 +1,6 @@
-ice.install ( {
-	name : "PagrCtrl",
-
-	// driver中的init方法接收外部传入的参数
+Class ( "PageCtrl" ).extends ( ice.Component ) ( {
+	
+	// component中的init方法接收外部传入的参数
 	init : function () {
 		return {
 			reqPath : {

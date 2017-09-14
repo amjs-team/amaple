@@ -2,7 +2,7 @@ import { foreach } from "../../../func/util";
 import { attr } from "../../../func/node";
 import Tmpl from "../Tmpl";
 
-export default {
+Tmpl.defineDirective ( "for", {
 	name : "for",
 
     /**
@@ -31,7 +31,6 @@ export default {
         this.expr      = variable [ 2 ];
        	this.key       = attr ( elem, ":key" );
         
-        attr ( elem, ":for", null );
     	if ( this.key ) {
             attr ( elem, ":key", null );
         }
@@ -52,7 +51,6 @@ export default {
     */
 	update ( iterator ) {
 		let elem         = this.node,
-            vm           = this.vm,
             doc 		 = elem.ownerDocument,
             fragment     = doc.createDocumentFragment(),
             itemNode, f,
@@ -61,7 +59,7 @@ export default {
             scopedDefinition = {};
   		
         foreach ( iterator, ( item, key ) => {
-        	f = doc.createDocumentFragment ();
+        	// f = doc.createDocumentFragment ();
 
             // 定义范围变量
             scopedDefinition [ this.item ] = item;
@@ -80,20 +78,23 @@ export default {
             	itemNode.conditions = elem.conditions;
             }
 
-            f.appendChild ( itemNode );
+            // f.appendChild ( itemNode );
 
             // 为遍历克隆的元素挂载数据
-        	new Tmpl ( f ).mount ( vm, true, this.defineScoped ( scopedDefinition, vm ) );
+        	this.tmpl.mount ( itemNode, true, this.defineScoped ( scopedDefinition ) );
 
-            itemNode = f.firstChild;
-            if ( itemNode.nodeName && itemNode.nodeName.toUpperCase () === "TEMPLATE" ) {
-                foreach ( itemNode.content && itemNode.content.childNodes || itemNode.childNodes, node => {
-                    fragment.appendChild ( node );
-                } );
-            }
-            else {
-                fragment.appendChild ( f );
-            }
+            // itemNode = f.firstChild;
+            //if ( itemNode.nodeName && itemNode.nodeName.toUpperCase () === "TEMPLATE" ) {
+                //foreach ( itemNode.content && itemNode.content.childNodes || itemNode.childNodes, node => {
+                    //fragment.appendChild ( node );
+                //} );
+            //}
+            //else {
+                //fragment.appendChild ( itemNode );
+            //}
+        	
+        	itemNode = Tmpl.renderTemplate ( itemNode );
+        	fragment.appendChild ( itemNode );
         } );
     	
       	// 初始化视图时将模板元素替换为挂载后元素
@@ -119,4 +120,4 @@ export default {
         	p.insertBefore ( fragment, this.endNode );
         }
     }
-};
+} );

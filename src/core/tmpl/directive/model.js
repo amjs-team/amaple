@@ -1,8 +1,9 @@
 import { attr } from "../../../func/node";
 import { type } from "../../../func/util";
 import event from "../../../event/core";
+import Tmpl from "../Tmpl";
 
-export default {
+Tmpl.defineDirective ( "model", {
 
     /**
         before ()
@@ -31,7 +32,7 @@ export default {
             },
             elem = this.node,
             expr = this.expr,
-            vm = this.vm,
+            vm = this.tmpl.getViewModel (),
             nodeName = elem.nodeName.toUpperCase (),
             inputType = ( attr ( elem, "type" ) || "" ).toLowerCase (),
 
@@ -47,8 +48,7 @@ export default {
             function () {
                 vm [ expr ] = this.value;
             };
-
-        attr ( elem, ":model", null );
+    	
 
         // 判断支持input事件的元素名称或对应type的input元素
         if ( ( nodeName === "INPUT" && support.input.type.indexOf ( inputType ) !== -1 ) || support.input.nodeName.indexOf ( nodeName ) !== -1 ) {
@@ -107,4 +107,4 @@ export default {
         	elem.value = val;
         }
     }
-};
+} );

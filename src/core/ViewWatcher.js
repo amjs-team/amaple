@@ -2,6 +2,7 @@ import { extend, type, foreach, noop } from "../func/util";
 import { runtimeErr } from "../error";
 import slice from "../var/slice";
 import Subscriber from "./Subscriber";
+import Tmpl from "./tmpl/Tmpl";
 
 
 /**
@@ -22,7 +23,7 @@ function makeFn ( code ) {
 	`let self = this,
 		 ret;
 	self.addScoped ();
-	with ( self.vm ) {
+	with ( self.tmpl.getViewModel () ) {
 		try {
 			ret = ${ code };
 		}
@@ -35,7 +36,7 @@ function makeFn ( code ) {
 }
 
 /**
-	ViewWatcher ( directive: Object, node: DOMObject, expr: String, vm?: Object, scoped?: Object )
+	ViewWatcher ( directive: Object, node: DOMObject, expr: String, tmpl?: Object, scoped?: Object )
 
 	Return Type:
 	void
@@ -48,16 +49,20 @@ function makeFn ( code ) {
 	URL doc:
 	http://icejs.org/######
 */
-export default function ViewWatcher ( directive, node, expr, vm, scoped ) {
+export default function ViewWatcher ( directive, node, expr, tmpl, scoped ) {
 
 	this.directive = directive;
 	this.node = node;
 	this.expr = expr;
-	this.vm = vm;
+	this.tmpl = tmpl;
 	this.scoped = scoped;
-
+	
 	( directive.before || noop ).call ( this );
-
+	
+	// 移除相关属性指令表达式
+	// 当属性指令表达式与指令名称不同的时候可将对应表达式赋值给this.attrExpr
+	attr ( node, Tmpl.directivePrefix + ( this.attrExpr || directive.name ), null );
+	
   	// 如果scoped为局部数据对象则将expr内的局部变量名替换为局部变量名
 	if ( type ( scoped ) === "object" && scoped.regexp instanceof RegExp ) {
 		this.expr = this.expr.replace ( scoped.regexp, match => scoped.prefix + match );
@@ -67,7 +72,7 @@ export default function ViewWatcher ( directive, node, expr, vm, scoped ) {
 
     // 将获取表达式的真实值并将此watcher对象绑定到依赖监听属性中
 	Subscriber.watcher = this;
-	let val = this.getter ( runtimeErr );
+	const val = this.getter ( runtimeErr );
   
 	// 局部变量没有设置监听，所以不会调用Subscriber.subscriber()，需手动设置为undefined
 	Subscriber.watcher = undefined;
@@ -110,7 +115,7 @@ extend ( ViewWatcher.prototype, {
     	http://icejs.org/######
     */
     defineScoped ( scopedDefinition ) {
-		let scoped = {
+		const scoped = {
             	prefix : "ICE_FOR_" + Date.now() + "_",
         		vars : {}
             },
@@ -142,9 +147,11 @@ extend ( ViewWatcher.prototype, {
     	http://icejs.org/######
     */
 	addScoped () {
+    	const vm = this.tmpl.getViewModel ();
+    	
     	// 增加局部变量
 		foreach ( this.scoped && this.scoped.vars || {}, ( val, varName ) => {
-			this.vm [ varName ] = val;
+			vm [ varName ] = val;
 		} );
     },
 	
@@ -162,9 +169,10 @@ extend ( ViewWatcher.prototype, {
     	http://icejs.org/######
     */
 	removeScoped () {
+    	const vm = this.tmpl.getViewModel ();
     	foreach ( this.scoped && this.scoped.vars || {}, ( val, varName ) => {
-        	if ( this.vm.hasOwnProperty ( varName ) ) {
-                delete this.vm [ varName ]
+        	if ( vm.hasOwnProperty ( varName ) ) {
+                delete vm [ varName ]
             }
 		} );
     }

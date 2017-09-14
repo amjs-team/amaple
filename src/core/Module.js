@@ -121,7 +121,7 @@ export default function Module ( module, vmData = { init: function () { return {
 		vm = new ViewModel ( vmData.init.apply ( caller, initDeps ) ),
 
 		// 使用vm解析模板
-		tmpl = new Tmpl ( moduleElem );
+		tmpl = new Tmpl ( vm, vmData.components );
 	
 	this.vm = vm;
 	this.view = slice.call ( moduleElem.childNodes ) || [];
@@ -130,7 +130,7 @@ export default function Module ( module, vmData = { init: function () { return {
 	// 解析模板，挂载数据
 	// 如果forceMount为true则强制挂载moduleElem
 	// 如果parentVm为对象时表示此模块不是最上层模块，不需挂载
-	tmpl.mount ( vm, !parent );
+	tmpl.mount ( moduleElem, !parent );
 	
 	this.initLifeCycle ( caller );
 	

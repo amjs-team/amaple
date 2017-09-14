@@ -1,8 +1,8 @@
 import event from "../../../event/core";
 import { attr } from "../../../func/node";
 
-export default {
-	name : /^on/,
+Tmpl.defineDirective ( "on", {
+	name : "on",
 
     /**
         before ()
@@ -27,7 +27,7 @@ export default {
       
 
         this.type = expr [ 0 ];
-    	attr ( this.node, ":on" + this.type, null );
+    	this.attrExpr = "on" + this.type;
         arg.unshift ( event );
     
     	this.expr = `function ( ${ event } ) {
@@ -52,4 +52,4 @@ export default {
 	update ( listener ) {
         event.on ( this.node, this.type, listener );
     }
-};
+} );
