@@ -1,6 +1,7 @@
 import slice from "../../var/slice";
 import { extend, foreach, type } from "../../func/util";
 import { attr } from "../../func/node";
+import { rexpr } from "../../var/const";
 import iceAttr from "../../single/iceAttr";
 import Subscriber from "../Subscriber";
 import ViewWatcher from "../ViewWatcher";
@@ -43,8 +44,7 @@ extend ( Tmpl.prototype, {
     */
 	mount ( elem, mountModule, scoped, isRoot = true ) {
         const 
-            rattr = /^:([\$\w]+)$/,
-            rexpr = /{{\s*(.*?)\s*}}/;
+            rattr = /^:([\$\w]+)$/;
 
 
         let directive, handler, targetNode, expr, forAttrValue, firstChild,
@@ -52,16 +52,7 @@ extend ( Tmpl.prototype, {
         
         do {
             if ( elem.nodeType === 1 && mountModule ) {
-                
-                // 处理组件元素
-                // 局部没有找到组件则查找全局组件
-                const ComponentDerivative = this.getComponent ( elem.nodeName ) || Component.getGlobal ( elem.nodeName );
-                if ( ComponentDerivative && ComponentDerivative.__proto__.name === "Component" ) {
-                    const comp = new ComponentDerivative ();
-                    this.compInstances.push ( comp );
-                    
-                    elem = comp.__render_ ( elem, this.getViewModel () );
-                }
+        		
                 
                 // 处理:for
                 // 处理:if :else-if :else
@@ -73,6 +64,16 @@ extend ( Tmpl.prototype, {
                     watcherData.push ( { handler : Tmpl.directives.for, targetNode : elem, expr : forAttrValue } );
                 }
                 else {
+                	
+            		// 处理组件元素
+                	// 局部没有找到组件则查找全局组件
+                	const ComponentDerivative = this.getComponent ( elem.nodeName ) || Component.getGlobal ( elem.nodeName );
+                	if ( ComponentDerivative && ComponentDerivative.__proto__.name === "Component" ) {
+                    	const comp = new ComponentDerivative ();
+                    	this.compInstances.push ( comp );
+                    
+                    	elem = comp.__mount__ ( elem, this.getViewModel () );
+                	}
                     
                     // 将子模块元素保存到页面结构体中以便下次直接获取使用
                     const moduleName = attr ( elem, iceAttr.module );
@@ -160,113 +161,6 @@ extend ( Tmpl.prototype, {
 extend ( Tmpl, {
 
     directivePrefix : ":",
-
-    /**
-        mountElem ( elem: DOMObject, mountModule: Boolean )
-    
-        Return Type:
-        watcherData
-        ViewWatcher对象数组
-    
-        Description:
-        递归遍历元素
-        将元素内需要挂载数据的部分使用ViewWatcher对象封装成数组并返回
-    
-        URL doc:
-        http://icejs.org/######
-    */
-	mountElem ( elem, mountModule, isRoot = false ) {
-    	const rattr = /^:([\$\w]+)$/;
-        let directive, handler, targetNode, expr, forAttrValue, firstChild,
-            watcherData = [],
-            rexpr = /{{\s*(.*?)\s*}}/;
-		
-    	do {
-        	if ( elem.nodeType === 1 && mountModule ) {
-            	
-        		// 处理组件元素
-    			// 局部没有找到组件则查找全局组件
-    			const ComponentDerivative = this.getComponent ( elem.nodeName ) || Component.getGlobalComponent ( elem.nodeName );
-    			if ( ComponentDerivative.__proto__.name === "Component" ) {
-        			const comp = new ComponentDerivative ();
-        			this.compInstances.push ( comp );
-                	
-                	elem = comp.__render_ ( elem, this.getViewModel () );
-        		}
-            	
-        		// 处理:for
-				// 处理:if :else-if :else
-				// 处理{{ expression }}
-				// 处理:on
-				// 处理:model
-            	forAttrValue = Tmpl.preTreat ( elem );
-            	if ( forAttrValue ) {
-                	watcherData.push ( { handler : Tmpl.directives.for, targetNode : elem, expr : forAttrValue } );
-                }
-            	else {
-                    
-                    // 将子模块元素保存到页面结构体中以便下次直接获取使用
-                	const moduleName = attr ( elem, iceAttr.module );
-                	if ( Structure.currentPage && type ( moduleName ) === "string" ) {
-                    	const currentStructure = Structure.currentPage.getCurrentRender ();
-                    	currentStructure.saveSubModuleNode ( elem );
-                    }
-                	
-                	foreach ( slice.call ( elem.attributes ), attr => {
-                		directive = rattr.exec ( attr.nodeName );
-                		if ( directive ) {
-                    		directive = directive [ 1 ];
-                    		if ( /^on/.test ( directive ) ) {
-                	        	// 事件绑定
-                        		handler = Tmpl.directives.on;
-                        		targetNode = elem,
-                        		expr = directive.slice ( 2 ) + ":" + attr.nodeValue;
-                        	}
-                    		else if ( Tmpl.directives [ directive ] ) {
-
-                        		// 模板属性绑定
-                        		handler = Tmpl.directives [ directive ];
-                        		targetNode = elem;
-                        		expr = attr.nodeValue;
-                        	}
-                    		else {
-
-                        		// 没有找到该指令
-                        		throw runtimeErr ( "directive", "没有找到\"" + directive + "\"指令或表达式" );
-                        	}
-
-                            watcherData.push ( { handler, targetNode, expr } );
-                    	}
-                		else if ( rexpr.test ( attr.nodeValue ) ) {
-
-                    		// 属性值表达式绑定
-                            watcherData.push ( { handler: Tmpl.directives.expr, targetNode : attr, expr : attr.nodeValue } );
-                    	}
-            		} );
-                }
-            }
-        	else if ( elem.nodeType === 3 ) {
-
-            	// 文本节点表达式绑定
-                if ( rexpr.test ( elem.nodeValue ) ) {
-                	watcherData.push ( { handler : Tmpl.directives.expr, targetNode : elem, expr : elem.nodeValue } );
-                }
-            }
-            
-        	if ( elem.isComponent ) {
-            	if ( elem.canRender ) {
-            		Component.render ( elem );
-                }
-            }
-        	else {
-            	firstChild = elem.firstChild || elem.content && elem.content.firstChild;
-            	if ( firstChild && !forAttrValue ) {
-                	watcherData = watcherData.concat ( Tmpl.mountElem ( firstChild, true ) );
-            	}
-            }
-        } while ( !isRoot && ( elem = elem.nextSibling ) )
-        return watcherData;
-    },
 
     /**
         preTreat ( elem: DOMObject )

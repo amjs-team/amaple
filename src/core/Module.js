@@ -140,9 +140,11 @@ export default function Module ( module, vmData = { init: function () { return {
 
 extend ( Module.prototype, {
 	initLifeCycle ( caller ) {
-    	const lifeCycleContainer = {};
+    	const 
+    		lifeCycle = [ "mount", "queryChanged", "paramChanged", "unmount" ],
+    		lifeCycleContainer = {};
     	
-    	foreach ( Module.lifeCycle, cycleItem => {
+    	foreach ( lifeCycle, cycleItem => {
         	lifeCycleContainer [ cycleItem ] = this.vm [ cycleItem ] || noop;
         	this [ cycleItem ] = () => {
             	lifeCycleContainer [ cycleItem ].call ( caller );
@@ -158,7 +160,5 @@ extend ( Module, {
 	
 	getIdentifier () {
 		return "module" + guid ();
-	},
-	
-	lifeCycle : [ "queryChanged", "paramChanged" ]
+	}
 } )

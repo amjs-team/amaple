@@ -14,6 +14,9 @@ export const rword = /\S+/g;
 // 变量正则表达式
 export const rvar = /[^0-9]{1}[\w$]*/;
 
+// 模板表达式匹配正则
+export const rexpr = /{{\s*(.*?)\s*}}/;
+
 // 模块事件常量
 export const MODULE_UPDATE = "update";
 export const MODULE_REQUEST = "request";
