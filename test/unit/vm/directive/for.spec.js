@@ -11,12 +11,12 @@ describe ( "directive for => ", () => {
 	it ( "directive :for in element attribute", () => {
         d.innerHTML = '<p :for="item in list">{{ item }}</p>';
 
-        let t = new Tmpl ( d ),
-            vm = new ViewModel ( {
+        let vm = new ViewModel ( {
                 list: [ "a", "b", "c" ]
             } ),
+            t = new Tmpl ( vm ),
             children;
-        t.mount ( vm );
+        t.mount ( d, true, true );
 
         children = d.children;
         expect ( children.length ).toBe ( 3 );
@@ -28,13 +28,13 @@ describe ( "directive for => ", () => {
     it ( "directive :for in element attribute with :key", () => {
         d.innerHTML = '<p :for="item in list" :key="k">{{ item }}{{ k }}<span>{{ show }}</span></p>';
 
-        let t = new Tmpl ( d ),
-            vm = new ViewModel ( {
+        let vm = new ViewModel ( {
                 list: [ "a", "b", "c" ],
                 show: "hello icejs",
             } ),
+            t = new Tmpl ( vm ),
             children;
-        t.mount ( vm );
+        t.mount ( d, true, true );
 
         children = d.children;
         expect ( children.length ).toBe ( 3 );
@@ -68,13 +68,13 @@ describe ( "directive for => ", () => {
     it ( "directive :for with nesting directive", () => {
         d.innerHTML = `<p :for="item in list"><span :if="next === item">{{ item }}</span><span :else>{{ item }} else</span></p>`;
 
-        let t = new Tmpl ( d ),
-            vm = new ViewModel ( {
+        let vm = new ViewModel ( {
                 list: [ "a", "b", "c" ],
                 next: "a",
             } ),
+            t = new Tmpl ( vm ),
             children;
-        t.mount ( vm );
+        t.mount ( d, true, true );
 
         children = d.children;
         expect ( children [ 0 ].firstChild.firstChild.nodeValue ).toBe ( "a" );
@@ -90,13 +90,13 @@ describe ( "directive for => ", () => {
     it ( "use directive :for and :if in the same node", () => {
         d.innerHTML = `<p :if="next === item" :for="item in list">{{ item }}</p>`;
 
-        let t = new Tmpl ( d ),
-            vm = new ViewModel ( {
+        let vm = new ViewModel ( {
                 list: [ "a", "b", "c" ],
                 next: "b",
             } ),
+            t = new Tmpl ( vm ),
             children;
-        t.mount ( vm );
+        t.mount ( d, true, true );
 
         children = d.children;
         expect ( children.length ).toBe ( 1 );
@@ -109,13 +109,13 @@ describe ( "directive for => ", () => {
     it ( "use directive :for and :if in the same node, and use :else-if,:else", () => {
         d.innerHTML = `<p :if="item === 'a'" :for="item in list">{{ item }}</p><p :else-if="item === next">{{ item }} elseif</p><p :else>{{ item }} else</p>`;
 
-        let t = new Tmpl ( d ),
-            vm = new ViewModel ( {
+        let vm = new ViewModel ( {
                 list: [ "a", "b", "c" ],
                 next: "b",
             } ),
+            t = new Tmpl ( vm ),
             children;
-        t.mount ( vm );
+        t.mount ( d, true, true );
 
         children = d.children;
         expect ( children.length ).toBe ( 3 );
@@ -133,12 +133,12 @@ describe ( "directive for => ", () => {
     it ( "directive :for in template node", () => {
         d.innerHTML = `<template :for="item in list"><span>{{ item }}</span><span>hello icejs</span></template>`;
 
-        let t = new Tmpl ( d ),
-            vm = new ViewModel ( {
+        let vm = new ViewModel ( {
                 list: [ "a", "b", "c" ],
             } ),
+            t = new Tmpl ( vm ),
             children;
-        t.mount ( vm );
+        t.mount ( d, true, true );
 
         children = d.children;
         expect ( children.length ).toBe ( 6 );
@@ -154,16 +154,15 @@ describe ( "directive for => ", () => {
     it ( "use directive :for and :if in the same template node", () => {
         d.innerHTML = `<template :if="item === next" :for="item in list"><span>{{ item }}</span><span>hello icejs</span></template><template :else><span>{{ item }} else</span><span>hello icejs</span></template>`;
 
-        let t = new Tmpl ( d ),
-            vm = new ViewModel ( {
+        let vm = new ViewModel ( {
                 list: [ "a", "b", "c" ],
                 next: "a",
             } ),
+            t = new Tmpl ( vm ),
             children;
-        t.mount ( vm );
+        t.mount ( d, true, true );
 
         children = d.children;
-        // console.log(d);
 
         // 调用list方法时会重新克隆元素，然后再进行渲染，此时相关监听变量会再次监听克隆出来的新的元素，但旧的监听已经需要删除了
 

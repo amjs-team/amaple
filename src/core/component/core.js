@@ -1,7 +1,7 @@
 import { extend } from "../../func/util";
 
 
-function Component () {
+export default function Component () {
 	
 }
 
@@ -19,4 +19,16 @@ extend ( Component.prototype, {
     },
 	
 	
+} );
+
+extend ( Component, {
+	globalClass : {},
+
+	defineGlobal ( componentDerivative ) {
+		globalClass [ componentDerivative.name ] = componentDerivative;
+	},
+
+	getGlobal ( name ) {
+		return this.globalClass [ name ];
+	}
 } );

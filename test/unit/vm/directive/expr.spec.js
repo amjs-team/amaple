@@ -10,11 +10,11 @@ describe ( "directive expr", () => {
 	
 	it ( "directive expression will mount in text node", () => {
         d.innerHTML = '<span>{{ expr }}</span><span>{{ expr }}123</span>';
-        let t = new Tmpl ( d ),
-            vm = new ViewModel ( {
+        let vm = new ViewModel ( {
                 expr : "success",
-            } );
-        t.mount ( vm );
+            } ),
+            t = new Tmpl ( vm );
+        t.mount ( d, true, true );
     	expect ( d.firstChild.firstChild.nodeValue ).toBe ( "success" );
         expect ( d.firstChild.nextSibling.firstChild.nodeValue ).toBe ( "success123" );
 
@@ -25,11 +25,11 @@ describe ( "directive expr", () => {
   
 	it ( "directive expression will mount in attribute node", () => {
         d.innerHTML = '<p id="{{ id }}">attr expr</p><p id="{{ id }}456">attr expr2</p>';
-        let t = new Tmpl ( d ),
-            vm = new ViewModel ( {
+        let vm = new ViewModel ( {
                 id : "text",
-            } );
-        t.mount ( vm );
+            } ),
+            t = new Tmpl ( vm );
+        t.mount ( d, true, true );
 
     	expect ( d.firstChild.getAttribute ( "id" ) ).toBe ( "text" );
         expect ( d.querySelector ( "#text" ).firstChild.nodeValue ).toBe ( "attr expr" );
@@ -43,29 +43,29 @@ describe ( "directive expr", () => {
 
     it ( "multiple directive expression in single attribute or single text", () => {
         d.innerHTML = '<p id="{{ id }}{{ text }}">{{ hello }} {{ id }}</p>';
-        let t = new Tmpl ( d ),
-            vm = new ViewModel ( {
+        let vm = new ViewModel ( {
                 id : "text",
                 text : "222",
                 hello : "hello",
-            } );
-        t.mount ( vm );
+            } ),
+            t = new Tmpl ( vm );
+        t.mount ( d, true, true );
 
         expect ( d.querySelector ( "#text222" ).firstChild.nodeValue ).toBe ( "hello text" );
     } );
 
     it ( "Special treatment at attribute \"style\" and \"class\" with directive expression", () => {
         d.innerHTML = '<p class="{{ clazz }}" style="{{ color }}">hello icejs</p>';
-        let t = new Tmpl ( d ),
-            vm = new ViewModel ( {
+        let vm = new ViewModel ( {
                 clazz: [ "a", "b", "c" ],
                 color: {
                     background: "red",
                     color: "white",
                     fontSize: 20,
                 }
-            } );
-        t.mount ( vm );
+            } ),
+            t = new Tmpl ( vm );
+        t.mount ( d, true, true );
 
         expect ( d.querySelector ( ".a" ) ).toEqual ( jasmine.any ( Object ) );
         expect ( d.querySelector ( ".b" ) ).toEqual ( jasmine.any ( Object ) );

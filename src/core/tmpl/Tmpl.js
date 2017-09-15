@@ -4,11 +4,6 @@ import { attr } from "../../func/node";
 import iceAttr from "../../single/iceAttr";
 import Subscriber from "../Subscriber";
 import ViewWatcher from "../ViewWatcher";
-import directiveIf from "./directive/if";
-import directiveFor from "./directive/for";
-import directiveExpr from "./directive/expr";
-import directiveOn from "./directive/on";
-import directiveModel from "./directive/model";
 import { runtimeErr } from "../../error";
 import Structure from "./Structure";
 import Component from "../component/core";
@@ -35,7 +30,7 @@ export default function Tmpl ( vm, components ) {
 extend ( Tmpl.prototype, {
 
     /**
-        mount ( tmplNode: DOMObject, mountModule: Boolean, scoped?: Object )
+        mount ( tmplNode: DOMObject, mountModule: Boolean, isRoot?: Boolean, scoped?: Object )
     
         Return Type:
         void
@@ -46,10 +41,115 @@ extend ( Tmpl.prototype, {
         URL doc:
         http://icejs.org/######
     */
-	mount ( tmplNode, mountModule, scoped ) {
-    	foreach ( Tmpl.mountElem ( tmplNode, mountModule, true ), data => {
-        	new ViewWatcher ( data.handler, data.targetNode, data.expr, this, scoped );
-        } );
+	mount ( elem, mountModule, scoped, isRoot = true ) {
+        const 
+            rattr = /^:([\$\w]+)$/,
+            rexpr = /{{\s*(.*?)\s*}}/;
+
+
+        let directive, handler, targetNode, expr, forAttrValue, firstChild,
+            watcherData = [];
+        
+        do {
+            if ( elem.nodeType === 1 && mountModule ) {
+                
+                // 处理组件元素
+                // 局部没有找到组件则查找全局组件
+                const ComponentDerivative = this.getComponent ( elem.nodeName ) || Component.getGlobal ( elem.nodeName );
+                if ( ComponentDerivative && ComponentDerivative.__proto__.name === "Component" ) {
+                    const comp = new ComponentDerivative ();
+                    this.compInstances.push ( comp );
+                    
+                    elem = comp.__render_ ( elem, this.getViewModel () );
+                }
+                
+                // 处理:for
+                // 处理:if :else-if :else
+                // 处理{{ expression }}
+                // 处理:on
+                // 处理:model
+                forAttrValue = Tmpl.preTreat ( elem );
+                if ( forAttrValue ) {
+                    watcherData.push ( { handler : Tmpl.directives.for, targetNode : elem, expr : forAttrValue } );
+                }
+                else {
+                    
+                    // 将子模块元素保存到页面结构体中以便下次直接获取使用
+                    const moduleName = attr ( elem, iceAttr.module );
+                    if ( Structure.currentPage && type ( moduleName ) === "string" ) {
+                        const currentStructure = Structure.currentPage.getCurrentRender ();
+                        currentStructure.saveSubModuleNode ( elem );
+                    }
+                    
+                    foreach ( slice.call ( elem.attributes ), attr => {
+                        directive = rattr.exec ( attr.nodeName );
+                        if ( directive ) {
+                            directive = directive [ 1 ];
+                            if ( /^on/.test ( directive ) ) {
+                                // 事件绑定
+                                handler = Tmpl.directives.on;
+                                targetNode = elem,
+                                expr = directive.slice ( 2 ) + ":" + attr.nodeValue;
+                            }
+                            else if ( Tmpl.directives [ directive ] ) {
+
+                                // 模板属性绑定
+                                handler = Tmpl.directives [ directive ];
+                                targetNode = elem;
+                                expr = attr.nodeValue;
+                            }
+                            else {
+
+                                // 没有找到该指令
+                                throw runtimeErr ( "directive", "没有找到\"" + directive + "\"指令或表达式" );
+                            }
+
+                            watcherData.push ( { handler, targetNode, expr } );
+                        }
+                        else if ( rexpr.test ( attr.nodeValue ) ) {
+
+                            // 属性值表达式绑定
+                            watcherData.push ( { handler: Tmpl.directives.expr, targetNode : attr, expr : attr.nodeValue } );
+                        }
+                    } );
+                }
+            }
+            else if ( elem.nodeType === 3 ) {
+
+                // 文本节点表达式绑定
+                if ( rexpr.test ( elem.nodeValue ) ) {
+                    watcherData.push ( { handler : Tmpl.directives.expr, targetNode : elem, expr : elem.nodeValue } );
+                }
+            }
+            
+            if ( elem.isComponent ) {
+                if ( elem.canRender ) {
+                    Component.render ( elem );
+                }
+            }
+            else {
+                firstChild = elem.firstChild || elem.content && elem.content.firstChild;
+                if ( firstChild && !forAttrValue ) {
+                    watcherData = watcherData.concat ( this.mount ( firstChild, true, scoped, false ) );
+                }
+            }
+        } while ( !isRoot && ( elem = elem.nextSibling ) )
+
+        if ( !isRoot ) {
+            return watcherData;
+        }
+        else {
+            //////////////////////////////
+            //////////////////////////////
+            //////////////////////////////
+            foreach ( watcherData, data => {
+                new ViewWatcher ( data.handler, data.targetNode, data.expr, this, scoped );
+            } );
+        }
+    },
+
+    getViewModel () {
+        return this.vm;
     },
 	
 	getComponent ( name ) {
@@ -57,7 +157,9 @@ extend ( Tmpl.prototype, {
     },
 } );
 
-extend ( Tmpl, 	{
+extend ( Tmpl, {
+
+    directivePrefix : ":",
 
     /**
         mountElem ( elem: DOMObject, mountModule: Boolean )
@@ -152,8 +254,8 @@ extend ( Tmpl, 	{
             }
             
         	if ( elem.isComponent ) {
-            	if ( elem.canRender ( elem ) {
-            		Component.render( elem );
+            	if ( elem.canRender ) {
+            		Component.render ( elem );
                 }
             }
         	else {
@@ -224,7 +326,7 @@ extend ( Tmpl, 	{
 		if ( elem && elem.nodeName && elem.nodeName.toUpperCase () === "TEMPLATE" ) {
         	const f = document.createDocumentFragment ();
         	foreach ( elem.content && elem.content.childNodes || elem.childNodes, childNode => {
-            	f.appendChild ( node );
+            	f.appendChild ( childNode );
     		} );
         	
         	elem = f;
@@ -233,7 +335,8 @@ extend ( Tmpl, 	{
     	return elem;
     },
 	
-	defineDirective ( name, directice ) {
+	defineDirective ( name, directive ) {
+        this.directives = this.directives || {};
     	this.directives [ name ] = directive;
     }
 } );

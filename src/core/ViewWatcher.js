@@ -1,4 +1,5 @@
 import { extend, type, foreach, noop } from "../func/util";
+import { attr } from "../func/node";
 import { runtimeErr } from "../error";
 import slice from "../var/slice";
 import Subscriber from "./Subscriber";
@@ -61,7 +62,9 @@ export default function ViewWatcher ( directive, node, expr, tmpl, scoped ) {
 	
 	// 移除相关属性指令表达式
 	// 当属性指令表达式与指令名称不同的时候可将对应表达式赋值给this.attrExpr
-	attr ( node, Tmpl.directivePrefix + ( this.attrExpr || directive.name ), null );
+	if ( node.nodeType === 1 ) {
+		attr ( node, Tmpl.directivePrefix + ( this.attrExpr || directive.name ), null );
+	}
 	
   	// 如果scoped为局部数据对象则将expr内的局部变量名替换为局部变量名
 	if ( type ( scoped ) === "object" && scoped.regexp instanceof RegExp ) {

@@ -102,7 +102,7 @@ export default function Promise ( resolver ) {
             	( handler.onFulfilled || noop ).apply ( null, args );
 			} );
 		}
-	},
+	}
 
 	/**
 		reject ( arg1?: any, arg2?: any ... )
@@ -193,7 +193,7 @@ extend ( Promise.prototype, {
 
 
 				onRejected ( ...args ) {
-					( type ( onRejected ) === "function" ? onRejected || noop ) .apply ( null, args );
+					( type ( onRejected ) === "function" ? onRejected : noop ).apply ( null, args );
 				}
 			} );
 		} );

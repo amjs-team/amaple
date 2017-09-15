@@ -59,7 +59,7 @@ Tmpl.defineDirective ( "for", {
             scopedDefinition = {};
   		
         foreach ( iterator, ( item, key ) => {
-        	// f = doc.createDocumentFragment ();
+        	f = doc.createDocumentFragment ();
 
             // 定义范围变量
             scopedDefinition [ this.item ] = item;
@@ -78,23 +78,19 @@ Tmpl.defineDirective ( "for", {
             	itemNode.conditions = elem.conditions;
             }
 
-            // f.appendChild ( itemNode );
+            // 再外套一层fragment的原因是在if中处理时不会因为无法获取itemNode.parentNode而报错
+            f.appendChild ( itemNode );
 
             // 为遍历克隆的元素挂载数据
-        	this.tmpl.mount ( itemNode, true, this.defineScoped ( scopedDefinition ) );
+        	this.tmpl.mount ( f, true, this.defineScoped ( scopedDefinition ) );
 
-            // itemNode = f.firstChild;
-            //if ( itemNode.nodeName && itemNode.nodeName.toUpperCase () === "TEMPLATE" ) {
-                //foreach ( itemNode.content && itemNode.content.childNodes || itemNode.childNodes, node => {
-                    //fragment.appendChild ( node );
-                //} );
-            //}
-            //else {
-                //fragment.appendChild ( itemNode );
-            //}
-        	
-        	itemNode = Tmpl.renderTemplate ( itemNode );
-        	fragment.appendChild ( itemNode );
+            itemNode = f.firstChild;
+            if ( itemNode.nodeName && itemNode.nodeName.toUpperCase () === "TEMPLATE" ) {
+                fragment.appendChild ( Tmpl.renderTemplate ( itemNode ) );
+            }
+            else {
+                fragment.appendChild ( f );
+            }
         } );
     	
       	// 初始化视图时将模板元素替换为挂载后元素

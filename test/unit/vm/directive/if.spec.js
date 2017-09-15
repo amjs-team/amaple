@@ -11,11 +11,11 @@ describe ( "directive if => ", () => {
 	it ( "directive :if in element attribute with single variable", () => {
         d.innerHTML = '<p :if="show">hello icejs</p>';
 
-        let t = new Tmpl ( d ),
-            vm = new ViewModel ( {
+        let vm = new ViewModel ( {
                 show: 0
-            } );
-        t.mount ( vm );
+            } ),
+            t = new Tmpl ( vm );
+        t.mount ( d, true, true );
 
         expect ( d.querySelector ( "p" ) ).toBeNull ();
 
@@ -26,13 +26,13 @@ describe ( "directive if => ", () => {
     it ( "directive :if in element attribute with comparison symbol", () => {
         d.innerHTML = '<p :if="show1 > 1">hello icejs1</p><p :if="show2 === 1">hello icejs2</p><p :if="show3 <= 0">hello icejs3</p>';
 
-        let t = new Tmpl ( d ),
-            vm = new ViewModel ( {
+        let vm = new ViewModel ( {
                 show1: 2,
                 show2: 0,
                 show3: -1,
-            } );
-        t.mount ( vm );
+            } ),
+            t = new Tmpl ( vm );
+        t.mount ( d, true, true );
         expect ( d.firstChild.firstChild.nodeValue ).toBe ( "hello icejs1" );
         expect ( d.firstChild.nextElementSibling.firstChild.nodeValue ).toBe ( "hello icejs3" );
 
@@ -45,11 +45,11 @@ describe ( "directive if => ", () => {
     it ( "directive :if in element attribute with functions fire", () => {
         d.innerHTML = '<p :if="show.toString() == \'1,2,3\'">hello icejs</p>';
 
-        let t = new Tmpl ( d ),
-            vm = new ViewModel ( {
+        let vm = new ViewModel ( {
                 show : [1, 2, 3]
-            } );
-        t.mount ( vm );
+            } ),
+            t = new Tmpl ( vm );
+        t.mount ( d, true, true );
         
         expect ( d.firstChild.firstChild.nodeValue ).toBe ( "hello icejs" );
 
@@ -60,12 +60,12 @@ describe ( "directive if => ", () => {
     it ( "directive :if,:else-if,:else in element attribute", () => {
         d.innerHTML = `<p :if="show > 1">hello icejs1</p><p :else-if="show === 1">hello icejs2</p><p :else>hello icejs3</p><p :if="show2 === 'aa'">hello icejs4</p><p :else-if="show2 === 'bb'">hello icejs5</p>`;
 
-        let t = new Tmpl ( d ),
-            vm = new ViewModel ( {
+        let vm = new ViewModel ( {
                 show: 2,
                 show2: "aa"
-            } );
-        t.mount ( vm );
+            } ),
+            t = new Tmpl ( vm );
+        t.mount ( d, true, true );
         expect ( d.childNodes.length ).toBe ( 2 );
         expect ( d.firstChild.firstChild.nodeValue ).toBe ( "hello icejs1" );
 
@@ -88,13 +88,13 @@ describe ( "directive if => ", () => {
     it ( "directive :if,:else-if,:else with nesting", () => {
         d.innerHTML = `<div :if="show > 1"><p :if="show2">hello icejs1</p></div><div :else-if="show === 1"><p :if="show3 === 'a'">hello icejs2</p><p :else-if="show3 === 'b'">hello icejs3</p></div><div :else>hello icejs4</div>`;
 
-        let t = new Tmpl ( d ),
-            vm = new ViewModel ( {
+        let vm = new ViewModel ( {
                 show: 2,
                 show2: "aa",
                 show3: 'a'
-            } );
-        t.mount ( vm );
+            } ),
+            t = new Tmpl ( vm );
+        t.mount ( d, true, true );
 
         expect ( d.firstChild.firstChild.firstChild.nodeValue ).toBe ( "hello icejs1" );
         expect ( d.firstChild.nextSibling ).toBeNull ();
@@ -118,13 +118,13 @@ describe ( "directive if => ", () => {
     it ( "directive :if,:else-if,:else in template node", () => {
         d.innerHTML = `<template :if="show == 1"><span>{{ num }}</span><span>666</span></template><template :else-if="show == 2"><span>{{ num }}</span><span>888</span></template><div :else>999</div>`;
 
-        let t = new Tmpl ( d ),
-            vm = new ViewModel ( {
+        let vm = new ViewModel ( {
                 show: 1,
                 num: 555,
             } ),
+            t = new Tmpl ( vm ),
             children;
-        t.mount ( vm );
+        t.mount ( d, true, true );
 
         children = d.children;
         expect ( children.length ).toBe ( 2 );
