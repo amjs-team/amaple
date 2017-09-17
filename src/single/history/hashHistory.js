@@ -1,6 +1,7 @@
 import { foreach, type, noop } from "../../func/util";
 import { query } from "../../func/node";
 import configuration from "../../core/configuration/core";
+import event from "../../event/core";
 import { HASH_HISTORY, BROWSER_HISTORY } from "./historyMode";
 import browserHistory from "./browserHistory";
 

@@ -73,11 +73,6 @@ export default {
         }
     	
     	iceHistory.initHistory ( routerConfig.history );
-
-    	delete routerConfig.history;
-    	
-    	// 将除routes、history外的配置信息进行保存
-    	configuration ( routerConfig );
     	
     	// 当使用hash模式时纠正路径
     	const 
@@ -91,6 +86,11 @@ export default {
             
             window.location.replace ( href.replace ( host, host + "#/" ) );
         }
+
+        delete routerConfig.history;
+    	
+    	// 将除routes、history外的配置信息进行保存
+    	configuration ( routerConfig );
 
         // 绑定元素请求或提交表单的事件到body元素上
         event.on ( document.body, "click submit", ( e ) => {

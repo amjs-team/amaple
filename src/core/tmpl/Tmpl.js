@@ -10,6 +10,67 @@ import Structure from "./Structure";
 import Component from "../component/core";
 
 /**
+    preTreat ( elem: DOMObject )
+
+    Return Type:
+    Object
+    处理后的元素对象
+
+    Description:
+    元素预处理
+    主要对“:if”、“:for”两个指令的特殊处理
+
+    URL doc:
+    http://icejs.org/######
+*/
+function preTreat ( elem ) {
+
+    const
+        _if = Tmpl.directivePrefix + "if",
+        _elseif = Tmpl.directivePrefix + "else-if",
+        _else = Tmpl.directivePrefix + "else";
+
+    let nextSib, parent, 
+        condition = attr ( elem, _if );
+
+    if ( condition && !elem.conditionElems ) {
+        elem = this.renderComponent ( elem );
+
+        elem.conditions = [ condition ];
+        elem.conditionElems = [ elem ];
+        parent = elem.parentNode;
+        while ( nextSib = elem.nextElementSibling ) {
+            if ( condition = attr ( nextSib, _elseif ) ) {
+                nextSib = this.renderComponent ( nextSib );
+                elem.conditions.push ( condition );
+                elem.conditionElems.push ( nextSib );
+                attr ( nextSib, _elseif, null );
+                parent.removeChild ( nextSib );
+            }
+            else if ( nextSib.hasAttribute ( _else ) ) {
+                nextSib = this.renderComponent ( nextSib );
+                elem.conditions.push ( "true" );
+                elem.conditionElems.push ( nextSib );
+                attr ( nextSib, _else, null );
+                parent.removeChild ( nextSib );
+                break;
+            }
+            else {
+                break;
+            }
+        }
+    }
+
+    foreach ( elem.conditionElems || [], nextSib => {
+        if ( nextSib.nodeName.toUpperCase () === "TEMPLATE" ) {
+            nextSib.templateNodes = slice.call ( nextSib.content.childNodes );
+        }
+    } );
+    
+    return elem;
+}
+
+/**
     Plugin Tmpl
 
     Description:
@@ -59,21 +120,17 @@ extend ( Tmpl.prototype, {
                 // 处理{{ expression }}
                 // 处理:on
                 // 处理:model
-                forAttrValue = Tmpl.preTreat ( elem );
-                if ( forAttrValue ) {
+                elem = preTreat.call ( this, elem );
+                if ( forAttrValue = attr ( elem, Tmpl.directivePrefix + "for" ) ) {
                     watcherData.push ( { handler : Tmpl.directives.for, targetNode : elem, expr : forAttrValue } );
                 }
                 else {
                 	
-            		// 处理组件元素
-                	// 局部没有找到组件则查找全局组件
-                	const ComponentDerivative = this.getComponent ( elem.nodeName ) || Component.getGlobal ( elem.nodeName );
-                	if ( ComponentDerivative && ComponentDerivative.__proto__.name === "Component" ) {
-                    	const comp = new ComponentDerivative ();
-                    	this.compInstances.push ( comp );
-                    
-                    	elem = comp.__mount__ ( elem, this.getViewModel () );
-                	}
+                    // 如果不是渲染后的组件元素，即表示该组件元素没有"if"和"for"指令
+                    if ( !elem.isComponent ) {
+                        // elem = this.renderComponent ( elem );
+                        // elem.canRender = true;
+                    }
                     
                     // 将子模块元素保存到页面结构体中以便下次直接获取使用
                     const moduleName = attr ( elem, iceAttr.module );
@@ -156,65 +213,39 @@ extend ( Tmpl.prototype, {
 	getComponent ( name ) {
     	return this.components [ name ];
     },
+
+    /**
+        renderComponent ( elem: DOMObject )
+    
+        Return Type:
+        elem
+        原组件或渲染后的组件
+    
+        Description:
+        渲染组件元素为真实元素结构，如果不是组件元素则返回原来的元素
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    renderComponent ( elem ) {
+
+        // 处理组件元素
+        // 局部没有找到组件则查找全局组件
+        const ComponentDerivative = this.getComponent ( elem.nodeName ) || Component.getGlobal ( elem.nodeName );
+        if ( ComponentDerivative && ComponentDerivative.__proto__.name === "Component" ) {
+            const comp = new ComponentDerivative ();
+            this.compInstances.push ( comp );
+           
+            elem = comp.__mount__ ( elem, this.getViewModel () );
+        }
+
+        return elem;
+    }
 } );
 
 extend ( Tmpl, {
 
     directivePrefix : ":",
-
-    /**
-        preTreat ( elem: DOMObject )
-    
-        Return Type:
-        String
-        当前元素的“:for”属性值
-    
-        Description:
-        元素预处理
-        主要对“:if”、“:for”两个指令的特殊处理
-    
-        URL doc:
-        http://icejs.org/######
-    */
-	preTreat ( elem ) {
-    	
-    	let nextSib, parent, 
-            _if = ":if",
-            _elseif = ":else-if",
-            _else = ":else",
-            condition = attr ( elem, _if );
-    	if ( condition && !elem.conditionElems ) {
-            elem.conditions = [ condition ];
-            elem.conditionElems = [ elem ];
-            parent = elem.parentNode;
-        	while ( nextSib = elem.nextElementSibling ) {
-        		if ( condition = attr ( nextSib, _elseif ) ) {
-					elem.conditions.push ( condition );
-                	elem.conditionElems.push ( nextSib );
-                    attr ( nextSib, _elseif, null );
-          			parent.removeChild ( nextSib );
-            	}
-				else if ( nextSib.hasAttribute ( _else ) ) {
-                	elem.conditions.push ( "true" );
-                	elem.conditionElems.push ( nextSib );
-                    attr ( nextSib, _else, null );
-          			parent.removeChild ( nextSib );
-                	break;
-                }
-      			else {
-                	break;
-                }
-        	}
-        }
-
-        foreach ( elem.conditionElems || [], nextSib => {
-            if ( nextSib.nodeName.toUpperCase () === "TEMPLATE" ) {
-                nextSib.templateNodes = slice.call ( nextSib.content.childNodes );
-            }
-        } );
-        
-        return attr ( elem, ":for" );
-    },
       
     renderTemplate ( elem ) {
 		if ( elem && elem.nodeName && elem.nodeName.toUpperCase () === "TEMPLATE" ) {

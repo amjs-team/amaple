@@ -80,7 +80,6 @@ extend ( Component.prototype, {
     		tmpl.mount ( template.content || template );
 
     		template.isComponent = true;
-    		template.canRender = !attr ( componentNode, ":for" );	// 待考虑？？？？？？
 
     		// 将处理过的实际组件结构替换组件代表元素
     		componentNode.parent.replaceChild ( template, componentNode );
