@@ -1,5 +1,6 @@
 import { attr } from "../../../func/node";
 import { type, foreach } from "../../../func/util";
+import { noUnitHook } from "../../../var/const";
 import Tmpl from "../Tmpl";
 
 Tmpl.defineDirective ( "expr", {
@@ -59,8 +60,9 @@ Tmpl.defineDirective ( "expr", {
             // 绑定style属性时可传入对象，键为样式名的驼峰式，值为样式值
             if ( nodeName === "style" ) {
                 if ( tval === "object" ) {
-                    let noUnitHook = [ "z-index" ],
-                        styleArray = [], num;
+                    const styleArray = [];
+                    let num;
+
                     foreach ( val, ( v, k ) => {
                         // 将驼峰式变量名转换为横杠式变量名
                         k = k.replace ( /[A-Z]/g, match => "-" + match.toLowerCase () );

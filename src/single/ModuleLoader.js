@@ -1,6 +1,5 @@
-import { type, extend, foreach, noop, isPlainObject, isEmpty } from "../func/util";
-import { query, attr, html, scriptEval } from "../func/node";
-import { serialize } from "../func/private";
+import { type, extend, foreach, noop, isPlainObject, isEmpty, timestamp } from "../func/util";
+import { query, attr, html, scriptEval, serialize } from "../func/node";
 import { envErr, moduleErr } from "../error";
 import { MODULE_UPDATE, MODULE_REQUEST, MODULE_RESPONSE } from "../var/const";
 import compileModule from "./compileModule";
@@ -323,7 +322,7 @@ extend ( ModuleLoader, {
 			( isCache === "true" || moduleConfig.cache === true && isCache !== "false" )
 			&& ( !method || method.toUpperCase () !== "POST" )
 			&& historyModule
-			&& ( moduleConfig.expired === 0 || historyModule.time + moduleConfig.expired > Date.now () )
+			&& ( moduleConfig.expired === 0 || historyModule.time + moduleConfig.expired > timestamp () )
 		) {
 	        this.saveModuleUpdateFn ( () => {
             	Structure.currentPage.signCurrentRender ( currentStructure, param, args, isPlainObject ( data ) ? data : serialize ( data ) );
@@ -363,7 +362,7 @@ extend ( ModuleLoader, {
 	            const updateFn = compileModule ( moduleString, moduleNode );
 
 	            // 缓存模块更新函数
-	            cache.pushModule ( path, { updateFn, time : Date.now () } );
+	            cache.pushModule ( path, { updateFn, time : timestamp () } );
 	        	
 	        	this.saveModuleUpdateFn ( () => {
 	            	event.emit ( moduleNode, MODULE_RESPONSE );

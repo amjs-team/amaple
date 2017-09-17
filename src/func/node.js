@@ -269,3 +269,41 @@ export function attr ( context, name, val ) {
         	context.removeAttribute ( name );
     }
 }
+
+/**
+	serialize ( form: DOMObject )
+
+	Return Type:
+	Object
+	序列化后表单信息对象
+
+	Description:
+	将表单内的信息序列化为表单信息对象
+
+	URL doc:
+	http://icejs.org/######
+*/
+export function serialize ( form ) {
+	if ( !form.nodeName || form.nodeName.toUpperCase () !== "FORM" ) {
+		return form;
+	}
+
+	const 
+		rcheckableType 	= ( /^(?:checkbox|radio)$/i ),
+		rsubmitterTypes = /^(?:submit|button|image|reset|file)$/i,
+		rsubmittable 	= /^(?:input|select|textarea|keygen)/i,
+		rCRLF 			= /\r?\n/g,
+
+		inputs 			= slice.call ( form.elements ),
+		formObject 		= {};
+
+	// 判断表单中是否含有上传文件
+	foreach ( inputs, inputItem => {
+		if ( inputItem.name && !attr ( inputItem, "disabled" ) && rsubmittable.test( inputItem.nodeName ) && !rsubmitterTypes.test( inputItem.type ) && ( inputItem.checked || !rcheckableType.test( inputItem.type ) ) ) {
+
+			formObject [ name ] = inputItem.value.replace ( rCRLF, "\r\n" );
+		}
+	} );
+
+	return formObject;
+}

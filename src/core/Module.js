@@ -5,6 +5,7 @@ import slice from "../var/slice";
 import cache from "../cache/core";
 import { newClassCheck } from "../Class.js";
 import ModuleCaller from "./ModuleCaller";
+import moduleConstructor from "./moduleConstructor";
 import ViewModel from "./ViewModel";
 import Tmpl from "./tmpl/Tmpl";
 import iceAttr from "../single/iceAttr";
@@ -73,15 +74,7 @@ export default function Module ( module, vmData = { init: function () { return {
   	
   	/////////////////////////////////
   	/////////////////////////////////
-	const
-		// 获取init方法参数
-		initArgs = matchFnArgs ( vmData.init ),
-      	initDeps = initArgs.map ( plugin => cache.getPlugin ( plugin ) ),
-
-		// 获取apply方法参数
-		applyArgs = matchFnArgs ( vmData.apply || noop ),
-        applyDeps = applyArgs.map ( plugin => cache.getPlugin ( plugin ) ),
-        caller = this.caller = new ModuleCaller ();
+	const caller = this.caller = new ModuleCaller ();
 
 	let parent;
 	if ( Structure.currentPage ) {
@@ -118,7 +111,7 @@ export default function Module ( module, vmData = { init: function () { return {
 	
 		// 获取后初始化vm的init方法
 		// 对数据模型进行转换
-		vm = new ViewModel ( vmData.init.apply ( caller, initDeps ) ),
+		vm = new ViewModel ( vmData.init.apply ( caller, cache.getDependentPlugin ( vmData.init ) ) ),
 
 		// 使用vm解析模板
 		tmpl = new Tmpl ( vm, vmData.components );
@@ -132,28 +125,12 @@ export default function Module ( module, vmData = { init: function () { return {
 	// 如果parentVm为对象时表示此模块不是最上层模块，不需挂载
 	tmpl.mount ( moduleElem, !parent );
 	
-	this.initLifeCycle ( caller );
+	const lifeCycle = [ "mount", "queryChanged", "paramChanged", "unmount" ];
+	moduleConstructor.initLifeCycle ( this, lifeCycle, vm );
 	
 	// 调用apply方法
-	( vmData.apply || noop ).apply ( caller, applyDeps );
+	( vmData.apply || noop ).apply ( caller, cache.getDependentPlugin ( vmData.apply || noop ) );
 }
-
-extend ( Module.prototype, {
-	initLifeCycle ( caller ) {
-    	const 
-    		lifeCycle = [ "mount", "queryChanged", "paramChanged", "unmount" ],
-    		lifeCycleContainer = {};
-    	
-    	foreach ( lifeCycle, cycleItem => {
-        	lifeCycleContainer [ cycleItem ] = this.vm [ cycleItem ] || noop;
-        	this [ cycleItem ] = () => {
-            	lifeCycleContainer [ cycleItem ].call ( caller );
-            }
-        	
-        	delete this.vm [ cycleItem ];
-        } );
-    }
-} );
 
 extend ( Module, {
 	identifier : "ice-identifier",

@@ -2,14 +2,14 @@ import iceAttr from "./iceAttr";
 import { attr, query } from "../func/node";
 import { buildURL } from "../func/private";
 import { type } from "../func/util";
-import event from "../event/core";
 import Router from "../router/core";
+import http from "../http/core";
 import iceHistory from "./history/iceHistory";
 import { moduleErr } from "../error";
 import Structure from "../core/tmpl/Structure";
 
 /**
-    requestEventBind ( elem: DOMObject )
+    requestEventBind ( e: Object )
 
     Return Type:
     void
@@ -20,25 +20,22 @@ import Structure from "../core/tmpl/Structure";
     url doc:
     http://icejs.org/######
 */
-export default function requestEventBind ( elem ) {
-    event.on ( elem, "click submit", e => {
+export default function requestEventHandler ( path, method, post ) {
+
+    if ( method === "GET" ) {
 
         const 
-            target = e.target,
-        	path = iceHistory.history.buildURL ( attr ( target, e.type.toLowerCase () === "submit" ? iceAttr.action : iceAttr.href ) ),
-            method = e.type.toLowerCase () === "submit" ? attr ( target, "method" ) : "get",
             param = {},
         	nextStructure = Router.matchRoutes ( path, param );
 
-		if ( !nextStructure.isEmptyStructure () ) {
-        	e.preventDefault ();
-
+    	if ( !nextStructure.isEmptyStructure () ) {
             const location = {
                 path,
-                nextStructure : nextStructure,
+                nextStructure : nextStructure.copy (),
                 param,
                 get : iceHistory.history.getQuery ( path ),
-                post : method.toLowerCase () === "post" ? target : {},
+                post,
+                method,
                 action : "PUSH"
             };
 
@@ -49,5 +46,15 @@ export default function requestEventBind ( elem ) {
             Structure.currentPage.render ( location );
                 	
         }
-    } );
+    }
+    else if ( method === "POST" ) {
+        // post提交数据
+        http.post ( path, post, ( redirectPath ) => {
+            if ( redirectPath ) {
+                redirectPath = iceHistory.history.buildURL ( redirectPath );
+
+                requestEventHandler ( redirectPath, "GET", {} );
+            }
+        } );
+    }
 }

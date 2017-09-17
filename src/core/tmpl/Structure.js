@@ -1,7 +1,8 @@
 import { extend, foreach, type, isEmpty } from "../../func/util";
-import { query, attr } from "../../func/node";
+import { query, attr, serialize } from "../../func/node";
 import { moduleErr } from "../../error";
 import ModuleLoader from "../../single/ModuleLoader";
+import requestEventHandler from "../../single/requestEventHandler";
 import iceAttr from "../../single/iceAttr";
 import iceHistory from "../../single/history/iceHistory";
 
@@ -148,6 +149,42 @@ extend ( Structure.prototype, {
             }
         } );
     },
+
+    /**
+        copy ()
+    
+        Return Type:
+        Object
+    
+        Description:
+        拷贝一个Structure对象
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    copy ( entity = this.entity, parent = null ) {
+        const copyEntity = [];
+
+        foreach ( entity, item => {
+            const copyItem = {};
+
+            foreach ( item, ( v, k ) => {
+                if ( k === "children" ) {
+                    copyItem.children = this.copy ( v, copyItem );
+                }
+                else if ( k === "parent" ) {
+                    copyItem.parent = parent;
+                }
+                else {
+                    copyItem [ k ] = v;
+                }
+            } );
+
+            copyEntity.push ( copyItem );
+        } );
+
+        return parent ? copyEntity : new Structure ( copyEntity );
+    },
 	
 	/**
         render ( location: Object )
@@ -162,34 +199,35 @@ extend ( Structure.prototype, {
         http://icejs.org/######
     */
 	render ( location ) {
-    	const 
+
+        const 
             locationGuide = {
-        	   structure : location.nextStructure, 
-        	   param : location.param,
-        	   get : location.get,
-               post : location.post
+            structure : location.nextStructure, 
+                param : location.param,
+                get : location.get,
+                post : serialize ( location.post )
             },
 
             // 使用模块加载器来加载更新模块
             moduleLoader = new ModuleLoader ();
-    	
+        
         moduleLoader.load ( this, { param : location.param, get : location.get, post : location.post } );
-    	
-    	switch ( location.action ) {
-        	case "PUSH":
-            	iceHistory.push ( locationGuide, location.path );
-            	
-            	break;
-        	case "REPLACE":
-            	iceHistory.replace ( locationGuide, location.path );
-            	
-        		break;
-        	case "NONE":
-            	iceHistory.saveState ( location.path, locationGuide );
+        
+        switch ( location.action ) {
+            case "PUSH":
+                iceHistory.push ( locationGuide, location.path );
+                
+                break;
+            case "REPLACE":
+                iceHistory.replace ( locationGuide, location.path );
+                
+                break;
+            case "NONE":
+                iceHistory.saveState ( location.path, locationGuide );
 
-            	break;
-        	case "POP":
-            	// do nothing
+                break;
+            case "POP":
+                // do nothing
         }
     },
 } );

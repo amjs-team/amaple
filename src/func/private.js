@@ -1,4 +1,6 @@
 import { foreach, type } from "./util";
+import { attr } from "./node";
+import slice from "../var/slice";
 
 /**
 	urlTransform ( str: String, mode: Boolean )
@@ -25,6 +27,16 @@ export function urlTransform ( str, mode ) {
 	return mode ? str.replace( rsep, point) : str.replace ( rpoint, separation );
 }
 
+// 转换存取器属性
+export function defineReactiveProperty ( key, getter, setter, target ) {
+	Object.defineProperty ( target, key, {
+		enumerable : true,
+		configurable : true,
+		get : getter,
+		set : setter
+	} );
+}
+
 /**
 	matchFnArgs ( fn: Function )
 
@@ -44,54 +56,16 @@ export function urlTransform ( str, mode ) {
 	URL doc:
 	http://icejs.org/######
 */
-export function matchFnArgs ( fn ) {
-	let fnStr = fn.toString ();
+// export function matchFnArgs ( fn ) {
+// 	let fnStr = fn.toString ();
 
-	return type ( fn ) === "function" ? 
-			( ( 
-				/^function(?:\s+\w+)?\s*\((.*)\)\s*/.exec ( fnStr ) || /^\(?(.*?)\)?\s*=>/.exec ( fnStr ) || /^\S+\s*\((.*?)\)/.exec ( fnStr ) || [] ) [ 1 ]
-				|| "" )
-			.split ( "," ).filter ( item => !!item ).map ( item => item.trim () )
-    		: [];
-}
-
-/**
-	serialize ( form: DOMObject )
-
-	Return Type:
-	Object
-	序列化后表单信息对象
-
-	Description:
-	将表单内的信息序列化为表单信息对象
-
-	URL doc:
-	http://icejs.org/######
-*/
-export function serialize ( form ) {
-	if ( !form.nodeName || form.nodeName.toUpperCase () !== "FORM" ) {
-		return form;
-	}
-
-	const 
-		rcheckableType 	= ( /^(?:checkbox|radio)$/i ),
-		rsubmitterTypes = /^(?:submit|button|image|reset|file)$/i,
-		rsubmittable 	= /^(?:input|select|textarea|keygen)/i,
-		rCRLF 			= /\r?\n/g,
-
-		inputs 			= form.elements.slice (),
-		formObject 		= {};
-
-	// 判断表单中是否含有上传文件
-	foreach ( inputs, inputItem => {
-		if ( inputItem.name && !attr ( inputItem, "disabled" ) && rsubmittable.test( inputItem.nodeName ) && !rsubmitterTypes.test( inputItem.type ) && ( inputItem.checked || !rcheckableType.test( inputItem.type ) ) ) {
-
-			formObject [ name ] = inputItem.value.replace ( rCRLF, "\r\n" );
-		}
-	} );
-
-	return formObject;
-}
+// 	return type ( fn ) === "function" ? 
+// 			( ( 
+// 				/^function(?:\s+\w+)?\s*\((.*)\)\s*/.exec ( fnStr ) || /^\(?(.*?)\)?\s*=>/.exec ( fnStr ) || /^\S+\s*\((.*?)\)/.exec ( fnStr ) || [] ) [ 1 ]
+// 				|| "" )
+// 			.split ( "," ).filter ( item => !!item ).map ( item => item.trim () )
+//     		: [];
+// }
 
 /**
 	parseGetQuery ( getString: String )

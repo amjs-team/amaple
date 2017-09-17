@@ -3,7 +3,7 @@ import { runtimeErr } from "../error";
 import Subscriber from "./Subscriber";
 
 /**
-	ComputedWatcher ( updateFn: Function, getter: Function )
+	ValueWatcher ( updateFn: Function, getter: Function )
 
 	Return Type:
 	void
@@ -16,7 +16,7 @@ import Subscriber from "./Subscriber";
 	URL doc:
 	http://icejs.org/######
 */
-export default function ComputedWatcher ( updateFn, getter ) {
+export default function ValueWatcher ( updateFn, getter ) {
 
 	this.updateFn = updateFn;
 	this.getter = getter;
@@ -26,7 +26,7 @@ export default function ComputedWatcher ( updateFn, getter ) {
 	updateFn ( getter () );
 }
 
-extend ( ComputedWatcher.prototype, {
+extend ( ValueWatcher.prototype, {
 
 	/**
 		update ()

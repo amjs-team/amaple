@@ -1,7 +1,7 @@
-import { extend, type, foreach } from "../func/util";
-import { attr } from "../func/node";
-import { serialize } from "../func/private";
+import { extend, type, foreach, isPlainObject } from "../func/util";
+import { attr, serialize } from "../func/node";
 import event from "../event/core";
+import correctParam from "../correctParam";
 import Promise from "../promise/Promise";
 import ICEXMLHttpRequest from "./ICEXMLHttpRequest";
 import xhr from "./transport/xhr";
@@ -90,7 +90,7 @@ function request ( method ) {
                     } );
 
 	    			// get请求参数初始化
-	    			params = { 
+	    			params = {
 	    				url 	: url, 
 	    				args 	: args, 
 	    				success : callback,
@@ -103,7 +103,7 @@ function request ( method ) {
 	    		}
 
 	    		// 合并参数
-	    		return extend ( defaultOptions, params );
+	    		return extend ( {}, defaultOptions, params );
 	    	}
 	    } ) ( method ),
 
@@ -180,12 +180,14 @@ function request ( method ) {
 				}
 			}
 
-			let args = [];
-			foreach ( options.data, ( _data, index ) => {
-				args.push ( index + "=" + _data );
-			} );
+			if ( isPlainObject ( options.data ) ) {
+				let args = [];
+				foreach ( options.data, ( _data, index ) => {
+					args.push ( index + "=" + _data );
+				} );
 
-			options.data = args.join ( "&" );
+				options.data = args.join ( "&" );
+			}
 		}
 
 		// 将method字符串转为大写以统一字符串为大写，以便下面判断

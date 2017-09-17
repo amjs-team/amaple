@@ -248,7 +248,7 @@ export function isWindow ( object ) {
 	http://icejs.org/######
 */
 export function isPlainObject ( object ) {
-	return toString.call ( object ) === "[object Object]";
+	return object.__proto__.constructor === Object && object.__proto__.toString && object.__proto__.valueOf;
 }
 
 /**
@@ -265,4 +265,21 @@ export function isPlainObject ( object ) {
 */
 export function guid () {
 	return setTimeout( 1 ) + "";
+}
+
+/**
+	timestamp ()
+
+	Return Type:
+	Number
+	当前时间戳
+
+	Description:
+	获取当前时间戳
+
+	URL doc:
+	http://icejs.org/######
+*/
+export function timestamp () {
+	return Math.floor ( Date.now () / 1000 );
 }

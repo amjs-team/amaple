@@ -2,7 +2,8 @@ import { type, foreach, noop, isEmpty } from "../func/util";
 import { query, attr } from "../func/node";
 import configuration from "./configuration/core";
 import cache from "../cache/core";
-import requestEventBind from "../single/requestEventBind";
+import requestEventHandler from "../single/requestEventHandler";
+import iceAttr from "../single/iceAttr";
 import iceHistory from "../single/history/iceHistory";
 import { AUTO, HASH_HISTORY, BROWSER_HISTORY } from "../single/history/historyMode";
 import event from "../event/core";
@@ -92,7 +93,19 @@ export default {
         }
 
         // 绑定元素请求或提交表单的事件到body元素上
-        requestEventBind ( document.body );
+        event.on ( document.body, "click submit", ( e ) => {
+
+        	const
+	        	target = e.target,
+	       		path = attr ( target, e.type.toLowerCase () === "submit" ? iceAttr.action : iceAttr.href ),
+	        	method = e.type.toLowerCase () === "submit" ? attr ( target, "method" ).toUpperCase () : "GET";
+
+	        if ( path ) {
+	        	e.preventDefault ();
+
+	        	requestEventHandler ( iceHistory.history.buildURL ( path ), method, method.toLowerCase () === "post" ? target : {} );
+	        }
+        } );
     	
 
     	const 
@@ -105,12 +118,13 @@ export default {
 	        	param,
 	        	get : iceHistory.history.getQuery (),
 	        	post : {},
+	        	method : "GET",
 	        	action : "NONE"
 	        };
 
     	// Router.matchRoutes()匹配当前路径需要更新的模块
 		// 因路由刚启动，故将nextStructure直接赋值给currentPage
-    	Structure.currentPage = location.nextStructure;
+    	Structure.currentPage = location.nextStructure.copy ();
 
     	// 根据更新后的页面结构体渲染新视图
     	Structure.currentPage.render ( location );
@@ -134,14 +148,7 @@ export default {
 		check ( pluginDefiniton.name ).type ( "string" ).notBe ( "" ).check ( cache.hasPlugin ( pluginDefiniton.name ) ).be ( true ).ifNot ( "pluginDefiniton.name", "plugin安装对象必须定义name属性以表示此插件的名称，且不能与已有插件名称重复" ).do ();
     	check ( pluginDefiniton.build ).type ( "function" ).ifNot ( "pluginDefiniton.build", "plugin安装对象必须包含build方法" ).do ();
     	
-    	const depNames = matchFnArgs ( pluginDefiniton.build );
-    	let deps = [];
-    	if ( !isEmpty ( depNames ) ) {
-    		foreach ( depNames, name => {
-    			deps.push ( cache.getPlugin ( name ) );
-    		} );
-    	}
-
+    	const deps = cache.getDependentPlugin ( pluginDefiniton.build );
         cache.pushPlugin ( pluginDefiniton.name, pluginDefiniton.build.apply ( this, deps ) );
 	}
 };

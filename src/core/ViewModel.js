@@ -1,17 +1,8 @@
 import { foreach, type, isPlainObject, noop } from "../func/util";
 import { vmComputedErr } from "../error";
+import { defineReactiveProperty } from "../func/private";
 import Subscriber from "./Subscriber";
-import ComputedWatcher from "./ComputedWatcher";
-
-// 转换存取器属性
-function defineProperty ( key, getter, setter, target ) {
-	Object.defineProperty ( target, key, {
-		enumerable : true,
-		configurable : true,
-		get : getter,
-		set : setter
-	} );
-}
+import ValueWatcher from "./ValueWatcher";
 
 
 function convertState ( value, subs, context ) {
@@ -32,11 +23,10 @@ function initMethod ( methods, context ) {
 
 // 初始化监听属性
 function initState ( states, context ) {
-  	let proxyState = {};
-	
 	foreach ( states, ( state, key ) => {
-		let subs = new Subscriber (),
-        	watch = noop,
+		const subs = new Subscriber ();
+        	
+        let watch = noop,
 			oldVal;
 
 		// 如果属性带有watch方法
@@ -47,7 +37,8 @@ function initState ( states, context ) {
       
     	state = convertState ( state, subs, context );
       	
-      	defineProperty ( key, () => {
+      	defineReactiveProperty ( key, () => {
+
 				// 绑定视图
 				subs.subscribe ();
 				return state;
@@ -63,48 +54,38 @@ function initState ( states, context ) {
 					subs.notify ();
 				}
    			}, context );
-
-      	// 代理监控数据
-  		defineProperty ( key, () => {
-      			return context [ key ];
-    		},
-            ( newVal ) => {
-            	context [ key ] = newVal;
-			}, proxyState );
     } );
-  	
-  	return proxyState;
 }
 
 // 初始化监听计算属性
-function initComputed ( computeds, states, context ) {
+function initComputed ( computeds, context ) {
 	foreach ( computeds, function ( computed, key ) {
 
 		if ( type ( computed ) !== "function" && type ( computed ) === "object" && type ( computed.get ) !== "function" ) {
 			throw vmComputedErr ( key, "计算属性必须包含get函数，可直接定义一个函数或对象内包含get函数" );
 		}
 
-		let state,
+		const
 			subs = new Subscriber (),
-			getter = () => {
+			getter = ( () => {
 				let computedGetter = type ( computed ) === "function" ? computed : computed.get;
 				return function () {
-					return computedGetter.call ( states );
+					return computedGetter.call ( context );
 				};
-        	};
+        	} ) ();
+
+        let state;
 
         // 创建ComputedWatcher对象供依赖数据监听
-        new ComputedWatcher ( ( newVal ) => {
-        		if ( state !== newVal ) {
-        			state = newVal;
+        new ValueWatcher ( ( newVal ) => {
+        		state = getter ();
 
-        			// 更新视图
-					subs.notify ();
-        		}
-        	}, getter () );
+        		// 更新视图
+				subs.notify ();
+        	}, getter );
       	
       	// 设置计算属性为监听数据
-      	defineProperty ( key, () => {
+      	defineReactiveProperty ( key, () => {
 
 				// 绑定视图
 				subs.subscribe ();
@@ -114,7 +95,7 @@ function initComputed ( computeds, states, context ) {
 			type ( computed.set ) === "function" ? 
 			( newVal ) => {
 				if ( state !== newVal ) {
-					computed.set.call ( states, newVal );
+					computed.set.call ( context, newVal );
 
 					// 更新视图
 					subs.notify ();
@@ -198,5 +179,6 @@ export default function ViewModel ( vmData, isRoot = true ) {
 
 	// 初始化监听属性
 	initMethod ( method, this );
-	initComputed ( computed, initState ( state, this ), this );
+	initState ( state, this );
+	initComputed ( computed, this );
 }

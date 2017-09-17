@@ -23,7 +23,8 @@ export default {
     	   	// 根据更新后的页面结构体渲染新视图
     	   	Structure.currentPage.render ( {
             	param : locationGuide.param,
-            	search : locationGuide.search,
+            	get : locationGuide.get,
+    	       	post : locationGuide.post,
             	action : "POP"
             } );
         } );

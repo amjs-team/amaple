@@ -16,6 +16,15 @@ import event from "./event";
 	http://icejs.org/######
 */
 export default {
+
+	getDependentPlugin ( fn ) {
+		const 
+			fnStr = fn.toString (),
+			deps = ( ( 
+					/^function(?:\s+\w+)?\s*\((.*)\)\s*/.exec ( fnStr ) || /^\(?(.*?)\)?\s*=>/.exec ( fnStr ) || /^\S+\s*\((.*?)\)/.exec ( fnStr ) || [] ) [ 1 ]
+					|| "" )
+				.split ( "," ).filter ( item => !!item ).map ( item => this.getPlugin ( item.trim () ) );
+	},
 	
 	// 查看是否存在指定插件
 	hasPlugin ( name ) {

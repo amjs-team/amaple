@@ -19,7 +19,7 @@ module.exports = function(config) {
     files: [
         'context.js',
     	{
-        	pattern : 'loadModule/module-files/**/*',
+        	pattern : 'loadModule/**/*',
         	watched : false,
         	included : false,
         	served : true,
@@ -103,7 +103,8 @@ module.exports = function(config) {
 
     proxies: {
     	'/plugin/' : '/base/loadModule/module-files/plugin/',
-        '/module/' : '/base/loadModule/module-files/module/'
+        '/module/' : '/base/loadModule/module-files/module/',
+        '/post/' : '/base/loadModule/post/'
     }
   })
 }

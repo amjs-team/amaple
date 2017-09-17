@@ -21,3 +21,8 @@ export const rexpr = /{{\s*(.*?)\s*}}/;
 export const MODULE_UPDATE = "update";
 export const MODULE_REQUEST = "request";
 export const MODULE_RESPONSE = "response";
+
+// 重复利用的常量
+// 样式值为数字时不添加单位“px”的样式名
+export const noUnitHook = [ "z-index" ];
+

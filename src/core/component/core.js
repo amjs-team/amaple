@@ -1,12 +1,12 @@
 import { extend, foreach, noop } from "../../func/util";
 import { matchFnArgs } from "../../func/private";
+import { query } from "../../func/node";
+import { noUnitHook } from "../../var/const";
 import check from "../../check";
 import ModuleCaller from "../ModuleCaller";
 import moduleConstructor from "../moduleConstructor";
 import Tmpl from "../tmpl/Tmpl";
 import cache from "../../cache/core";
-
-
 
 export default function Component () {
 
@@ -18,53 +18,101 @@ export default function Component () {
     	caller = this.caller = new ModuleCaller (),
         lifeCycle = [ "mount", "unmount" ];
 	
-	// 3、初始化vm数据
-	// 4、数初始化生命周期
-	moduleConstructor.initLifeCycle ( this, lifeCycle, 
-	// 5、渲染并挂载模板
-	// 6、初始化action
 	// 7、调用apply
 }
 
 extend ( Component.prototype, {
 	
 	__mount__ ( componentNode, moduleVm ) {
+		let propsValidator, componentString, scopedStyle;
     	
-    	this.caller.set { props : moduleConstructor.initProps ( componentNode, moduleVm ) };
+    	if ( type ( this.validateProps ) ) {
+
+    		// 构造属性验证获取器获取属性验证参数
+    		this.caller.set ( {
+    			propsType ( validator ) {
+    				propsValidator = validator || {};
+    			}
+    		} );
+
+    		this.validateProps.apply ( this.caller, cache.getDependentPlugin ( this.validateProps ) );
+
+    		this.caller.del ( "propsType" );
+    	}
+
+    	// 获取props，如果有需要则验证它们
+    	this.caller.set ( { props : moduleConstructor.initProps ( componentNode, moduleVm, propsValidator ) } );
     	
-    	/////////////////////
-    	// 获取init方法返回值并转vm对象
+    	//////////////////////////////////////////
+    	// 获取init方法返回值并初始化vm数据
 		const 
-        	initArgs = matchFnArgs ( this.init ),
-      		initDeps = initArgs.map ( plugin => cache.getPlugin ( plugin ) ),
+      		initDeps = cache.getDependentPlugin ( this.init ),
+    		componentVm = this.init.apply ( this.caller, initDeps );
     	
-    		vm = this.init.apply ( this.caller, initDeps );
-    	
+    	// 4、数初始化生命周期
+		// moduleConstructor.initLifeCycle ( this, lifeCycle, componentVm );
+
     	/////////////////////
     	// 转换组件代表元素为实际的组件元素节点
-    	
-    	// 2、获取props，如果有需要则验证它们
-    },
-	
-	__initLifeCycle__ () {
-    	const
-    		lifeCycleContainer = {};
-    	
-    	foreach ( lifeCycle, cycleItem => {
-        	lifeCycleContainer [ cycleItem ] = this.vm [ cycleItem ] || noop;
-        	this [ cycleItem ] = () => {
-            	lifeCycleContainer [ cycleItem ].call ( caller );
-            }
-        	
-        	delete this.vm [ cycleItem ];
-        } );
-    },
-	
-	__initAction__ () {
-    	
-    },
-	
-	
+    	if ( this.render ) {
+
+    		// 构造模板和样式的获取器获取模板和样式
+    		this.caller.set ( {
+    			template ( str ) {
+    				componentString = str || "";
+    			},
+
+    			style ( obj ) {
+    				scopedStyle = obj || {};
+    			}
+    		} );
+
+    		this.render.apply ( this.caller, cache.getDependentPlugin ( this.init ) );
+
+    		this.caller.del ( "template", "style" );
+
+    		// 处理模块并挂载数据
+    		const 
+    			template = componentNode.ownerDocument.createElement ( "template" ),
+    			tmpl = new Tmpl ( componentVm );
+
+    		template.innerHTML = componentString;
+    		tmpl.mount ( template.content || template );
+
+    		template.isComponent = true;
+    		template.canRender = !attr ( componentNode, ":for" );	// 待考虑？？？？？？
+
+    		// 将处理过的实际组件结构替换组件代表元素
+    		componentNode.parent.replaceChild ( template, componentNode );
+
+    		// 调用mount钩子函数
+    		( this.mount || noop ).apply ( this.caller, cache.getDependentPlugin ( this.mount ) );
+
+
+    		// 为对应元素添加内嵌样式
+    		let num;
+    		foreach ( scopedStyle, ( styles, selector ) => {
+    			foreach ( query ( selector, template.content || template, true ), elem => {
+    				foreach ( styles, ( styleName, val ) => {
+    					num = parseInt ( v );
+    					elem.style [ styleName ] = type ( num ) === "number" && ( num >= 0 || num <= 0 ) && noUnitHook.indexOf ( k ) === -1 ? "px" : "";
+    				} );
+    			} );
+    		} );
+    	}
+
+    	// 初始化action
+    	if ( this.action ) {
+    		const actions = this.action.apply ( this.caller, cache.getDependentPlugin ( this.action ) );
+
+    		moduleConstructor.initAction ( this, actions );
+    	}
+
+    	// 组件初始化完成，调用apply钩子函数
+    	( this.apply || noop ).apply ( this.caller, cache.getDependentPlugin ( this.apply || noop ) );
+
+    	return template;
+    }
 } );
 
 extend ( Component, {
