@@ -1,8 +1,10 @@
 import slice from "../var/slice";
 import { foreach, noop, type } from "../func/util";
+import { query } from "../func/node";
 import { defineReactiveProperty } from "../func/private";
 import { rexpr, rvar } from "../var/const";
 import { componentErr } from "../error";
+import { noUnitHook } from "../var/const";
 import Subscriber from "./Subscriber";
 import ViewWatcher from "./ViewWatcher";
 
@@ -154,6 +156,35 @@ export default {
             delete vm [ cycleItem ];
         } );
     },
+
+    /**
+        initTemplate ( template: String, scopedStyle: Object )
+    
+        Return Type:
+        void
+    
+        Description:
+        初始化模板
+        为模板添加实际的DOM结构
+        为模板DOM结构添加样式
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    initTemplate ( target, template, scopedStyle ) {
+        target.innerHTML = template;
+
+        // 为对应元素添加内嵌样式
+        let num;
+        foreach ( scopedStyle, ( styles, selector ) => {
+            foreach ( query ( selector, target.content || target, true ), elem => {
+                foreach ( styles, ( val, styleName ) => {
+                    num = parseInt ( val );
+                    elem.style [ styleName ] += val + ( type ( num ) === "number" && ( num >= 0 || num <= 0 ) && noUnitHook.indexOf ( k ) === -1 ? "px" : "" );
+                } );
+            } );
+        } );
+    },
 	
     /**
         initAction ( component: Object, actions: Object )
@@ -167,15 +198,18 @@ export default {
         URL doc:
         http://icejs.org/######
     */
-	initAction ( component, actions ) {
+	initAction ( caller, actions ) {
+        caller.action = caller.action || {};
     	foreach ( actions, ( action, name ) => {
-            if ( component [ name ] ) {
-                throw componentErr ( "duplicate", "此组件对象上已存在名为’" + name + "‘的属性或方法" );
-            }
+            // if ( component [ name ] ) {
+            //     throw componentErr ( "duplicate", "此组件对象上已存在名为’" + name + "‘的属性或方法" );
+            // }
 
-            component [ name ] = () => {
-                action.call ( component.caller );
+            caller.action [ name ] = ( ...args ) => {
+                action.apply ( caller, args );
             };
         } );
+
+        // caller.action = actions;
     }
 };

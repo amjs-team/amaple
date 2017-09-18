@@ -1,9 +1,8 @@
-import { extend, foreach, noop } from "../../func/util";
+import { extend, foreach, noop, type } from "../../func/util";
 import { matchFnArgs } from "../../func/private";
-import { query } from "../../func/node";
-import { noUnitHook } from "../../var/const";
 import check from "../../check";
 import ModuleCaller from "../ModuleCaller";
+import ViewModel from "../ViewModel";
 import moduleConstructor from "../moduleConstructor";
 import Tmpl from "../tmpl/Tmpl";
 import cache from "../../cache/core";
@@ -15,18 +14,15 @@ export default function Component () {
 	
 	// 1、创建Caller
 	const
-    	caller = this.caller = new ModuleCaller (),
-        lifeCycle = [ "mount", "unmount" ];
-	
-	// 7、调用apply
+    	caller = this.caller = new ModuleCaller ();
 }
 
 extend ( Component.prototype, {
 	
-	__mount__ ( componentNode, moduleVm ) {
+	__init__ ( componentNode, moduleVm ) {
 		let propsValidator, componentString, scopedStyle;
     	
-    	if ( type ( this.validateProps ) ) {
+    	if ( type ( this.validateProps ) === "function" ) {
 
     		// 构造属性验证获取器获取属性验证参数
     		this.caller.set ( {
@@ -47,13 +43,16 @@ extend ( Component.prototype, {
     	// 获取init方法返回值并初始化vm数据
 		const 
       		initDeps = cache.getDependentPlugin ( this.init ),
-    		componentVm = this.init.apply ( this.caller, initDeps );
+    		componentVm = new ViewModel ( this.init.apply ( this.caller, initDeps ) );
+
+        this.caller.set ( { state : componentVm } );
     	
     	// 4、数初始化生命周期
 		// moduleConstructor.initLifeCycle ( this, lifeCycle, componentVm );
 
     	/////////////////////
     	// 转换组件代表元素为实际的组件元素节点
+    	let template;
     	if ( this.render ) {
 
     		// 构造模板和样式的获取器获取模板和样式
@@ -71,40 +70,27 @@ extend ( Component.prototype, {
 
     		this.caller.del ( "template", "style" );
 
-    		// 处理模块并挂载数据
-    		const 
-    			template = componentNode.ownerDocument.createElement ( "template" ),
-    			tmpl = new Tmpl ( componentVm );
+    		// 处理模块并挂载数据 
+    		template = componentNode.ownerDocument.createElement ( "template" ),
+    		moduleConstructor.initTemplate ( template, componentString, scopedStyle );
 
-    		template.innerHTML = componentString;
+    		const tmpl = new Tmpl ( componentVm );
     		tmpl.mount ( template.content || template );
 
     		template.isComponent = true;
 
     		// 将处理过的实际组件结构替换组件代表元素
-    		componentNode.parent.replaceChild ( template, componentNode );
+    		componentNode.parentNode.replaceChild ( template, componentNode );
 
     		// 调用mount钩子函数
-    		( this.mount || noop ).apply ( this.caller, cache.getDependentPlugin ( this.mount ) );
-
-
-    		// 为对应元素添加内嵌样式
-    		let num;
-    		foreach ( scopedStyle, ( styles, selector ) => {
-    			foreach ( query ( selector, template.content || template, true ), elem => {
-    				foreach ( styles, ( styleName, val ) => {
-    					num = parseInt ( v );
-    					elem.style [ styleName ] = type ( num ) === "number" && ( num >= 0 || num <= 0 ) && noUnitHook.indexOf ( k ) === -1 ? "px" : "";
-    				} );
-    			} );
-    		} );
+    		( this.mount || noop ).apply ( this.caller, cache.getDependentPlugin ( this.mount || noop ) );
     	}
 
     	// 初始化action
     	if ( this.action ) {
     		const actions = this.action.apply ( this.caller, cache.getDependentPlugin ( this.action ) );
 
-    		moduleConstructor.initAction ( this, actions );
+    		moduleConstructor.initAction ( this.caller, actions );
     	}
 
     	// 组件初始化完成，调用apply钩子函数

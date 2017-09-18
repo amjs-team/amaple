@@ -9,8 +9,9 @@ ice.Class ( "Button" ).extends ( ice.Component ) ( {
 		};
 	},
 
-	view : function () {
-    	return "";
+	render : function () {
+    	this.template ( "" );
+    	this.style ( "" );
     },
 
 	// action中定义驱动器方法，会过滤不是function的属性。方法中的this.state为init方法返回的vm对象，this.action指向此driver的封装方法

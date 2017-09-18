@@ -236,7 +236,7 @@ extend ( Tmpl.prototype, {
             const comp = new ComponentDerivative ();
             this.compInstances.push ( comp );
            
-            elem = comp.__mount__ ( elem, this.getViewModel () );
+            elem = comp.__init__ ( elem, this.getViewModel () );
         }
 
         return elem;
