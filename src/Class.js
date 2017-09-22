@@ -176,6 +176,8 @@ export default function Class ( clsName ) {
 		if ( !isEmpty ( proto ) ) {
 			defineMemberFunction ( classFn, proto );
 		}
+    	
+    	// 
 
 		return classFn;
 	}

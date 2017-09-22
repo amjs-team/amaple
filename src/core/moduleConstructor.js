@@ -171,19 +171,60 @@ export default {
         URL doc:
         http://icejs.org/######
     */
-    initTemplate ( target, template, scopedStyle ) {
-        target.innerHTML = template;
+    initTemplate ( template, scopedStyle ) {
+    	const 
+        	d = document.createElement ( "div" ),
+        	f = document.createDocumentFragment ();
+    	
+        d.innerHTML = template;
 
         // 为对应元素添加内嵌样式
         let num;
         foreach ( scopedStyle, ( styles, selector ) => {
-            foreach ( query ( selector, target.content || target, true ), elem => {
+            foreach ( query ( selector, d, true ), elem => {
                 foreach ( styles, ( val, styleName ) => {
                     num = parseInt ( val );
                     elem.style [ styleName ] += val + ( type ( num ) === "number" && ( num >= 0 || num <= 0 ) && noUnitHook.indexOf ( k ) === -1 ? "px" : "" );
                 } );
             } );
         } );
+    	
+    	foreach ( slice.call ( d.childNodes ), child => {
+        	f.appendChild ( child );
+        } );
+    
+    	return f;
+    },
+	
+	initSubElements ( componentNode ) {
+    	const subElements = {
+        	default : componentNode.ownerDocument.createDocumentFragment ()
+        };
+    	
+    	let componentName, f;
+        foreach ( slice.call ( componentNode.childNodes ), node => {
+            	
+            componentName = transformCompName ( node.nodeName );
+            if ( this.subElements.indexOf ( componentName ) >= 0 ) {
+                subElements [ componentName ] = subElements [ componentName ] || [];
+                	
+                f = componentNode.ownerDocument.createDocumentFragment ();
+                f.appendChild ( node );
+                subElements [ componentName ].push ( f );
+            }
+            else {
+                subElements.default.appendChild ( node );
+            }
+        } );
+        	
+    	// 如果数组内只有一个fragment则去掉数组包裹层
+        foreach ( subElements, ( elems, key, self ) => {
+            if ( elems.length === 1 ) {
+                self [ key ] = elems [ 0 ];
+            }
+        } );
+    	
+    	return { subElements };
     },
 	
     /**

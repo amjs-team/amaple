@@ -48,11 +48,16 @@ Tmpl.defineDirective ( "expr", {
         http://icejs.org/######
     */
 	update ( val ) {
-        let nodeName = this.node.nodeName.toLowerCase (),
-            tval = type ( val );
+        const 
+        	node = this.node,
+        	nodeName = node.nodeName.toLowerCase (),
+        	tval = type ( val );
 
         if ( tval !== "object" && tval !== "array" ) {
             this.node.nodeValue = val;
+        }
+    	else if ( val && val.nodeType > 0 && node.nodeType === 3 ) {
+        	node.parentNode.replaceChild ( val, node );
         }
         else {
 
@@ -73,13 +78,13 @@ Tmpl.defineDirective ( "expr", {
                         styleArray.push ( k + ":" + v );
                     } );
 
-                    this.node.nodeValue = styleArray.join ( ";" );
+                    node.nodeValue = styleArray.join ( ";" );
                 }
             }
             // 绑定元素的class时可传入数组，绑定渲染时会自动用空格隔开
             else if ( nodeName === "class" ) {
                 if ( tval === "array" ) {
-                    this.node.nodeValue = val.join ( " " );
+                    node.nodeValue = val.join ( " " );
                 }
             }
         }

@@ -82,7 +82,7 @@ Tmpl.defineDirective ( "for", {
             f.appendChild ( itemNode );
 
             // 为遍历克隆的元素挂载数据
-        	this.tmpl.mount ( f, true, this.defineScoped ( scopedDefinition ) );
+        	this.tmpl.mount ( f, true, Tmpl.defineScoped ( scopedDefinition ) );
 
             itemNode = f.firstChild;
             if ( itemNode.nodeName && itemNode.nodeName.toUpperCase () === "TEMPLATE" ) {

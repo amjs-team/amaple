@@ -1,6 +1,7 @@
 import slice from "../../var/slice";
 import { extend, foreach, type } from "../../func/util";
 import { attr } from "../../func/node";
+import { transformCompName } from "../../func/private";
 import { rexpr } from "../../var/const";
 import iceAttr from "../../single/iceAttr";
 import Subscriber from "../Subscriber";
@@ -34,21 +35,17 @@ function preTreat ( elem ) {
         condition = attr ( elem, _if );
 
     if ( condition && !elem.conditionElems ) {
-        elem = this.renderComponent ( elem );
-
         elem.conditions = [ condition ];
         elem.conditionElems = [ elem ];
         parent = elem.parentNode;
         while ( nextSib = elem.nextElementSibling ) {
             if ( condition = attr ( nextSib, _elseif ) ) {
-                nextSib = this.renderComponent ( nextSib );
                 elem.conditions.push ( condition );
                 elem.conditionElems.push ( nextSib );
                 attr ( nextSib, _elseif, null );
                 parent.removeChild ( nextSib );
             }
             else if ( nextSib.hasAttribute ( _else ) ) {
-                nextSib = this.renderComponent ( nextSib );
                 elem.conditions.push ( "true" );
                 elem.conditionElems.push ( nextSib );
                 attr ( nextSib, _else, null );
@@ -63,11 +60,20 @@ function preTreat ( elem ) {
 
     foreach ( elem.conditionElems || [], nextSib => {
         if ( nextSib.nodeName.toUpperCase () === "TEMPLATE" ) {
-            nextSib.templateNodes = slice.call ( nextSib.content.childNodes );
+            nextSib.templateNodes = slice.call ( nextSib.content.childNodes || nextSib.childNodes );
         }
     } );
     
     return elem;
+}
+
+function concatHandler ( target, source ) {
+	const concats = {};
+	
+	concats.watchers = target.watchers.concat ( source.watchers );
+	concats.components = target.components.concat ( source.components );
+
+	return concats;
 }
 
 /**
@@ -85,7 +91,7 @@ export default function Tmpl ( vm, components ) {
 	this.components = {};
 	
 	foreach ( components, comp => {
-    	this.components [ comp.name.toLowerCase () ] = comp;
+    	this.components [ comp.name ] = comp;
     } );
 }
 
@@ -109,7 +115,10 @@ extend ( Tmpl.prototype, {
 
 
         let directive, handler, targetNode, expr, forAttrValue, firstChild,
-            watcherData = [];
+            compileHandlers = {
+            	watchers : [],
+            	components : []
+            };
         
         do {
             if ( elem.nodeType === 1 && mountModule ) {
@@ -122,15 +131,18 @@ extend ( Tmpl.prototype, {
                 // 处理:model
                 elem = preTreat.call ( this, elem );
                 if ( forAttrValue = attr ( elem, Tmpl.directivePrefix + "for" ) ) {
-                    watcherData.push ( { handler : Tmpl.directives.for, targetNode : elem, expr : forAttrValue } );
+                    compileHandlers.watchers.push ( { handler : Tmpl.directives.for, targetNode : elem, expr : forAttrValue } );
                 }
                 else {
                 	
-                    // 如果不是渲染后的组件元素，即表示该组件元素没有"if"和"for"指令
-                    if ( !elem.isComponent ) {
-                        // elem = this.renderComponent ( elem );
-                        // elem.canRender = true;
-                    }
+                	// 收集组件元素待渲染
+        			// 局部没有找到组件则查找全局组件
+        			const 
+                    	componentName = transformCompName ( elem.nodeName ),
+                    	ComponentDerivative = this.getComponent ( componentName ) || Component.getGlobal ( componentName );
+        			if ( ComponentDerivative && ComponentDerivative.__proto__.name === "Component" ) {
+                    	compileHandlers.components.push ( { elem, Class : ComponentDerivative } );
+        			}
                     
                     // 将子模块元素保存到页面结构体中以便下次直接获取使用
                     const moduleName = attr ( elem, iceAttr.module );
@@ -162,12 +174,12 @@ extend ( Tmpl.prototype, {
                                 throw runtimeErr ( "directive", "没有找到\"" + directive + "\"指令或表达式" );
                             }
 
-                            watcherData.push ( { handler, targetNode, expr } );
+                            compileHandlers.watchers.push ( { handler, targetNode, expr } );
                         }
                         else if ( rexpr.test ( attr.nodeValue ) ) {
 
                             // 属性值表达式绑定
-                            watcherData.push ( { handler: Tmpl.directives.expr, targetNode : attr, expr : attr.nodeValue } );
+                            compileHandlers.watchers.push ( { handler: Tmpl.directives.expr, targetNode : attr, expr : attr.nodeValue } );
                         }
                     } );
                 }
@@ -176,32 +188,34 @@ extend ( Tmpl.prototype, {
 
                 // 文本节点表达式绑定
                 if ( rexpr.test ( elem.nodeValue ) ) {
-                    watcherData.push ( { handler : Tmpl.directives.expr, targetNode : elem, expr : elem.nodeValue } );
+                    compileHandlers.watchers.push ( { handler : Tmpl.directives.expr, targetNode : elem, expr : elem.nodeValue } );
                 }
             }
             
-            if ( elem.isComponent ) {
-                if ( elem.canRender ) {
-                    Component.render ( elem );
-                }
-            }
-            else {
-                firstChild = elem.firstChild || elem.content && elem.content.firstChild;
-                if ( firstChild && !forAttrValue ) {
-                    watcherData = watcherData.concat ( this.mount ( firstChild, true, scoped, false ) );
-                }
+            
+            firstChild = elem.firstChild || elem.content && elem.content.firstChild;
+            if ( firstChild && !forAttrValue ) {
+                compileHandlers = concatHandlers ( compileHandlers, this.mount ( firstChild, true, scoped, false ) );
             }
         } while ( !isRoot && ( elem = elem.nextSibling ) )
 
         if ( !isRoot ) {
-            return watcherData;
+            return compileHandlers;
         }
         else {
             //////////////////////////////
             //////////////////////////////
-            //////////////////////////////
-            foreach ( watcherData, data => {
-                new ViewWatcher ( data.handler, data.targetNode, data.expr, this, scoped );
+            // 为相应模板元素挂载数据
+            foreach ( compileHandlers.watchers, watcher => {
+                new ViewWatcher ( watcher.handler, watcher.targetNode, watcher.expr, this, scoped );
+            } );
+        
+        	// 渲染组件
+        	foreach ( compileHandlers.components, comp => {
+            	const instance = new comp.Class ();
+            this.compInstances.push ( instance );
+           
+            instance.__init__ ( comp.elem, this.getViewModel () );
             } );
         }
     },
@@ -212,34 +226,6 @@ extend ( Tmpl.prototype, {
 	
 	getComponent ( name ) {
     	return this.components [ name ];
-    },
-
-    /**
-        renderComponent ( elem: DOMObject )
-    
-        Return Type:
-        elem
-        原组件或渲染后的组件
-    
-        Description:
-        渲染组件元素为真实元素结构，如果不是组件元素则返回原来的元素
-    
-        URL doc:
-        http://icejs.org/######
-    */
-    renderComponent ( elem ) {
-
-        // 处理组件元素
-        // 局部没有找到组件则查找全局组件
-        const ComponentDerivative = this.getComponent ( elem.nodeName ) || Component.getGlobal ( elem.nodeName );
-        if ( ComponentDerivative && ComponentDerivative.__proto__.name === "Component" ) {
-            const comp = new ComponentDerivative ();
-            this.compInstances.push ( comp );
-           
-            elem = comp.__init__ ( elem, this.getViewModel () );
-        }
-
-        return elem;
     }
 } );
 
@@ -258,6 +244,41 @@ extend ( Tmpl, {
     	}
     
     	return elem;
+    },
+	
+	/**
+    	defineScoped ( scopedDefinition: Object )
+    
+    	Return Type:
+    	Object
+    	局部变量操作对象
+    
+    	Description:
+		定义模板局部变量
+		此方法将生成局部变量操作对象，内含替身变量前缀
+    	此替身变量名不能为当前vm中已有的变量名，所以需取的生僻些
+    	在挂载数据时如果有替身则会将局部变量名替换为替身变量名来达到不重复vm中已有变量名的目的
+    
+    	URL doc:
+    	http://icejs.org/######
+    */
+    defineScoped ( scopedDefinition ) {
+		const scoped = {
+            	prefix : "ICE_FOR_" + Date.now() + "_",
+        		vars : {}
+            },
+            availableItems = [];
+
+    	foreach ( scopedDefinition, ( val, varName ) => {
+    		if ( varName ) {
+    			scoped.vars [ scoped.prefix + varName ] = val;
+            	availableItems.push ( varName );
+    		}
+    	} );
+
+    	scoped.regexp = new RegExp ( availableItems.join ( "|" ), "g" );
+
+    	return scoped;
     },
 	
 	defineDirective ( name, directive ) {

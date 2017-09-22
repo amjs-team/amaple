@@ -6,7 +6,7 @@ export default function ModuleCaller ( opts ) {
 
 extend ( ModuleCaller.prototype, {
 	set ( opts ) {
-		const propertyConstraint = [ "state", "props", "parent", "action", "param", "get", "post", "propsType", "template", "style" ];
+		const propertyConstraint = [ "state", "props", "parent", "action", "param", "get", "post", "propsType", "template", "style", "subElement" ];
 		    	
     	foreach ( opts, ( property, name ) => {
         	if ( propertyConstraint.indexOf ( name ) > -1 ) {

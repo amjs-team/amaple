@@ -1,31 +1,8 @@
 import { foreach, type } from "./util";
 import { attr } from "./node";
+import { componentErr } from "../error";
 import slice from "../var/slice";
 
-/**
-	urlTransform ( str: String, mode: Boolean )
-
-	Return Type:
-	String
-
-	Description:
-	将url中的"/"和"."做调换，此方法用于设置请求路径与模块定义时的依赖注入。
-	当mode不传或传入null、false时表示false，即字符串将.替换为/
-	当mode有值时表示true，即字符串将/替换为.
-
-	URL doc:
-	http://icejs.org/######
-*/
-export function urlTransform ( str, mode ) {
-	mode = !!mode;
-
-	let rpoint = /\./g,
-		rsep = /\//g,
-		point = ".",
-		separation = "/";
-
-	return mode ? str.replace( rsep, point) : str.replace ( rpoint, separation );
-}
 
 // 转换存取器属性
 export function defineReactiveProperty ( key, getter, setter, target ) {
@@ -91,4 +68,8 @@ export function parseGetQuery ( getString ) {
 	}
 
 	return getObject;
+}
+
+export function transformCompName ( compName ) {
+	return compName.toLowerCase ().replace ( /^([a-z])|-(.)/g, ( match, rep1, rep2 ) => ( rep1 || rep2 ).toUpperCase () );
 }

@@ -1,5 +1,6 @@
 import { extend, foreach, noop, type } from "../../func/util";
-import { matchFnArgs } from "../../func/private";
+import { matchFnArgs, transformCompName } from "../../func/private";
+import { rcomponentName } from "../../var/const";
 import check from "../../check";
 import ModuleCaller from "../ModuleCaller";
 import ViewModel from "../ViewModel";
@@ -52,7 +53,6 @@ extend ( Component.prototype, {
 
     	/////////////////////
     	// 转换组件代表元素为实际的组件元素节点
-    	let template;
     	if ( this.render ) {
 
     		// 构造模板和样式的获取器获取模板和样式
@@ -63,24 +63,34 @@ extend ( Component.prototype, {
 
     			style ( obj ) {
     				scopedStyle = obj || {};
-    			}
+    			},
+            	
+            	subElements ( ...elemNames ) {
+                	this.subElements = [];
+                	foreach ( elemNames, name => {
+                    	if ( !rcomponentName.test ( name ) ) {
+							throw componentErr ( "name", "组件名称定义需遵循首字母大写的驼峰式命名规则" );
+                    	}
+                    	
+                    	this.subElements.push ( transformCompName ( name ) );
+                    } );
+                }
     		} );
 
     		this.render.apply ( this.caller, cache.getDependentPlugin ( this.init ) );
 
-    		this.caller.del ( "template", "style" );
+    		this.caller.del ( "template", "style", "subElement" );
 
     		// 处理模块并挂载数据 
-    		template = componentNode.ownerDocument.createElement ( "template" ),
-    		moduleConstructor.initTemplate ( template, componentString, scopedStyle );
-
-    		const tmpl = new Tmpl ( componentVm );
-    		tmpl.mount ( template.content || template );
-
-    		template.isComponent = true;
+    		const 
+            	fragment = moduleConstructor.initTemplate ( componentString, scopedStyle ),
+                subElements = moduleConstructor.initSubElements ( componentNode ),
+                tmpl = new Tmpl ( componentVm, this.depComponents || [] );
+        	
+    		tmpl.mount ( fragment, false, Tmpl.defineScoped ( subElements ) );
 
     		// 将处理过的实际组件结构替换组件代表元素
-    		componentNode.parentNode.replaceChild ( template, componentNode );
+    		componentNode.parentNode.replaceChild ( fragment, componentNode );
 
     		// 调用mount钩子函数
     		( this.mount || noop ).apply ( this.caller, cache.getDependentPlugin ( this.mount || noop ) );
@@ -95,8 +105,16 @@ extend ( Component.prototype, {
 
     	// 组件初始化完成，调用apply钩子函数
     	( this.apply || noop ).apply ( this.caller, cache.getDependentPlugin ( this.apply || noop ) );
-
-    	return template;
+    },
+	
+	depComponents ( ...comps ) {
+    	this.depComponents = [];
+    	
+    	foreach ( comps, comp => {
+        	if ( comp.__proto__.name === "Component" ) {
+            	this.depComponents.push ( comp );
+            }
+        } );
     }
 } );
 

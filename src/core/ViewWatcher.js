@@ -100,41 +100,6 @@ extend ( ViewWatcher.prototype, {
 	update () {
     	this.directive.update.call ( this, this.getter ( runtimeErr ) );
     },
-
-    /**
-    	defineScoped ( scopedDefinition: Object )
-    
-    	Return Type:
-    	Object
-    	局部变量操作对象
-    
-    	Description:
-		定义模板局部变量
-		此方法将生成局部变量操作对象，内含替身变量前缀
-    	此替身变量名不能为当前vm中已有的变量名，所以需取的生僻些
-    	在挂载数据时如果有替身则会将局部变量名替换为替身变量名来达到不重复vm中已有变量名的目的
-    
-    	URL doc:
-    	http://icejs.org/######
-    */
-    defineScoped ( scopedDefinition ) {
-		const scoped = {
-            	prefix : "ICE_FOR_" + Date.now() + "_",
-        		vars : {}
-            },
-            availableItems = [];
-
-    	foreach ( scopedDefinition, ( val, varName ) => {
-    		if ( varName ) {
-    			scoped.vars [ scoped.prefix + varName ] = val;
-            	availableItems.push ( varName );
-    		}
-    	} );
-
-    	scoped.regexp = new RegExp ( availableItems.join ( "|" ), "g" );
-
-    	return scoped;
-    },
 	
 	/**
     	addScoped ()
