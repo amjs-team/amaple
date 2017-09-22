@@ -22,10 +22,10 @@
 	</style>
 		
 	<script>
-		var login = new ice.Module ( {
+		new ice.Module ( {
 
 			// 该函数返回的对象为该模块内的数据绑定，包括变量和方法
-			init : function ( animate ) {
+			init ( animate ) {
 
 				return {
 					userName 	: "",
@@ -42,7 +42,7 @@
 						value : 50,
 
 						// watch中的this表示当前值
-						watch : function ( oldVal, newVal ) {
+						watch ( oldVal, newVal ) {
                         	this.animate = new Animate ();
                         	
 							this.animate.step ( function ( eachVal ) {
@@ -54,46 +54,20 @@
 						}
 					},
 
-					reqBefore 	: function () {
+					reqBefore () {
 						animate.Linear ( this.state.style.opacity, 0, 1000 );
 					},
 
-					reqAfter 	: function () {
+					reqAfter () {
 						animate.Linear ( this.state.style.opacity, 1, 1000 );
 					},
 				};
 			},
 
 			// 要操作模块内的dom，可调用该函数，参数this.moduleElem为module对应的元素封装，可链式调用
-			apply : function () {
+			apply () {
 				
 			}
 		} );
 	</script>
 </Module>
-
- <!-- ice-loading="#submit::setState('loading')" ice-finish="#submit::setState('default')" -->
-<!-- function(crystals, language, event) {
-
-	// 获取提交按钮对象
-	var btn = crystals('#submit');
-
-	event.on(btn, 'click', function() {
-		btn.setState('loading');
-		crystals.submit({
-			formName: 'login_form',
-			module: {200: 'root'},
-			code: 'code',
-			data: '',
-			timeout: 3000,
-			success: function(result) {
-				btn.setState('default');
-				if (result.code === 400) {
-					alert(result.message);
-				}
-			}
-		});
-	});
-
-
-} -->

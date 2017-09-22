@@ -4,70 +4,33 @@
 	<meta charset="UTF-8">
 	<title>spa test</title>
 	<link rel="icon" href="data:;base64,=">
-	<!-- <script src="ice.0.1.0.js" config="config.js"></script> -->
-	<link rel="stylesheet" type="text/css" href="static/css/reset.css">
-	<link rel="stylesheet" type="text/css" href="static/css/index.css">
+	<link rel="stylesheet" type="text/css" href="src/assets/css/reset.css">
+	<link rel="stylesheet" type="text/css" href="src/assets/css/index.css">
+	<script src="src/assert/ice.min.0.1.0.js"></script>
 </head>
 <body>
-	<div class="wrap" ice-module="wrap">
-		<div class="login-body" ice-module="body" ice-src="login" :onrequest="reqBefore" :onresponse="reqAfter"></div>
-		<div class="forget">
-			<a href="forget_pwd" ice-target="body">忘记密码？</a>
-		</div>
-
-
-
-		<div class="info-table" ice-module="table">
-			<!-- 表格组件渲染 -->
-			<table ice-driver="driver.EditTable">
-				<tr>
-					<th :for="t of title">{{ t }}</th>
-				</tr>
-				<tr :for="c of content">
-					<td :for="item of c">{{ item }}</td>
-				</tr>
-			</table>
-			
-			<!-- 翻页组件渲染 -->
-			<div ice-driver="driver.PageCtrl" ice-data="{{ pageCtrl }}"></div>
-		</div>
-
-
-	</div>
+	<div class="wrap" ice-module></div>
 </body>
 <script>
-	ice.config ( {
-		base: {
-			url: "url/static/"
-		},
-		directionCache: false
-	} );
-
-	var table = ice.module ( "table", {
-		init : function () {
-			return {
-				// 绑定变量与绑定函数直接写返回对象内
-				title: ["NO.", "UserName", "Avatar", "Age", "Address"],
-				content: [
-					["1", "Tom", "img/a1.png", "24", "LongHu street"],
-					["2", "Sam", "img/a2.png", "23", "LongHu street"],
-					["3", "Ann", "img/a3.png", "25", "LongHu street"],
-					["4", "Jane", "img/a4.png", "22", "LongHu street"],
-					["5", "Leo", "img/a5.png", "26", "LongHu street"]
-				],
-				pageCtrl: {
-					reqPath 	: "data/user_info",
-					currentPage : 1,
-					pageCount 	: 10,
-					current 	: "current"
-				},
-			};
-		}
-	} );
-
-
-
-
+	ice.startRouter ( {
+    	history : ice.BROWSER_HISTORY // ice.HASH, ice.AUTO
+    	module : {
+        	cache : true,
+        	expired : 3000
+        },
+    	routes : function ( Router ) {
+        	Router.module ().route ( "/settings", "setting", function ( ChildRouter, Redirector ) {
+				Redirector.from ( "" ).to ( "profile" );
+				ChildRouter.module ( "menu" ).route ( ":page", "menu" );
+				// 或者可写成 ChildRouter.module ( "menu" ).route ( [ "profile", "admin", "keys" ... ], menu );
+            	
+				ChildRouter.module ( "main" ).route ( ":page", "{{ page }}" );
+				ChildRouter.module ( "footer" ).route ( ":page", "footer" );
+			} );
+    	}
+    } );
+	
+	
 	// function(crystals, language, animate, http) {
 
 	// 	http.get('login')

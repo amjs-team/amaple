@@ -11,11 +11,11 @@
 
 	<!-- 此模板对应的数据 -->
 	<script>
-    	var EditTable = import ( "../../component/EditTable" ), 
-        	PageCtrl = import ( "../../component/PageCtrl" );
+    	import EditTable from "../../component/EditTable";
+        import PageCtrl from "../../component/PageCtrl";
     	
-		var table = new ice.Module ( {
-			init : function () {
+		new ice.Module ( {
+			init () {
 				return {
 					// 绑定变量与绑定函数直接写返回对象内
 					title: ["NO.", "UserName", "Avatar", "Age", "Address"],
@@ -33,7 +33,7 @@
 						current 	: "current"
 					},
 	            
-	            	setPage : function ( newVal ) {
+	            	setPage ( newVal ) {
 	                	this.pageCtrl.currentPage = newVal;
 	                }
 				};

@@ -47,21 +47,17 @@ Class ( "PageCtrl" ).extends ( ice.Component ) ( {
 
 	// action中定义驱动器方法，会过滤不是function的属性。方法中的this为init方法返回的vm对象
 	// 定义驱动器方法时不能使用箭头函数定义，因为这样内部的this的指向将会错误
-	action : function ( http ) {
-      	return {
-			prev : function () {
-				this.state.setPage ( --this.state.currentPage );
-			},
-			next : function () {
-				this.state.setPage ( ++this.state.currentPage );
-			},
-			turnTo : function ( page ) {
-				if ( page > 0 && page <= this.state.pageCount ) {
-					this.state.setPage ( page );
-				}
-            }
-        };
+	prev : function () {
+		this.state.setPage ( --this.state.currentPage );
 	},
+	next : function () {
+		this.state.setPage ( ++this.state.currentPage );
+	},
+	turnTo : function ( page ) {
+		if ( page > 0 && page <= this.state.pageCount ) {
+			this.state.setPage ( page );
+		}
+    },
 	apply : function () {
 		// ...
 	}

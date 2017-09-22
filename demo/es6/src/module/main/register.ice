@@ -18,8 +18,8 @@
 	</style>
 
 	<script>
-		let reg = new ice.Module ( {
-			init : function () {
+		new ice.Module ( {
+			init () {
 
 				return {
 					submit 		: "提交",
@@ -30,7 +30,7 @@
 			}
 
 			// 要操作模块内的dom，可调用该函数，this.moduleElem为module对应的元素封装，可链式调用
-			apply : function ( http ) {
+			apply ( http ) {
 				http.get ( "reg.php" ).done ( res => {
 					this.state.userName = res.userName;
 					this.state.passowrd = res.passowrd;
