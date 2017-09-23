@@ -195,7 +195,7 @@ extend ( Tmpl.prototype, {
             
             firstChild = elem.firstChild || elem.content && elem.content.firstChild;
             if ( firstChild && !forAttrValue ) {
-                compileHandlers = concatHandlers ( compileHandlers, this.mount ( firstChild, true, scoped, false ) );
+                compileHandlers = concatHandler ( compileHandlers, this.mount ( firstChild, true, scoped, false ) );
             }
         } while ( !isRoot && ( elem = elem.nextSibling ) )
 
@@ -211,11 +211,12 @@ extend ( Tmpl.prototype, {
             } );
         
         	// 渲染组件
+            this.compInstances = this.compInstances || [];
         	foreach ( compileHandlers.components, comp => {
             	const instance = new comp.Class ();
-            this.compInstances.push ( instance );
+                this.compInstances.push ( instance );
            
-            instance.__init__ ( comp.elem, this.getViewModel () );
+                instance.__init__ ( comp.elem, this.getViewModel () );
             } );
         }
     },

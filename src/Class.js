@@ -177,7 +177,8 @@ export default function Class ( clsName ) {
 			defineMemberFunction ( classFn, proto );
 		}
     	
-    	// 
+    	// 普通模式下将此类赋值到全局
+    	window [ clsName ] = classFn;
 
 		return classFn;
 	}

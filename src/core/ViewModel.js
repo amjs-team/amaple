@@ -138,7 +138,7 @@ function initArray ( array, subs, context ) {
 }
 
 /**
-	ViewModel ( vmData: Object, isRoot: Boolean )
+	ViewModel ( vmData: Object, isRoot?: Boolean )
 
 	Return Type:
 	void

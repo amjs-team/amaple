@@ -1,12 +1,12 @@
 import slice from "../var/slice";
-import { foreach, noop, type } from "../func/util";
+import { foreach, noop, type, isPlainObject } from "../func/util";
 import { query } from "../func/node";
 import { defineReactiveProperty } from "../func/private";
 import { rexpr, rvar } from "../var/const";
 import { componentErr } from "../error";
 import { noUnitHook } from "../var/const";
 import Subscriber from "./Subscriber";
-import ViewWatcher from "./ViewWatcher";
+import ValueWatcher from "./ValueWatcher";
 
 const dataType = [ String, Number, Function, Boolean, Object ];
 
@@ -27,12 +27,17 @@ function validateProp ( prop, validate ) {
     let isPass = false;
     const tvalidate = type ( validate );
 
+    // 类型验证
     if ( dataType.indexOf ( validate ) >= 0 ) {
         isPass = prop.constructor === validate;
     }
+
+    // 正则表达式验证
     else if ( validate instanceof RegExp ) {
         isPass = validate.test ( prop );
     }
+
+    // 多个值的验证
     else if ( tvalidate === "array" ) {
 
         // 如果验证参数为数组，则满足数组中任意一项即通过
@@ -43,8 +48,10 @@ function validateProp ( prop, validate ) {
             }
         } );
     }
+
+    // 方法验证
     else if ( tvalidate === "function" ) {
-        isPass = validate ();
+        isPass = validate ( prop );
     }
 
     return isPass;
@@ -74,15 +81,15 @@ export default {
         	if ( rvar.test ( attr.name ) ) {
             	if ( match = attr.value.match ( rexpr ) ) {
                     const 
-                        subs = new Subscriber ();
+                        subs = new Subscriber (),
                         propName = match [ 1 ],
                         getter = () => {
-                            return vm [ propName ];
+                            return moduleVm [ propName ];
                         };
 
                     let propValue;
 
-                    new ViewWatcher ( ( newVal ) => {
+                    new ValueWatcher ( ( newVal ) => {
                         propValue = newVal;
 
                         subs.notify ();
@@ -95,7 +102,7 @@ export default {
                         },
                         ( newVal ) => {
                             if ( newVal !== propValue ) {
-                                vm [ propName ] = propValue = newVal;
+                                moduleVm [ propName ] = propValue = newVal;
 
                                 subs.notify ();
                             }
@@ -106,9 +113,10 @@ export default {
                 }
 
                 // 验证属性值
-                let validateItem;
-                if ( validateItem = propsValidator [ attr.name ] ) {
-                    if ( !validateProp ( props [ attr.name ], validateItem.validate ) ) {
+                const validateItem = propsValidator && propsValidator [ attr.name ];
+                if ( validateItem ) {
+                    const validate = isPlainObject ( validateItem ) ? validateItem.validate : validateItem;
+                    if ( validate && !validateProp ( props [ attr.name ], validate ) ) {
                         throw componentErr ( "prop:" + attr.name, "组件传递属性" + attr.name + "的值未通过验证，请检查该值的正确性或修改验证规则" );
                     }
                 }
@@ -184,7 +192,7 @@ export default {
             foreach ( query ( selector, d, true ), elem => {
                 foreach ( styles, ( val, styleName ) => {
                     num = parseInt ( val );
-                    elem.style [ styleName ] += val + ( type ( num ) === "number" && ( num >= 0 || num <= 0 ) && noUnitHook.indexOf ( k ) === -1 ? "px" : "" );
+                    elem.style [ styleName ] += val + ( type ( num ) === "number" && ( num >= 0 || num <= 0 ) && noUnitHook.indexOf ( styleName ) === -1 ? "px" : "" );
                 } );
             } );
         } );

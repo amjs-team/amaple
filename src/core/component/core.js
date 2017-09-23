@@ -59,10 +59,12 @@ extend ( Component.prototype, {
     		this.caller.set ( {
     			template ( str ) {
     				componentString = str || "";
+                    return this;
     			},
 
     			style ( obj ) {
     				scopedStyle = obj || {};
+                    return this;
     			},
             	
             	subElements ( ...elemNames ) {
@@ -74,12 +76,14 @@ extend ( Component.prototype, {
                     	
                     	this.subElements.push ( transformCompName ( name ) );
                     } );
+
+                    return this;
                 }
     		} );
 
     		this.render.apply ( this.caller, cache.getDependentPlugin ( this.init ) );
 
-    		this.caller.del ( "template", "style", "subElement" );
+    		this.caller.del ( "template", "style", "subElements" );
 
     		// 处理模块并挂载数据 
     		const 

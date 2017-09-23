@@ -249,9 +249,9 @@ export function html ( context, node, callback = noop ) {
 	http://icejs.org/######
 */
 export function attr ( context, name, val ) {
-	correctParam ( name, val ).to ( "string", [ "string", "object" ] ).done ( function () {
-		this.$1 = name;
-		this.$2 = val;
+	correctParam ( name, val ).to ( "string", [ "string", "object", null ] ).done ( function () {
+		name = this.$1;
+		val = this.$2;
 	} );
   
 	switch ( type ( val ) ) {
@@ -261,7 +261,7 @@ export function attr ( context, name, val ) {
     	case "undefined":
         	return context.getAttribute ( name );
     	case "object":
-        	foreach ( val, ( k, v ) => {
+        	foreach ( val, ( v, k ) => {
             	context.setAttribute ( k, v );
             } );
         	break;
