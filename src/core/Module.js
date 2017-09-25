@@ -4,7 +4,7 @@ import { matchFnArgs, parseGetQuery } from "../func/private";
 import slice from "../var/slice";
 import cache from "../cache/core";
 import { newClassCheck } from "../Class.js";
-import ModuleCaller from "./ModuleCaller";
+// import ModuleCaller from "./ModuleCaller";
 import moduleConstructor from "./moduleConstructor";
 import ViewModel from "./ViewModel";
 import Tmpl from "./tmpl/Tmpl";
@@ -74,7 +74,7 @@ export default function Module ( module, vmData = { init: function () { return {
   	
   	/////////////////////////////////
   	/////////////////////////////////
-	const caller = this.caller = new ModuleCaller ();
+	// const caller = this.caller = new ModuleCaller ();
 
 	let parent;
 	if ( Structure.currentPage ) {
@@ -82,12 +82,10 @@ export default function Module ( module, vmData = { init: function () { return {
 		// 单页模式时，使用Structure.currentPage.getCurrentParentVm()获取父级的vm
 		const currentRender = Structure.currentPage.getCurrentRender ();
     	parent = currentRender.parent && currentRender.parent.module.vm;
-    
-    	caller.set ( {
-        	param : currentRender.param,
-        	get : parseGetQuery ( currentRender.get ),
-        	post : currentRender.post
-        } );
+		
+        this.params = currentRender.param;
+        this.get = parseGetQuery ( currentRender.get );
+        this.post = currentRender.post;
     	
      	// 参数传递过来后可移除，以免与下一次传递的参数混淆
     	delete currentRender.param;
@@ -105,20 +103,44 @@ export default function Module ( module, vmData = { init: function () { return {
 		// 将当前Module对象保存在对应的模块根节点下，以便子模块寻找父模块的Module对象
 		moduleElem.__module__ = this;
 	}
-    caller.set ( { parent } );
+    this.parent = parent;
     
     const
+    	components = ( () => {
+        	let compFn = vmData.depComponents,
+                deps = cache.getDependentPlugin ( compFn || noop );
+        	
+        	try {
+        		return ( compFn || noop ).apply ( this, deps );
+            }
+        	catch ( e ) {
+            	compFn = ( new Function ( "return " + compFn.toString ().replace ( /return\s+\[(.+?)\]/, ( match, rep ) => {
+					return match.replace ( rep, rep.split ( "," )
+					.map ( item => "\"" + item.trim () + "\"" )
+					.join ( "," ) );
+				} ) ) ) ();
+            	
+            	const 
+                	depStrs = compFn.apply ( this, deps ),
+                    depComps = [];
+            	foreach ( depStrs, depObj => {
+                	depComps.push ( depObj );
+                } );
+            	
+            	return depComps;
+            }
+        } ) (),
 	
 		// 获取后初始化vm的init方法
 		// 对数据模型进行转换
-		vm = new ViewModel ( vmData.init.apply ( caller, cache.getDependentPlugin ( vmData.init ) ) ),
+		vm = new ViewModel ( vmData.init.apply ( this, cache.getDependentPlugin ( vmData.init ) ) ),
 
 		// 使用vm解析模板
-		tmpl = new Tmpl ( vm, vmData.components );
+		tmpl = new Tmpl ( vm, components );
 	
 	this.vm = vm;
 	this.view = slice.call ( moduleElem.childNodes ) || [];
-	caller.set ( { state : vm } );
+	this.state = vm ;
 
 	// 解析模板，挂载数据
 	// 如果forceMount为true则强制挂载moduleElem
@@ -129,8 +151,14 @@ export default function Module ( module, vmData = { init: function () { return {
 	moduleConstructor.initLifeCycle ( this, lifeCycle, vm );
 	
 	// 调用apply方法
-	( vmData.apply || noop ).apply ( caller, cache.getDependentPlugin ( vmData.apply || noop ) );
+	( vmData.apply || noop ).apply ( this, cache.getDependentPlugin ( vmData.apply || noop ) );
 }
+
+extend ( Module.prototype, {
+	refs ( ref ) {
+    	return this.refs [ ref ] || null;
+    }
+} );
 
 extend ( Module, {
 	identifier : "ice-identifier",

@@ -1,5 +1,7 @@
 import { foreach, isEmpty, type, noop } from "./func/util";
 import { classErr } from "./error";
+import cache from "./cache/core";
+import ComponentLoader from "./core/deps/ComponentLoader";
 
 const 
 	rconstructor = /^(?:constructor\s*|function\s*)?\((.*?)\)\s*(?:=>\s*)?{([\s\S]*)}$/,
@@ -112,8 +114,21 @@ export default function Class ( clsName ) {
 	let _superClass;
 
 	function classDefiner ( proto ) {
-
-		proto.constructor = proto.constructor || noop;
+		const constructor = ( ...args ) => {
+        	try {
+        		( proto.constructor || noop ).apply ( this, args );
+            }
+        	catch ( e ) {
+            	proto.constructor = ( new Function ( "return " + proto.constructor.toString ().replace ( /this\.depComponents\s*\((.+?)\)/, ( match, rep ) => {
+					return match.replace ( rep, rep.split ( "," )
+					.map ( item => "\"" + item.trim () + "\"" )
+					.join ( "," ) );
+				} ) ) ) ();
+            	
+            	proto.constructor.apply ( this, args );
+            }
+        };
+    	proto.constructor = proto.constructor || noop;
 
 		let fnBody = `return function ${ clsName } (`,
 			mustNew = `newClassCheck(this, ${ clsName });`,
@@ -161,13 +176,13 @@ export default function Class ( clsName ) {
 
             fnBody += `constructor.call(this${ args && "," + args });return getSuperConstructorReturn(this,__superReturn.value);}`;
 
-            classFn = new Function ( "constructor", "newClassCheck", "defineSuper", "getSuperConstructorReturn", fnBody ) ( proto.constructor, newClassCheck, defineSuper, getSuperConstructorReturn );
+            classFn = new Function ( "constructor", "newClassCheck", "defineSuper", "getSuperConstructorReturn", fnBody ) ( constructor, newClassCheck, defineSuper, getSuperConstructorReturn );
 
             inherits ( classFn, _superClass );
 		}
 		else {
 			fnBody += `${ mustNew }constructor.call(this${ args && "," + args });}`;
-			classFn = new Function ( "constructor", "newClassCheck", fnBody ) ( proto.constructor, newClassCheck );
+			classFn = new Function ( "constructor", "newClassCheck", fnBody ) ( constructor, newClassCheck );
 		}
 
     	delete proto.constructor;
@@ -177,8 +192,8 @@ export default function Class ( clsName ) {
 			defineMemberFunction ( classFn, proto );
 		}
     	
-    	// 普通模式下将此类赋值到全局
-    	window [ clsName ] = classFn;
+    	// 将此组件类保存至缓存中
+    	cache.pushComponent ( ComponentLoader.getCurrentPath, classFn );
 
 		return classFn;
 	}

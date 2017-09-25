@@ -2,7 +2,7 @@ import { extend, foreach, noop, type } from "../../func/util";
 import { matchFnArgs, transformCompName } from "../../func/private";
 import { rcomponentName } from "../../var/const";
 import check from "../../check";
-import ModuleCaller from "../ModuleCaller";
+// import ModuleCaller from "../ModuleCaller";
 import ViewModel from "../ViewModel";
 import moduleConstructor from "../moduleConstructor";
 import Tmpl from "../tmpl/Tmpl";
@@ -14,8 +14,7 @@ export default function Component () {
 	check ( this.init ).type ( "function" ).ifNot ( "component:" + this.constructor.name, "component derivative必须带有init方法" ).do ();
 	
 	// 1、创建Caller
-	const
-    	caller = this.caller = new ModuleCaller ();
+	// this.caller = new ModuleCaller ();
 }
 
 extend ( Component.prototype, {
@@ -26,27 +25,24 @@ extend ( Component.prototype, {
     	if ( type ( this.validateProps ) === "function" ) {
 
     		// 构造属性验证获取器获取属性验证参数
-    		this.caller.set ( {
-    			propsType ( validator ) {
-    				propsValidator = validator || {};
-    			}
-    		} );
+    		this.propsType = ( validator ) => {
+              	propsValidator = validator || {};
+            };
 
-    		this.validateProps.apply ( this.caller, cache.getDependentPlugin ( this.validateProps ) );
+    		this.validateProps.apply ( this, cache.getDependentPlugin ( this.validateProps ) );
 
-    		this.caller.del ( "propsType" );
+    		delete this.propsType;
     	}
 
     	// 获取props，如果有需要则验证它们
-    	this.caller.set ( { props : moduleConstructor.initProps ( componentNode, moduleVm, propsValidator ) } );
+    	this.props = moduleConstructor.initProps ( componentNode, moduleVm, propsValidator );
     	
     	//////////////////////////////////////////
     	// 获取init方法返回值并初始化vm数据
 		const 
-      		initDeps = cache.getDependentPlugin ( this.init ),
-    		componentVm = new ViewModel ( this.init.apply ( this.caller, initDeps ) );
+    		componentVm = new ViewModel ( this.init.apply ( this, cache.getDependentPlugin ( this.init ) ) );
 
-        this.caller.set ( { state : componentVm } );
+        this.state = componentVm;
     	
     	// 4、数初始化生命周期
 		// moduleConstructor.initLifeCycle ( this, lifeCycle, componentVm );
@@ -56,34 +52,34 @@ extend ( Component.prototype, {
     	if ( this.render ) {
 
     		// 构造模板和样式的获取器获取模板和样式
-    		this.caller.set ( {
-    			template ( str ) {
-    				componentString = str || "";
-                    return this;
-    			},
+    		this.template = str => {
+    			componentString = str || "";
+            	return this;
+    		};
 
-    			style ( obj ) {
-    				scopedStyle = obj || {};
-                    return this;
-    			},
+    		this.style = obj => {
+    			scopedStyle = obj || {};
+                return this;
+    		};
             	
-            	subElements ( ...elemNames ) {
-                	this.subElements = [];
-                	foreach ( elemNames, name => {
-                    	if ( !rcomponentName.test ( name ) ) {
-							throw componentErr ( "name", "组件名称定义需遵循首字母大写的驼峰式命名规则" );
-                    	}
+            this.subElements = ( ...elemNames ) => {
+                this.subElements = [];
+                foreach ( elemNames, name => {
+                    if ( !rcomponentName.test ( name ) ) {
+						throw componentErr ( "name", "组件名称定义需遵循首字母大写的驼峰式命名规则" );
+                    }
                     	
-                    	this.subElements.push ( transformCompName ( name ) );
-                    } );
+                    this.subElements.push ( transformCompName ( name ) );
+                } );
 
-                    return this;
-                }
-    		} );
+                return this;
+            };
 
-    		this.render.apply ( this.caller, cache.getDependentPlugin ( this.init ) );
+    		this.render.apply ( this, cache.getDependentPlugin ( this.render ) );
 
-    		this.caller.del ( "template", "style", "subElements" );
+    		delete this.template;
+        	delete this.style;
+        	delete this.subElements;
 
     		// 处理模块并挂载数据 
     		const 
@@ -97,26 +93,32 @@ extend ( Component.prototype, {
     		componentNode.parentNode.replaceChild ( fragment, componentNode );
 
     		// 调用mount钩子函数
-    		( this.mount || noop ).apply ( this.caller, cache.getDependentPlugin ( this.mount || noop ) );
+    		( this.mount || noop ).apply ( this, cache.getDependentPlugin ( this.mount || noop ) );
     	}
 
     	// 初始化action
     	if ( this.action ) {
-    		const actions = this.action.apply ( this.caller, cache.getDependentPlugin ( this.action ) );
+    		const actions = this.action.apply ( this, cache.getDependentPlugin ( this.action ) );
 
-    		moduleConstructor.initAction ( this.caller, actions );
+    		// moduleConstructor.initAction ( this, actions );
     	}
 
     	// 组件初始化完成，调用apply钩子函数
-    	( this.apply || noop ).apply ( this.caller, cache.getDependentPlugin ( this.apply || noop ) );
+    	( this.apply || noop ).apply ( this, cache.getDependentPlugin ( this.apply || noop ) );
     },
 	
 	depComponents ( ...comps ) {
     	this.depComponents = [];
     	
     	foreach ( comps, comp => {
-        	if ( comp.__proto__.name === "Component" ) {
+        	if ( comp && comp.__proto__.name === "Component" ) {
             	this.depComponents.push ( comp );
+            }
+        	else if ( type ( comp ) === "string" ) {
+            	const compObj = cache.getComponent ( comp );
+            	if ( compObj && compObj.__proto__.name === "Component" ) {
+           			this.depComponents.push ( compObj );
+                }
             }
         } );
     }

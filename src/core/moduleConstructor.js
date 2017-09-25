@@ -158,7 +158,7 @@ export default {
         foreach ( lifeCycle, cycleItem => {
             lifeCycleContainer [ cycleItem ] = vm [ cycleItem ] || noop;
             module [ cycleItem ] = () => {
-                lifeCycleContainer [ cycleItem ].call ( caller );
+                lifeCycleContainer [ cycleItem ].call ( module );
             }
             
             delete vm [ cycleItem ];

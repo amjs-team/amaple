@@ -1,8 +1,9 @@
 import { extend, foreach } from "../../func/util";
+import { attr } from "../../func/node";
 import cache from "../../cache/core";
 
 /**
-	loader ( name: String, load: Object )
+	loader ( load: Object )
 
 	Return Type:
 	void
@@ -13,24 +14,20 @@ import cache from "../../cache/core";
 	URL doc:
 	http://icejs.org/######
 */
-export default function Loader ( name, load ) {
+export default function ComponentLoader ( load ) {
 
 	
 	// 需要加载的依赖，加载完成所有依赖需要遍历此对象上的所有依赖并调用相应回调函数
-	this.load 	 = {};
+	this.load = load;
 
 	 // 等待加载完成的依赖，每加载完成一个依赖都会将此依赖在waiting对象上移除，当waiting为空时则表示相关依赖已全部加载完成
 	this.waiting = [];
 
 	this.factory;
-
-	//////////////////////////////////////////
-	//////////////////////////////////////////
-	this.load [ name ] = load;
 }
 
 
-extend ( Loader.prototype, {
+extend ( ComponentLoader.prototype, {
 
 	/**
 		putWaiting ( name: String )
@@ -61,44 +58,12 @@ extend ( Loader.prototype, {
 		http://icejs.org/######
 	*/
 	dropWaiting ( name ) {
-		let pointer = this.waiting.indexOf ( name );
+		const pointer = this.waiting.indexOf ( name );
 		if ( pointer !== -1 ) {
 			this.waiting.splice ( pointer, 1 );
 		}
 
 		return this.waiting.length;
-	},
-
-	/**
-		putLoad ( name: String, load: Object )
-	
-		Return Type:
-		void
-	
-		Description:
-		将加载的依赖信息放入load对象中
-	
-		URL doc:
-		http://icejs.org/######
-	*/
-	putLoad ( name, load ) {
-		this.load [ name ] = load;
-	},
-
-	/**
-		getLoad ( name: String )
-	
-		Return Type:
-		Object
-	
-		Description:
-		获取需要加载的依赖对象
-	
-		URL doc:
-		http://icejs.org/######
-	*/
-	getLoad ( name ) {
-		return this.load [ name ];
 	},
 
 	/**
@@ -115,29 +80,18 @@ extend ( Loader.prototype, {
 	*/
 	inject () {
 
-		let 
-			module = this.getLoad ( Loader.topName ),
-			deps = {},
-			depObj, ret;
+		const
+			deps = [];
 
-		foreach ( module.deps, dep => {
+		foreach ( this.load.deps, dep => {
 
 			// 查找插件
-			if ( depObj = cache.getPlugin ( dep ) ) {
-				deps [ dep ] = depObj;
-			}
-
-			// 如果都没找到则去此次加载完成的依赖中获取并缓存入外部对象
-			else {
-				depObj = this.inject ( this.getLoad ( dep ) );
-				cache.pushPlugin ( dep, depObj );
-            	deps [ dep ] = depObj;
-			}
+			deps [ dep ] = cache.getComponent ( dep );
 		} );
 
 		// 返回注入后工厂方法
 		this.factory = () => {
-			module.factory ( deps );
+			this.load.factory.apply ( null, deps );
 		}
 	},
 
@@ -160,7 +114,7 @@ extend ( Loader.prototype, {
 
 
 
-extend ( Loader, {
+extend ( ComponentLoader, {
 
 	// 文件后缀
 	suffix : ".js",
@@ -169,13 +123,7 @@ extend ( Loader, {
 	depName : "data-depName",
 
 	// script加载依赖时用于标识依赖
-	scriptFlag : "dep-loading",
-
-	// script加载依赖时用于标识依赖
 	loaderID : "loader-ID",
-
-	// 顶层依赖名
-	topName : "*",
 
 	// 保存正在使用的依赖加载器对象，因为当同时更新多个依赖时将会存在多个依赖加载器对象
 	loaderMap : {},
@@ -192,12 +140,12 @@ extend ( Loader, {
 		URL doc:
 		http://icejs.org/######
 	*/
-	create ( guid, name, loadDep ) {
-		return Loader.loaderMap [ guid ] = new Loader ( name, loadDep );
+	create ( guid, loadDep ) {
+		return Loader.loaderMap [ guid ] = new Loader ( loadDep );
 	},
-
+	
 	/**
-		getCurrentDep ()
+		getCurrentPath ()
 	
 		Return Type:
 		Object
@@ -209,16 +157,12 @@ extend ( Loader, {
 		URL doc:
 		http://icejs.org/######
 	*/
-	getCurrentDep () {
+	getCurrentPath () {
 		try {
 			____a.____b();
-		} catch(e) {
+		} catch ( e ) {
 			if ( e.stack ) {
-				let match = /\?m=(\S+)&guid=([\d]+):?/.exec ( e.stack );
-				return {
-					name: match [ 1 ],
-					guid: match [ 2 ]
-				};
+				 return ( e.stack.match ( /http:\/\/(.+?):/ ) || [] ) [ 1 ];
 			}
 		}
 	},
@@ -236,16 +180,17 @@ extend ( Loader, {
 		URL doc:
 		http://icejs.org/######
 	*/
-	onScriptLoaded ( event ) {
+	onScriptLoaded ( e ) {
 
-		let loadID = event.target.getAttribute ( Loader.loaderID ),
+		const
+        	loadID = e.target [ Loader.loaderID ],
 			curLoader = Loader.loaderMap [ loadID ];
 
 		// 执行
-		if ( curLoader.dropWaiting ( event.target.getAttribute ( Loader.depName ) ) === 0 ) {
+		if ( curLoader.dropWaiting ( e.target [ Loader.depName ] ) === 0 ) {
 
 			// 依赖注入后的工厂方法
-			let factory = curLoader.inject ();
+			const factory = curLoader.inject ();
 
 			// 调用工厂方法
 			Loader.fire ( factory );

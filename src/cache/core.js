@@ -1,5 +1,6 @@
 import plugin from "./plugin";
 import module from "./module";
+import component from "./component";
 import event from "./event";
 
 /**
@@ -40,6 +41,14 @@ export default {
 	getPlugin ( name ) {
 		return plugin.get ( name );
 	},
+	
+	pushComponent ( name, comp ) {
+    	component.push ( name, comp );
+    },
+	
+	getComponent ( name ) {
+    	return component.get ( name );
+    },
 
 	// 添加页面模块缓存
 	pushModule ( name, d ) {

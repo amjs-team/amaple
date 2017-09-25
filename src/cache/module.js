@@ -16,7 +16,7 @@ export default {
 		URL doc:
 		http://icejs.org/######
 	*/
-	push : function ( name, module ) {
+	push ( name, module ) {
 		this.modules [ name ] = module;
 	},
 
@@ -33,7 +33,7 @@ export default {
 		URL doc:
 		http://icejs.org/######
 	*/
-	get : function ( name ) {
+	get ( name ) {
 		return this.modules [ name ] || null;
 	}
 };

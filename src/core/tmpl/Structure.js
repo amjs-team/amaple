@@ -26,8 +26,12 @@ extend ( Structure.prototype, {
     	let x = this.entity,
 			y = structure.entity,
             find;
+    	const unmountModule = [];
     	
     	if ( ( x && !y ) || ( !x && y ) ) {
+        	foreach ( x, xItem => {
+            	unmountModule.push ( xItem.module );
+            } );
 			x = y;
         }
         else if ( x && y ) {
@@ -37,6 +41,8 @@ extend ( Structure.prototype, {
             		if ( xItem.name === yItem.name ) {
                 		find = true;
                 		if ( xItem.modulePath !== yItem.modulePath ) {
+                        	
+                        	unmountModule.push ( xItem.module );
                     	
                     		// 模块名相同但模块内容不同的时候表示此模块需更新为新模块及子模块内容
                     		xItem.modulePath = yItem.modulePath;
@@ -68,6 +74,15 @@ extend ( Structure.prototype, {
             	}
         	} );
         }
+    	
+    	// call unmount
+    	foreach ( unmountModule, mod => {
+        	foreach ( mod.components, comp => {
+            	comp.unmount ();
+            } );
+        	
+        	mod.unmount ();
+        } );
     	
     	if ( !this instanceof Structure ) {
         	return x;
