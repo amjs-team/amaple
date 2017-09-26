@@ -250,7 +250,10 @@ export default {
 	initAction ( component, actions ) {
         component.action = {};
     	foreach ( actions, ( action, name ) => {
-            if ( component [ name ] ) {
+        	if ( type ( action ) !== "function" ) {
+            	throw componentErr ( "actionType", "action \"" + name + "\"不是方法，组件action返回的对象属性必须为方法，它表示此组件的行为" );
+            }
+            else if ( component [ name ] ) {
                 throw componentErr ( "duplicate", "此组件对象上已存在名为’" + name + "‘的属性或方法" );
             }
 

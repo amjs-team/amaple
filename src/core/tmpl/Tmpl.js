@@ -89,6 +89,7 @@ function concatHandler ( target, source ) {
 export default function Tmpl ( vm, components ) {
 	this.vm = vm;
 	this.components = {};
+	this.refs = {};
 	
 	foreach ( components, comp => {
     	this.components [ comp.name ] = comp;
@@ -142,6 +143,8 @@ extend ( Tmpl.prototype, {
                     	ComponentDerivative = this.getComponent ( componentName ) || Component.getGlobal ( componentName );
         			if ( ComponentDerivative && ComponentDerivative.__proto__.name === "Component" ) {
                     	compileHandlers.components.push ( { elem, Class : ComponentDerivative } );
+                    	
+                    	elem.isComponent = true;
         			}
                     
                     // 将子模块元素保存到页面结构体中以便下次直接获取使用
@@ -282,8 +285,8 @@ extend ( Tmpl, {
     	return scoped;
     },
 	
-	defineDirective ( name, directive ) {
+	defineDirective ( directive ) {
         this.directives = this.directives || {};
-    	this.directives [ name ] = directive;
+    	this.directives [ directive.name ] = directive;
     }
 } );

@@ -3,7 +3,9 @@ import { type, foreach } from "../../../func/util";
 import { noUnitHook } from "../../../var/const";
 import Tmpl from "../Tmpl";
 
-Tmpl.defineDirective ( "expr", {
+Tmpl.defineDirective ( {
+	
+	name : "expr",
 
     /**
         before ()

@@ -1,5 +1,6 @@
 import { extend, foreach } from "../../../func/util";
 import { attr } from "../../../func/node";
+import slice from "../../../var/slice";
 import cache from "../../../cache/core";
 
 /**
@@ -158,13 +159,34 @@ extend ( ComponentLoader, {
 		http://icejs.org/######
 	*/
 	getCurrentPath () {
-		try {
-			____a.____b();
-		} catch ( e ) {
-			if ( e.stack ) {
-				 return ( e.stack.match ( /http:\/\/(.+?):/ ) || [] ) [ 1 ];
+    	if ( document.currentScript ) {
+        	
+        	// Chrome, Firefox, Safari高版本
+        	return document.currentScript.src;
+        }
+    	else {
+        	// IE10+, Safari低版本, Opera9
+        	
+        	try {
+				____a.____b();
+			} catch ( e ) {
+				const stack = e.stack || e.sourceURL || e.stacktrace;
+            	if ( stack ) {
+					return ( e.stack.match ( /(?:http|https|file):\/\/.*?\/.+?\.js/ ) || [ "" ] ) [ 0 ];
+                }
+            	else {
+                	// IE9
+                	
+                	const scripts = slice.call ( document.querySelectorAll ( "script" ) );
+                	for ( let i = scripts.length - 1, script; script = script [ i-- ] ) {
+                    	if ( script.readyState === "interative" ) {
+                        	return script.src;
+                        }
+                    }
+                }
 			}
 		}
+        }
 	},
 
 	/**

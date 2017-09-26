@@ -102,6 +102,9 @@ extend ( Component.prototype, {
 
     		moduleConstructor.initAction ( this, actions );
     	}
+    	
+    	// 如果有saveRef方法则表示此组件需被引用
+    	( componentNode.saveRef || noop ) ( this.action );
 
     	// 组件初始化完成，调用apply钩子函数
     	( this.apply || noop ).apply ( this, cache.getDependentPlugin ( this.apply || noop ) );

@@ -72,9 +72,13 @@ export default function ViewWatcher ( directive, node, expr, tmpl, scoped ) {
 	}
 
 	this.getter = makeFn ( this.expr );
-
-    // 将获取表达式的真实值并将此watcher对象绑定到依赖监听属性中
-	Subscriber.watcher = this;
+	
+	if ( directive.dynamic !== false ) {
+    	
+    	// 将获取表达式的真实值并将此watcher对象绑定到依赖监听属性中
+		Subscriber.watcher = this;
+    }
+	
 	const val = this.getter ( runtimeErr );
   
 	// 局部变量没有设置监听，所以不会调用Subscriber.subscriber()，需手动设置为undefined

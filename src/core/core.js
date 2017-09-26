@@ -149,6 +149,7 @@ export default {
     	check ( pluginDefiniton.build ).type ( "function" ).ifNot ( "pluginDefiniton.build", "plugin安装对象必须包含build方法" ).do ();
     	
     	const deps = cache.getDependentPlugin ( pluginDefiniton.build );
+    	
         cache.pushPlugin ( pluginDefiniton.name, pluginDefiniton.build.apply ( this, deps ) );
 	}
 };

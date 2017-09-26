@@ -164,14 +164,14 @@ extend ( ModuleLoader.prototype, {
                 	
                 	param = args.param [ route.name ];
 		            // 比较新旧param和get,post对象中的值，如果有改变则调用paramChanged和queryChanged
-                    if ( compareArgs ( param, route.module.caller.param ) ) {
-                    	route.module.caller.param = param;
+                    if ( compareArgs ( param, route.module.param ) ) {
+                    	route.module.param = param;
                     	route.module.paramChanged ();
                     }
                 	
-                	if ( compareArgs ( args.get, route.module.caller.get ) || compareArgs ( args.post, route.module.caller.post ) ) {
-                    	route.module.caller.get= args.get;
-                    	route.module.caller.post = args.post;
+                	if ( compareArgs ( args.get, route.module.get ) || compareArgs ( args.post, route.module.post ) ) {
+                    	route.module.get = args.get;
+                    	route.module.post = args.post;
                 		route.module.queryChanged ();
                     }
 		        }

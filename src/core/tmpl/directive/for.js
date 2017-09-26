@@ -2,7 +2,7 @@ import { foreach } from "../../../func/util";
 import { attr } from "../../../func/node";
 import Tmpl from "../Tmpl";
 
-Tmpl.defineDirective ( "for", {
+Tmpl.defineDirective ( {
 	name : "for",
 
     /**

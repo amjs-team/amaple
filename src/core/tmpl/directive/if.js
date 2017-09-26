@@ -3,7 +3,7 @@ import { foreach, type } from "../../../func/util";
 import slice from "../../../var/slice";
 import Tmpl from "../Tmpl";
 
-Tmpl.defineDirective ( "if", {
+Tmpl.defineDirective ( {
 	name : "if",
 
     /**

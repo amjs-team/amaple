@@ -3,7 +3,9 @@ import { type } from "../../../func/util";
 import event from "../../../event/core";
 import Tmpl from "../Tmpl";
 
-Tmpl.defineDirective ( "model", {
+Tmpl.defineDirective ( {
+	
+	name : "model",
 
     /**
         before ()

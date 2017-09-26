@@ -20,8 +20,8 @@ export default {
 
 	getDependentPlugin ( fn ) {
 		const 
-			fnStr = fn.toString (),
-			deps = ( ( 
+			fnStr = fn.toString ();
+		return ( ( 
 					/^function(?:\s+\w+)?\s*\((.*)\)\s*/.exec ( fnStr ) || /^\(?(.*?)\)?\s*=>/.exec ( fnStr ) || /^\S+\s*\((.*?)\)/.exec ( fnStr ) || [] ) [ 1 ]
 					|| "" )
 				.split ( "," ).filter ( item => !!item ).map ( item => this.getPlugin ( item.trim () ) );

@@ -2,7 +2,7 @@ import event from "../../../event/core";
 import { attr } from "../../../func/node";
 import Tmpl from "../Tmpl";
 
-Tmpl.defineDirective ( "on", {
+Tmpl.defineDirective ( {
 	name : "on",
 
     /**
