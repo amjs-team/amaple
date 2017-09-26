@@ -247,15 +247,15 @@ export default {
         URL doc:
         http://icejs.org/######
     */
-	initAction ( caller, actions ) {
-        caller.action = caller.action || {};
+	initAction ( component, actions ) {
+        component.action = {};
     	foreach ( actions, ( action, name ) => {
-            // if ( component [ name ] ) {
-            //     throw componentErr ( "duplicate", "此组件对象上已存在名为’" + name + "‘的属性或方法" );
-            // }
+            if ( component [ name ] ) {
+                throw componentErr ( "duplicate", "此组件对象上已存在名为’" + name + "‘的属性或方法" );
+            }
 
-            caller.action [ name ] = ( ...args ) => {
-                action.apply ( caller, args );
+            component.action [ name ] = ( ...args ) => {
+                action.apply ( component, args );
             };
         } );
 

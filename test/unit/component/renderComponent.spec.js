@@ -3,8 +3,10 @@ import Class from "src/Class";
 import Tmpl from "src/core/tmpl/Tmpl";
 
 describe ( "render component", () => {
+	let TestComp;
+
 	beforeEach ( () => {
-		Class ( "TestComp" ).extends ( Component ) ( {
+		TestComp = Class ( "TestComp" ).extends ( Component ) ( {
 			init () {
 				return {
 			    	btnText : "test-btn",
@@ -29,10 +31,6 @@ describe ( "render component", () => {
 				};
 			}
 		} );
-	} );
-
-	afterEach ( () => {
-		delete window.TestComp;
 	} );
 
 	it ( "render a simple component", () => {

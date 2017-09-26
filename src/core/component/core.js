@@ -100,7 +100,7 @@ extend ( Component.prototype, {
     	if ( this.action ) {
     		const actions = this.action.apply ( this, cache.getDependentPlugin ( this.action ) );
 
-    		// moduleConstructor.initAction ( this, actions );
+    		moduleConstructor.initAction ( this, actions );
     	}
 
     	// 组件初始化完成，调用apply钩子函数

@@ -16,7 +16,9 @@ describe ( "class =>", () => {
 
 		expect ( p.prototype.constructor ).toBe ( p );
 		expect ( p.bb ).toBe ( 2 );
-		expect ( new p ().aa ).toBe ( 1 );
+		
+		const p1 = new p ();
+		expect ( p1.aa ).toBe ( 1 );
 		expect ( p.prototype.cc ).toEqual ( jasmine.any ( Function ) );
 	} );
 

@@ -5,7 +5,7 @@ import { attr } from "src/func/node";
 
 describe ( "define component", () => {
 	it ( "use the function Class to define a component derivative", () => {
-		Class ( "TestComp" ).extends ( Component ) ( {
+		const TestComp = Class ( "TestComp" ).extends ( Component ) ( {
 			init () {
 				return {
 			    	btnText : "test-btn",
@@ -42,13 +42,13 @@ describe ( "define component", () => {
 		expect ( fragment.firstChild.nodeName ).toBe ( "BUTTON" );
 		expect ( fragment.firstChild.firstChild.nodeValue ).toBe ( "test-btn" );
 
-		tc.caller.action.print ( "hello icejs" );
+		tc.action.print ( "hello icejs" );
 		expect ( fragment.firstChild.nextElementSibling.firstChild.nodeValue ).toBe ( "hello icejs" );
 		expect ( fragment.firstChild.nextElementSibling.style.color ).toBe ( "rgb(0, 170, 230)" );
 	} );
 
 	it ( "validate component props without vm data", () => {
-		Class ( "TestComp" ).extends ( Component ) ( {
+		const TestComp = Class ( "TestComp" ).extends ( Component ) ( {
 			init () {
 				const self = this;
 				return {
@@ -150,7 +150,7 @@ describe ( "define component", () => {
 	} );
 
 	it ( "validate the Two-way binding props of component with vm data", () => {
-		Class ( "TestComp" ).extends ( Component ) ( {
+		const TestComp = Class ( "TestComp" ).extends ( Component ) ( {
 			init () {
 				const self = this;
 				return {
@@ -213,7 +213,7 @@ describe ( "define component", () => {
 		vm.link = "./c";
 		expect ( fragment.firstChild.pathname ).toBe ( "/c" );
 
-		tc.caller.action.changeLink ( "./d" );
+		tc.action.changeLink ( "./d" );
 		expect ( vm.link ).toBe ( "./d" );
 	} );
 } );

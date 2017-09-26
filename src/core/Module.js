@@ -114,21 +114,16 @@ export default function Module ( module, vmData = { init: function () { return {
         		return ( compFn || noop ).apply ( this, deps );
             }
         	catch ( e ) {
-            	compFn = ( new Function ( "return " + compFn.toString ().replace ( /return\s+\[(.+?)\]/, ( match, rep ) => {
-					return match.replace ( rep, rep.split ( "," )
-					.map ( item => "\"" + item.trim () + "\"" )
-					.join ( "," ) );
-				} ) ) ) ();
-            	
-            	const 
-                	depStrs = compFn.apply ( this, deps ),
+            	const 
+ 					depStrs = ( compFn.toString ().match ( /return\s+\[(.+?)\]/ ) || [ "", "" ] ) [ 1 ].split ( "," ).map ( item => item.trim () ),
                     depComps = [];
+
             	foreach ( depStrs, depObj => {
                 	depComps.push ( depObj );
                 } );
             	
             	return depComps;
-            }
+			}
         } ) (),
 	
 		// 获取后初始化vm的init方法

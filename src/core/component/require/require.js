@@ -1,8 +1,7 @@
-import Loader from "./Loader";
-import cache from "../../cache/core";
-import { foreach, guid } from "../../func/util";
-import { appendScript, attr } from "../../func/node";
-import core from "../core";
+import ComponentLoader from "./ComponentLoader";
+import cache from "../../../cache/core";
+import { foreach, guid } from "../../../func/util";
+import { appendScript, attr } from "../../../func/node";
 
 /**
 	require ( deps: Object, factory: Function )
@@ -30,7 +29,7 @@ export default function require ( deps, factory ) {
 			factory : factory,
 		},
 	
-		loadObj = Loader.create ( nguid, module );
+		loadObj = ComponentLoader.create ( nguid, module );
 
 	// 遍历依赖，如果依赖未被加载，则放入waiting中等待加载完成
 	foreach ( deps, depStr => {
@@ -42,18 +41,18 @@ export default function require ( deps, factory ) {
 			// 加载依赖
 			const script = document.createElement ( "script" );
 
-			script.src 	= depStr + Loader.suffix;
-			script [ Loader.depName ] = depStr;
-			script [ Loader.loaderID ] = nguid;
+			script.src 	= depStr + ComponentLoader.suffix;
+			script [ ComponentLoader.depName ] = depStr;
+			script [ ComponentLoader.ComponentLoaderID ] = nguid;
 
-			appendScript ( script, Loader.onScriptLoaded );
+			appendScript ( script, ComponentLoader.onScriptLoaded );
 
 			loadingCount ++;
 		}
 	} );
 
 	// 如果顶层执行依赖没有待加载的依赖参数，或可以直接触发，则直接执行
-	if ( loadingCount === 0 && name === Loader.topName ) {
+	if ( loadingCount === 0 && name === ComponentLoader.topName ) {
 		loadObj.inject ();
 		loadObj.fire ();
 	}

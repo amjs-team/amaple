@@ -1,6 +1,6 @@
-import { extend, foreach } from "../../func/util";
-import { attr } from "../../func/node";
-import cache from "../../cache/core";
+import { extend, foreach } from "../../../func/util";
+import { attr } from "../../../func/node";
+import cache from "../../../cache/core";
 
 /**
 	loader ( load: Object )

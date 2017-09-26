@@ -1,7 +1,7 @@
 import { foreach, isEmpty, type, noop } from "./func/util";
 import { classErr } from "./error";
 import cache from "./cache/core";
-import ComponentLoader from "./core/deps/ComponentLoader";
+import ComponentLoader from "./core/component/require/ComponentLoader";
 
 const 
 	rconstructor = /^(?:constructor\s*|function\s*)?\((.*?)\)\s*(?:=>\s*)?{([\s\S]*)}$/,
@@ -114,21 +114,23 @@ export default function Class ( clsName ) {
 	let _superClass;
 
 	function classDefiner ( proto ) {
-		const constructor = ( ...args ) => {
+		const 
+			customConstructor = proto.constructor,
+			constructor = function ( ...args ) {
         	try {
-        		( proto.constructor || noop ).apply ( this, args );
+        		( customConstructor || noop ).apply ( this, args );
             }
         	catch ( e ) {
-            	proto.constructor = ( new Function ( "return " + proto.constructor.toString ().replace ( /this\.depComponents\s*\((.+?)\)/, ( match, rep ) => {
+            	customConstructor = ( new Function ( "return " + customConstructor.toString ().replace ( /this\.depComponents\s*\((.+?)\)/, ( match, rep ) => {
 					return match.replace ( rep, rep.split ( "," )
 					.map ( item => "\"" + item.trim () + "\"" )
 					.join ( "," ) );
 				} ) ) ) ();
             	
-            	proto.constructor.apply ( this, args );
+            	customConstructor.apply ( this, args );
             }
         };
-    	proto.constructor = proto.constructor || noop;
+    	// proto.constructor = proto.constructor || noop;
 
 		let fnBody = `return function ${ clsName } (`,
 			mustNew = `newClassCheck(this, ${ clsName });`,
@@ -193,7 +195,7 @@ export default function Class ( clsName ) {
 		}
     	
     	// 将此组件类保存至缓存中
-    	cache.pushComponent ( ComponentLoader.getCurrentPath, classFn );
+    	cache.pushComponent ( ComponentLoader.getCurrentPath (), classFn );
 
 		return classFn;
 	}
