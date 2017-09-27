@@ -18,12 +18,11 @@ import { appendScript, attr } from "../../../func/node";
 */
 export default function require ( deps, factory ) {
 
+	// 正在加载的依赖数
+	let	loadingCount = 0;
+
 	const
     	nguid = guid (),
-    	
-		// 正在加载的依赖数
-		loadingCount = 0,
-
 		module = {
 			deps 	: deps,
 			factory : factory,

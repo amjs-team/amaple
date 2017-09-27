@@ -1,7 +1,7 @@
 import slice from "../var/slice";
 import { foreach, noop, type, isPlainObject } from "../func/util";
 import { query } from "../func/node";
-import { defineReactiveProperty } from "../func/private";
+import { defineReactiveProperty, transformCompName } from "../func/private";
 import { rexpr, rvar } from "../var/const";
 import { componentErr } from "../error";
 import { noUnitHook } from "../var/const";
@@ -204,35 +204,62 @@ export default {
     	return f;
     },
 	
-	initSubElements ( componentNode ) {
-    	const subElements = {
-        	default : componentNode.ownerDocument.createDocumentFragment ()
+    /**
+        initSubElements ( component: DOMObject, subElements: Array )
+    
+        Return Type:
+        Object
+        组件子元素对象
+    
+        Description:
+        获取组件子元素并打包成局部vm的数据对象
+    
+        URL doc:
+        http://icejs.org/######
+    */
+	initSubElements ( componentNode, subElements ) {
+    	const _subElements = {
+        	default : ""
         };
     	
     	let componentName, f;
         foreach ( slice.call ( componentNode.childNodes ), node => {
             	
             componentName = transformCompName ( node.nodeName );
-            if ( this.subElements.indexOf ( componentName ) >= 0 ) {
-                subElements [ componentName ] = subElements [ componentName ] || [];
-                	
+            if ( subElements.indexOf ( componentName ) >= 0 ) {
                 f = componentNode.ownerDocument.createDocumentFragment ();
-                f.appendChild ( node );
-                subElements [ componentName ].push ( f );
+                foreach ( slice.call ( node.childNodes ), subNode => {
+                    f.appendChild ( subNode );
+                } );
+
+                switch ( type ( _subElements [ componentName ] ) ) {
+                    case "undefined":
+                        _subElements [ componentName ] = f;
+
+                        break;
+                    case "object":
+                        _subElements [ componentName ] = [ _subElements [ componentName ] ];
+                        _subElements [ componentName ].push ( f );
+
+                        break;
+                    case "array":
+                        _subElements [ componentName ].push ( f );
+                }
             }
             else {
-                subElements.default.appendChild ( node );
+                _subElements.default = _subElements.default || componentNode.ownerDocument.createDocumentFragment ();
+                _subElements.default.appendChild ( node );
             }
         } );
         	
     	// 如果数组内只有一个fragment则去掉数组包裹层
-        foreach ( subElements, ( elems, key, self ) => {
+        foreach ( _subElements, ( elems, key, self ) => {
             if ( elems.length === 1 ) {
                 self [ key ] = elems [ 0 ];
             }
         } );
     	
-    	return { subElements };
+    	return { subElements: _subElements };
     },
 	
     /**

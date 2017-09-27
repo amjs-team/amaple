@@ -6,4 +6,6 @@ export default {
 
 	href			: "href",
 	action 			: "action",
+
+	title 			: ":title",
 };

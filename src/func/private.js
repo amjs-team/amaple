@@ -15,36 +15,6 @@ export function defineReactiveProperty ( key, getter, setter, target ) {
 }
 
 /**
-	matchFnArgs ( fn: Function )
-
-	Return Type:
-	Array
-	方法参数数组
-
-	Description:
-	获取方法中传入的参数
-	以数组形式返回
-	可匹配以下四种方法的参数：
-	① function xxx (a,b,c) { // ... }
-	② function (a,b,c) { // ... }
-	③ (a,b,c) => { // ... }
-	④ xxx (a,b,c) { // ... }
-
-	URL doc:
-	http://icejs.org/######
-*/
-// export function matchFnArgs ( fn ) {
-// 	let fnStr = fn.toString ();
-
-// 	return type ( fn ) === "function" ? 
-// 			( ( 
-// 				/^function(?:\s+\w+)?\s*\((.*)\)\s*/.exec ( fnStr ) || /^\(?(.*?)\)?\s*=>/.exec ( fnStr ) || /^\S+\s*\((.*?)\)/.exec ( fnStr ) || [] ) [ 1 ]
-// 				|| "" )
-// 			.split ( "," ).filter ( item => !!item ).map ( item => item.trim () )
-//     		: [];
-// }
-
-/**
 	parseGetQuery ( getString: String )
 
 	Return Type:
@@ -70,6 +40,23 @@ export function parseGetQuery ( getString ) {
 	return getObject;
 }
 
-export function transformCompName ( compName ) {
-	return compName.toLowerCase ().replace ( /^([a-z])|-(.)/g, ( match, rep1, rep2 ) => ( rep1 || rep2 ).toUpperCase () );
+/**
+	transformCompName ( compName: String, mode?: Boolean )
+
+	Return Type:
+	驼峰式或中划线式的组件名
+
+	Description:
+	mode不为true时，将中划线风格的组件名转换为驼峰式的组件名
+	mode为true时，将驼峰式风格的组件名转换为中划线的组件名
+
+	URL doc:
+	http://icejs.org/######
+*/
+export function transformCompName ( compName, mode ) {
+	return ( mode !== true ? 
+		compName.toLowerCase ().replace ( /^([a-z])|-(.)/g, ( match, rep1, rep2 ) => ( rep1 || rep2 ).toUpperCase () ) 
+		: 
+		compName.replace ( /([A-Z])/g, ( match, rep, i ) => ( i > 0 ? "-" : "" ) + rep.toLowerCase () ) 
+	);
 }

@@ -4,7 +4,7 @@ import slice from "../../../var/slice";
 import cache from "../../../cache/core";
 
 /**
-	loader ( load: Object )
+	ComponentLoader ( load: Object )
 
 	Return Type:
 	void
@@ -142,7 +142,7 @@ extend ( ComponentLoader, {
 		http://icejs.org/######
 	*/
 	create ( guid, loadDep ) {
-		return Loader.loaderMap [ guid ] = new Loader ( loadDep );
+		return ComponentLoader.loaderMap [ guid ] = new ComponentLoader ( loadDep );
 	},
 	
 	/**
@@ -160,13 +160,13 @@ extend ( ComponentLoader, {
 	*/
 	getCurrentPath () {
     	if ( document.currentScript ) {
-        	
-        	// Chrome, Firefox, Safari高版本
+
+    		// Chrome, Firefox, Safari高版本
         	return document.currentScript.src;
         }
     	else {
+
         	// IE10+, Safari低版本, Opera9
-        	
         	try {
 				____a.____b();
 			} catch ( e ) {
@@ -175,17 +175,16 @@ extend ( ComponentLoader, {
 					return ( e.stack.match ( /(?:http|https|file):\/\/.*?\/.+?\.js/ ) || [ "" ] ) [ 0 ];
                 }
             	else {
+
                 	// IE9
-                	
                 	const scripts = slice.call ( document.querySelectorAll ( "script" ) );
-                	for ( let i = scripts.length - 1, script; script = script [ i-- ] ) {
+                	for ( let i = scripts.length - 1, script; script = script [ i-- ]; ) {
                     	if ( script.readyState === "interative" ) {
                         	return script.src;
                         }
                     }
                 }
 			}
-		}
         }
 	},
 
@@ -197,7 +196,7 @@ extend ( ComponentLoader, {
 	
 		Description:
 		js依赖加载onload事件回调函数
-		此函数不是直接在其他地方调用，而是赋值给script的onload事件的，所以函数里的this都需要使用Loader来替代
+		此函数不是直接在其他地方调用，而是赋值给script的onload事件的，所以函数里的this都需要使用ComponentLoader来替代
 	
 		URL doc:
 		http://icejs.org/######
@@ -205,19 +204,19 @@ extend ( ComponentLoader, {
 	onScriptLoaded ( e ) {
 
 		const
-        	loadID = e.target [ Loader.loaderID ],
-			curLoader = Loader.loaderMap [ loadID ];
+        	loadID = e.target [ ComponentLoader.loaderID ],
+			curLoader = ComponentLoader.loaderMap [ loadID ];
 
 		// 执行
-		if ( curLoader.dropWaiting ( e.target [ Loader.depName ] ) === 0 ) {
+		if ( curLoader.dropWaiting ( e.target [ ComponentLoader.depName ] ) === 0 ) {
 
 			// 依赖注入后的工厂方法
-			const factory = curLoader.inject ();
+			curLoader.inject ();
 
 			// 调用工厂方法
-			Loader.fire ( factory );
+			curLoader.fire ( factory );
 			
-			delete Loader.loaderMap [ loadID ];
+			delete ComponentLoader.loaderMap [ loadID ];
 		}
 	}
 } );

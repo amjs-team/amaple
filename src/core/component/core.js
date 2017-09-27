@@ -1,8 +1,8 @@
 import { extend, foreach, noop, type } from "../../func/util";
 import { matchFnArgs, transformCompName } from "../../func/private";
 import { rcomponentName } from "../../var/const";
+import { componentErr } from "../../error";
 import check from "../../check";
-// import ModuleCaller from "../ModuleCaller";
 import ViewModel from "../ViewModel";
 import moduleConstructor from "../moduleConstructor";
 import Tmpl from "../tmpl/Tmpl";
@@ -20,8 +20,8 @@ export default function Component () {
 extend ( Component.prototype, {
 	
 	__init__ ( componentNode, moduleVm ) {
-		let propsValidator, componentString, scopedStyle;
-    	
+        let propsValidator;
+
     	if ( type ( this.validateProps ) === "function" ) {
 
     		// 构造属性验证获取器获取属性验证参数
@@ -50,6 +50,8 @@ extend ( Component.prototype, {
     	/////////////////////
     	// 转换组件代表元素为实际的组件元素节点
     	if ( this.render ) {
+            let componentString, scopedStyle,
+                subElementNames = [];
 
     		// 构造模板和样式的获取器获取模板和样式
     		this.template = str => {
@@ -63,13 +65,12 @@ extend ( Component.prototype, {
     		};
             	
             this.subElements = ( ...elemNames ) => {
-                this.subElements = [];
                 foreach ( elemNames, name => {
                     if ( !rcomponentName.test ( name ) ) {
-						throw componentErr ( "name", "组件名称定义需遵循首字母大写的驼峰式命名规则" );
+						throw componentErr ( "subElements", "组件子元素名\"" + name + "\"定义错误，组件子元素名的定义规则与组件名相同，需遵循首字母大写的驼峰式" );
                     }
                     	
-                    this.subElements.push ( transformCompName ( name ) );
+                    subElementNames.push ( name );
                 } );
 
                 return this;
@@ -84,8 +85,8 @@ extend ( Component.prototype, {
     		// 处理模块并挂载数据 
     		const 
             	fragment = moduleConstructor.initTemplate ( componentString, scopedStyle ),
-                subElements = moduleConstructor.initSubElements ( componentNode ),
-                tmpl = new Tmpl ( componentVm, this.depComponents || [] );
+                subElements = moduleConstructor.initSubElements ( componentNode, subElementNames ),
+                tmpl = new Tmpl ( componentVm, this.components || [] );
         	
     		tmpl.mount ( fragment, false, Tmpl.defineScoped ( subElements ) );
 
@@ -111,16 +112,16 @@ extend ( Component.prototype, {
     },
 	
 	depComponents ( ...comps ) {
-    	this.depComponents = [];
+    	this.components = [];
     	
     	foreach ( comps, comp => {
         	if ( comp && comp.__proto__.name === "Component" ) {
-            	this.depComponents.push ( comp );
+            	this.components.push ( comp );
             }
         	else if ( type ( comp ) === "string" ) {
             	const compObj = cache.getComponent ( comp );
             	if ( compObj && compObj.__proto__.name === "Component" ) {
-           			this.depComponents.push ( compObj );
+           			this.components.push ( compObj );
                 }
             }
         } );

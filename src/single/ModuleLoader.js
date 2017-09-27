@@ -1,5 +1,6 @@
 import { type, extend, foreach, noop, isPlainObject, isEmpty, timestamp } from "../func/util";
-import { query, attr, html, scriptEval, serialize } from "../func/node";
+import { query, attr, html, serialize } from "../func/node";
+import require from "../core/component/require/require";
 import { envErr, moduleErr } from "../error";
 import { MODULE_UPDATE, MODULE_REQUEST, MODULE_RESPONSE } from "../var/const";
 import compileModule from "./compileModule";
@@ -327,7 +328,7 @@ extend ( ModuleLoader, {
 	        this.saveModuleUpdateFn ( () => {
             	Structure.currentPage.signCurrentRender ( currentStructure, param, args, isPlainObject ( data ) ? data : serialize ( data ) );
             	
-	        	const title = historyModule.updateFn ( ice, moduleNode, html, scriptEval );
+	        	const title = historyModule.updateFn ( ice, moduleNode, html, require );
 				event.emit ( moduleNode, MODULE_UPDATE );
 
 				return title;
@@ -359,7 +360,7 @@ extend ( ModuleLoader, {
 				/////////////////////////////////////////////////////////
 	        	// 编译module为可执行函数
 				// 将请求的html替换到module模块中
-	            const updateFn = compileModule ( moduleString, moduleNode );
+	            const updateFn = compileModule ( moduleString, attr ( moduleNode, Module.identifier ) );
 
 	            // 缓存模块更新函数
 	            cache.pushModule ( path, { updateFn, time : timestamp () } );
@@ -369,7 +370,7 @@ extend ( ModuleLoader, {
                 	
                 	Structure.currentPage.signCurrentRender ( currentStructure, param, args, isPlainObject ( data ) ? data : serialize ( data ) );
                 	
-	        		const title = updateFn ( ice, moduleNode, html, scriptEval );
+	        		const title = updateFn ( ice, moduleNode, html, require );
 	            	event.emit ( moduleNode, MODULE_UPDATE );
 
 	            	// 调用success回调

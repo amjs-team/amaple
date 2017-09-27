@@ -12,7 +12,7 @@
 						<span>{{ password }}</span>
 					</li>
 					<li>
-						<!-- <SubmitButton text="{{ btnOpts.btnText }}" /> -->
+						<submit-button text="{{ btnOpts.btnText }}"></submit-button>
 						<input type="submit" value="{{ btnOpts.btnText }}">
 					</li>
 				</ul>
@@ -25,6 +25,8 @@
 	</style>
 
 	<script>
+		// var SubmitButton = import ( "./comp/SubmitButton" );
+
 		var login = new ice.Module ( {
 
 			// 该函数返回的对象为该模块内的数据绑定，包括变量和方法

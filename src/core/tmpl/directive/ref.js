@@ -30,7 +30,7 @@ Tmpl.defineDirective ( {
                 	break;
             	case "object" :
                 	refs [ ref ] = [ refs [ ref ] ];
-                	refs [ ref ].push ( refObj ];
+                	refs [ ref ].push ( refObj );
                     
                     break;
             	case "array" :

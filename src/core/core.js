@@ -145,8 +145,19 @@ export default {
 		http://icejs.org/######
 	*/
 	install ( pluginDefiniton ) {
-		check ( pluginDefiniton.name ).type ( "string" ).notBe ( "" ).check ( cache.hasPlugin ( pluginDefiniton.name ) ).be ( true ).ifNot ( "pluginDefiniton.name", "plugin安装对象必须定义name属性以表示此插件的名称，且不能与已有插件名称重复" ).do ();
-    	check ( pluginDefiniton.build ).type ( "function" ).ifNot ( "pluginDefiniton.build", "plugin安装对象必须包含build方法" ).do ();
+		check ( pluginDefiniton.name )
+			.type ( "string" )
+			.notBe ( "" )
+			.check ( cache.hasPlugin ( pluginDefiniton.name ) )
+			.be ( true )
+			.ifNot ( "pluginDefiniton.name", "plugin安装对象必须定义name属性以表示此插件的名称，且不能与已有插件名称重复" )
+			.do ();
+
+    	check ( pluginDefiniton.build )
+    		.type ( "function" )
+    		.ifNot ( "pluginDefiniton.build", "plugin安装对象必须包含build方法" )
+    		.do ();
+    	
     	
     	const deps = cache.getDependentPlugin ( pluginDefiniton.build );
     	
