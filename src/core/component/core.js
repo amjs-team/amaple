@@ -90,8 +90,12 @@ extend ( Component.prototype, {
         	
     		tmpl.mount ( fragment, false, Tmpl.defineScoped ( subElements ) );
 
-    		// 将处理过的实际组件结构替换组件代表元素
-    		componentNode.parentNode.replaceChild ( fragment, componentNode );
+    		// 将处理过的实际组件结构替换组件代表元素，兼容“:if”等判断指令的处理
+        	componentNode.templateNodes = slice.call ( fragment.childNodes );
+    		
+        	if ( componentNode.parentNode ) {
+        		componentNode.parentNode.replaceChild ( fragment, componentNode );
+            }
 
     		// 调用mount钩子函数
     		( this.mount || noop ).apply ( this, cache.getDependentPlugin ( this.mount || noop ) );
