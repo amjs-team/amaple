@@ -2,6 +2,7 @@ import { extend, foreach, noop, type } from "../../func/util";
 import { matchFnArgs, transformCompName } from "../../func/private";
 import { rcomponentName } from "../../var/const";
 import { componentErr } from "../../error";
+import slice from "../../var/slice";
 import check from "../../check";
 import ViewModel from "../ViewModel";
 import moduleConstructor from "../moduleConstructor";
@@ -12,9 +13,6 @@ export default function Component () {
 
 	// check
 	check ( this.init ).type ( "function" ).ifNot ( "component:" + this.constructor.name, "component derivative必须带有init方法" ).do ();
-	
-	// 1、创建Caller
-	// this.caller = new ModuleCaller ();
 }
 
 extend ( Component.prototype, {
@@ -51,7 +49,7 @@ extend ( Component.prototype, {
     	// 转换组件代表元素为实际的组件元素节点
     	if ( this.render ) {
             let componentString, scopedStyle,
-                subElementNames = [];
+                subElementNames = {};
 
     		// 构造模板和样式的获取器获取模板和样式
     		this.template = str => {
@@ -65,12 +63,16 @@ extend ( Component.prototype, {
     		};
             	
             this.subElements = ( ...elemNames ) => {
-                foreach ( elemNames, name => {
-                    if ( !rcomponentName.test ( name ) ) {
-						throw componentErr ( "subElements", "组件子元素名\"" + name + "\"定义错误，组件子元素名的定义规则与组件名相同，需遵循首字母大写的驼峰式" );
+                foreach ( elemNames, nameObj => {
+                    if ( type ( nameObj ) === "string" ) {
+                        nameObj = { elem : nameObj, multiple: false };
+                    }
+
+                    if ( !rcomponentName.test ( nameObj.elem ) ) {
+						throw componentErr ( "subElements", "组件子元素名\"" + nameObj.elem + "\"定义错误，组件子元素名的定义规则与组件名相同，需遵循首字母大写的驼峰式" );
                     }
                     	
-                    subElementNames.push ( name );
+                    subElementNames [ nameObj.elem ] = nameObj.multiple;
                 } );
 
                 return this;

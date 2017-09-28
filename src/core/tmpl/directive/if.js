@@ -51,12 +51,21 @@ Tmpl.defineDirective ( {
         http://icejs.org/######
     */
 	update ( conditions ) {
-		let elem = this.node,
+
+        // 当元素为组件元素时纠正当前节点的指向问题
+        // 因为在组件初始化时替换了当前在DOM树上的组件元素导致当前节点变量指向错误
+        if ( this.node.isComponent && this.currentNode === this.node && !this.node.parentNode ) {
+            this.currentNode = this.node.templateNodes;
+        }
+
+		const 
+            elem = this.node,
             conditionElems = elem.conditionElems,
             cNode = this.currentNode,
             tcurNode = type ( cNode ) === "array",
-            parent = ( tcurNode ? cNode [ 0 ] : cNode ).parentNode,
-            newNode, _cNode;
+            parent = ( tcurNode ? cNode [ 0 ] : cNode ).parentNode;
+
+        let newNode, _cNode;
 
         foreach ( conditions, ( cond, i ) => {
         	if ( cond ) {

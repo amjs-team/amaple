@@ -276,7 +276,9 @@ extend ( Tmpl, {
     	foreach ( scopedDefinition, ( val, varName ) => {
     		if ( varName ) {
     			scoped.vars [ scoped.prefix + varName ] = val;
-            	availableItems.push ( varName );
+
+                // 两边添加”\b“表示边界，以防止有些单词中包含局部变量名而错误替换
+            	availableItems.push ( "\\b" + varName + "\\b" );
     		}
     	} );
 

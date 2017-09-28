@@ -205,7 +205,7 @@ export default {
     },
 	
     /**
-        initSubElements ( component: DOMObject, subElements: Array )
+        initSubElements ( component: DOMObject, subElementNames: Object )
     
         Return Type:
         Object
@@ -217,33 +217,32 @@ export default {
         URL doc:
         http://icejs.org/######
     */
-	initSubElements ( componentNode, subElements ) {
+	initSubElements ( componentNode, subElementNames ) {
     	const _subElements = {
         	default : ""
         };
+
+        foreach ( subElementNames, ( multiple, subElemName ) => {
+            if ( multiple === true ) {
+                _subElements [ subElemName ] = [];
+            }
+        } );
     	
-    	let componentName, f;
+    	let componentName, subElemName, f;
         foreach ( slice.call ( componentNode.childNodes ), node => {
-            	
             componentName = transformCompName ( node.nodeName );
-            if ( subElements.indexOf ( componentName ) >= 0 ) {
+
+            if ( subElemName = subElementNames [ componentName ] !== undefined ) {
                 f = componentNode.ownerDocument.createDocumentFragment ();
                 foreach ( slice.call ( node.childNodes ), subNode => {
                     f.appendChild ( subNode );
                 } );
 
-                switch ( type ( _subElements [ componentName ] ) ) {
-                    case "undefined":
-                        _subElements [ componentName ] = f;
-
-                        break;
-                    case "object":
-                        _subElements [ componentName ] = [ _subElements [ componentName ] ];
-                        _subElements [ componentName ].push ( f );
-
-                        break;
-                    case "array":
-                        _subElements [ componentName ].push ( f );
+                if ( subElemName.multiple === true ) {
+                    _subElements [ componentName ].push ( f );
+                }
+                else {
+                    _subElements [ componentName ] = f;
                 }
             }
             else {

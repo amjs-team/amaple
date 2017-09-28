@@ -133,9 +133,10 @@ export default function Module ( module, vmData = { init: function () { return {
 		// 使用vm解析模板
 		tmpl = new Tmpl ( vm, components );
 	
-	this.vm = vm;
 	this.view = slice.call ( moduleElem.childNodes ) || [];
-	this.state = vm ;
+	this.state = vm;
+	this.components = tmpl.compInstances;
+	this.refs = tmpl.refs;
 
 	// 解析模板，挂载数据
 	// 如果forceMount为true则强制挂载moduleElem
