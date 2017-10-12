@@ -21,7 +21,7 @@ Tmpl.defineDirective ( {
     */
 	before () {
     	
-    	let variable   = /^\s*([$\w]+)\s+in\s+([$\w]+)\s*$/.exec ( this.expr ),
+    	let variable   = /^\s*([$\w]+)\s+in\s+([$\w.]+)\s*$/.exec ( this.expr ),
             elem       = this.node;
   
 		this.startNode = elem.ownerDocument.createTextNode ( "" );

@@ -232,13 +232,13 @@ export default {
         foreach ( slice.call ( componentNode.childNodes ), node => {
             componentName = transformCompName ( node.nodeName );
 
-            if ( subElemName = subElementNames [ componentName ] !== undefined ) {
+            if ( subElementNames.hasOwnProperty ( componentName ) ) {
                 f = componentNode.ownerDocument.createDocumentFragment ();
                 foreach ( slice.call ( node.childNodes ), subNode => {
                     f.appendChild ( subNode );
                 } );
 
-                if ( subElemName.multiple === true ) {
+                if ( subElementNames [ componentName ] === true ) {
                     _subElements [ componentName ].push ( f );
                 }
                 else {
@@ -248,13 +248,6 @@ export default {
             else {
                 _subElements.default = _subElements.default || componentNode.ownerDocument.createDocumentFragment ();
                 _subElements.default.appendChild ( node );
-            }
-        } );
-        	
-    	// 如果数组内只有一个fragment则去掉数组包裹层
-        foreach ( _subElements, ( elems, key, self ) => {
-            if ( elems.length === 1 ) {
-                self [ key ] = elems [ 0 ];
             }
         } );
     	

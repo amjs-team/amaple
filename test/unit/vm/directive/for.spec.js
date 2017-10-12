@@ -16,7 +16,7 @@ describe ( "directive for => ", () => {
             } ),
             t = new Tmpl ( vm ),
             children;
-        t.mount ( d, true, true );
+        t.mount ( d, true, undefined, true );
 
         children = d.children;
         expect ( children.length ).toBe ( 3 );
@@ -34,7 +34,7 @@ describe ( "directive for => ", () => {
             } ),
             t = new Tmpl ( vm ),
             children;
-        t.mount ( d, true, true );
+        t.mount ( d, true, undefined, true );
 
         children = d.children;
         expect ( children.length ).toBe ( 3 );
@@ -74,7 +74,7 @@ describe ( "directive for => ", () => {
             } ),
             t = new Tmpl ( vm ),
             children;
-        t.mount ( d, true, true );
+        t.mount ( d, true, undefined, true );
 
         children = d.children;
         expect ( children [ 0 ].firstChild.firstChild.nodeValue ).toBe ( "a" );
@@ -96,7 +96,7 @@ describe ( "directive for => ", () => {
             } ),
             t = new Tmpl ( vm ),
             children;
-        t.mount ( d, true, true );
+        t.mount ( d, true, undefined, true );
 
         children = d.children;
         expect ( children.length ).toBe ( 1 );
@@ -115,7 +115,7 @@ describe ( "directive for => ", () => {
             } ),
             t = new Tmpl ( vm ),
             children;
-        t.mount ( d, true, true );
+        t.mount ( d, true, undefined, true );
 
         children = d.children;
         expect ( children.length ).toBe ( 3 );
@@ -138,7 +138,7 @@ describe ( "directive for => ", () => {
             } ),
             t = new Tmpl ( vm ),
             children;
-        t.mount ( d, true, true );
+        t.mount ( d, true, undefined, true );
 
         children = d.children;
         expect ( children.length ).toBe ( 6 );
@@ -160,7 +160,7 @@ describe ( "directive for => ", () => {
             } ),
             t = new Tmpl ( vm ),
             children;
-        t.mount ( d, true, true );
+        t.mount ( d, true, undefined, true );
 
         children = d.children;
 

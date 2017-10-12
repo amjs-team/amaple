@@ -59,16 +59,16 @@ export default function ViewWatcher ( directive, node, expr, tmpl, scoped ) {
 	this.scoped = scoped;
 	
 	( directive.before || noop ).call ( this );
+
+	// 如果scoped为局部数据对象则将expr内的局部变量名替换为局部变量名
+	if ( type ( scoped ) === "object" && scoped.regexp instanceof RegExp ) {
+		this.expr = this.expr.replace ( scoped.regexp, match => scoped.prefix + match );
+	}
 	
 	// 移除相关属性指令表达式
 	// 当属性指令表达式与指令名称不同的时候可将对应表达式赋值给this.attrExpr
 	if ( node.nodeType === 1 ) {
 		attr ( node, Tmpl.directivePrefix + ( this.attrExpr || directive.name ), null );
-	}
-	
-  	// 如果scoped为局部数据对象则将expr内的局部变量名替换为局部变量名
-	if ( type ( scoped ) === "object" && scoped.regexp instanceof RegExp ) {
-		this.expr = this.expr.replace ( scoped.regexp, match => scoped.prefix + match );
 	}
 
 	this.getter = makeFn ( this.expr );
