@@ -22,7 +22,7 @@
         	Router.module ().route ( "/settings", "setting", function ( ChildRouter, Redirector ) {
 				Redirector.from ( "" ).to ( "profile" );
 				ChildRouter.module ( "menu" ).route ( ":page", "menu" );
-				// 或者可写成 ChildRouter.module ( "menu" ).route ( [ "profile", "admin", "keys" ... ], menu );
+				// 或者可写 ChildRouter.module ( "menu" ).route ( [ "profile", "admin", "keys" ... ], menu );
             	
 				ChildRouter.module ( "main" ).route ( ":page", "{{ page }}" );
 				ChildRouter.module ( "footer" ).route ( ":page", "footer" );
