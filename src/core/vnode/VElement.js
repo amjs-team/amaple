@@ -1,0 +1,14 @@
+import VNode from "./VNode";
+
+export default function VElement ( nodeName, attrs, key, parent, children, elem, isComponent ) {
+	const vnode = new VNode ( 1, key, parent, elem );
+	vnode.nodeName = nodeName;
+	vnode.attrs = attrs || {};
+	vnode.children = children || [];
+	
+	if ( isComponent === true ) {
+    	vnode.isComponent = true;
+    }
+	
+	return vnode;
+}

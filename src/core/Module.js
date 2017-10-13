@@ -11,6 +11,7 @@ import Tmpl from "./tmpl/Tmpl";
 import iceAttr from "../single/iceAttr";
 import check from "../check";
 import Structure from "./tmpl/Structure";
+import VNode from "./vnode/VNode";
 
 
 /**
@@ -131,17 +132,15 @@ export default function Module ( module, vmData = { init: function () { return {
 		vm = new ViewModel ( vmData.init.apply ( this, cache.getDependentPlugin ( vmData.init ) ) ),
 
 		// 使用vm解析模板
-		tmpl = new Tmpl ( vm, components );
+		tmpl = new Tmpl ( this, components );
 	
-	this.view = slice.call ( moduleElem.childNodes ) || [];
+	// this.view = slice.call ( moduleElem.childNodes ) || [];
 	this.state = vm;
-	this.components = tmpl.compInstances;
-	this.refs = tmpl.refs;
 
 	// 解析模板，挂载数据
 	// 如果forceMount为true则强制挂载moduleElem
 	// 如果parentVm为对象时表示此模块不是最上层模块，不需挂载
-	tmpl.mount ( moduleElem, !parent );
+	tmpl.mount ( VNode.domToVNode ( moduleElem ), !parent );
 	
 	const lifeCycle = [ "mount", "queryChanged", "paramChanged", "unmount" ];
 	moduleConstructor.initLifeCycle ( this, lifeCycle, vm );

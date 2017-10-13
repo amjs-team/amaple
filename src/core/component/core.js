@@ -17,7 +17,7 @@ export default function Component () {
 
 extend ( Component.prototype, {
 	
-	__init__ ( componentNode, moduleVm ) {
+	__init__ ( componentVNode, moduleVm ) {
         let propsValidator;
 
     	if ( type ( this.validateProps ) === "function" ) {
@@ -33,7 +33,7 @@ extend ( Component.prototype, {
     	}
 
     	// 获取props，如果有需要则验证它们
-    	this.props = moduleConstructor.initProps ( componentNode, moduleVm, propsValidator );
+    	this.props = moduleConstructor.initProps ( componentVNode, moduleVm, propsValidator );
     	
     	//////////////////////////////////////////
     	// 获取init方法返回值并初始化vm数据
@@ -87,16 +87,16 @@ extend ( Component.prototype, {
     		// 处理模块并挂载数据 
     		const 
             	fragment = moduleConstructor.initTemplate ( componentString, scopedStyle ),
-                subElements = moduleConstructor.initSubElements ( componentNode, subElementNames ),
+                subElements = moduleConstructor.initSubElements ( componentVNode, subElementNames ),
                 tmpl = new Tmpl ( componentVm, this.components || [] );
         	
     		tmpl.mount ( fragment, false, Tmpl.defineScoped ( subElements ) );
 
     		// 将处理过的实际组件结构替换组件代表元素，兼容“:if”等判断指令的处理
-        	componentNode.templateNodes = slice.call ( fragment.childNodes );
+        	componentVNode.templateNodes = slice.call ( fragment.childNodes );
     		
-        	if ( componentNode.parentNode ) {
-        		componentNode.parentNode.replaceChild ( fragment, componentNode );
+        	if ( componentVNode.parentNode ) {
+        		componentVNode.parentNode.replaceChild ( fragment, componentVNode );
             }
 
     		// 调用mount钩子函数
@@ -111,7 +111,7 @@ extend ( Component.prototype, {
     	}
     	
     	// 如果有saveRef方法则表示此组件需被引用
-    	( componentNode.saveRef || noop ) ( this.action );
+    	( componentVNode.saveRef || noop ) ( this.action );
 
     	// 组件初始化完成，调用apply钩子函数
     	( this.apply || noop ).apply ( this, cache.getDependentPlugin ( this.apply || noop ) );

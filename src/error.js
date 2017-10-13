@@ -39,3 +39,4 @@ export const vmComputedErr = error ( "vm-computed" );		// 模块错误
 export const classErr = error ( "class" );		// 类定义错误
 export const RouterErr = error ( "router" );		// 路由定义错误
 export const componentErr = error ( "component" );		// 组件错误
+export const vnodeErr = error ( "vnode" );		// 虚拟节点错误

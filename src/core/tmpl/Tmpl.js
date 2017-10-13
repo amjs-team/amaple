@@ -9,9 +9,10 @@ import ViewWatcher from "../ViewWatcher";
 import { runtimeErr } from "../../error";
 import Structure from "./Structure";
 import Component from "../component/core";
+import VNode from "../vnode/VNode";
 
 /**
-    preTreat ( elem: DOMObject )
+    preTreat ( vnode: Object )
 
     Return Type:
     Object
@@ -24,31 +25,31 @@ import Component from "../component/core";
     URL doc:
     http://icejs.org/######
 */
-function preTreat ( elem ) {
+function preTreat ( vnode ) {
 
     const
         _if = Tmpl.directivePrefix + "if",
         _elseif = Tmpl.directivePrefix + "else-if",
         _else = Tmpl.directivePrefix + "else";
 
-    let nextSib, parent, 
-        condition = attr ( elem, _if );
+    let nextSib, parent;
+    const condition = vnode.attr ( _if );
 
-    if ( condition && !elem.conditionElems ) {
-        elem.conditions = [ condition ];
-        elem.conditionElems = [ elem ];
-        parent = elem.parentNode;
-        while ( nextSib = elem.nextElementSibling ) {
-            if ( condition = attr ( nextSib, _elseif ) ) {
-                elem.conditions.push ( condition );
-                elem.conditionElems.push ( nextSib );
-                attr ( nextSib, _elseif, null );
+    if ( condition && !vnode.conditionElems ) {
+        vnode.conditions = [ condition ];
+        vnode.conditionElems = [ vnode ];
+        parent = elem.parent;
+        while ( nextSib = elem.nextSibling () ) {
+            if ( condition = nextSib.attr ( _elseif ) ) {
+                vnode.conditions.push ( condition );
+                vnode.conditionElems.push ( nextSib );
+                nextSib.attr ( _elseif, null );
                 parent.removeChild ( nextSib );
             }
-            else if ( nextSib.hasAttribute ( _else ) ) {
-                elem.conditions.push ( "true" );
-                elem.conditionElems.push ( nextSib );
-                attr ( nextSib, _else, null );
+            else if ( nextSib.attr ( _else ) ) {
+                vnode.conditions.push ( "true" );
+                vnode.conditionElems.push ( nextSib );
+                nextSib.attr ( _else, null );
                 parent.removeChild ( nextSib );
                 break;
             }
@@ -58,13 +59,13 @@ function preTreat ( elem ) {
         }
     }
 
-    foreach ( elem.conditionElems || [], nextSib => {
-        if ( nextSib.nodeName.toUpperCase () === "TEMPLATE" ) {
-            nextSib.templateNodes = slice.call ( nextSib.content.childNodes || nextSib.childNodes );
+    foreach ( vnode.conditionElems || [], nextSib => {
+        if ( nextSib.nodeName === "TEMPLATE" ) {
+            nextSib.templateNodes = nextSib.children;
         }
     } );
     
-    return elem;
+    return vnode;
 }
 
 function concatHandler ( target, source ) {
@@ -86,20 +87,19 @@ function concatHandler ( target, source ) {
     URL doc:
     http://icejs.org/######
 */
-export default function Tmpl ( vm, components ) {
-	this.vm = vm;
-	this.components = {};
-	this.refs = {};
-	
-	foreach ( components, comp => {
-    	this.components [ comp.name ] = comp;
+export default function Tmpl ( module, components ) {
+	this.module = module;
+    this.components = {};
+    
+    foreach ( components, comp => {
+        this.components [ comp.name ] = comp;
     } );
 }
 
 extend ( Tmpl.prototype, {
 
     /**
-        mount ( tmplNode: DOMObject, mountModule: Boolean, isRoot?: Boolean, scoped?: Object )
+        mount ( vnode: Object, mountModule: Boolean, isRoot?: Boolean, scoped?: Object )
     
         Return Type:
         void
@@ -110,7 +110,7 @@ extend ( Tmpl.prototype, {
         URL doc:
         http://icejs.org/######
     */
-	mount ( elem, mountModule, scoped, isRoot = true ) {
+	mount ( vnode, mountModule, scoped, isRoot = true ) {
         const 
             rattr = /^:([\$\w]+)$/;
 
@@ -122,7 +122,7 @@ extend ( Tmpl.prototype, {
             };
         
         do {
-            if ( elem.nodeType === 1 && mountModule ) {
+            if ( vnode.nodeType === 1 && mountModule ) {
         		
                 
                 // 处理:for
@@ -130,46 +130,47 @@ extend ( Tmpl.prototype, {
                 // 处理{{ expression }}
                 // 处理:on
                 // 处理:model
-                elem = preTreat.call ( this, elem );
-                if ( forAttrValue = attr ( elem, Tmpl.directivePrefix + "for" ) ) {
-                    compileHandlers.watchers.push ( { handler : Tmpl.directives.for, targetNode : elem, expr : forAttrValue } );
+                vnode = preTreat.call ( this, vnode );
+                if ( forAttrValue = vnode.attr ( Tmpl.directivePrefix + "for" ) ) {
+                    compileHandlers.watchers.push ( { handler : Tmpl.directives.for, targetNode : vnode, expr : forAttrValue } );
                 }
                 else {
                 	
                 	// 收集组件元素待渲染
         			// 局部没有找到组件则查找全局组件
         			const 
-                    	componentName = transformCompName ( elem.nodeName ),
+                    	componentName = transformCompName ( vnode.nodeName ),
                     	ComponentDerivative = this.getComponent ( componentName ) || Component.getGlobal ( componentName );
         			if ( ComponentDerivative && ComponentDerivative.__proto__.name === "Component" ) {
-                    	compileHandlers.components.push ( { elem, Class : ComponentDerivative } );
+                    	compileHandlers.components.push ( { vnode, Class : ComponentDerivative } );
                     	
-                    	elem.isComponent = true;
+                    	vnode.isComponent = true;
         			}
                     
                     // 将子模块元素保存到页面结构体中以便下次直接获取使用
-                    const moduleName = attr ( elem, iceAttr.module );
+                    const moduleName = vnode.attr ( iceAttr.module );
                     if ( Structure.currentPage && type ( moduleName ) === "string" ) {
                         const currentStructure = Structure.currentPage.getCurrentRender ();
-                        currentStructure.saveSubModuleNode ( elem );
+                        currentStructure.saveSubModuleNode ( vnode );
                     }
                     
-                    foreach ( slice.call ( elem.attributes ), attr => {
-                        directive = rattr.exec ( attr.nodeName );
+                    foreach ( vnode.attrs, ( attr, name, attrs ) => {
+                        directive = rattr.exec ( name );
                         if ( directive ) {
                             directive = directive [ 1 ];
                             if ( /^on/.test ( directive ) ) {
+
                                 // 事件绑定
                                 handler = Tmpl.directives.on;
-                                targetNode = elem,
-                                expr = directive.slice ( 2 ) + ":" + attr.nodeValue;
+                                targetNode = vnode,
+                                expr = ` ${ directive.slice ( 2 ) }:${ attr }`;
                             }
                             else if ( Tmpl.directives [ directive ] ) {
 
                                 // 模板属性绑定
                                 handler = Tmpl.directives [ directive ];
-                                targetNode = elem;
-                                expr = attr.nodeValue;
+                                targetNode = vnode;
+                                expr = attr;
                             }
                             else {
 
@@ -179,28 +180,28 @@ extend ( Tmpl.prototype, {
 
                             compileHandlers.watchers.push ( { handler, targetNode, expr } );
                         }
-                        else if ( rexpr.test ( attr.nodeValue ) ) {
+                        else if ( rexpr.test ( attr ) ) {
 
                             // 属性值表达式绑定
-                            compileHandlers.watchers.push ( { handler: Tmpl.directives.expr, targetNode : attr, expr : attr.nodeValue } );
+                            compileHandlers.watchers.push ( { handler: Tmpl.directives.attrExpr, targetNode : attrs, expr : `${ name }:${ attr }` } );
                         }
                     } );
                 }
             }
-            else if ( elem.nodeType === 3 ) {
+            else if ( vnode.nodeType === 3 ) {
 
                 // 文本节点表达式绑定
-                if ( rexpr.test ( elem.nodeValue ) ) {
-                    compileHandlers.watchers.push ( { handler : Tmpl.directives.expr, targetNode : elem, expr : elem.nodeValue } );
+                if ( rexpr.test ( vnode.nodeValue ) ) {
+                    compileHandlers.watchers.push ( { handler : Tmpl.directives.textExpr, targetNode : vnode, expr : vnode.nodeValue } );
                 }
             }
             
             
-            firstChild = elem.firstChild || elem.content && elem.content.firstChild;
+            firstChild = vnode.children && vnode.children [ 0 ];
             if ( firstChild && !forAttrValue ) {
                 compileHandlers = concatHandler ( compileHandlers, this.mount ( firstChild, true, scoped, false ) );
             }
-        } while ( !isRoot && ( elem = elem.nextSibling ) )
+        } while ( !isRoot && ( vnode = vnode.nextSibling () ) )
 
         if ( !isRoot ) {
             return compileHandlers;
@@ -214,18 +215,18 @@ extend ( Tmpl.prototype, {
             } );
         
         	// 渲染组件
-            this.compInstances = this.compInstances || [];
+            this.module.components = this.module.components || [];
         	foreach ( compileHandlers.components, comp => {
             	const instance = new comp.Class ();
-                this.compInstances.push ( instance );
+                this.module.components.push ( instance );
            
-                instance.__init__ ( comp.elem, this.getViewModel () );
+                instance.__init__ ( comp.vnode, this.getViewModel () );
             } );
         }
     },
 
     getViewModel () {
-        return this.vm;
+        return this.module.state;
     },
 	
 	getComponent ( name ) {
@@ -287,6 +288,19 @@ extend ( Tmpl, {
     	return scoped;
     },
 	
+    /**
+        defineDirective ( directive: Object )
+    
+        Return Type:
+        void
+    
+        Description:
+        定义指令
+        指令对象必须包含”name“属性和”update“方法，”before“方法为可选项
+    
+        URL doc:
+        http://icejs.org/######
+    */
 	defineDirective ( directive ) {
         this.directives = this.directives || {};
     	this.directives [ directive.name ] = directive;

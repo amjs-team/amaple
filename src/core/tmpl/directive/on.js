@@ -9,8 +9,7 @@ Tmpl.defineDirective ( {
         before ()
     
         Return Type:
-        void|Boolean
-        返回false时停止往下执行
+        void
     
         Description:
         更新视图前调用（即update方法调用前调用）
@@ -20,14 +19,15 @@ Tmpl.defineDirective ( {
         http://icejs.org/######
     */
 	before () {
-        let expr = this.expr.split ( ":" ),
-            argMatch = /([$\w]+)\s*\((.*?)\)/.exec ( expr [ 1 ] ),
-            listener = argMatch ? argMatch [ 1 ] : expr [ 1 ],
+        const 
+            exprMatch = this.expr.match ( /^(.*?):(.*)$/ ),
+            argMatch = exprMatch [ 2 ].match ( /([$\w]+)\s*\((.*?)\)/ ),
+            listener = argMatch ? argMatch [ 1 ] : exprMatch [ 2 ],
         	arg = argMatch && argMatch [ 2 ] ? argMatch [ 2 ].split ( "," ).map ( item => item.trim () ) : [],
             event = "__$event__";
       
 
-        this.type = expr [ 0 ];
+        this.type = exprMatch [ 1 ];
     	this.attrExpr = "on" + this.type;
         arg.unshift ( event );
     

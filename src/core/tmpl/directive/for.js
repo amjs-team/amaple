@@ -9,8 +9,7 @@ Tmpl.defineDirective ( {
         before ()
     
         Return Type:
-        void|Boolean
-        返回false时停止往下执行
+        void
     
         Description:
         更新视图前调用（即update方法调用前调用）
