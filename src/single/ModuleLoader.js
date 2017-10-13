@@ -13,6 +13,7 @@ import event from "../event/core";
 import Module from "../core/Module";
 import Router from "../router/core";
 import Structure from "../core/tmpl/Structure";
+import VNode from "../core/vnode/VNode";
 
 
 function loopFlush ( moduleUpdateContext ) {
@@ -188,7 +189,7 @@ extend ( ModuleLoader.prototype, {
 
 		        // 如果结构中没有模块节点则查找DOM树获取节点
 		        if ( !route.moduleNode ) {
-		            const moduleNode = query ( `[${ iceAttr.module }=${ route.name === "default" ? "''" : route.name }]`, route.parent && route.parent.moduleNode || undefined );
+		            const moduleNode = VNode.domToVNode ( query ( `[${ iceAttr.module }=${ route.name === "default" ? "''" : route.name }]`, route.parent && route.parent.moduleNode.node || undefined ) );
 
 		            if ( moduleNode ) {
 		                route.moduleNode = moduleNode;

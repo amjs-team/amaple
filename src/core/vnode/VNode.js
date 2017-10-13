@@ -25,25 +25,57 @@ export default function VNode ( nodeType, key, parent, node ) {
 extend ( VNode.prototype, {
 	appendChild ( childVNode ) {
     	supportCheck ( this.nodeType, "appendChild" );
-    	this.children.push ( childVNode );
+    	
+    	if ( childVNode.nodeType === 11 ) {
+        	foreach ( childVNode.children, child => {
+            	this.children.push ( child );
+            } );
+        }
+    	else {
+    		this.children.push ( childVNode );
+        }
     },
 	
 	removeChild ( childVNode ) {
     	supportCheck ( this.nodeType, "removeChild" );
-    	foreach ( this.children, ( child, i, children ) => {
-        	if ( child === childVNode ) {
-            	children.splice ( i, 1 );
-            }
-        } );
+    	this.children.splice ( this.children.indexOf ( oldVNode ), 1 );
     },
 
     replaceChild ( newVNode, oldVNode ) {
     	supportCheck ( this.nodeType, "replaceChild" );
-    	foreach ( this.children, ( child, i, children ) => {
-        	if ( child === oldVNode ) {
-            	children.splice ( i, 1, newVNode );
-            }
-        } );
+    	
+    	const i = this.children.indexOf ( oldVNode );
+    	if ( i >= 0 ) {
+        	if ( newVNode.nodeType === 11 ) {
+                	const args = [ i, 1 ].concat ( newVNode.children );
+                	Array.prototype.splice.apply ( children, args );
+                }
+            	else {
+            		children.splice ( i, 1, newVNode );
+                }
+        	}
+        }
+    },
+	
+	insertBefore ( newVNode, existingVNode ) {
+    	supportCheck ( this.nodeType, "insertBefore" );
+    	
+    	const i = this.children.indexOf ( oldVNode );
+    	if ( i >= 0 ) {
+        	if ( newVNode.nodeType === 11 ) {
+                	const args = [ i, 0 ].concat ( newVNode.children );
+                	Array.prototype.splice.apply ( children, args );
+                }
+            	else {
+            		children.splice ( i, 0, newVNode );
+                }
+        	}
+        }
+    },
+    
+    html ( vnode ) {
+    	supportCheck ( this.nodeType, "html" );
+    	this.children = [ vnode ];
     },
 	
 	//
@@ -79,34 +111,47 @@ extend ( VNode.prototype, {
     },
 
     render () {
-    	let node;
+    	
     	switch ( this.nodeType ) {
         	case 1:
-        		node = this.node = document.createElement ( this.nodeName );
-    			attr ( node, this.attrs );
+        		if ( this.node === undefined ) {
+        			this.node = document.createElement ( this.nodeName );
+    				attr ( this.node, this.attrs );
+         		}
+            	
+            	const f = document.createDocumentFragment ();
     			foreach ( this.children, child => {
-        			node.appendChild ( child.render () );
+        			f.appendChild ( child.render () );
                 } );
+            	
+            	this.node.appendChild ( f );
             	
             	break;
         	case 3:
-        		node = this.node = document.createTextNode ( this.nodeValue || "" );
+            	if ( this.node === undefined ) {
+        			this.node = document.createTextNode ( this.nodeValue || "" );
+                }
             	
             	break;
         	case 11:
-        		node = this.node = document.createDocumentFragment ();
+            	if ( this.node === undefined ) {
+        			this.node = document.createDocumentFragment ();
+                }
         		
+            	const f = document.createDocumentFragment ();
         		foreach ( this.children, child => {
-        			node.appendChild ( child.render () );
+        			f.appendChild ( child.render () );
         		} );
+            	
+            	this.node.appendChild ( f );
 
                 break;
         }
     	
-    	return node;
+    	return this.node;
     },
 
-    copy ( parent = null ) {
+    clone ( parent = null ) {
         let vnode;
         
         switch ( this.nodeType ) {
@@ -141,6 +186,13 @@ extend ( VNode.prototype, {
         }
     	
     	return vnode;
+    },
+    
+    bindEvent ( type, listener ) {
+    	this.events = this.events || {};
+    	this.events [ type ] = this.events [ type ] || [];
+    	
+    	this.events [ type ].push ( listener );
     },
 
     diff ( vnode ) {

@@ -1,6 +1,8 @@
-import { foreach } from "../../../func/util";
+import { foreach, guid } from "../../../func/util";
 import { attr } from "../../../func/node";
 import Tmpl from "../Tmpl";
+import VTextNode from "../../vnode/VTextNode";
+import VFragment from "../../vnode/VFragment";
 
 Tmpl.defineDirective ( {
 	name : "for",
@@ -20,18 +22,18 @@ Tmpl.defineDirective ( {
     */
 	before () {
     	
-    	let variable   = /^\s*([$\w]+)\s+in\s+([$\w.]+)\s*$/.exec ( this.expr ),
-            elem       = this.node;
+    	const
+        	variable   = this.expr.match ( /^\s*([$\w]+)\s+in\s+([$\w.]+)\s*$/ );
   
-		this.startNode = elem.ownerDocument.createTextNode ( "" );
-		this.endNode   = this.startNode.cloneNode ();
+		this.startNode = VTextNode ( "", guid (), null );
+		this.endNode   = VTextNode ( "", guid (), null );
 		
         this.item      = variable [ 1 ];
         this.expr      = variable [ 2 ];
-       	this.key       = attr ( elem, ":key" );
+       	this.key       = this.node ( ":key" );
         
     	if ( this.key ) {
-            attr ( elem, ":key", null );
+            this.node.attr ( ":key", null );
         }
     },
 
@@ -49,16 +51,17 @@ Tmpl.defineDirective ( {
         http://icejs.org/######
     */
 	update ( iterator ) {
-		let elem         = this.node,
-            doc 		 = elem.ownerDocument,
-            fragment     = doc.createDocumentFragment(),
-            itemNode, f,
+		const
+        	elem 		 = this.node,
+            fragment     = VFragment();
+      
+        let itemNode, f,
 
             // 局部变量定义
             scopedDefinition = {};
   		
         foreach ( iterator, ( item, key ) => {
-        	f = doc.createDocumentFragment ();
+        	f = VFragment ();
 
             // 定义范围变量
             scopedDefinition [ this.item ] = item;
@@ -66,12 +69,12 @@ Tmpl.defineDirective ( {
                 scopedDefinition [ this.key ] = key;
             }
 
-            itemNode = elem.cloneNode ( true );
+            itemNode = elem.clone ();
         	if ( elem.conditionElems ) {
             	itemNode.conditionElems = [ itemNode ];
             	foreach ( elem.conditionElems, ( nextSib, i ) => {
                     if ( i > 0 ) {
-                        itemNode.conditionElems.push ( nextSib.cloneNode ( true ) );
+                        itemNode.conditionElems.push ( nextSib.clone () );
                     }
                 } );
             	itemNode.conditions = elem.conditions;
@@ -83,9 +86,9 @@ Tmpl.defineDirective ( {
             // 为遍历克隆的元素挂载数据
         	this.tmpl.mount ( f, true, Tmpl.defineScoped ( scopedDefinition ) );
 
-            itemNode = f.firstChild;
-            if ( itemNode.nodeName && itemNode.nodeName.toUpperCase () === "TEMPLATE" ) {
-                fragment.appendChild ( Tmpl.renderTemplate ( itemNode ) );
+            itemNode = f.children [ 0 ];
+            if ( itemNode.nodeName && itemNode.nodeName === "TEMPLATE" ) {
+                fragment.appendChild ( VFragment ( itemNode.children ) );
             }
             else {
                 fragment.appendChild ( f );
@@ -93,19 +96,19 @@ Tmpl.defineDirective ( {
         } );
     	
       	// 初始化视图时将模板元素替换为挂载后元素
-    	if ( elem.parentNode ) {
-        	fragment.insertBefore ( this.startNode, fragment.firstChild );
+    	if ( elem.parent ) {
+        	fragment.insertBefore ( this.startNode, fragment.children [ 0 ] );
         	fragment.appendChild ( this.endNode );
           
-            elem.parentNode.replaceChild ( fragment, elem );
+            elem.parent.replaceChild ( fragment, elem );
         }
     	
     	// 改变数据后更新视图
     	else {
         	let el = this.startNode,
-                p = el.parentNode,
+                p = el.parent,
                 removes = [];
-        	while ( ( el = el.nextSibling ) !== this.endNode ) {
+        	while ( ( el = el.nextSibling () ) !== this.endNode ) {
             	removes.push ( el );
             }
         	removes.map ( item => {

@@ -51,6 +51,6 @@ Tmpl.defineDirective ( {
         http://icejs.org/######
     */
 	update ( listener ) {
-        event.on ( this.node, this.type, listener );
+        this.node.bindEvent ( this.type, listener );
     }
 } );

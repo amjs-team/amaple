@@ -7,6 +7,8 @@ import { componentErr } from "../error";
 import { noUnitHook } from "../var/const";
 import Subscriber from "./Subscriber";
 import ValueWatcher from "./ValueWatcher";
+import VNode from "./vnode/VNode";
+import VFragment from "./vnode/VFragment";
 
 const dataType = [ String, Number, Function, Boolean, Object ];
 
@@ -201,11 +203,11 @@ export default {
         	f.appendChild ( child );
         } );
     
-    	return f;
+    	return VNode.domToVNode ( f );
     },
 	
     /**
-        initSubElements ( component: DOMObject, subElementNames: Object )
+        initSubElements ( componentVNode: Object, subElementNames: Object )
     
         Return Type:
         Object
@@ -217,7 +219,7 @@ export default {
         URL doc:
         http://icejs.org/######
     */
-	initSubElements ( componentNode, subElementNames ) {
+	initSubElements ( componentVNode, subElementNames ) {
     	const _subElements = {
         	default : ""
         };
@@ -228,25 +230,25 @@ export default {
             }
         } );
     	
-    	let componentName, subElemName, f;
-        foreach ( slice.call ( componentNode.childNodes ), node => {
-            componentName = transformCompName ( node.nodeName );
+    	let componentName, subElemName, vf;
+        foreach ( componentVNode.children ), vnode => {
+            componentName = transformCompName ( vnode.nodeName || "" );
 
             if ( subElementNames.hasOwnProperty ( componentName ) ) {
-                f = componentNode.ownerDocument.createDocumentFragment ();
-                foreach ( slice.call ( node.childNodes ), subNode => {
-                    f.appendChild ( subNode );
+                vf = VFragment ();
+                foreach ( vnode.children ), subVNode => {
+                    vf.appendChild ( subVNode );
                 } );
 
                 if ( subElementNames [ componentName ] === true ) {
-                    _subElements [ componentName ].push ( f );
+                    _subElements [ componentName ].push ( vf );
                 }
                 else {
-                    _subElements [ componentName ] = f;
+                    _subElements [ componentName ] = vf;
                 }
             }
             else {
-                _subElements.default = _subElements.default || componentNode.ownerDocument.createDocumentFragment ();
+                _subElements.default = _subElements.default || VFragment ();
                 _subElements.default.appendChild ( node );
             }
         } );

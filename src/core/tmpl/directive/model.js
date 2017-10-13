@@ -21,7 +21,8 @@ Tmpl.defineDirective ( {
         http://icejs.org/######
     */
 	before () {
-        let support = {
+        const 
+        	support = {
                 input : {
                     nodeName : "TEXTAREA",
                     type : "text, password, color, search, week, date, datetime-local, month, time, email, range, tel, url"
@@ -34,8 +35,8 @@ Tmpl.defineDirective ( {
             elem = this.node,
             expr = this.expr,
             vm = this.tmpl.getViewModel (),
-            nodeName = elem.nodeName.toUpperCase (),
-            inputType = ( attr ( elem, "type" ) || "" ).toLowerCase (),
+            nodeName = elem.nodeName,
+            inputType = ( elem.attr ( "type" ) || "" ).toLowerCase (),
 
             // 如果是复选框则数据要以数组的形式表现
             handler = nodeName === "INPUT" && inputType === "checkbox" ? function () {
@@ -53,15 +54,16 @@ Tmpl.defineDirective ( {
 
         // 判断支持input事件的元素名称或对应type的input元素
         if ( ( nodeName === "INPUT" && support.input.type.indexOf ( inputType ) !== -1 ) || support.input.nodeName.indexOf ( nodeName ) !== -1 ) {
-            event.on ( elem, "input", handler );
+            elem.bindEvent ( "input", handler );
         }
         else if ( ( nodeName === "INPUT" && support.change.inputType.indexOf ( inputType ) !== -1 ) || support.change.nodeName.indexOf ( nodeName ) !== -1 ) {
 
         	// 将相同model的radio控件分为一组
         	if ( inputType === "radio" ) {
-            	attr ( elem, "name", expr );
+            	elem.attr ( "name", expr );
             }
-            event.on ( elem, "change", handler );
+          
+            elem.bindEvent ( "change", handler );
         }
     },
 
@@ -78,34 +80,35 @@ Tmpl.defineDirective ( {
         http://icejs.org/######
     */
 	update ( val ) {
-    	let tval = type ( val ),
+    	const
+        	tval = type ( val ),
             elem = this.node,
-        	nodeName = elem.nodeName.toUpperCase (),
-            inputType = ( attr ( elem, "type" ) || "" ).toLowerCase ();
+        	nodeName = elem.nodeName,
+            inputType = ( elem.attr ( "type" ) || "" ).toLowerCase ();
 
 		// 对radio的处理
     	if ( tval === "string" && nodeName === "INPUT" && inputType === "radio" ) {
-        	if ( elem.value === val ) {
-                elem.checked = true;
+        	if ( elem.attr ( "value" ) === val ) {
+                elem.attr ( "checked", true );
             }
             else {
-                elem.checked = false;
+                elem.attr ( "checked", false );
             }
         }
     	
     	// 对checkbox的处理
     	else if ( tval === "array" && nodeName === "INPUT" && inputType === "checkbox" ) {
-        	if ( val.indexOf ( elem.value ) !== -1 ) {
-            	elem.checked = true;
+        	if ( val.indexOf ( elem.attr ( "value" ) !== -1 ) {
+            	elem.attr ( "checked", true );
             }
         	else {
-            	elem.checked = false;
+            	elem.attr ( "checked", false );
             }
         }
     	
     	// 其他控件的处理
     	else {
-        	elem.value = val;
+        	elem.attr ( "value", val );
         }
     }
 } );

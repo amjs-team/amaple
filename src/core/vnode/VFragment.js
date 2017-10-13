@@ -1,8 +1,8 @@
 import VNode from "./VNode";
 
-export default function VFragment ( key, parent, children, elem ) {
-	const vnode = new VNode ( 11, key, parent, elem );
-	vnode.children = children || [];
+export default function VFragment ( children, elem ) {
+	const vnode = new VNode ( 11, null, null, elem );
+	vnode.children = children.concat () || [];
 	
 	return vnode;
 }

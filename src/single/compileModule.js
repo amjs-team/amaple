@@ -186,7 +186,7 @@ function parseScript ( moduleString, scriptPaths, scriptNames, parses ) {
     		}
     	}
 
-		parses.script = parses.script.replace ( rmoduleDef, match => `${ match }fragment,` );
+		parses.script = parses.script.replace ( rmoduleDef, match => `${ match }moduleNode,` );
 	}
 
 	return moduleString;
@@ -243,7 +243,7 @@ export default function compileModule ( moduleString, identifier ) {
 			.ifNot ( "module:script", "<Module>内的<script>为必须子元素，它的内部js代码用于初始化模块的页面布局" )
 			.do ();
 
-		const buildView = `var div=document.createElement("div"),fragment=document.createDocumentFragment(),nodes=[];div.innerHTML=view;nodes=Array.prototype.slice.call(div.childNodes);for(var i=0;i<nodes.length;i++){fragment.appendChild(nodes[i]);}`;
+		const buildView = `moduleNode.html(VNode.domToVNode(view))`;
 
 		////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////
@@ -251,10 +251,10 @@ export default function compileModule ( moduleString, identifier ) {
 		moduleString = `var title="${ parses.attrs [ iceAttr.title ] || "" }",view="${ parses.view }${ parses.style }";`;
 
 		if ( !isEmpty ( scriptPaths ) ) {
-			moduleString += `require([${ scriptPaths.join ( "," ) }], function(${ scriptNames.join ( "," ) }){${ buildView }${ parses.script };html(moduleNode,fragment);});`;
+			moduleString += `require([${ scriptPaths.join ( "," ) }],function(${ scriptNames.join ( "," ) }){${ buildView }${ parses.script };});`;
 		}
 		else {
-			moduleString += `${ buildView }${ parses.script };html(moduleNode,fragment);`
+			moduleString += `${ buildView }${ parses.script };`
 		}
 
 		moduleString += "return title;";

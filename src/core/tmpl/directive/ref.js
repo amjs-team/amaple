@@ -7,34 +7,33 @@ Tmpl.defineDirective ( {
 	dynamic : false,
 
     /**
-        update ( listener: Function )
+        update ( refName: String )
     
         Return Type:
         void
     
         Description:
-        事件绑定方法
+        元素或组件引用
     
         URL doc:
         http://icejs.org/######
     */
-	update ( ref ) {
-    	const refs = this.tmpl.refs;
-    	
+	update ( refName ) {
+    	const refs = this.tmpl.module.refs;
     	function saveRef ( refObj ) {
-        	const tref = type ( refs [ ref ] );
+        	const tref = type ( refs [ refName ] );
         	switch ( tref ) {
             	case "undefined" :
-                	refs [ ref ] = refObj;
+                	refs [ refName ] = refObj;
                 	
                 	break;
             	case "object" :
-                	refs [ ref ] = [ refs [ ref ] ];
-                	refs [ ref ].push ( refObj );
+                	refs [ refName ] = [ refs [ ref ] ];
+                	refs [ refName ].push ( refObj );
                     
                     break;
             	case "array" :
-                    refs [ ref ].push ( refObj );
+                    refs [ refName ].push ( refObj );
             }
         }
     	

@@ -86,18 +86,14 @@ extend ( Component.prototype, {
 
     		// 处理模块并挂载数据 
     		const 
-            	fragment = moduleConstructor.initTemplate ( componentString, scopedStyle ),
+            	vfragment = moduleConstructor.initTemplate ( componentString, scopedStyle ),
                 subElements = moduleConstructor.initSubElements ( componentVNode, subElementNames ),
                 tmpl = new Tmpl ( componentVm, this.components || [] );
         	
-    		tmpl.mount ( fragment, false, Tmpl.defineScoped ( subElements ) );
+    		tmpl.mount ( vfragment, false, Tmpl.defineScoped ( subElements ) );
 
-    		// 将处理过的实际组件结构替换组件代表元素，兼容“:if”等判断指令的处理
-        	componentVNode.templateNodes = slice.call ( fragment.childNodes );
-    		
-        	if ( componentVNode.parentNode ) {
-        		componentVNode.parentNode.replaceChild ( fragment, componentVNode );
-            }
+    		// 保存组件结构
+        	componentVNode.componentNodes = vfragment.children;
 
     		// 调用mount钩子函数
     		( this.mount || noop ).apply ( this, cache.getDependentPlugin ( this.mount || noop ) );

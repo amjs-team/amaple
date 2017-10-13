@@ -66,7 +66,7 @@ export default function Module ( module, vmData = { init: function () { return {
     	moduleElem = query ( `*[${ iceAttr.module }=${ module }]` );
     }
     else if ( module.nodeType === 1 || module.nodeType === 3 || module.nodeType === 11 ) {
-    	moduleElem = module;
+        moduleElem = module;
     }
       	
 	// 检查参数
@@ -75,7 +75,7 @@ export default function Module ( module, vmData = { init: function () { return {
   	
   	/////////////////////////////////
   	/////////////////////////////////
-	// const caller = this.caller = new ModuleCaller ();
+	const moduleElemBackup = moduleElem.clone ();
 
 	let parent;
 	if ( Structure.currentPage ) {
@@ -105,8 +105,10 @@ export default function Module ( module, vmData = { init: function () { return {
 		moduleElem.__module__ = this;
 	}
     this.parent = parent;
-    
+  
+	moduleElem = VNode.domToVNode ( moduleElem );
     const
+    	moduleElemBackup = moduleElem.clone (),
     	components = ( () => {
         	let compFn = vmData.depComponents,
                 deps = cache.getDependentPlugin ( compFn || noop );
@@ -140,7 +142,11 @@ export default function Module ( module, vmData = { init: function () { return {
 	// 解析模板，挂载数据
 	// 如果forceMount为true则强制挂载moduleElem
 	// 如果parentVm为对象时表示此模块不是最上层模块，不需挂载
-	tmpl.mount ( VNode.domToVNode ( moduleElem ), !parent );
+	tmpl.mount ( moduleElem, !parent );
+	
+	// 对比新旧vnode计算出差异
+	// 并根据差异更新到实际dom中
+	moduleElem.diff ( moduleElemBackup ).patch ();
 	
 	const lifeCycle = [ "mount", "queryChanged", "paramChanged", "unmount" ];
 	moduleConstructor.initLifeCycle ( this, lifeCycle, vm );

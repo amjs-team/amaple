@@ -235,21 +235,9 @@ extend ( Tmpl.prototype, {
 } );
 
 extend ( Tmpl, {
-
+	
+	// 指令前缀
     directivePrefix : ":",
-      
-    renderTemplate ( elem ) {
-		if ( elem && elem.nodeName && elem.nodeName.toUpperCase () === "TEMPLATE" ) {
-        	const f = document.createDocumentFragment ();
-        	foreach ( elem.content && elem.content.childNodes || elem.childNodes, childNode => {
-            	f.appendChild ( childNode );
-    		} );
-        	
-        	elem = f;
-    	}
-    
-    	return elem;
-    },
 	
 	/**
     	defineScoped ( scopedDefinition: Object )
