@@ -13,6 +13,45 @@ supportCheck ( nodeType, method ) {
     }
 }
 
+diffAttrs ( newAttrs, oldAttrs ) {
+	
+}
+
+diffChildren ( newChildren, oldChildren ) {
+	let oldIndex;
+	const oldChildrenCopy = oldVnode.children.concat ();
+	
+	foreach ( this.children, ( child, i ) => {
+		oldIndex = oldChildrenCopy.indexOf ( child );
+		if ( oldIndex > -1 ) {
+            if ( oldIndex !== i ) {
+                // move child
+                // ...
+            	
+                oldChildrenCopy.splice ( oldIndex, 1 );
+				oldChildrenCopy.splice ( i, 0, child );
+            }
+            	
+            // save child differences
+        	const diff = child.diff ( oldChildrenCopy [ oldChildrenCopy ] );
+		}
+		else if ( oldIndex === -1 ) {
+              
+			// add the new child node
+			// ...
+            	
+			oldChildCopy.splice ( i, 0, child );
+		}
+	} );
+
+	foreach ( oldChildrenCopy, ( child, i ) => {
+		if ( this.children.indexOf ( child ) <= -1 ) {
+			// remove this node
+            // ...
+		}
+	} );
+}
+
 export default function VNode ( nodeType, key, parent, node ) {
 	newClassCheck ( this, VNode );
 	
@@ -195,8 +234,25 @@ extend ( VNode.prototype, {
     	this.events [ type ].push ( listener );
     },
 
-    diff ( vnode ) {
-    	
+    diff ( oldVnode ) {
+    	if ( this.nodeType === 3 && oldVnode === 3 ) {
+        	if ( this.nodeValue !== oldVnode.nodeValue ) {
+            	// change text
+            	// ...
+            }
+        }
+    	else if ( this.nodeName === oldVnode.nodeName && this.key === oldVnode.key ) {
+            // diff attrs
+        	diffAttrs ( this.attrs, oldVnode.attrs );
+        	
+        	// diff children
+        	diffChildren ( this.children, oldVnode.children );
+        }
+		else {
+        	// replace node
+        	// ...
+        	
+        }
     },
 } );
 
@@ -208,7 +264,7 @@ extend ( VNode, {
             vnode = new VNode ( dom.nodeName, dom.nodeType, slice.call ( dom.attributes ), guid (), parent, children, dom );
     	
     	foreach ( slice.call ( dom.nodeName === "TEMPLATE" ? dom.content.childNodes || dom.childNodes : dom.childNodes ), childNode => {
-        	children.push ( childNode.nodeType === 3 ? childNode.nodeValue : VNode.domToVNode ( childNode, vnode ) );
+        	children.push ( VNode.domToVNode ( childNode, vnode ) );
         } );
     	
     	return vnode;
