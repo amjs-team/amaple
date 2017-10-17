@@ -1,7 +1,7 @@
 import Tmpl from "core/tmpl/Tmpl";
 import ViewModel from "core/ViewModel";
 
-describe ( "directive for => ", () => {
+xdescribe ( "directive for => ", () => {
 	let d;
 	
 	beforeEach ( () => {

@@ -260,5 +260,5 @@ export default function compileModule ( moduleString, identifier ) {
 		moduleString += "return title;";
 	}
   
-	return new Function ( "ice", "moduleNode", "html", "require", moduleString );
+	return new Function ( "ice", "moduleNode", "VNode", "require", moduleString );
 }

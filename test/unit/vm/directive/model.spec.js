@@ -2,7 +2,7 @@ import Tmpl from "core/tmpl/Tmpl";
 import ViewModel from "core/ViewModel";
 import event from "src/event/core";
 
-describe ( "directive :model", () => {
+xdescribe ( "directive model => ", () => {
 	let d;
 	
 	beforeEach ( () => {

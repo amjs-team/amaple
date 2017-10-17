@@ -1,6 +1,6 @@
 import ice from "ice";
 
-describe ( "ice test =>", () => {
+xdescribe ( "ice test =>", () => {
 
 	it ( "load a simple ice module", () => {
 		document.body.innerHTML = `<div ice-module></div><a href="#">444</a><div class="abc">{{ title }} {{ content }}</div>`;

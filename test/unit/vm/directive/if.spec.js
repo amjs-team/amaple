@@ -1,7 +1,7 @@
 import Tmpl from "core/tmpl/Tmpl";
 import ViewModel from "core/ViewModel";
 
-describe ( "directive if => ", () => {
+xdescribe ( "directive if => ", () => {
 	let d;
 	
 	beforeEach ( () => {

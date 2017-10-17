@@ -75,7 +75,6 @@ export default function Module ( module, vmData = { init: function () { return {
   	
   	/////////////////////////////////
   	/////////////////////////////////
-	const moduleElemBackup = moduleElem.clone ();
 
 	let parent;
 	if ( Structure.currentPage ) {

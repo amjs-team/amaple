@@ -54,6 +54,7 @@ export default function ViewWatcher ( directive, node, expr, tmpl, scoped ) {
 
 	this.directive = directive;
 	this.node = node;
+	this.parentNode = node.parent;
 	this.expr = expr;
 	this.tmpl = tmpl;
 	this.scoped = scoped;
@@ -97,12 +98,16 @@ extend ( ViewWatcher.prototype, {
 	
 		Description:
 		更新视图
+		通过更新虚拟dom再对比计算出更新差异
+		最后更新视图
 	
 		URL doc:
 		http://icejs.org/######
 	*/
 	update () {
+		const parentNodeBackup = this.parentNode.clone ();
     	this.directive.update.call ( this, this.getter ( runtimeErr ) );
+    	this.parentNode.diff ( parentNodeBackup ).patch ();
     },
 	
 	/**

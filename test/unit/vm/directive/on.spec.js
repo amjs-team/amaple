@@ -1,7 +1,7 @@
 import Tmpl from "core/tmpl/Tmpl";
 import ViewModel from "core/ViewModel";
 
-describe ( "directive event bind => ", () => {
+xdescribe ( "directive event bind => ", () => {
     let d;
     
     beforeEach ( () => {

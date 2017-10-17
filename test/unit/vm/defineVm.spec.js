@@ -1,6 +1,6 @@
 import ViewModel from "core/ViewModel";
 
-describe ( "define vm", () => {
+describe ( "define vm => ", () => {
 	let vm;
 	beforeEach ( () => {
 		vm = new ViewModel ( {

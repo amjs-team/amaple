@@ -207,6 +207,7 @@ extend ( Tmpl.prototype, {
             return compileHandlers;
         }
         else {
+            
             //////////////////////////////
             //////////////////////////////
             // 为相应模板元素挂载数据

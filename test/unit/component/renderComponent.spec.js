@@ -3,7 +3,7 @@ import ViewModel from "src/core/ViewModel";
 import Class from "src/Class";
 import Tmpl from "src/core/tmpl/Tmpl";
 
-describe ( "render component => ", () => {
+xdescribe ( "render component => ", () => {
 	let TestComp;
 
 	beforeEach ( () => {

@@ -231,12 +231,12 @@ export default {
         } );
     	
     	let componentName, subElemName, vf;
-        foreach ( componentVNode.children ), vnode => {
+        foreach ( componentVNode.children, vnode => {
             componentName = transformCompName ( vnode.nodeName || "" );
 
             if ( subElementNames.hasOwnProperty ( componentName ) ) {
                 vf = VFragment ();
-                foreach ( vnode.children ), subVNode => {
+                foreach ( vnode.children, subVNode => {
                     vf.appendChild ( subVNode );
                 } );
 

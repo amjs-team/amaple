@@ -3,7 +3,7 @@ import Class from "src/Class";
 import ViewModel from "src/core/ViewModel";
 import { attr } from "src/func/node";
 
-describe ( "define component", () => {
+xdescribe ( "define component =>", () => {
 	it ( "use the function Class to define a component derivative", () => {
 		const TestComp = Class ( "TestComp" ).extends ( Component ) ( {
 			init () {

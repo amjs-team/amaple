@@ -1,5 +1,5 @@
 import { type, extend, foreach, noop, isPlainObject, isEmpty, timestamp } from "../func/util";
-import { query, attr, html, serialize } from "../func/node";
+import { query, attr, serialize } from "../func/node";
 import require from "../core/component/require/require";
 import { envErr, moduleErr } from "../error";
 import { MODULE_UPDATE, MODULE_REQUEST, MODULE_RESPONSE } from "../var/const";
@@ -163,18 +163,18 @@ extend ( ModuleLoader.prototype, {
 		            toRender = true;
 		        }
 		        else {
-                	
                 	param = args.param [ route.name ];
+
 		            // 比较新旧param和get,post对象中的值，如果有改变则调用paramChanged和queryChanged
                     if ( compareArgs ( param, route.module.param ) ) {
                     	route.module.param = param;
-                    	route.module.paramChanged ();
+                    	( route.module.paramChanged || noop ).apply ( route.module, cache.getDependentPlugin ( route.module.paramChanged || noop ) );
                     }
                 	
                 	if ( compareArgs ( args.get, route.module.get ) || compareArgs ( args.post, route.module.post ) ) {
                     	route.module.get = args.get;
                     	route.module.post = args.post;
-                		route.module.queryChanged ();
+                		( route.module.queryhanged || noop ).apply ( route.module, cache.getDependentPlugin ( route.module.queryhanged || noop ) );
                     }
 		        }
 		        
@@ -202,10 +202,10 @@ extend ( ModuleLoader.prototype, {
 		        // 给模块元素添加编号属性，此编号有两个作用：
 		        // 1、用于模块加载时的模块识别
 		        // 2、使用此属性作为子选择器限制样式范围
-		        let moduleIdentifier = attr ( route.moduleNode, Module.identifier );
+		        let moduleIdentifier = route.moduleNode.attr ( Module.identifier );
 		        if ( !moduleIdentifier ) {
 		        	moduleIdentifier = Module.getIdentifier ();
-		        	attr ( route.moduleNode, Module.identifier, moduleIdentifier );
+		        	route.moduleNode.attr ( Module.identifier, moduleIdentifier );
 		        }
 
 		        // 加入等待加载队列
@@ -296,52 +296,41 @@ extend ( ModuleLoader, {
 	actionLoad ( path, moduleNode, currentStructure, param, args, data, method, timeout, before = noop, success = noop, error = noop, abort = noop ) {
 
 
-		const 
-			moduleName = attr ( moduleNode, iceAttr.module ),
-			isCache = attr ( moduleNode, iceAttr.cache ),
-			moduleConfig = configuration.getConfigure ( "module" ),
-	        
-	        baseURL = configuration.getConfigure ( "baseURL" ),
-	        isBase = attr ( moduleNode, iceAttr.base ) !== "false" && baseURL.length > 0,
-			hasSeparator = path.indexOf ( "/" );
+		const moduleConfig = configuration.getConfigure ( "module" );
 
 
 		//////////////////////////////////////////////////
 		//////////////////////////////////////////////////
 		//////////////////////////////////////////////////
-		path = ( isBase 
-			? baseURL + ( hasSeparator === 0 ? path.substr ( 1 ) : path )
-			: path ) + configuration.getConfigure ( "moduleSuffix" ) + args;
+		path += configuration.getConfigure ( "moduleSuffix" ) + args;
 
 		const historyModule = cache.getModule ( path );
 
-		// 模块强制缓存或者全局使用缓存并且模块没有强制不使用缓存
 		// 并且请求不为post
 		// 并且已有缓存
 		// 并且缓存未过期
 		// cache已有当前模块的缓存时，才使用缓存
 		if (
-			( isCache === "true" || moduleConfig.cache === true && isCache !== "false" )
-			&& ( !method || method.toUpperCase () !== "POST" )
+			( !method || method.toUpperCase () !== "POST" )
 			&& historyModule
 			&& ( moduleConfig.expired === 0 || historyModule.time + moduleConfig.expired > timestamp () )
 		) {
 	        this.saveModuleUpdateFn ( () => {
             	Structure.currentPage.signCurrentRender ( currentStructure, param, args, isPlainObject ( data ) ? data : serialize ( data ) );
             	
-	        	const title = historyModule.updateFn ( ice, moduleNode, html, require );
-				event.emit ( moduleNode, MODULE_UPDATE );
+	        	const title = historyModule.updateFn ( ice, moduleNode, VNode, require );
+				moduleNode.emit ( MODULE_UPDATE );
 
 				return title;
 	        } );
 
 	    	// 获取模块更新函数完成后在等待队列中移除
-	    	this.delWaiting ( attr ( moduleNode, Module.identifier ) );
+	    	this.delWaiting ( moduleNode.attr ( Module.identifier ) );
 		}
 		else {
 	    	
 	    	// 触发请求事件回调
-	    	event.emit ( moduleNode, MODULE_REQUEST );
+	    	moduleNode.emit ( MODULE_REQUEST );
 							  
 			// 请求模块跳转页面数据
 			http.request ( {
@@ -361,18 +350,18 @@ extend ( ModuleLoader, {
 				/////////////////////////////////////////////////////////
 	        	// 编译module为可执行函数
 				// 将请求的html替换到module模块中
-	            const updateFn = compileModule ( moduleString, attr ( moduleNode, Module.identifier ) );
+	            const updateFn = compileModule ( moduleString, moduleNode.attr ( Module.identifier ) );
 
 	            // 缓存模块更新函数
 	            cache.pushModule ( path, { updateFn, time : timestamp () } );
 	        	
 	        	this.saveModuleUpdateFn ( () => {
-	            	event.emit ( moduleNode, MODULE_RESPONSE );
+	            	moduleNode.emit ( MODULE_RESPONSE );
                 	
                 	Structure.currentPage.signCurrentRender ( currentStructure, param, args, isPlainObject ( data ) ? data : serialize ( data ) );
                 	
-	        		const title = updateFn ( ice, moduleNode, html, require );
-	            	event.emit ( moduleNode, MODULE_UPDATE );
+	        		const title = updateFn ( ice, moduleNode, VNode, require );
+	            	moduleNode.emit ( MODULE_UPDATE );
 
 	            	// 调用success回调
 					success ( moduleNode );
@@ -381,7 +370,7 @@ extend ( ModuleLoader, {
 	            } );
 
 	            // 获取模块更新函数完成后在等待队列中移除
-	    		this.delWaiting ( attr ( moduleNode, Module.identifier ) );
+	    		this.delWaiting ( moduleNode.attr ( Module.identifier ) );
 			} ).fail ( ( iceXHR, errorCode ) => {
 
 				// 保存错误信息并立即刷新
