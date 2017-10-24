@@ -5,10 +5,12 @@ import { vnodeErr } from "../../error";
 import correctParam from "../../correctParam";
 import event from "../../event/core";
 import slice from "../../var/slice";
+import { diffAttrs, diffChildren } from "./diffs";
 import VElement from "./VElement";
 import VTextNode from "./VTextNode";
 import VFragment from "./VFragment";
 import NodePatcher from "./NodePatcher";
+import Tmpl from "../tmpl/Tmpl";
 
 /**
     supportCheck ( nodeType: Number, method: String )
@@ -29,32 +31,6 @@ function supportCheck ( nodeType, method ) {
     }
 }
 
-/**
-    diffAttrs ( newVNode: Object, oldVNode: Object, nodePatcher: Object )
-
-    Return Type:
-    void
-
-    Description:
-    对比新旧vnode的属性，将差异存入nodePatcher中
-
-    URL doc:
-    http://icejs.org/######
-*/
-function diffAttrs ( newVNode, oldVNode, nodePatcher ) {
-	foreach ( newVNode.attrs, ( attr, name ) => {
-        if ( oldVNode.attrs [ name ] !== attr ) {
-            nodePatcher.reorderAttr ( newVNode, name, attr );
-        }
-    } );
-
-    //找出移除的属性
-    foreach ( oldVNode.attrs, ( attr, name ) => {
-        if ( !newVNode.attrs.hasOwnProperty ( name ) ) {
-            nodePatcher.removeAttr ( newVNode, name );
-        }
-    } );
-}
 
 /**
     changeParent ( childVNode: Object, parent: Object )
@@ -80,186 +56,6 @@ export function changeParent ( childVNode, parent ) {
         childVNode.parent = parent;
     }
 }
-
-/**
-    diffChildren ( newChildren: Array, oldChildren: Array, nodePatcher: Object )
-
-    Return Type:
-    void
-
-    Description:
-    比较新旧节点的子节点，将差异存入nodePatcher中
-
-    URL doc:
-    http://icejs.org/######
-*/
-function diffChildren ( newChildren, oldChildren, nodePatcher ) {
-
-    const oldChildrenCopy = oldChildren.concat ();
-    let index, oldChild, removeIndex,
-        offset = 0;
-
-    foreach ( newChildren, ( child, i ) => {
-
-        // 遍历旧子节点查看是否有移除的节点
-        oldChild = oldChildren [ i + offset ];
-        while ( oldChild && newChildren.indexOf ( oldChild ) === -1 ) {
-            removeIndex = oldChildrenCopy.indexOf ( oldChild );
-            
-            nodePatcher.removeNode ( oldChild );
-            oldListCopy.splice ( removeIndex, 1 );
-
-            offset ++;
-            oldChild = oldChildren [ i + offset ];
-        }
-
-
-        ////////////////////////////
-        ////////////////////////////
-        ////////////////////////////
-        index = oldChildrenCopy.indexOf ( child );
-        if ( index > -1 && index !== i ) {
-
-            // 移动节点
-            nodePatcher.moveNode ( child, index, i );
-
-            oldChildrenCopy.splice ( index, 1 );
-            oldChildrenCopy.splice ( i, 0, child );
-        }
-        else if ( index === -1 ) {
-
-            // 增加节点
-            nodePatcher.addNode ( child, i );
-
-            oldChildrenCopy.splice ( i, 0, item );
-        }
-    } );
-
-    // 当旧子节点数量比新子节点数量多时，表示上面循环中可能未全部对比出需移除的节点
-    // 所以在这边补充剩余未对比的需移除的节点
-    if ( newChildren.length + offset < oldChildren.length ) {
-
-        index = newChildren.length;
-        while ( oldChildren [ index ] ) {
-            if ( newChildren.indexOf ( oldChildren [ index ] ) === -1 ) {
-
-                removeIndex = oldChildren.indexOf ( oldList [ index ] );
-                nodePatcher.removeNode ( oldChildren [ removeIndex ], removeIndex );
-            }
-
-            index ++;
-        }
-    }
-}
-
-/**
-    optimizeSteps ( patches: Array )
-
-    Return Type:
-    void
-
-    Description:
-    优化步骤
-    主要优化为子节点的移动步骤优化
-
-    URL doc:
-    http://icejs.org/######
-*/
-function optimizeSteps ( patches ) {
-    let i = 0;
-    while ( patches [ i ] ) {
-        const step = patches [ i ];
-        if ( step.type === NodePatcher.MOVE ) {
-
-            const 
-                optimizeItems = [],
-
-                // 穿插的步骤
-                alternates = [];
-            let span;
-
-            if ( step.to < step.from ) {
-                span = step.from - step.to;
-
-                for ( let k = step.to; k < step.from; k ++ ) {
-                    optimizeItems.push ( {
-                        type : step.type, 
-                        item : step.list [ k ], 
-                        from : step.to, 
-                        to : step.from
-                    } );
-                }
-            }
-            else {
-                span = 1;
-                optimizeItems.push ( step );
-            }
-
-            let steadIndex = i,
-                hasMerge = false;
-                j = i + 1;
-            while ( patches [ j ] ) {
-                const mergeStep = patches [ j ];
-                let merge = false;
-                
-                if ( mergeStep.type === NodePatcher.MOVE ) {
-                    if ( optimizeItems [ 0 ] && mergeStep.to === optimizeItems [ 0 ].to - span + 1 ) {
-                        if ( mergeStep.from - mergeStep.to === span ) {
-                            foreach ( optimizeItems, item => {
-                                item.to = mergeStep.from;
-                            } );
-
-                            merge = true;
-                            hasMerge = true;
-                            patches.splice ( j, 1 );
-                        }
-                        else if ( mergeStep.from - mergeStep.to > span ) {
-                            foreach ( optimizeItems, item => {
-                                item.to ++;
-                            } );
-
-                            alternates.push ( mergeStep );
-
-                            merge = true;
-                            hasMerge = true;
-                            j++;
-                        }
-                        else {
-                            j++;
-                        }
-                    }
-                }
-
-                if ( !merge ) {
-                    break;
-                }
-            }
-
-            if ( hasMerge ) {
-                hasMerge = false;
-
-                foreach ( optimizeItems, item => {
-                    foreach ( alternates, alternate => {
-                        if ( item.to < alternate.from ) {
-                            item.to --;
-                        }
-                        else {
-                            alternate.from --;
-                        }
-                    } );
-                } );
-
-                // i --;
-
-                optimizeItems.splice ( 0, 0, steadIndex, 1 );
-                Array.prototype.splice.apply ( patches, optimizeItems );
-            }
-        }
-
-        i ++;
-    }
-}
-
 
 /**
     VNode ( nodeType: Number, key: Number, parent: Object, node: DOMObject )
@@ -612,6 +408,7 @@ extend ( VNode.prototype, {
 
     	if ( this.nodeType === 3 && oldVNode === 3 ) {
         	if ( this.nodeValue !== oldVNode.nodeValue ) {
+            	
             	// 文本节点内容不同时更新文本内容
                 if ( this.nodeValue !== oldVNode.nodeValue ) {
                     nodePatcher.replaceTextNode ( this );
@@ -619,13 +416,18 @@ extend ( VNode.prototype, {
             }
         }
     	else if ( this.nodeName === oldVNode.nodeName && this.key === oldVNode.key ) {
-
-            // 通过key对比出节点相同时
-            // 对比属性
-        	diffAttrs ( this, oldVNode, nodePatcher );
+			if ( this.isComponent ) {
+            	diffChildren ( this.componentNodes, oldVNode.componentNpdes, nodePatcher );
+            }
+        	else {
+            	
+            	// 通过key对比出节点相同时
+            	// 对比属性
+        		diffAttrs ( this, oldVNode, nodePatcher );
         	
-        	// 比较子节点
-        	diffChildren ( this.children, oldVNode.children, nodePatcher );
+        		// 比较子节点
+        		diffChildren ( this.children, oldVNode.children, nodePatcher );
+            }
         }
 		else {
         	
@@ -674,15 +476,20 @@ extend ( VNode, {
         switch ( dom.nodeType ) {
             case 1:
                 const attrs = {};
+          		let guid;
                 foreach ( slice.call ( dom.attributes ), attr => {
                     attrs [ attr.name ] = attr.nodeValue;
+                	
+                	if ( attr.name === Tmpl.directivePrefix + "for" ) {
+                    	guid = guid ();
+                    }
                 } );
 
-                vnode = VElement ( dom.nodeName, attrs, guid (), null, null, dom );
+                vnode = VElement ( dom.nodeName, attrs, guid, null, null, dom );
 
                 break;
             case 3:
-                vnode = VTextNode ( dom.nodeValue, guid (), null, dom );
+                vnode = VTextNode ( dom.nodeValue, undefined, null, dom );
 
                 break;
             case 11:

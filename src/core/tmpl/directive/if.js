@@ -24,7 +24,7 @@ Tmpl.defineDirective ( {
 		const elem = this.node;
 		
     	this.expr = "[" + elem.conditions.join ( "," ) + "]";
-    	this.replacement = VTextNode ( "", guid () );
+    	this.replacement = VTextNode ( "" );
 
         // 将elem在DOM结构中去掉，以便在下面循环扫描时不会扫描到elem的nextSibling元素
         elem.parent.replaceChild ( this.replacement, elem );

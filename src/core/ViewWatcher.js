@@ -91,7 +91,7 @@ export default function ViewWatcher ( directive, node, expr, tmpl, scoped ) {
 extend ( ViewWatcher.prototype, {
 
 	/**
-		update ()
+		update ( newVal: Any )
 	
 		Return Type:
 		void
@@ -104,9 +104,9 @@ extend ( ViewWatcher.prototype, {
 		URL doc:
 		http://icejs.org/######
 	*/
-	update () {
+	update ( newVal ) {
 		const parentNodeBackup = this.parentNode.clone ();
-    	this.directive.update.call ( this, this.getter ( runtimeErr ) );
+    	this.directive.update.call ( this, newVal );
     	this.parentNode.diff ( parentNodeBackup ).patch ();
     },
 	

@@ -25,8 +25,8 @@ Tmpl.defineDirective ( {
     	const
         	variable   = this.expr.match ( /^\s*([$\w]+)\s+in\s+([$\w.]+)\s*$/ );
   
-		this.startNode = VTextNode ( "", guid (), null );
-		this.endNode   = VTextNode ( "", guid (), null );
+		this.startNode = VTextNode ( "" );
+		this.endNode   = VTextNode ( "" );
 		
         this.item      = variable [ 1 ];
         this.expr      = variable [ 2 ];
@@ -70,6 +70,7 @@ Tmpl.defineDirective ( {
             }
 
             itemNode = elem.clone ();
+        	
         	if ( elem.conditionElems ) {
             	itemNode.conditionElems = [ itemNode ];
             	foreach ( elem.conditionElems, ( nextSib, i ) => {

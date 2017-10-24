@@ -94,7 +94,7 @@ export default {
                     new ValueWatcher ( ( newVal ) => {
                         propValue = newVal;
 
-                        subs.notify ();
+                        subs.notify ( propValue );
                     }, getter );
 
                     defineReactiveProperty ( attr.name, () => {
@@ -106,7 +106,7 @@ export default {
                             if ( newVal !== propValue ) {
                                 moduleVm [ propName ] = propValue = newVal;
 
-                                subs.notify ();
+                                subs.notify ( newVal );
                             }
                         }, props );
                 }

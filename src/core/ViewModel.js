@@ -51,7 +51,7 @@ function initState ( states, context ) {
 					watch.call ( context, newVal, oldVal );
 
 					// 更新视图
-					subs.notify ();
+					subs.notify ( newVal );
 				}
    			}, context );
     } );
@@ -81,7 +81,7 @@ function initComputed ( computeds, context ) {
         		state = getter ();
 
         		// 更新视图
-				subs.notify ();
+				subs.notify ( state );
         	}, getter );
       	
       	// 设置计算属性为监听数据
@@ -98,7 +98,7 @@ function initComputed ( computeds, context ) {
 					computed.set.call ( context, newVal );
 
 					// 更新视图
-					subs.notify ();
+					subs.notify ( newVal );
 				}
 			} : noop, context );
 	} );
@@ -111,8 +111,8 @@ function initArray ( array, subs, context ) {
 	array = array.map ( item => convertState ( item, subs, context ) );
   	
   	foreach ( [ "push", "pop", "shift", "unshift", "splice", "sort", "reverse" ], method => {
-      	let nativeMethod = Array.prototype [ method ],
- 			res;
+      	const nativeMethod = Array.prototype [ method ];
+ 		let res;
       	
       	Object.defineProperty ( array, method, {
           	value ( ...args ) {
@@ -124,7 +124,7 @@ function initArray ( array, subs, context ) {
         		res = nativeMethod.apply ( this, args );
               	
               	// 更新视图
-				subs.notify ();
+				subs.notify ( { method, args } );
               	
               	return res;
         	},

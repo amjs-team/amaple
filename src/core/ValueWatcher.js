@@ -19,7 +19,6 @@ import Subscriber from "./Subscriber";
 export default function ValueWatcher ( updateFn, getter ) {
 
 	this.updateFn = updateFn;
-	this.getter = getter;
 
     // 将获取表达式的真实值并将此watcher对象绑定到依赖监听属性中
 	Subscriber.watcher = this;
@@ -29,7 +28,7 @@ export default function ValueWatcher ( updateFn, getter ) {
 extend ( ValueWatcher.prototype, {
 
 	/**
-		update ()
+		update ( newVal: Any )
 	
 		Return Type:
 		void
@@ -40,8 +39,8 @@ extend ( ValueWatcher.prototype, {
 		URL doc:
 		http://icejs.org/######
 	*/
-	update () {
-    	this.updateFn ( this.getter () );
+	update ( newVal ) {
+    	this.updateFn ( newVal );
     }
 
 } );
