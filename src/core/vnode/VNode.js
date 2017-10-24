@@ -1,5 +1,6 @@
 import { newClassCheck } from "../../Class";
 import { extend, foreach, type, guid } from "../../func/util";
+import { attr } from "../../func/node";
 import { vnodeErr } from "../../error";
 import correctParam from "../../correctParam";
 import event from "../../event/core";
@@ -29,7 +30,7 @@ function supportCheck ( nodeType, method ) {
 }
 
 /**
-    diffAttrs ( newVnode: Object, oldVnode: Object, nodePatcher: Object )
+    diffAttrs ( newVNode: Object, oldVNode: Object, nodePatcher: Object )
 
     Return Type:
     void
@@ -40,19 +41,44 @@ function supportCheck ( nodeType, method ) {
     URL doc:
     http://icejs.org/######
 */
-function diffAttrs ( newVnode, oldVnode, nodePatcher ) {
-	foreach ( newVnode.attrs, ( attr, name ) => {
-        if ( oldVnode.attrs [ name ] !== attr ) {
-            nodePatcher.reorderAttr ( newVnode, name, attr );
+function diffAttrs ( newVNode, oldVNode, nodePatcher ) {
+	foreach ( newVNode.attrs, ( attr, name ) => {
+        if ( oldVNode.attrs [ name ] !== attr ) {
+            nodePatcher.reorderAttr ( newVNode, name, attr );
         }
     } );
 
     //找出移除的属性
-    foreach ( oldVnode.attrs, ( attr, name ) => {
-        if ( !newVnode.attrs.hasOwnProperty ( name ) ) {
-            nodePatcher.removeAttr ( newVnode, name );
+    foreach ( oldVNode.attrs, ( attr, name ) => {
+        if ( !newVNode.attrs.hasOwnProperty ( name ) ) {
+            nodePatcher.removeAttr ( newVNode, name );
         }
     } );
+}
+
+/**
+    changeParent ( childVNode: Object, parent: Object )
+
+    Return Type:
+    void
+
+    Description:
+    更换父节点
+    如果此子节点已有父节点则将此子节点从父节点中移除
+
+    URL doc:
+    http://icejs.org/######
+*/
+export function changeParent ( childVNode, parent ) {
+    if ( childVNode && parent && childVNode.parent !== parent ) {
+
+        // 如果有父节点，则从父节点中移除
+        if ( childVNode.parent ) {
+            childVNode.parent.removeChild ( childVNode );
+        }
+
+        childVNode.parent = parent;
+    }
 }
 
 /**
@@ -127,6 +153,115 @@ function diffChildren ( newChildren, oldChildren, nodePatcher ) {
 }
 
 /**
+    optimizeSteps ( patches: Array )
+
+    Return Type:
+    void
+
+    Description:
+    优化步骤
+    主要优化为子节点的移动步骤优化
+
+    URL doc:
+    http://icejs.org/######
+*/
+function optimizeSteps ( patches ) {
+    let i = 0;
+    while ( patches [ i ] ) {
+        const step = patches [ i ];
+        if ( step.type === NodePatcher.MOVE ) {
+
+            const 
+                optimizeItems = [],
+
+                // 穿插的步骤
+                alternates = [];
+            let span;
+
+            if ( step.to < step.from ) {
+                span = step.from - step.to;
+
+                for ( let k = step.to; k < step.from; k ++ ) {
+                    optimizeItems.push ( {
+                        type : step.type, 
+                        item : step.list [ k ], 
+                        from : step.to, 
+                        to : step.from
+                    } );
+                }
+            }
+            else {
+                span = 1;
+                optimizeItems.push ( step );
+            }
+
+            let steadIndex = i,
+                hasMerge = false;
+                j = i + 1;
+            while ( patches [ j ] ) {
+                const mergeStep = patches [ j ];
+                let merge = false;
+                
+                if ( mergeStep.type === NodePatcher.MOVE ) {
+                    if ( optimizeItems [ 0 ] && mergeStep.to === optimizeItems [ 0 ].to - span + 1 ) {
+                        if ( mergeStep.from - mergeStep.to === span ) {
+                            foreach ( optimizeItems, item => {
+                                item.to = mergeStep.from;
+                            } );
+
+                            merge = true;
+                            hasMerge = true;
+                            patches.splice ( j, 1 );
+                        }
+                        else if ( mergeStep.from - mergeStep.to > span ) {
+                            foreach ( optimizeItems, item => {
+                                item.to ++;
+                            } );
+
+                            alternates.push ( mergeStep );
+
+                            merge = true;
+                            hasMerge = true;
+                            j++;
+                        }
+                        else {
+                            j++;
+                        }
+                    }
+                }
+
+                if ( !merge ) {
+                    break;
+                }
+            }
+
+            if ( hasMerge ) {
+                hasMerge = false;
+
+                foreach ( optimizeItems, item => {
+                    foreach ( alternates, alternate => {
+                        if ( item.to < alternate.from ) {
+                            item.to --;
+                        }
+                        else {
+                            alternate.from --;
+                        }
+                    } );
+                } );
+
+                // i --;
+
+                optimizeItems.splice ( 0, 0, steadIndex, 1 );
+                Array.prototype.splice.apply ( patches, optimizeItems );
+            }
+        }
+
+        i ++;
+    }
+}
+
+
+/**
     VNode ( nodeType: Number, key: Number, parent: Object, node: DOMObject )
 
     Return Type:
@@ -163,6 +298,8 @@ extend ( VNode.prototype, {
     */
 	appendChild ( childVNode ) {
     	supportCheck ( this.nodeType, "appendChild" );
+
+        changeParent ( childVNode, this );
     	
     	if ( childVNode.nodeType === 11 ) {
         	foreach ( childVNode.children, child => {
@@ -188,7 +325,11 @@ extend ( VNode.prototype, {
     */
 	removeChild ( childVNode ) {
     	supportCheck ( this.nodeType, "removeChild" );
-    	this.children.splice ( this.children.indexOf ( oldVNode ), 1 );
+
+        if ( childVNode.parent === this ) {
+            this.children.splice ( this.children.indexOf ( childVNode ), 1 );
+            childVNode.parent = null;
+        }
     },
 
     replaceChild ( newVNode, oldVNode ) {
@@ -196,13 +337,24 @@ extend ( VNode.prototype, {
     	
     	const i = this.children.indexOf ( oldVNode );
     	if ( i >= 0 ) {
+            let children;
         	if ( newVNode.nodeType === 11 ) {
+                children = newVNode.children;
+
                	const args = [ i, 1 ].concat ( newVNode.children );
             	Array.prototype.splice.apply ( children, args );
             }
         	else {
-        		children.splice ( i, 1, newVNode );
+                children = [ newVNode ];
+        		this.children.splice ( i, 1, newVNode );
             }
+
+            // 更换父节点
+            foreach ( children, child => {
+                changeParent ( child, this );
+            } );
+
+            oldVNode.parent = null;
         }
     },
 	
@@ -221,15 +373,23 @@ extend ( VNode.prototype, {
 	insertBefore ( newVNode, existingVNode ) {
     	supportCheck ( this.nodeType, "insertBefore" );
     	
-    	const i = this.children.indexOf ( oldVNode );
+    	const i = this.children.indexOf ( existingVNode );
     	if ( i >= 0 ) {
+            let children;
         	if ( newVNode.nodeType === 11 ) {
+                children = newVNode.children;
                	const args = [ i, 0 ].concat ( newVNode.children );
             	Array.prototype.splice.apply ( children, args );
             }
         	else {
-        		children.splice ( i, 0, newVNode );
+                children = [ newVNode ];
+        		this.children.splice ( i, 0, newVNode );
             }
+
+            // 更换父节点
+            foreach ( children, child => {
+                changeParent ( child, this );
+            } );
     	}
     },
     
@@ -247,7 +407,13 @@ extend ( VNode.prototype, {
     */
     html ( vnode ) {
     	supportCheck ( this.nodeType, "html" );
+
+        foreach ( this.children, child => {
+            child.parent = null;
+        } )
+
     	this.children = [ vnode ];
+        changeParent ( vnode, this );
     },
 	
 	/**
@@ -296,7 +462,7 @@ extend ( VNode.prototype, {
         		return this.attrs [ name ];
     		case "object":
         		foreach ( val, ( v, k ) => {
-            		context.setAttribute ( k, v );
+            		this.attrs [ k ] = v;
             	} );
 
         		break;
@@ -361,7 +527,7 @@ extend ( VNode.prototype, {
     },
 
     /**
-        clone ( parent: Object )
+        clone ()
     
         Return Type:
         Object
@@ -374,37 +540,33 @@ extend ( VNode.prototype, {
         URL doc:
         http://icejs.org/######
     */
-    clone ( parent = null ) {
+    clone () {
         let vnode;
-        const children = [];
         
         switch ( this.nodeType ) {
         	case 1:
 
         		// 复制attrs
-    			const 
-        			attrs = {},
-            		vnode = VElement ( this.nodeName, attrs, this.key, parent, children, this.node, this.isComponent );
-    	
+    			const attrs = {};
     			foreach ( this.attrs, ( attr, name ) => {
         			attrs [ name ] = attr;
         		} );
-    	
-    			foreach ( this.children, child => {
-        			children.push ( child.copy ( vnode ) );
-        		} );
+
+                vnode = VElement ( this.nodeName, attrs, this.key, null, null, this.node, this.isComponent );
             	
             	break;
         	case 3:
-            	vnode = VTextNode ( this.nodeValue, this.key, parent, this.node );
+            	vnode = VTextNode ( this.nodeValue, this.key, null, this.node );
             	
             	break;
         	case 11:
-            	vnode = VFragment ( this.key, parent, children, this.elem );
-                
-            	foreach ( this.children, child => {
-                    children.push ( child.copy ( vnode ) );
-                } );
+            	vnode = VFragment ( null, this.elem );
+        }
+
+        if ( this.children ) {
+            foreach ( this.children, child => {
+                vnode.appendChild ( child.clone () );
+            } );
         }
     	
     	return vnode;
@@ -430,40 +592,40 @@ extend ( VNode.prototype, {
     },
 
     /**
-        diff ( oldVnode: Object )
+        diff ( oldVNode: Object )
     
         Return Type:
         Object
-        此vnode与参数oldVnode对比后计算出的NodePatcher对象
+        此vnode与参数oldVNode对比后计算出的NodePatcher对象
     
         Description:
-        此vnode与参数oldVnode进行对比，并计算出差异
+        此vnode与参数oldVNode进行对比，并计算出差异
     
         URL doc:
         http://icejs.org/######
     */
-    diff ( oldVnode ) {
+    diff ( oldVNode ) {
 
         const 
             nodePatcher = new NodePatcher (), 
-            oldVnodeCopy = oldVnode.concat ();
+            oldVNodeCopy = oldVNode.concat ();
 
-    	if ( this.nodeType === 3 && oldVnode === 3 ) {
-        	if ( this.nodeValue !== oldVnode.nodeValue ) {
+    	if ( this.nodeType === 3 && oldVNode === 3 ) {
+        	if ( this.nodeValue !== oldVNode.nodeValue ) {
             	// 文本节点内容不同时更新文本内容
-                if ( this.nodeValue !== oldVnode.nodeValue ) {
+                if ( this.nodeValue !== oldVNode.nodeValue ) {
                     nodePatcher.replaceTextNode ( this );
                 }
             }
         }
-    	else if ( this.nodeName === oldVnode.nodeName && this.key === oldVnode.key ) {
+    	else if ( this.nodeName === oldVNode.nodeName && this.key === oldVNode.key ) {
 
             // 通过key对比出节点相同时
             // 对比属性
-        	diffAttrs ( this, oldVnode, nodePatcher );
+        	diffAttrs ( this, oldVNode, nodePatcher );
         	
         	// 比较子节点
-        	diffChildren ( this.children, oldVnode.children, nodePatcher );
+        	diffChildren ( this.children, oldVNode.children, nodePatcher );
         }
 		else {
         	
@@ -472,6 +634,18 @@ extend ( VNode.prototype, {
         }
     },
 
+    /**
+        emit ( type: String )
+    
+        Return Type:
+        void
+    
+        Description:
+        触发事件
+    
+        URL doc:
+        http://icejs.org/######
+    */
     emit ( type ) {
         if ( this.node ) {
             event.emit ( this.node, type );
@@ -494,26 +668,33 @@ extend ( VNode, {
         URL doc:
         http://icejs.org/######
     */
-	domToVNode ( dom, parent = null ) {
+	domToVNode ( dom ) {
     	
-    	const children = [];
         let vnode;
-
         switch ( dom.nodeType ) {
             case 1:
-                vnode = VElement ( dom.nodeName, slice.call ( dom.attributes ), guid (), parent, children, dom );
+                const attrs = {};
+                foreach ( slice.call ( dom.attributes ), attr => {
+                    attrs [ attr.name ] = attr.nodeValue;
+                } );
+
+                vnode = VElement ( dom.nodeName, attrs, guid (), null, null, dom );
 
                 break;
             case 3:
-                vnode = VTextNode ( dom.nodeValue, guid (), parent, dom );
+                vnode = VTextNode ( dom.nodeValue, guid (), null, dom );
 
                 break;
             case 11:
-                vnode = VFragment ( children, dom );
+                vnode = VFragment ( null, dom );
         }
-    	
-    	foreach ( slice.call ( dom.nodeName === "TEMPLATE" ? dom.content.childNodes || dom.childNodes : dom.childNodes ), childNode => {
-        	children.push ( VNode.domToVNode ( childNode, vnode ) );
+
+        foreach ( slice.call ( dom.nodeName === "TEMPLATE" ? dom.content.childNodes || dom.childNodes : dom.childNodes ), child => {
+
+            child = VNode.domToVNode ( child );
+            if ( child instanceof VNode ) {
+                vnode.appendChild ( child );
+            }
         } );
     	
     	return vnode;

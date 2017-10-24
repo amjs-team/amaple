@@ -5,7 +5,7 @@ export default function VElement ( nodeName, attrs, key, parent, children, elem,
 	vnode.nodeName = nodeName.toUpperCase ();
 
 	vnode.attrs = attrs || {};
-	vnode.children = children || [];
+	vnode.children = children && children.concat () || [];
 	
 	if ( isComponent === true ) {
     	vnode.isComponent = true;
