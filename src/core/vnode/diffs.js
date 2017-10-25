@@ -27,6 +27,18 @@ export function diffAttrs ( newVNode, oldVNode, nodePatcher ) {
     } );
 }
 
+function indexOf ( children, searchNode ) {
+	let index = -1;
+    foreach ( children, ( child, i ) => {
+        if ( child.key === searchNode.key ) {
+            index = i;
+            return false;
+        }
+    } );
+	
+	return index;
+}
+
 /**
     diffChildren ( newChildren: Array, oldChildren: Array, nodePatcher: Object )
 
@@ -44,19 +56,19 @@ export function diffChildren ( newChildren, oldChildren, nodePatcher ) {
     const oldChildrenCopy = oldChildren.concat ();
     let oldIndex = 0,
         moveItems = [],
+        isFind;
         i = 0;
 
 	foreach ( newChildren, ( newChild, i ) => {
-		if ( oldChildrenCopy.indexOf ( newChild ) === -1 ) {
+		if ( indexOf ( oldChildrenCopy, newChild ) === -1 ) {
 			nodePatcher.addNode ( newChild, i );
 
             oldChildrenCopy.splice ( i, 0, newChild );
         }
     } );
-
+	
     while ( oldChildrenCopy [ i ] ) {
-        if ( newChildren.indexOf ( oldChildrenCopy [ i ] ) === -1 ) {
-        	
+        if ( indexOf ( newChildren, oldChildrenCopy [ i ] ) ) {
 			nodePatcher.removeNode ( oldChildrenCopy [ i ], i );
             oldChildrenCopy.splice ( i, 1 );
         }
@@ -66,21 +78,24 @@ export function diffChildren ( newChildren, oldChildren, nodePatcher ) {
     }
 
     foreach ( newChildren, ( newChild, i ) => {
-        oldIndex = oldChildrenCopy.indexOf ( newChild );
-        if ( oldIndex > -1 && oldIndex !== i ) {
-            moveItems.push ( {
-                item : newChild,
-                from : oldIndex,
-                to : i,
-                list : oldChildrenCopy.concat ()
-			} );
+        oldIndex = indexOf ( oldChildrenCopy, newChild );
+        if ( oldIndex > -1 ) {
+        	nodePatcher.concat ( newChild.diff ( oldChildrenCopy [ oldIndex ] ) );
+        	if ( oldIndex !== i ) {
+            	moveItems.push ( {
+                	item : newChild,
+                	from : oldIndex,
+                	to : i,
+                	list : oldChildrenCopy.concat ()
+				} );
 
-            oldChildrenCopy.splice ( oldIndex, 1 );
-            oldChildrenCopy.splice ( i, 0, newChild );
+            	oldChildrenCopy.splice ( oldIndex, 1 );
+            	oldChildrenCopy.splice ( i, 0, newChild );
+            }
         }
     } );
 	
-	foreach ( optimizeSteps ( moveItems ), move => {
+	foreach ( optimizeSteps ( moveItems ), move => { 
     	nodePatcher.moveNode ( move.item, move.from, move.to );
     } );
 }
@@ -105,7 +120,7 @@ function optimizeSteps ( patches ) {
         	step = patches [ i ],
             optimizeItems = [],
             span = step.from - step.to,
-            nextStep = patches [ i + 1],
+            nextStep = patches [ i + 1 ],
 
             // 合并的步骤
             mergeItems = { alternates: [], eliminates: [], previous: [] };

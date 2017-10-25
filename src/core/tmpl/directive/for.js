@@ -4,7 +4,7 @@ import Tmpl from "../Tmpl";
 import VTextNode from "../../vnode/VTextNode";
 import VFragment from "../../vnode/VFragment";
 
-function createVNode ( arg, watcher ) {
+function createVNode ( arg, key, watcher ) {
     const 
         f = VFragment (),
         elem = watcher.node,
@@ -12,7 +12,7 @@ function createVNode ( arg, watcher ) {
         // 定义范围变量
         scopedDefinition [ watcher.item ] = arg,
         itemNode = elem.clone ();
-
+		itemNode.key = guid ();
     if ( watcher.key ) {
         scopedDefinition [ watcher.key ] = key;
     }
@@ -69,7 +69,7 @@ Tmpl.defineDirective ( {
     },
 
     /**
-        update ( args: Array|Object )
+        update ( iterator: Array )
     
         Return Type:
         void
@@ -81,20 +81,25 @@ Tmpl.defineDirective ( {
         URL doc:
         http://icejs.org/######
     */
-	update ( args ) {
+	update ( iterator ) {
 		const
         	elem = this.node,
-            fragment = VFragment();
+            fragment = VFragment (),
+            nodeMap = [];
       
-        let itemNode, f,
-
-            // 局部变量定义
-            scopedDefinition = {};
-  		
+        let itemNode, f;
+    	
         // 初始化视图时将模板元素替换为挂载后元素
         if ( elem.parent ) {
-            foreach ( args, ( arg, key ) => {
-                fragment.appendChild ( createVNode ( arg, this ) );
+            foreach ( iterator, ( val, key ) => {
+            	itemNode = createVNode ( val, key, this );
+            	nodeMap.push ( {
+                	node : itemNode,
+                	val,
+                } );
+            	
+                fragment.appendChild ( itemNode );
+            	
             } );
 
             fragment.insertBefore ( this.startNode, fragment.children [ 0 ] );
@@ -105,50 +110,41 @@ Tmpl.defineDirective ( {
     	else {
 
             // 改变数据后更新视图
-            switch ( args.method ) {
-                case "push":
-                    foreach ( args.args, arg => {
-                        elem.parent.insertBefore ( createVNode ( arg, this ), this.endNode );
-                    } );
-
-                    break;
-                case "pop":
-                    elem.parent.removeChild ( this.endNode.prevSibling () );
-
-                    break;
-                case "shift":
-                    elem.parent.removeChild ( this.startNode.nextSibling () );
-
-                    break;
-                case "unshift":
-                    foreach ( args.args, arg => {
-                        elem.parent.insertBefore ( createVNode ( arg, this ), this.startNode.nextSibling () );
-                    } );
-
-                    break;
-                case "splice":
-                    
-
-                    break;
-                case "sort":
-
-                    break;
-                case "reverse":
-
-                    break;
+        	foreach ( iterator, ( val, key ) => {
+        		foreach ( this.nodeMap, item => {
+                	if ( item.val === val ) {
+                    	itemNode = item.node;
+            			nodeMap.push ( {
+                        	node : itemNode,
+                        	val,
+                        } );
+            			
+            			break;
+                    }
+                } );
+    			
+    			// 在原数组中没有找到对应项时，创建新的项
+    			if ( !itemNode ) {
+                	itemNode = createVNode ( val, key, this );
+            		nodeMap.push ( {
+                		node : itemNode,
+                		val,
+                	} );
+                }
+    			
+    			fragment.appendChild ( itemNode );
+            } );
+			
+        	let el,
+         		p = el.parent,
+         		removes = [];
+        	while ( ( el = this.startNode.nextSibling () ) !== this.endNode ) {
+        		p.removeChild ( el );
             }
-
-        	// let el = this.startNode,
-         //        p = el.parent,
-         //        removes = [];
-        	// while ( ( el = el.nextSibling () ) !== this.endNode ) {
-         //    	removes.push ( el );
-         //    }
-        	// removes.map ( item => {
-         //    	p.removeChild ( item );
-         //    } );
         	
-        	// p.insertBefore ( fragment, this.endNode );
-        }
+        	p.insertBefore ( fragment, this.endNode );
+        }
+        
+        this.nodeMap = nodeMap;
     }
 } );

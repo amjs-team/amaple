@@ -10,7 +10,6 @@ import VElement from "./VElement";
 import VTextNode from "./VTextNode";
 import VFragment from "./VFragment";
 import NodePatcher from "./NodePatcher";
-import Tmpl from "../tmpl/Tmpl";
 
 /**
     supportCheck ( nodeType: Number, method: String )
@@ -427,14 +426,12 @@ extend ( VNode.prototype, {
         	if ( this.nodeValue !== oldVNode.nodeValue ) {
             	
             	// 文本节点内容不同时更新文本内容
-                if ( this.nodeValue !== oldVNode.nodeValue ) {
-                    nodePatcher.replaceTextNode ( this );
-                }
+                nodePatcher.replaceTextNode ( oldVNode, this.nodeValue );
             }
         }
     	else if ( this.nodeName === oldVNode.nodeName && this.key === oldVNode.key ) {
 			if ( this.isComponent ) {
-            	diffChildren ( this.componentNodes, oldVNode.componentNpdes, nodePatcher );
+            	diffChildren ( this.componentNodes, oldVNode.componentNodes, nodePatcher );
             }
         	else {
             	
@@ -449,7 +446,7 @@ extend ( VNode.prototype, {
 		else {
         	
         	// 节点不同，直接替换
-            nodePatcher.replaceNode ( this );
+            nodePatcher.replaceNode ( this, oldVNode.node );
         }
     },
 
@@ -493,16 +490,11 @@ extend ( VNode, {
         switch ( dom.nodeType ) {
             case 1:
                 const attrs = {};
-          		let guid;
                 foreach ( slice.call ( dom.attributes ), attr => {
                     attrs [ attr.name ] = attr.nodeValue;
-                	
-                	if ( attr.name === Tmpl.directivePrefix + "for" ) {
-                    	guid = guid ();
-                    }
                 } );
 
-                vnode = VElement ( dom.nodeName, attrs, guid, null, null, dom );
+                vnode = VElement ( dom.nodeName, attrs, undefined, null, null, dom );
 
                 break;
             case 3:
