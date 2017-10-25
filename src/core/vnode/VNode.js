@@ -174,8 +174,7 @@ extend ( VNode.prototype, {
             let children;
         	if ( newVNode.nodeType === 11 ) {
                 children = newVNode.children;
-               	const args = [ i, 0 ].concat ( newVNode.children );
-            	Array.prototype.splice.apply ( children, args );
+            	Array.prototype.splice.apply ( children, [ i, 0 ].concat ( newVNode.children ) );
             }
         	else {
                 children = [ newVNode ];
@@ -227,6 +226,24 @@ extend ( VNode.prototype, {
 	nextSibling () {
     	if ( this.parent ) {
         	return this.parent.children [ this.parent.children.indexOf ( this ) + 1 ];
+        }
+    },
+
+    /**
+        prevSibling ()
+    
+        Return Type:
+        void
+    
+        Description:
+        获取此vnode的下一个vnode
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    prevSibling () {
+        if ( this.parent ) {
+            return this.parent.children [ this.parent.children.indexOf ( this ) - 1 ];
         }
     },
 

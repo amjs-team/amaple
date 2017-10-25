@@ -1,6 +1,7 @@
 import { foreach, type, isPlainObject, noop } from "../func/util";
 import { vmComputedErr } from "../error";
 import { defineReactiveProperty } from "../func/private";
+import { VNODE_ADD, VNODE_REMOVE, VNODE_MOVE } from "../var/const";
 import Subscriber from "./Subscriber";
 import ValueWatcher from "./ValueWatcher";
 
@@ -112,7 +113,6 @@ function initArray ( array, subs, context ) {
   	
   	foreach ( [ "push", "pop", "shift", "unshift", "splice", "sort", "reverse" ], method => {
       	const nativeMethod = Array.prototype [ method ];
- 		let res;
       	
       	Object.defineProperty ( array, method, {
           	value ( ...args ) {
@@ -121,7 +121,7 @@ function initArray ( array, subs, context ) {
                   	// 转换数组新加入的项
                   	args = args.map ( item => convertState ( item, subs, context ) );
         		}
-        		res = nativeMethod.apply ( this, args );
+        		const res = nativeMethod.apply ( this, args );
               	
               	// 更新视图
 				subs.notify ( { method, args } );

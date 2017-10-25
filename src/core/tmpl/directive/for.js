@@ -1,8 +1,40 @@
 import { foreach, guid } from "../../../func/util";
-import { attr } from "../../../func/node";
+import { VNODE_ADD, VNODE_REMOVE, VNODE_MOVE } from "../../../var/const";
 import Tmpl from "../Tmpl";
 import VTextNode from "../../vnode/VTextNode";
 import VFragment from "../../vnode/VFragment";
+
+function createVNode ( arg, watcher ) {
+    const 
+        f = VFragment (),
+        elem = watcher.node,
+
+        // 定义范围变量
+        scopedDefinition [ watcher.item ] = arg,
+        itemNode = elem.clone ();
+
+    if ( watcher.key ) {
+        scopedDefinition [ watcher.key ] = key;
+    }
+    
+    if ( elem.conditionElems ) {
+        itemNode.conditionElems = [ itemNode ];
+        foreach ( elem.conditionElems, ( nextSib, i ) => {
+            if ( i > 0 ) {
+                itemNode.conditionElems.push ( nextSib.clone () );
+            }
+        } );
+        itemNode.conditions = elem.conditions;
+    }
+
+    // 再外套一层fragment的原因是在if中处理时不会因为无法获取itemNode.parentNode而报错
+    f.appendChild ( itemNode );
+
+    // 为遍历克隆的元素挂载数据
+    watcher.tmpl.mount ( f, true, Tmpl.defineScoped ( scopedDefinition ) );
+
+    return itemNode.nodeName && itemNode.nodeName === "TEMPLATE" ? VFragment ( itemNode.children ) : itemNode;
+}
 
 Tmpl.defineDirective ( {
 	name : "for",
@@ -22,8 +54,7 @@ Tmpl.defineDirective ( {
     */
 	before () {
     	
-    	const
-        	variable   = this.expr.match ( /^\s*([$\w]+)\s+in\s+([$\w.]+)\s*$/ );
+    	const variable   = this.expr.match ( /^\s*([$\w]+)\s+in\s+([$\w.]+)\s*$/ );
   
 		this.startNode = VTextNode ( "" );
 		this.endNode   = VTextNode ( "" );
@@ -38,7 +69,7 @@ Tmpl.defineDirective ( {
     },
 
     /**
-        update ( iterator: Array )
+        update ( args: Array|Object )
     
         Return Type:
         void
@@ -50,73 +81,74 @@ Tmpl.defineDirective ( {
         URL doc:
         http://icejs.org/######
     */
-	update ( iterator ) {
+	update ( args ) {
 		const
-        	elem 		 = this.node,
-            fragment     = VFragment();
+        	elem = this.node,
+            fragment = VFragment();
       
         let itemNode, f,
 
             // 局部变量定义
             scopedDefinition = {};
   		
-        foreach ( iterator, ( item, key ) => {
-        	f = VFragment ();
+        // 初始化视图时将模板元素替换为挂载后元素
+        if ( elem.parent ) {
+            foreach ( args, ( arg, key ) => {
+                fragment.appendChild ( createVNode ( arg, this ) );
+            } );
 
-            // 定义范围变量
-            scopedDefinition [ this.item ] = item;
-            if ( this.key ) {
-                scopedDefinition [ this.key ] = key;
-            }
-
-            itemNode = elem.clone ();
-        	
-        	if ( elem.conditionElems ) {
-            	itemNode.conditionElems = [ itemNode ];
-            	foreach ( elem.conditionElems, ( nextSib, i ) => {
-                    if ( i > 0 ) {
-                        itemNode.conditionElems.push ( nextSib.clone () );
-                    }
-                } );
-            	itemNode.conditions = elem.conditions;
-            }
-
-            // 再外套一层fragment的原因是在if中处理时不会因为无法获取itemNode.parentNode而报错
-            f.appendChild ( itemNode );
-
-            // 为遍历克隆的元素挂载数据
-        	this.tmpl.mount ( f, true, Tmpl.defineScoped ( scopedDefinition ) );
-
-            itemNode = f.children [ 0 ];
-            if ( itemNode.nodeName && itemNode.nodeName === "TEMPLATE" ) {
-                fragment.appendChild ( VFragment ( itemNode.children ) );
-            }
-            else {
-                fragment.appendChild ( f );
-            }
-        } );
-    	
-      	// 初始化视图时将模板元素替换为挂载后元素
-    	if ( elem.parent ) {
-        	fragment.insertBefore ( this.startNode, fragment.children [ 0 ] );
-        	fragment.appendChild ( this.endNode );
-          
+            fragment.insertBefore ( this.startNode, fragment.children [ 0 ] );
+            fragment.appendChild ( this.endNode );
+            
             elem.parent.replaceChild ( fragment, elem );
         }
-    	
-    	// 改变数据后更新视图
     	else {
-        	let el = this.startNode,
-                p = el.parent,
-                removes = [];
-        	while ( ( el = el.nextSibling () ) !== this.endNode ) {
-            	removes.push ( el );
+
+            // 改变数据后更新视图
+            switch ( args.method ) {
+                case "push":
+                    foreach ( args.args, arg => {
+                        elem.parent.insertBefore ( createVNode ( arg, this ), this.endNode );
+                    } );
+
+                    break;
+                case "pop":
+                    elem.parent.removeChild ( this.endNode.prevSibling () );
+
+                    break;
+                case "shift":
+                    elem.parent.removeChild ( this.startNode.nextSibling () );
+
+                    break;
+                case "unshift":
+                    foreach ( args.args, arg => {
+                        elem.parent.insertBefore ( createVNode ( arg, this ), this.startNode.nextSibling () );
+                    } );
+
+                    break;
+                case "splice":
+                    
+
+                    break;
+                case "sort":
+
+                    break;
+                case "reverse":
+
+                    break;
             }
-        	removes.map ( item => {
-            	p.removeChild ( item );
-            } );
+
+        	// let el = this.startNode,
+         //        p = el.parent,
+         //        removes = [];
+        	// while ( ( el = el.nextSibling () ) !== this.endNode ) {
+         //    	removes.push ( el );
+         //    }
+        	// removes.map ( item => {
+         //    	p.removeChild ( item );
+         //    } );
         	
-        	p.insertBefore ( fragment, this.endNode );
+        	// p.insertBefore ( fragment, this.endNode );
         }
     }
 } );
