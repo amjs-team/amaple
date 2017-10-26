@@ -147,7 +147,7 @@ export function diffChildren ( newChildren, oldChildren, nodePatcher ) {
             oldChildrenCopy = oldNodeClassification [ i ].children;
             foreach ( newItem.children, ( newChild, j ) => {
                 if ( indexOf ( oldChildrenCopy, newChild ) === -1 ) {
-                    nodePatcher.reorderNode ( newChild, j + offset );
+                    nodePatcher.addNode ( newChild, j + offset );
 
                     oldChildrenCopy.splice ( j, 0, newChild );
                 }
@@ -185,7 +185,7 @@ export function diffChildren ( newChildren, oldChildren, nodePatcher ) {
             } );
             
             foreach ( optimizeSteps ( moveItems ), move => { 
-                nodePatcher.reorderNode ( move.item, move.to + offset );
+                nodePatcher.moveNode ( move.item, move.to + offset );
             } );
         }
 

@@ -3,8 +3,9 @@ import Tmpl from "../Tmpl";
 
 Tmpl.defineDirective ( {
 	name : "ref",
-
-	dynamic : false,
+	
+  	// static为true时，模板将不会挂载watcher在对应vm下
+	static : true,
 
     /**
         update ( refName: String )

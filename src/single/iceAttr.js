@@ -1,11 +1,6 @@
 export default {
-	module 			: "ice-module",
-	src 			: "ice-src",
-	cache 			: "ice-cache",
-	base 			: "ice-base",
+	title : ":title",
 
-	href			: "href",
-	action 			: "action",
-
-	title 			: ":title",
+	href : "href",
+	action : "action"
 };

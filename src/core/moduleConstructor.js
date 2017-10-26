@@ -142,28 +142,24 @@ export default {
     },
 
     /**
-        initLifeCycle ( module: Object, lifeCycle: Array, vm: Object )
+        initLifeCycle ( component: Object )
     
         Return Type:
         void
     
         Description:
-        初始化模块或组件对象的生命周期
+        初始化组件对象的生命周期
     
         URL doc:
         http://icejs.org/######
     */
-	initLifeCycle ( module, lifeCycle, vm ) {
-        const
-            lifeCycleContainer = {};
+	initLifeCycle ( component ) {
+        const lifeCycle = [ "update", "unmount" ];
             
         foreach ( lifeCycle, cycleItem => {
-            lifeCycleContainer [ cycleItem ] = vm [ cycleItem ] || noop;
-            module [ cycleItem ] = () => {
-                lifeCycleContainer [ cycleItem ].call ( module );
+            component [ cycleItem ] = () => {
+                ( component [ cycleItem ] || noop ).apply ( component, cache.getDependentPlugib ( component [ cycleItem ] || noop ) );
             }
-            
-            delete vm [ cycleItem ];
         } );
     },
 

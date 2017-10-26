@@ -147,13 +147,6 @@ extend ( Tmpl.prototype, {
                     	vnode.isComponent = true;
         			}
                     
-                    // 将子模块元素保存到页面结构体中以便下次直接获取使用
-                    const moduleName = vnode.attr ( iceAttr.module );
-                    if ( Structure.currentPage && type ( moduleName ) === "string" ) {
-                        const currentStructure = Structure.currentPage.getCurrentRender ();
-                        currentStructure.saveSubModuleNode ( vnode );
-                    }
-                    
                     foreach ( vnode.attrs, ( attr, name, attrs ) => {
                         directive = rattr.exec ( name );
                         if ( directive ) {

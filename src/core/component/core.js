@@ -42,8 +42,8 @@ extend ( Component.prototype, {
 
         this.state = componentVm;
     	
-    	// 4、数初始化生命周期
-		// moduleConstructor.initLifeCycle ( this, lifeCycle, componentVm );
+    	// 初始化生命周期
+		moduleConstructor.initLifeCycle ( this, lifeCycle, componentVm );
 
     	/////////////////////
     	// 转换组件代表元素为实际的组件元素节点
@@ -92,7 +92,8 @@ extend ( Component.prototype, {
         	
     		tmpl.mount ( vfragment, false, Tmpl.defineScoped ( subElements ) );
 
-    		// 保存组件结构
+    		// 保存组件对象和结构
+        	componentVNode.component = this;
         	componentVNode.componentNodes = vfragment.children;
 
     		// 调用mount钩子函数

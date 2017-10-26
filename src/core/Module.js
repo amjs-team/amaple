@@ -5,7 +5,6 @@ import slice from "../var/slice";
 import cache from "../cache/core";
 import { newClassCheck } from "../Class.js";
 // import ModuleCaller from "./ModuleCaller";
-import moduleConstructor from "./moduleConstructor";
 import ViewModel from "./ViewModel";
 import Tmpl from "./tmpl/Tmpl";
 import iceAttr from "../single/iceAttr";
@@ -44,7 +43,35 @@ function findParentVm ( elem ) {
 }
 
 /**
-	Module ( moduleName: String|DOMObject, vmData: Object )
+    initModuleLifeCycle ( module: Object, lifeCycle: Array, vm: Object )
+    
+    Return Type:
+    void
+    
+    Description:
+    初始化模块对象的生命周期
+    
+    URL doc:
+    http://icejs.org/######
+*/
+function initModuleLifeCycle ( module, vm ) {
+    const
+    	// Module生命周期
+		lifeCycle = [ "queryChanged", "paramChanged", "unmount" ],
+        lifeCycleContainer = {};
+            
+        foreach ( lifeCycle, cycleItem => {
+            lifeCycleContainer [ cycleItem ] = vm [ cycleItem ] || noop;
+            module [ cycleItem ] = () => {
+                lifeCycleContainer [ cycleItem ].apply ( module, cache.getDependentPlugib ( lifeCycleContainer [ cycleItem ] ) );
+            }
+            
+            delete vm [ cycleItem ];
+        } );
+    },
+
+/**
+	Module ( moduleName: String|DOMObject|Object, vmData: Object )
 
 	Return Type:
 	Object
@@ -53,6 +80,9 @@ function findParentVm ( elem ) {
 	Description:
 	创建模块对象初始化模块
     初始化包括转换监听对象，动态绑定数据到视图层
+    module可传入：
+	1、module属性名，普通模式时的模块名，此方法将会根据模块名获取dom元素
+	2、实际dom和fragment，此方法将直接解析此元素
 
 	URL doc:
 	http://icejs.org/######
@@ -75,10 +105,12 @@ export default function Module ( module, vmData = { init: function () { return {
   	
   	/////////////////////////////////
   	/////////////////////////////////
+	initModuleLifeCycle ( this, vmData );
 
 	let parent;
 	if ( Structure.currentPage ) {
-
+		
+    	// 只有单页模式时Structure.currentPage会有值
 		// 单页模式时，使用Structure.currentPage.getCurrentParentVm()获取父级的vm
 		const currentRender = Structure.currentPage.getCurrentRender ();
     	parent = currentRender.parent && currentRender.parent.module.vm;
@@ -104,7 +136,7 @@ export default function Module ( module, vmData = { init: function () { return {
 		moduleElem.__module__ = this;
 	}
     this.parent = parent;
-  
+	
 	moduleElem = VNode.domToVNode ( moduleElem );
     const
     	moduleElemBackup = moduleElem.clone (),
@@ -140,15 +172,15 @@ export default function Module ( module, vmData = { init: function () { return {
 
 	// 解析模板，挂载数据
 	// 如果forceMount为true则强制挂载moduleElem
-	// 如果parentVm为对象时表示此模块不是最上层模块，不需挂载
-	tmpl.mount ( moduleElem, !parent );
+	// 单页模式下未挂载的模块元素将会在ModuleLoader.load完成挂载
+	// 普通模式下，如果parent为对象时表示此模块不是最上层模块，不需挂载
+	tmpl.mount ( moduleElem, Structure.currentPage ? false : !parent );
+	
+	moduleElem.render ();
 	
 	// 对比新旧vnode计算出差异
 	// 并根据差异更新到实际dom中
 	moduleElem.diff ( moduleElemBackup ).patch ();
-	
-	const lifeCycle = [ "mount", "queryChanged", "paramChanged", "unmount" ];
-	moduleConstructor.initLifeCycle ( this, lifeCycle, vm );
 	
 	// 调用apply方法
 	( vmData.apply || noop ).apply ( this, cache.getDependentPlugin ( vmData.apply || noop ) );

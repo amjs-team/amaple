@@ -13,6 +13,7 @@ import event from "../event/core";
 import Module from "../core/Module";
 import Router from "../router/core";
 import Structure from "../core/tmpl/Structure";
+import Tmpl from "../core/tmpl/Tmpl";
 import VNode from "../core/vnode/VNode";
 
 
@@ -189,7 +190,10 @@ extend ( ModuleLoader.prototype, {
 
 		        // 如果结构中没有模块节点则查找DOM树获取节点
 		        if ( !route.moduleNode ) {
-		            const moduleNode = VNode.domToVNode ( query ( `[${ iceAttr.module }=${ route.name === "default" ? "''" : route.name }]`, route.parent && route.parent.moduleNode.node || undefined ) );
+		            const 
+                    	moduleNode = VNode.domToVNode ( query ( `[${ iceAttr.module }=${ route.name === "default" ? "''" : route.name }]`, route.parent && route.parent.moduleNode.node || undefined ) ),
+                    	tmpl = new Tmpl ();
+                	tmpl.mount ( moduleNode, true );
 
 		            if ( moduleNode ) {
 		                route.moduleNode = moduleNode;
@@ -352,8 +356,10 @@ extend ( ModuleLoader, {
 				// 将请求的html替换到module模块中
 	            const updateFn = compileModule ( moduleString, moduleNode.attr ( Module.identifier ) );
 
-	            // 缓存模块更新函数
-	            cache.pushModule ( path, { updateFn, time : timestamp () } );
+	            // 满足缓存条件时缓存模块更新函数
+            	if ( moduleConfig.cache === true && moduleNode.cache !== false ) {
+	            	cache.pushModule ( path, { updateFn, time : timestamp () } );
+                }
 	        	
 	        	this.saveModuleUpdateFn ( () => {
 	            	moduleNode.emit ( MODULE_RESPONSE );

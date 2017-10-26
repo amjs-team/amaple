@@ -19,8 +19,24 @@ extend ( NodePatcher.prototype, {
 		URL doc:
 		http://icejs.org/######
 	*/
-	reorderNode ( item, index ) {
+	addNode ( item, index ) {
 		this.patches.push ( { type : NodePatcher.NODE_REORDER, item, index } );
+	},
+	
+	/**
+		moveNode ( item: Object, index: Number )
+	
+		Return Type:
+		void
+	
+		Description:
+		记录需增加或移动节点的信息
+	
+		URL doc:
+		http://icejs.org/######
+	*/
+	moveNode ( item, index ) {
+		this.patches.push ( { type : NodePatcher.NODE_REORDER, item, index, isMove : true } );
 	},
 
 	/**
@@ -67,8 +83,8 @@ extend ( NodePatcher.prototype, {
 		URL doc:
 		http://icejs.org/######
 	*/
-	replaceTextNode ( item, val ) {
-		this.patches.push ( { type : NodePatcher.TEXTNODE, item, val } );
+	replaceTextNode ( item, replaceNode ) {
+		this.patches.push ( { type : NodePatcher.TEXTNODE, item, replaceNode } );
 	},
 
 	/**
@@ -144,25 +160,84 @@ extend ( NodePatcher.prototype, {
                 	
                 	break;
                 case NodePatcher.TEXTNODE :
-                	patchItem.item.node.nodeValue = val;
+                	patchItem.replaceNode.node.nodeValue = patchItem.item.node.nodeValue;
+                	patchItem.item.node = patchItem.replaceNode.node;
             	
                 	break;
                 case NodePatcher.NODE_REORDER :
-                	p = patchItem.item.node.parentNode;
-                	if ( patchItem.index < p.childNodes.length - 1 ) {
-            			p.insertBefore ( patchItem.item.node, p.childNodes.item ( patchItem.index + 1 ) );
+                	p = patchItem.item.parent.node;
+              		if ( patchItem.item.isComponent ) {
+                    	const f = document.createDocumentFragment ();
+                    	foreach ( patchItem.item.componentNodes, vnode => {
+                        	f.appendChild ( vnode.node );
+                        } );
+                    	
+                    	if ( patchItem.index < p.childNodes.length - 1 ) {
+            				p.insertBefore ( f, p.childNodes.item ( patchItem.index + 1 ) );
+                    	}
+                		else {
+                    		p.appendChild ( f );
+                    	}
+                    	
+                    	if ( patchItem.isMove ) {
+                        	patchItem.item.component.update ();
+                        }
                     }
                 	else {
-                    	p.appendChild ( patchItem.item.node );
+                		if ( patchItem.index < p.childNodes.length - 1 ) {
+            				p.insertBefore ( patchItem.item.node, p.childNodes.item ( patchItem.index + 1 ) );
+                    	}
+                		else {
+                    		p.appendChild ( patchItem.item.node );
+                    	}
                     }
                 	
                 	break;
                 case NodePatcher.NODE_REMOVE :
-                	patchItem.item.node.parentNode.removeChild ( patchItem.item.node );
-            	
+                	if ( patchItem.item.isComponent ) {
+                    	foreach ( patchItem.item.componentNodes, vnode => {
+                        	vnode.parent.node.removeChild ( vnode.node );
+                        } );
+                    	
+                    	patchItem.item.component.unmount ();
+                    }
+                	else {
+                		patchItem.item.node.parentNode.removeChild ( patchItem.item.node );
+                    }
+                	
                 	break;
                 case NodePatcher.NODE_REPLACE :
-            		patchItem.replaceNode.parentNode.replaceChild ( patchItem.item.node, patchItem.replaceNode );
+                	p = patchItem.replaceNode.node.parentNode;
+                	if ( patchItem.replaceNode.isComponent ) {
+                    	let node;
+                    	if ( patchItem.item.isComponent ) {
+                        	node = document.createDocumentFragment ();
+                        	foreach ( patchItem.item.componentNodes, vnode => {
+                            	node.appendChild ( vnode.node );
+                            } );
+                        }
+                    	else {
+                        	node = patchItem.item.node;
+                        }
+                    	
+                    	p.insertBefore ( node, patchItem.replaceNode.componentNodes [ 0 ].node );
+                    	foreach ( patchItem.replaceNode.componentNodes, vnode => {
+                        	p.removeChild ( vnode.node );
+                        } );
+                    	
+                    	patchItem.replaceNode.component.unmount ();
+                    }
+                	else {
+                    	let node;
+                    	if ( patchItem.item.isComponent ) {
+                        	node = document.createDocumentFragment ();
+                        	foreach ( patchItem.item.componentNodes, vnode => {
+                            	node.appendChild ( vnode.node );
+                            } );
+                        }
+                    	
+            			p.replaceChild ( node, patchItem.replaceNode.node );
+                    }
                 	
                 	break;
             }
@@ -175,7 +250,6 @@ extend ( NodePatcher, {
 	// 虚拟DOM差异标识
 	// 属性差异标识
     ATTR_REORDER : 0,
-
     ATTR_REMOVE : 1,
 
     // 文本节点差异标识

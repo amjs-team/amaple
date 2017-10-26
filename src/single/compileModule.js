@@ -112,7 +112,7 @@ function parseStyle ( moduleString, identifier, parses ) {
 			styleMatch [ 0 ] = styleMatch [ 0 ].replace ( styleMatch [ 1 ], placeholder );
 
 			// 为每个样式添加模块前缀以达到控制范围的作用
-			parses.style = parses.style.replace ( raddScoped, ( match, rep ) => match.replace (rep, rnoscoped.test ( rep ) ? rep : `[${ Module.identifier }=${ identifier }] ` + rep ) );
+			parses.style = parses.style.replace ( raddScoped, ( match, rep ) => match.replace ( rep, rnoscoped.test ( rep ) ? rep : `[${ Module.identifier }=${ identifier }] ` + rep ) );
 
 			parses.style = styleMatch [ 0 ].replace ( placeholder, parses.style );
         }
@@ -243,7 +243,7 @@ export default function compileModule ( moduleString, identifier ) {
 			.ifNot ( "module:script", "<Module>内的<script>为必须子元素，它的内部js代码用于初始化模块的页面布局" )
 			.do ();
 
-		const buildView = `moduleNode.html(VNode.domToVNode(view))`;
+		const buildView = `moduleNode.html(VNode.domToVNode(view));`;
 
 		////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////

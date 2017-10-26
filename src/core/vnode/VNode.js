@@ -424,7 +424,7 @@ extend ( VNode.prototype, {
         	if ( this.nodeValue !== oldVNode.nodeValue ) {
             	
             	// 文本节点内容不同时更新文本内容
-                nodePatcher.replaceTextNode ( oldVNode, this.nodeValue );
+                nodePatcher.replaceTextNode ( this, oldVNode );
             }
         }
     	else if ( this.nodeName === oldVNode.nodeName && this.key === oldVNode.key ) {
@@ -444,7 +444,7 @@ extend ( VNode.prototype, {
 		else {
         	
         	// 节点不同，直接替换
-            nodePatcher.replaceNode ( this, oldVNode.node );
+            nodePatcher.replaceNode ( this, oldVNode );
         }
 
         return nodePatcher;
@@ -485,6 +485,18 @@ extend ( VNode, {
         http://icejs.org/######
     */
 	domToVNode ( dom ) {
+    	if ( type ( dom ) === "string" ) {
+        	const 
+            	d = document.createElement ( "div" ),
+                f = document.createDocumentFragment ();
+        	
+        	d.innerHTML = dom;
+        	foreach ( slice.call ( d.childNodes ), childNode => {
+            	f.appendChild ( childNode );
+            } );
+        	
+        	dom = f;
+        }
     	
         let vnode;
         switch ( dom.nodeType ) {
