@@ -7,30 +7,98 @@ export default function NodePatcher () {
 
 extend ( NodePatcher.prototype, {
 
-	addNode ( item, index ) {
-		this.patches.push ( { type : NodePatcher.NODE_ADD, item, index } );
+	/**
+		reorderNode ( item: Object, index: Number )
+	
+		Return Type:
+		void
+	
+		Description:
+		记录需增加或移动节点的信息
+	
+		URL doc:
+		http://icejs.org/######
+	*/
+	reorderNode ( item, index ) {
+		this.patches.push ( { type : NodePatcher.NODE_REORDER, item, index } );
 	},
 
-	moveNode ( item, from, to ) {
-		this.patches.push ( { type : NodePatcher.NODE_MOVE, item, from, to } );
-	},
-
+	/**
+		replaceNode ( item: Object, replaceNode: Object )
+	
+		Return Type:
+		void
+	
+		Description:
+		记录替换节点的信息
+	
+		URL doc:
+		http://icejs.org/######
+	*/
 	replaceNode ( item, replaceNode ) {
 		this.patches.push ( { type : NodePatcher.NODE_REPLACE, item, replaceNode } );
 	},
 
-	removeNode ( item, index ) {
-		this.patches.push ( { type : NodePatcher.NODE_REMOVE, item, index } );
+	/**
+		removeNode ( item: Object )
+	
+		Return Type:
+		void
+	
+		Description:
+		记录移除节点的信息
+	
+		URL doc:
+		http://icejs.org/######
+	*/
+	removeNode ( item ) {
+		this.patches.push ( { type : NodePatcher.NODE_REMOVE, item } );
 	},
 
+	/**
+		replaceTextNode ( item: Object, val: String )
+	
+		Return Type:
+		void
+	
+		Description:
+		记录修改文本节点的信息
+	
+		URL doc:
+		http://icejs.org/######
+	*/
 	replaceTextNode ( item, val ) {
 		this.patches.push ( { type : NodePatcher.TEXTNODE, item, val } );
 	},
 
+	/**
+		reorderAttr ( item: Object, name: String, val: String )
+	
+		Return Type:
+		void
+	
+		Description:
+		记录重设或增加节点属性的信息
+	
+		URL doc:
+		http://icejs.org/######
+	*/
 	reorderAttr ( item, name, val ) {
 		this.patches.push ( { type : NodePatcher.ATTR_REORDER, item, name, val } );
 	},
 
+	/**
+		removeAttr ( item: Object, name: String )
+	
+		Return Type:
+		void
+	
+		Description:
+		记录移除节点属性的记录
+	
+		URL doc:
+		http://icejs.org/######
+	*/
 	removeAttr ( item, name ) {
 		this.patches.push ( { type : NodePatcher.ATTR_REMOVE, item, name } );
 	},
@@ -64,6 +132,7 @@ extend ( NodePatcher.prototype, {
 		http://icejs.org/######
 	*/
 	patch () {
+		let p;
 		foreach ( this.patches, patchItem => {
         	switch ( patchItem.type ) {
               	case NodePatcher.ATTR_REORDER :
@@ -78,25 +147,15 @@ extend ( NodePatcher.prototype, {
                 	patchItem.item.node.nodeValue = val;
             	
                 	break;
-                case NodePatcher.NODE_MOVE :
-                	const p = patchItem.item.node.parentNode;
-                	if ( patchItem.to < p.childNodes.length - 1 ) {
-            			p.insertBefore ( patchItem.item.node, p.childNodes.item ( patchItem.to + 1 ) );
-                    }
-                	else {
-                    	p.appendChild ( patchItem.item.node );
-                    }
-                	
-                	break;
-                case NodePatcher.NODE_ADD :
-                	const p = patchItem.item.node.parentNode;
+                case NodePatcher.NODE_REORDER :
+                	p = patchItem.item.node.parentNode;
                 	if ( patchItem.index < p.childNodes.length - 1 ) {
             			p.insertBefore ( patchItem.item.node, p.childNodes.item ( patchItem.index + 1 ) );
                     }
                 	else {
                     	p.appendChild ( patchItem.item.node );
                     }
-            	
+                	
                 	break;
                 case NodePatcher.NODE_REMOVE :
                 	patchItem.item.node.parentNode.removeChild ( patchItem.item.node );
@@ -122,15 +181,12 @@ extend ( NodePatcher, {
     // 文本节点差异标识
     TEXTNODE : 2,
 
-    // 节点移动标识
-    NODE_MOVE : 3,
-
-    // 节点增加标识
-    NODE_ADD : 4,
+    // 节点增加或移动标识
+    NODE_REORDER : 3,
 
     // 节点移除标识
-    NODE_REMOVE : 5,
+    NODE_REMOVE : 4,
 
     // 节点替换标识
-    NODE_REPLACE : 6
+    NODE_REPLACE : 5
 } );

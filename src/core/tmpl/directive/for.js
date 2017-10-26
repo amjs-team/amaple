@@ -8,11 +8,13 @@ function createVNode ( arg, key, watcher ) {
     const 
         f = VFragment (),
         elem = watcher.node,
+        itemNode = elem.clone (),
 
         // 定义范围变量
-        scopedDefinition [ watcher.item ] = arg,
-        itemNode = elem.clone ();
-		itemNode.key = guid ();
+        scopedDefinition = {};
+
+    scopedDefinition [ watcher.item ] = arg;
+	itemNode.key = guid ();
     if ( watcher.key ) {
         scopedDefinition [ watcher.key ] = key;
     }
@@ -119,7 +121,7 @@ Tmpl.defineDirective ( {
                         	val,
                         } );
             			
-            			break;
+            			return false;
                     }
                 } );
     			
@@ -136,8 +138,7 @@ Tmpl.defineDirective ( {
             } );
 			
         	let el,
-         		p = el.parent,
-         		removes = [];
+         		p = el.parent;
         	while ( ( el = this.startNode.nextSibling () ) !== this.endNode ) {
         		p.removeChild ( el );
             }

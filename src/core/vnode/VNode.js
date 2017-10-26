@@ -57,7 +57,7 @@ export function changeParent ( childVNode, parent ) {
 }
 
 /**
-    VNode ( nodeType: Number, key: Number, parent: Object, node: DOMObject )
+    VNode ( nodeType: Number, parent: Object, node: DOMObject )
 
     Return Type:
     void
@@ -68,11 +68,10 @@ export function changeParent ( childVNode, parent ) {
     URL doc:
     http://icejs.org/######
 */
-export default function VNode ( nodeType, key, parent, node ) {
+export default function VNode ( nodeType, parent, node ) {
 	newClassCheck ( this, VNode );
 	
 	this.nodeType = nodeType;
-	this.key = key;
 	this.parent = parent || null;
 	this.node = node;
 }
@@ -364,11 +363,13 @@ extend ( VNode.prototype, {
         			attrs [ name ] = attr;
         		} );
 
-                vnode = VElement ( this.nodeName, attrs, this.key, null, null, this.node, this.isComponent );
+                vnode = VElement ( this.nodeName, attrs, null, null, this.node, this.isComponent );
+                vnode.key = this.key;
             	
             	break;
         	case 3:
-            	vnode = VTextNode ( this.nodeValue, this.key, null, this.node );
+            	vnode = VTextNode ( this.nodeValue, null, this.node );
+                vnode.key = this.key;
             	
             	break;
         	case 11:
@@ -418,11 +419,8 @@ extend ( VNode.prototype, {
     */
     diff ( oldVNode ) {
 
-        const 
-            nodePatcher = new NodePatcher (), 
-            oldVNodeCopy = oldVNode.concat ();
-
-    	if ( this.nodeType === 3 && oldVNode === 3 ) {
+        const nodePatcher = new NodePatcher ();
+    	if ( this.nodeType === 3 && oldVNode.nodeType === 3 ) {
         	if ( this.nodeValue !== oldVNode.nodeValue ) {
             	
             	// 文本节点内容不同时更新文本内容
@@ -448,6 +446,8 @@ extend ( VNode.prototype, {
         	// 节点不同，直接替换
             nodePatcher.replaceNode ( this, oldVNode.node );
         }
+
+        return nodePatcher;
     },
 
     /**
@@ -494,11 +494,11 @@ extend ( VNode, {
                     attrs [ attr.name ] = attr.nodeValue;
                 } );
 
-                vnode = VElement ( dom.nodeName, attrs, undefined, null, null, dom );
+                vnode = VElement ( dom.nodeName, attrs, null, null, dom );
 
                 break;
             case 3:
-                vnode = VTextNode ( dom.nodeValue, undefined, null, dom );
+                vnode = VTextNode ( dom.nodeValue, null, dom );
 
                 break;
             case 11:

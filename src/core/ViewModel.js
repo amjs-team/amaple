@@ -124,7 +124,7 @@ function initArray ( array, subs, context ) {
         		const res = nativeMethod.apply ( this, args );
               	
               	// 更新视图
-				subs.notify ( { method, args } );
+				subs.notify ( this );
               	
               	return res;
         	},

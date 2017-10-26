@@ -8,17 +8,16 @@ describe ( "vnode functions => ", () => {
 
 	let vf, vnode1, vtext;
 	beforeEach ( () => {
-		vnode1 = VElement ( "div", { id: "the-div", "ice-module": "root" }, 1 ),
-		vtext = VTextNode ( "hello icejs", 2 );
+		vnode1 = VElement ( "div", { id: "the-div", "ice-module": "root" } ),
+		vtext = VTextNode ( "hello icejs" );
 
 		vf = VFragment ( [ vnode1, vtext ] );
 	} );
 
 	it ( "Call the function 'appendChild'", () => {
-		vf.appendChild ( VElement ( "div", { id: "the-div", "ice-module": "root2" }, 3 ) );
+		vf.appendChild ( VElement ( "div", { id: "the-div", "ice-module": "root2" } ) );
 
 		expect ( vf.children [ vf.children.length - 1 ].nodeName ).toBe ( "DIV" );
-		expect ( vf.children [ vf.children.length - 1 ].key ).toBe ( 3 );
 		expect ( vf.children [ vf.children.length - 1 ].parent ).toBe ( vf );
 	} );
 
@@ -27,23 +26,22 @@ describe ( "vnode functions => ", () => {
 
 		expect ( vf.children.length ).toBe ( 1 );
 		expect ( vf.children [ vf.children.length - 1 ].nodeValue ).toBe ( "hello icejs" );
-		expect ( vf.children [ vf.children.length - 1 ].key ).toBe ( 2 );
-		expect ( vnode1.parent ).toBe ( null );
+		expect ( vnode1.parent ).toBeNull ();
 	} );
 
 	it ( "Call the function 'replaceChild'", () => {
-		const vnode2 = VElement ( "div", { id: "the-div", "ice-module": "root2" }, 3 );
+		const vnode2 = VElement ( "div", { id: "the-div", "ice-module": "root2" } );
 
 		vf.replaceChild ( vnode2, vnode1 );
 
 		expect ( vf.children.length ).toBe ( 2 );
 		expect ( vf.children [ 0 ] ).toBe ( vnode2 );
 		expect ( vf.children [ 0 ].parent ).toBe ( vf );
-		expect ( vnode1.parent ).toBe ( null );
+		expect ( vnode1.parent ).toBeNull ();
 	} );
 
 	it ( "Call the function 'insertBefore'", () => {
-		const vnode2 = VElement ( "div", { id: "the-div", "ice-module": "root2" }, 3 );
+		const vnode2 = VElement ( "div", { id: "the-div", "ice-module": "root2" } );
 
 		vf.insertBefore ( vnode2, vnode1 );
 
@@ -54,15 +52,15 @@ describe ( "vnode functions => ", () => {
 	} );
 
 	it ( "Call the function 'html'", () => {
-		const vnode2 = VElement ( "div", { id: "the-div", "ice-module": "root2" }, 3 );
+		const vnode2 = VElement ( "div", { id: "the-div", "ice-module": "root2" } );
 
 		vf.html ( vnode2 );
 
 		expect ( vf.children.length ).toBe ( 1 );
 		expect ( vf.children [ 0 ] ).toBe ( vnode2 );
 		expect ( vf.children [ 0 ].parent ).toBe ( vf );
-		expect ( vnode1.parent ).toBe ( null );
-		expect ( vtext.parent ).toBe ( null );
+		expect ( vnode1.parent ).toBeNull ();
+		expect ( vtext.parent ).toBeNull ();
 	} );
 
 	it ( "Call the function 'nextSibling'", () => {
@@ -103,7 +101,7 @@ describe ( "vnode functions => ", () => {
 		expect ( fragment.childNodes.item ( 1 ) ).toBe ( vf.children [ 1 ].node );
 
 
-		vnode1.appendChild ( VTextNode ( "hello icejs2", 4 ) );
+		vnode1.appendChild ( VTextNode ( "hello icejs2" ) );
 		fragment = vf.render ();
 
 		expect ( fragment.nodeType ).toBe ( 11 );
@@ -122,7 +120,7 @@ describe ( "vnode functions => ", () => {
 	} );
 
 	it ( "Call the function 'clone'", () => {
-		vnode1.appendChild ( VTextNode ( "hello icejs2", 4 ) );
+		vnode1.appendChild ( VTextNode ( "hello icejs2" ) );
 
 		const vf2 = vf.clone ();
 

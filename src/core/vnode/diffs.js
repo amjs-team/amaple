@@ -27,6 +27,19 @@ export function diffAttrs ( newVNode, oldVNode, nodePatcher ) {
     } );
 }
 
+/**
+    indexOf ( children: Array, searchNode: Object )
+
+    Return Type:
+    Number
+    查找的node在children数组中的位置，如果没有找打则返回-1
+
+    Description:
+    获取查找的node在children数组中的位置，如果没有找打则返回-1
+
+    URL doc:
+    http://icejs.org/######
+*/
 function indexOf ( children, searchNode ) {
 	let index = -1;
     foreach ( children, ( child, i ) => {
@@ -53,50 +66,130 @@ function indexOf ( children, searchNode ) {
 */
 export function diffChildren ( newChildren, oldChildren, nodePatcher ) {
 
-    const oldChildrenCopy = oldChildren.concat ();
-    let oldIndex = 0,
-        moveItems = [],
-        isFind;
-        i = 0;
+    let keyType = newChildren [ 0 ] && newChildren [ 0 ].key === undefined ? 0 : 1,
+        obj = { keyType, children : [] };
 
-	foreach ( newChildren, ( newChild, i ) => {
-		if ( indexOf ( oldChildrenCopy, newChild ) === -1 ) {
-			nodePatcher.addNode ( newChild, i );
+    const 
+        newNodeClassification = [ obj ],
+        oldNodeClassification = [];
+    foreach ( newChildren, newChild => {
 
-            oldChildrenCopy.splice ( i, 0, newChild );
+        // key为undefined的分类
+        if ( keyType === 0 ) {
+            if ( newChild.key === undefined ) {
+                obj.children.push ( newChild );
+            }
+            else {
+                keyType = 1;
+                obj = { keyType, children : [ newChild ] };
+                newNodeClassification.push ( obj );
+            }
         }
-    } );
-	
-    while ( oldChildrenCopy [ i ] ) {
-        if ( indexOf ( newChildren, oldChildrenCopy [ i ] ) ) {
-			nodePatcher.removeNode ( oldChildrenCopy [ i ], i );
-            oldChildrenCopy.splice ( i, 1 );
-        }
-        else {
-            i ++;
-        }
-    }
+        else if ( keyType === 1 ) {
 
-    foreach ( newChildren, ( newChild, i ) => {
-        oldIndex = indexOf ( oldChildrenCopy, newChild );
-        if ( oldIndex > -1 ) {
-        	nodePatcher.concat ( newChild.diff ( oldChildrenCopy [ oldIndex ] ) );
-        	if ( oldIndex !== i ) {
-            	moveItems.push ( {
-                	item : newChild,
-                	from : oldIndex,
-                	to : i,
-                	list : oldChildrenCopy.concat ()
-				} );
-
-            	oldChildrenCopy.splice ( oldIndex, 1 );
-            	oldChildrenCopy.splice ( i, 0, newChild );
+            // key为undefined的分类
+            if ( newChild.key !== undefined ) {
+                obj.children.push ( newChild );
+            }
+            else {
+                keyType = 0;
+                obj = { keyType, children : [ newChild ] };
+                newNodeClassification.push ( obj );
             }
         }
     } );
-	
-	foreach ( optimizeSteps ( moveItems ), move => { 
-    	nodePatcher.moveNode ( move.item, move.from, move.to );
+
+    keyType = oldChildren [ 0 ] && oldChildren [ 0 ].key === undefined ? 0 : 1;
+    obj = { keyType, children : [] };
+    oldNodeClassification.push ( obj );
+    foreach ( oldChildren, oldChild => {
+
+        // key为undefined的分类
+        if ( keyType === 0 ) {
+            if ( oldChild.key === undefined ) {
+                obj.children.push ( oldChild );
+            }
+            else {
+                keyType = 1;
+                obj = { keyType, children : [ oldChild ] };
+                oldNodeClassification.push ( obj );
+            }
+        }
+        else if ( keyType === 1 ) {
+
+            // key为undefined的分类
+            if ( oldChild.key !== undefined ) {
+                obj.children.push ( oldChild );
+            }
+            else {
+                keyType = 0;
+                obj = { keyType, children : [ oldChild ] };
+                oldNodeClassification.push ( obj );
+            }
+        }
+    } );
+
+
+    // 对每个分类的新旧节点进行对比
+    let moveItems, oldIndex, oldChildrenCopy,
+        offset = 0;
+    foreach ( newNodeClassification,  ( newItem, i ) => {
+        if ( newItem.keyType === 0 ) {
+
+            // key为undefined时直接对比同位置的两个节点
+            foreach ( newItem.children, ( newChild, j ) => {
+                nodePatcher.concat ( newChild.diff ( oldNodeClassification [ i ].children [ j ] ) );
+            } );
+        }
+        else if ( newItem.keyType === 1 ) {
+
+            // key不为undefined时需对比节点增加、移除及移动
+            oldChildrenCopy = oldNodeClassification [ i ].children;
+            foreach ( newItem.children, ( newChild, j ) => {
+                if ( indexOf ( oldChildrenCopy, newChild ) === -1 ) {
+                    nodePatcher.reorderNode ( newChild, j + offset );
+
+                    oldChildrenCopy.splice ( j, 0, newChild );
+                }
+            } );
+            
+            let k = 0;
+            while ( oldChildrenCopy [ k ] ) {
+                if ( indexOf ( newItem.children, oldChildrenCopy [ k ] ) === -1 ) {
+                    nodePatcher.removeNode ( oldChildrenCopy [ k ] );
+                    oldChildrenCopy.splice ( k, 1 );
+                }
+                else {
+                    k ++;
+                }
+            }
+
+            moveItems = [];
+            oldIndex = 0;
+            foreach ( newItem.children, ( newChild, j ) => {
+                oldIndex = indexOf ( oldChildrenCopy, newChild );
+                if ( oldIndex > -1 ) {
+                    nodePatcher.concat ( newChild.diff ( oldChildrenCopy [ oldIndex ] ) );
+                    if ( oldIndex !== j ) {
+                        moveItems.push ( {
+                            item : newChild,
+                            from : oldIndex,
+                            to : j,
+                            list : oldChildrenCopy.concat ()
+                        } );
+
+                        oldChildrenCopy.splice ( oldIndex, 1 );
+                        oldChildrenCopy.splice ( j, 0, newChild );
+                    }
+                }
+            } );
+            
+            foreach ( optimizeSteps ( moveItems ), move => { 
+                nodePatcher.reorderNode ( move.item, move.to + offset );
+            } );
+        }
+
+        offset += newItem.children.length;
     } );
 }
 
