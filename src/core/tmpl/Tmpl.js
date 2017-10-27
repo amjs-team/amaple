@@ -46,7 +46,7 @@ function preTreat ( vnode ) {
                 nextSib.attr ( _elseif, null );
                 parent.removeChild ( nextSib );
             }
-            else if ( nextSib.attr ( _else ) ) {
+            else if ( nextSib.attrs.hasOwnProperty ( _else ) ) {
                 vnode.conditions.push ( "true" );
                 vnode.conditionElems.push ( nextSib );
                 nextSib.attr ( _else, null );
@@ -61,7 +61,9 @@ function preTreat ( vnode ) {
 
     foreach ( vnode.conditionElems || [], nextSib => {
         if ( nextSib.nodeName === "TEMPLATE" ) {
-            nextSib.templateNodes = nextSib.children;
+
+            // 需拷贝一份数组，直接引用会在后续对children的操作就相当于操作templateNodes
+            nextSib.templateNodes = nextSib.children.concat ();
         }
     } );
     
@@ -99,7 +101,7 @@ export default function Tmpl ( module, components ) {
 extend ( Tmpl.prototype, {
 
     /**
-        mount ( vnode: Object, mountModule: Boolean, isRoot?: Boolean, scoped?: Object )
+        mount ( vnode: Object, mountModule: Boolean, scoped?: Object )
     
         Return Type:
         void
@@ -110,8 +112,9 @@ extend ( Tmpl.prototype, {
         URL doc:
         http://icejs.org/######
     */
-	mount ( vnode, mountModule, scoped, isRoot = true ) {
+	mount ( vnode, mountModule, scoped ) {
         const 
+            isRoot = !vnode.parent,
             rattr = /^:([\$\w]+)$/;
 
 

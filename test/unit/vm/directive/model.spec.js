@@ -1,105 +1,136 @@
 import Tmpl from "core/tmpl/Tmpl";
 import ViewModel from "core/ViewModel";
 import event from "src/event/core";
+import VElement from "core/vnode/VElement";
+import VTextNode from "core/vnode/VTextNode";
 
-xdescribe ( "directive model => ", () => {
+describe ( "directive model => ", () => {
 	let d;
 	
 	beforeEach ( () => {
-    	d = document.createElement ( "div" );
+    	d = VElement ( "div" );
     } );
 	
 	it ( "directive :model will mount in text input node", () => {
-        d.innerHTML = '<input type="text" :model="text" />';
+        d.appendChild ( VElement ( "input", { type: "text", ":model": "text" } ) );
+
         let vm = new ViewModel ( {
                 text : "hello icejs"
             } ),
-            t = new Tmpl ( vm );
-        t.mount ( d, true, true );
-    	expect ( d.firstChild.value ).toBe ( "hello icejs" );
+            t = new Tmpl ( { state : vm } );
+        t.mount ( d, true );
+        d.render ();
+
+    	expect ( d.children [ 0 ].attr ( "value" ) ).toBe ( "hello icejs" );
+        expect ( d.children [ 0 ].node.value ).toBe ( "hello icejs" );
       
 		vm.text = "hello world";
-		expect ( d.firstChild.value ).toBe ( "hello world" );
+		expect ( d.children [ 0 ].attr ( "value" ) ).toBe ( "hello world" );
+        //缺少变量修改后应用到实际dom的测试
       
-		d.firstChild.value = "hello icejs2";
-        event.emit ( d.firstChild, "input" );
+		d.children [ 0 ].node.value = "hello icejs2";
+        event.emit ( d.children [ 0 ].node, "input" );
 		expect ( vm.text ).toBe ( "hello icejs2" );
     } );
 	
 	it ( "directive :model will mount in textarea node", () => {
-        d.innerHTML = '<textarea :model="text"></textarea>';
+        d.appendChild ( VElement ( "textarea", { ":model" : "text" } ) );
+
         let vm = new ViewModel ( {
                 text : "hello icejs"
             } ),
-            t = new Tmpl ( vm );
-        t.mount ( d, true, true );
-    	expect ( d.firstChild.value ).toBe ( "hello icejs" );
+            t = new Tmpl ( { state : vm } );
+        t.mount ( d, true );
+        d.render ();
+
+    	expect ( d.children [ 0 ].attr ( "value" ) ).toBe ( "hello icejs" );
+        expect ( d.children [ 0 ].node.value ).toBe ( "hello icejs" );
       
 		vm.text = "hello world";
-		expect ( d.firstChild.value ).toBe ( "hello world" );
+		expect ( d.children [ 0 ].attr ( "value" ) ).toBe ( "hello world" );
+        //缺少变量修改后应用到实际dom的测试
       
-		d.firstChild.value = "hello icejs2";
-        event.emit ( d.firstChild, "input" );
+		d.children [ 0 ].node.value = "hello icejs2";
+        event.emit ( d.children [ 0 ].node, "input" );
 		expect ( vm.text ).toBe ( "hello icejs2" );
     } );
 
 	it ( "directive :model will mount in radio input node", () => {
-        d.innerHTML = '<input type="radio" :model="text" value="a" /><input type="radio" :model="text" value="b" />';
+        d.appendChild ( VElement ( "input", { type : "radio", ":model" : "text", value : "a" } ) );
+        d.appendChild ( VElement ( "input", { type : "radio", ":model" : "text", value : "b" } ) );
+
         let vm = new ViewModel ( {
                 text : "a"
             } ),
-            t = new Tmpl ( vm );
-        t.mount ( d, true, true );
-    	expect ( d.firstChild.checked ).toBe ( true );
-    	expect ( d.firstChild.nextSibling.checked ).toBe ( false );
+            t = new Tmpl ( { state : vm } );
+        t.mount ( d, true );
+        d.render ();
+
+    	expect ( d.children [ 0 ].attr ( "checked" ) ).toBe ( true );
+        expect ( d.children [ 0 ].node.checked ).toBe ( true );
+    	expect ( d.children [ 1 ].attr ( "checked" ) ).toBe ( false );
+        expect ( d.children [ 1 ].node.checked ).toBe ( false );
       
 		vm.text = "b";
-    	expect ( d.firstChild.checked ).toBe ( false );
-		expect ( d.firstChild.nextSibling.checked ).toBe ( true );
+    	expect ( d.children [ 0 ].attr ( "checked" ) ).toBe ( false );
+        expect ( d.children [ 1 ].attr ( "checked" ) ).toBe ( true );
+        //缺少变量修改后应用到实际dom的测试
       
 		vm.text = "c";
-    	expect ( d.firstChild.checked ).toBe ( false );
-		expect ( d.firstChild.nextSibling.checked ).toBe ( false );
+    	expect ( d.children [ 0 ].attr ( "checked" ) ).toBe ( false );
+        expect ( d.children [ 1 ].attr ( "checked" ) ).toBe ( false );
+        //缺少变量修改后应用到实际dom的测试
 
-        event.emit ( d.firstChild, "change" );
+        event.emit ( d.children [ 0 ].node, "change" );
         expect ( vm.text ).toBe ( "a" );
     } );
 	
 	it ( "directive :model will in checkbox input node", () => {
-		d.innerHTML = '<input type="checkbox" :model="arr" value="a" /><input type="checkbox" :model="arr" value="b" /><input type="checkbox" :model="arr" value="c" />';
+        d.appendChild ( VElement ( "input", { type : "checkbox", ":model" : "arr", value : "a" } ) );
+        d.appendChild ( VElement ( "input", { type : "checkbox", ":model" : "arr", value : "b" } ) );
+        d.appendChild ( VElement ( "input", { type : "checkbox", ":model" : "arr", value : "c" } ) );
     	
     	let vm = new ViewModel ( {
                 arr : [ "b" ]
             } ),
-            t = new Tmpl ( vm );
-        t.mount ( d, true, true );
+            t = new Tmpl ( { state : vm } );
+        t.mount ( d, true );
+        d.render ();
     	
-    	expect ( d.childNodes [ 0 ].checked ).toBe ( false );
-    	expect ( d.childNodes [ 1 ].checked ).toBe ( true );
-    	expect ( d.childNodes [ 2 ].checked ).toBe ( false );
+    	expect ( d.children [ 0 ].attr ( "checked" ) ).toBe ( false );
+        expect ( d.children [ 0 ].node.checked ).toBe ( false );
+        expect ( d.children [ 1 ].attr ( "checked" ) ).toBe ( true );
+    	expect ( d.children [ 1 ].node.checked ).toBe ( true );
+        expect ( d.children [ 2 ].attr ( "checked" ) ).toBe ( false );
+    	expect ( d.children [ 2 ].node.checked ).toBe ( false );
     	
-        d.childNodes [ 0 ].checked = true;
-        event.emit ( d.childNodes [ 0 ], "change" );
-    	expect ( d.childNodes [ 0 ].checked ).toBe ( true );
-    	expect ( d.childNodes [ 1 ].checked ).toBe ( true );
-    	expect ( d.childNodes [ 2 ].checked ).toBe ( false );
+        d.children [ 0 ].node.checked = true;
+        event.emit ( d.children [ 0 ].node, "change" );
+    	expect ( d.children [ 0 ].attr ( "checked" ) ).toBe ( true );
+    	expect ( d.children [ 1 ].attr ( "checked" ) ).toBe ( true );
+    	expect ( d.children [ 2 ].attr ( "checked" ) ).toBe ( false );
         expect ( vm.arr.toString () ).toBe ( "b,a" );
+        //缺少变量修改后应用到实际dom的测试
 
-        d.childNodes [ 1 ].checked = false;
-        event.emit ( d.childNodes [ 1 ], "change" );
-        expect ( d.childNodes [ 0 ].checked ).toBe ( true );
-        expect ( d.childNodes [ 1 ].checked ).toBe ( false );
-        expect ( d.childNodes [ 2 ].checked ).toBe ( false );
+        d.children [ 1 ].node.checked = false;
+        event.emit ( d.children [ 1 ].node, "change" );
+        expect ( d.children [ 0 ].attr ( "checked" ) ).toBe ( true );
+        expect ( d.children [ 1 ].attr ( "checked" ) ).toBe ( false );
+        expect ( d.children [ 2 ].attr ( "checked" ) ).toBe ( false );
         expect ( vm.arr.toString () ).toBe ( "a" );
+        //缺少变量修改后应用到实际dom的测试
     
     	vm.arr.push ( "c" );
-    	expect ( d.childNodes [ 0 ].checked ).toBe ( true );
-    	expect ( d.childNodes [ 1 ].checked ).toBe ( false );
-    	expect ( d.childNodes [ 2 ].checked ).toBe ( true );
+    	expect ( d.children [ 0 ].attr ( "checked" ) ).toBe ( true );
+    	expect ( d.children [ 1 ].attr ( "checked" ) ).toBe ( false );
+    	expect ( d.children [ 2 ].attr ( "checked" ) ).toBe ( true );
+        //缺少变量修改后应用到实际dom的测试
 
         vm.arr.shift ();
-        expect ( d.childNodes [ 0 ].checked ).toBe ( false );
-        expect ( d.childNodes [ 1 ].checked ).toBe ( false );
-        expect ( d.childNodes [ 2 ].checked ).toBe ( true );
+        expect ( d.children [ 0 ].attr ( "checked" ) ).toBe ( false );
+        expect ( d.children [ 1 ].attr ( "checked" ) ).toBe ( false );
+        expect ( d.children [ 2 ].attr ( "checked" ) ).toBe ( true );
+        //缺少变量修改后应用到实际dom的测试
+        
     } );
 } );

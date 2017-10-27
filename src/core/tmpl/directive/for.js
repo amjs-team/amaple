@@ -5,19 +5,22 @@ import Tmpl from "../Tmpl";
 import VTextNode from "../../vnode/VTextNode";
 import VFragment from "../../vnode/VFragment";
 
-function createVNode ( arg, key, watcher ) {
+function createVNode ( watcher, arg, index, key ) {
     const 
         f = VFragment (),
         elem = watcher.node,
-        itemNode = elem.clone (),
 
         // 定义范围变量
         scopedDefinition = {};
 
+    let itemNode = elem.clone ();
+
     scopedDefinition [ watcher.item ] = arg;
-	itemNode.key = guid ();
-    if ( watcher.key ) {
-        scopedDefinition [ watcher.key ] = key;
+
+    // 为itemNode指定key，如果没有传入key则生成一个新key
+	itemNode.key = key !== undefined ? key : guid ();
+    if ( watcher.index ) {
+        scopedDefinition [ watcher.index ] = index;
     }
     
     if ( elem.conditionElems ) {
@@ -35,6 +38,7 @@ function createVNode ( arg, key, watcher ) {
 
     // 为遍历克隆的元素挂载数据
     watcher.tmpl.mount ( f, true, Tmpl.defineScoped ( scopedDefinition ) );
+    itemNode = f.children [ 0 ];
 
     return itemNode.nodeName && itemNode.nodeName === "TEMPLATE" ? VFragment ( itemNode.children ) : itemNode;
 }
@@ -58,18 +62,18 @@ Tmpl.defineDirective ( {
 	before () {
     	const 
             forExpr = /^\s*([$\w(),\s]+)\s+in\s+([$\w.]+)\s*$/,
-            keyExpr = /^\(\s*[$\w]+\s*,\s*[$\w]+\s*\)$/;
+            keyExpr = /^\(\s*([$\w]+)\s*,\s*([$\w]+)\s*\)$/;
 
         if ( !forExpr.test ( this.expr ) ) {
             throw directiveErr ( "for", "for指令内的循环格式为'item in list'或'(item, index) in list'，请正确使用该指令" );
         }
     	const 
             variable = this.expr.match ( forExpr ),
-            keyValMatch = variable [ 1 ].match ( keyExpr );
+            indexValMatch = variable [ 1 ].match ( keyExpr );
 
-        if ( keyValMatch ) {
-            this.item = keyValMatch [ 1 ];
-            this.key = keyValMatch [ 2 ];
+        if ( indexValMatch ) {
+            this.item = indexValMatch [ 1 ];
+            this.index = indexValMatch [ 2 ];
         }
         else {
             this.item = variable [ 1 ];
@@ -103,10 +107,10 @@ Tmpl.defineDirective ( {
     	
         // 初始化视图时将模板元素替换为挂载后元素
         if ( elem.parent ) {
-            foreach ( iterator, ( val, key ) => {
-            	itemNode = createVNode ( val, key, this );
+            foreach ( iterator, ( val, i ) => {
+            	itemNode = createVNode ( this, val, i );
             	nodeMap.push ( {
-                	node : itemNode,
+                	key : itemNode.key,
                 	val,
                 } );
             	
@@ -122,33 +126,25 @@ Tmpl.defineDirective ( {
     	else {
 
             // 改变数据后更新视图
-        	foreach ( iterator, ( val, key ) => {
+        	foreach ( iterator, ( val, index ) => {
+                let key;
+
+                // 在原数组中找到对应项时，使用该项的key创建vnode
         		foreach ( this.nodeMap, item => {
                 	if ( item.val === val ) {
-                    	itemNode = item.node;
-            			nodeMap.push ( {
-                        	node : itemNode,
-                        	val,
-                        } );
-            			
+                    	key = item.key;
+
             			return false;
                     }
                 } );
-    			
-    			// 在原数组中没有找到对应项时，创建新的项
-    			if ( !itemNode ) {
-                	itemNode = createVNode ( val, key, this );
-            		nodeMap.push ( {
-                		node : itemNode,
-                		val,
-                	} );
-                }
-    			
+                itemNode = createVNode ( this, val, index, key );
+    			nodeMap.push ( { key : itemNode.key, val } );
+
     			fragment.appendChild ( itemNode );
             } );
 			
-        	let el,
-         		p = el.parent;
+        	let p = this.startNode.parent,
+         		el;
         	while ( ( el = this.startNode.nextSibling () ) !== this.endNode ) {
         		p.removeChild ( el );
             }

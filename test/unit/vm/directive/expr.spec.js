@@ -18,7 +18,7 @@ describe ( "directive expr => ", () => {
                 expr : "success",
             } ),
             t = new Tmpl ( { state : vm } );
-        t.mount ( d, true, true );
+        t.mount ( d, true );
     	expect ( d.children [ 0 ].children [ 0 ].nodeValue ).toBe ( "success" );
         expect ( d.children [ 0 ].nextSibling ().children [ 0 ].nodeValue ).toBe ( "success123" );
 
@@ -35,7 +35,7 @@ describe ( "directive expr => ", () => {
                 id : "text",
             } ),
             t = new Tmpl ( { state : vm } );
-        t.mount ( d, true, true );
+        t.mount ( d, true );
 
         expect ( d.children [ 0 ].attr ( "id" ) ).toBe ( "text" );
         expect ( d.children [ 1 ].attr ( "id" ) ).toBe ( "text456" );
@@ -54,7 +54,7 @@ describe ( "directive expr => ", () => {
                 hello : "hello",
             } ),
             t = new Tmpl ( { state : vm } );
-        t.mount ( d, true, true );
+        t.mount ( d, true );
 
         expect ( d.children [ 0 ].attr ( "id" ) ).toBe ( "text222" );
         expect ( d.children [ 0 ].children [ 0 ].nodeValue ).toBe ( "hello text" );
@@ -74,7 +74,7 @@ describe ( "directive expr => ", () => {
     //             }
     //         } ),
     //         t = new Tmpl ( vm );
-    //     t.mount ( d, true, true );
+    //     t.mount ( d, true );
 
     //     expect ( d.querySelector ( ".a" ) ).toEqual ( jasmine.any ( Object ) );
     //     expect ( d.querySelector ( ".b" ) ).toEqual ( jasmine.any ( Object ) );

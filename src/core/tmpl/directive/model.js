@@ -98,7 +98,7 @@ Tmpl.defineDirective ( {
     	
     	// 对checkbox的处理
     	else if ( tval === "array" && nodeName === "INPUT" && inputType === "checkbox" ) {
-        	if ( val.indexOf ( elem.attr ( "value" ) !== -1 ) ) {
+        	if ( val.indexOf ( elem.attr ( "value" ) ) !== -1 ) {
             	elem.attr ( "checked", true );
             }
         	else {

@@ -3,6 +3,7 @@ import { foreach, type, guid } from "../../../func/util";
 import slice from "../../../var/slice";
 import Tmpl from "../Tmpl";
 import VTextNode from "../../vnode/VTextNode";
+import VFragment from "../../vnode/VFragment";
 
 Tmpl.defineDirective ( {
 	name : "if",
@@ -96,7 +97,7 @@ Tmpl.defineDirective ( {
                 newNode = null;
             }
             else {
-                _cNode = newNode.children;
+                _cNode = newNode.children.concat ();
             }
         }
         else if ( !newNode ) {

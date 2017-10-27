@@ -49,11 +49,12 @@ Tmpl.defineDirective ( {
 	update ( val ) {
         const node = this.node;
 
-        if ( type ( val ) === "string" ) {
-            node.nodeValue = val;
+        // 定义了组件子元素时，需将组件表达式（nodeType为3）替换为实际传入的dom结构
+        if ( val && val.nodeType > 0 && node.nodeType === 3 ) {
+            node.parent.replaceChild ( val, node );
         }
-    	else if ( val && val.nodeType > 0 ) {
-        	node.parent.replaceChild ( val, node );
+    	else {
+        	node.nodeValue = val;
         }
     }
 } );

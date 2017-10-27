@@ -11,6 +11,9 @@ import VTextNode from "./VTextNode";
 import VFragment from "./VFragment";
 import NodePatcher from "./NodePatcher";
 
+// 直接赋值的属性
+const attrAssignmentHook = [ "value", "checked" ];
+
 /**
     supportCheck ( nodeType: Number, method: String )
 
@@ -133,10 +136,9 @@ extend ( VNode.prototype, {
     	if ( i >= 0 ) {
             let children;
         	if ( newVNode.nodeType === 11 ) {
-                children = newVNode.children;
+                children = newVNode.children.concat ();
 
-               	const args = [ i, 1 ].concat ( newVNode.children );
-            	Array.prototype.splice.apply ( children, args );
+            	Array.prototype.splice.apply ( this.children, [ i, 1 ].concat ( children ) );
             }
         	else {
                 children = [ newVNode ];
@@ -171,8 +173,8 @@ extend ( VNode.prototype, {
     	if ( i >= 0 ) {
             let children;
         	if ( newVNode.nodeType === 11 ) {
-                children = newVNode.children;
-            	Array.prototype.splice.apply ( children, [ i, 0 ].concat ( newVNode.children ) );
+                children = newVNode.children.concat ();
+            	Array.prototype.splice.apply ( this.children, [ i, 0 ].concat ( newVNode.children ) );
             }
         	else {
                 children = [ newVNode ];
@@ -259,27 +261,26 @@ extend ( VNode.prototype, {
     */
     attr ( name, val ) {
     	supportCheck ( this.nodeType, "attr" );
-    	correctParam ( name, val ).to ( "string", [ "string", "object", null ] ).done ( function () {
+    	correctParam ( name, val ).to ( "string", [ "string", "object", null, "boolean" ] ).done ( function () {
 			name = this.$1;
 			val = this.$2;
 		} );
-  
-		switch ( type ( val ) ) {
-    		case "string":
-        		this.attrs [ name ] = val;
 
-        		break;
-    		case "undefined":
-        		return this.attrs [ name ];
-    		case "object":
-        		foreach ( val, ( v, k ) => {
-            		this.attrs [ k ] = v;
-            	} );
-
-        		break;
-    		case "null":
-        		delete this.attrs [ name ];
-    	}
+        const tval = type ( val );
+        if ( tval === "undefined" ) {
+            return this.attrs [ name ];
+        }
+        else if ( tval === "null" ) {
+            delete this.attrs [ name ];
+        }
+        else if ( tval === "object" ) {
+            foreach ( val, ( v, k ) => {
+                this.attrs [ k ] = v;
+            } );
+        }
+        else {
+            this.attrs [ name ] = val;
+        }
     },
 
     /**
@@ -302,7 +303,19 @@ extend ( VNode.prototype, {
         	case 1:
         		if ( this.node === undefined ) {
         			this.node = document.createElement ( this.nodeName );
-    				attr ( this.node, this.attrs );
+    				foreach ( this.attrs, ( attrVal, name ) => {
+                        if ( attrAssignmentHook.indexOf ( name ) === -1 ) {
+                            attr ( this.node, name, attrVal );
+                        }
+                        else {
+                            this.node [ name ] = attrVal;
+                        }
+                    } );
+                    foreach ( this.events, ( handlers, type ) => {
+                        foreach ( handlers, handler => {
+                            event.on ( this.node, type, handler );
+                        } );
+                    } );
          		}
             	
             	f = document.createDocumentFragment ();

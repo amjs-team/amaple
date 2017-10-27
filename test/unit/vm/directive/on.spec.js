@@ -1,15 +1,19 @@
 import Tmpl from "core/tmpl/Tmpl";
 import ViewModel from "core/ViewModel";
+import VElement from "core/vnode/VElement";
+import VTextNode from "core/vnode/VTextNode";
 
-xdescribe ( "directive event bind => ", () => {
+describe ( "directive event bind => ", () => {
     let d;
     
     beforeEach ( () => {
-        d = document.createElement ( "div" );
+        d = VElement ( "div" );
     } );
     
     it ( "directive :on without function param", ( done ) => {
-        d.innerHTML = '<p :onclick="click">btn</p>';
+        d.appendChild ( VElement ( "p", { ":onclick" : "click" }, null, [
+            VTextNode ( "btn" )
+        ] ) );
 
         let vm = new ViewModel ( {
                 click : function ( event ){
@@ -17,14 +21,17 @@ xdescribe ( "directive event bind => ", () => {
                     expect ( event.type ).toBe ( "click" );
                 }
             } ),
-            t = new Tmpl ( vm );
-        t.mount ( d, true, true );
+            t = new Tmpl ( { state : vm } );
+        t.mount ( d, true );
+        d.render ();
 
-        d.firstChild.click ();
+        d.children [ 0 ].node.click ();
     } );
 
-    it ( "directive :on with function param", ( done ) => {
-        d.innerHTML = `<p :onclick="click ( 666, '555' )">btn</p>`;
+    it ( "directive :on with basic data type function param", ( done ) => {
+        d.appendChild ( VElement ( "p", { ":onclick" : "click ( 666, '555' )" }, null, [
+            VTextNode ( "btn" )
+        ] ) );
 
         let vm = new ViewModel ( {
                 click : function ( event, arg, arg2 ){
@@ -34,14 +41,17 @@ xdescribe ( "directive event bind => ", () => {
                     expect ( arg2 ).toBe ( "555" );
                 }
             } ),
-            t = new Tmpl ( vm );
-        t.mount ( d, true, true );
+            t = new Tmpl ( { state : vm } );
+        t.mount ( d, true );
+        d.render ();
 
-        d.firstChild.click ();
+        d.children [ 0 ].node.click ();
     } );
 
-    it ( "directive :on with function listener param", ( done ) => {
-        d.innerHTML = `<p :onclick="click ( text )">btn</p>`;
+    it ( "directive :on with reactive param", ( done ) => {
+        d.appendChild ( VElement ( "p", { ":onclick" : "click ( text )" }, null, [
+            VTextNode ( "btn" )
+        ] ) );
 
         let vm = new ViewModel ( {
                 text: "hello icejs",
@@ -51,14 +61,17 @@ xdescribe ( "directive event bind => ", () => {
                     expect ( arg ).toBe ( "hello icejs" );
                 }
             } ),
-            t = new Tmpl ( vm );
-        t.mount ( d, true, true );
+            t = new Tmpl ( { state : vm } );
+        t.mount ( d, true );
+        d.render ();
 
-        d.firstChild.click ();
+        d.children [ 0 ].node.click ();
     } );
 
-    it ( "directive :on with function listener param", ( done ) => {
-        d.innerHTML = `<p :for="item in list" :key="key" :onclick="click ( item, key )">btn</p>`;
+    it ( "directive :on with directive 'for' scoped param", ( done ) => {
+        d.appendChild ( VElement ( "p", { ":for" : "( item, key ) in list", ":onclick" : "click ( item, key )" }, null, [
+                VTextNode ( "btn" )
+            ] ) );
 
         let vm = new ViewModel ( {
                 list : [ "hello icejs0", "hello icejs1", "hello icejs2" ],
@@ -68,11 +81,13 @@ xdescribe ( "directive event bind => ", () => {
                     expect ( arg ).toBe ( "hello icejs" + key );
                 }
             } ),
-            t = new Tmpl ( vm );
-        t.mount ( d, true, true );
+            t = new Tmpl ( { state : vm } );
+        t.mount ( d, true );
+        d.render ();
 
-        d.children[0].click ();
-        d.children[1].click ();
-        d.children[2].click ();
+        // d.children [ 0 ]为startNode
+        d.children [ 1 ].node.click ();
+        d.children [ 2 ].node.click ();
+        d.children [ 3 ].node.click ();
     } );
 } );
