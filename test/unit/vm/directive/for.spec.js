@@ -5,11 +5,12 @@ xdescribe ( "directive for => ", () => {
 	let d;
 	
 	beforeEach ( () => {
-    	d = document.createElement ( "div" );
+        d = VElement ( "div" );
     } );
 	
 	it ( "directive :for in element attribute", () => {
         d.innerHTML = '<p :for="item in list">{{ item }}</p>';
+        // d.appendChild()
 
         let vm = new ViewModel ( {
                 list: [ "a", "b", "c" ]

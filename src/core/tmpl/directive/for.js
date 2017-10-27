@@ -1,4 +1,5 @@
 import { foreach, guid } from "../../../func/util";
+import { directiveErr } from "../../../error";
 import { VNODE_ADD, VNODE_REMOVE, VNODE_MOVE } from "../../../var/const";
 import Tmpl from "../Tmpl";
 import VTextNode from "../../vnode/VTextNode";
@@ -55,19 +56,28 @@ Tmpl.defineDirective ( {
         http://icejs.org/######
     */
 	before () {
-    	
-    	const variable   = this.expr.match ( /^\s*([$\w]+)\s+in\s+([$\w.]+)\s*$/ );
-  
-		this.startNode = VTextNode ( "" );
-		this.endNode   = VTextNode ( "" );
-		
-        this.item      = variable [ 1 ];
-        this.expr      = variable [ 2 ];
-       	this.key       = this.node ( ":key" );
-        
-    	if ( this.key ) {
-            this.node.attr ( ":key", null );
+    	const 
+            forExpr = /^\s*([$\w(),\s]+)\s+in\s+([$\w.]+)\s*$/,
+            keyExpr = /^\(\s*[$\w]+\s*,\s*[$\w]+\s*\)$/;
+
+        if ( !forExpr.test ( this.expr ) ) {
+            throw directiveErr ( "for", "for指令内的循环格式为'item in list'或'(item, index) in list'，请正确使用该指令" );
         }
+    	const 
+            variable = this.expr.match ( forExpr ),
+            keyValMatch = variable [ 1 ].match ( keyExpr );
+
+        if ( keyValMatch ) {
+            this.item = keyValMatch [ 1 ];
+            this.key = keyValMatch [ 2 ];
+        }
+        else {
+            this.item = variable [ 1 ];
+        }
+
+        this.expr      = variable [ 2 ];
+        this.startNode = VTextNode ( "" );
+        this.endNode   = VTextNode ( "" );
     },
 
     /**

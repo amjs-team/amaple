@@ -1,4 +1,4 @@
-import { extend } from "../../func/util";
+import { extend, foreach } from "../../func/util";
 import { attr } from "../../func/node";
 
 export default function NodePatcher () {

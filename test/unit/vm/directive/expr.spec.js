@@ -1,77 +1,86 @@
 import Tmpl from "core/tmpl/Tmpl";
 import ViewModel from "core/ViewModel";
+import VElement from "core/vnode/VElement";
+import VTextNode from "core/vnode/VTextNode";
 
-xdescribe ( "directive expr => ", () => {
+describe ( "directive expr => ", () => {
+
 	let d;
-	
 	beforeEach ( () => {
-    	d = document.createElement ( "div" );
+    	d = VElement ( "div" );
     } );
 	
 	it ( "directive expression will mount in text node", () => {
-        d.innerHTML = '<span>{{ expr }}</span><span>{{ expr }}123</span>';
+        d.appendChild ( VElement ( "span", {}, null, [ VTextNode ( "{{ expr }}" ) ] ) );
+        d.appendChild ( VElement ( "span", {}, null, [ VTextNode ( "{{ expr }}123" ) ] ) );
+
         let vm = new ViewModel ( {
                 expr : "success",
             } ),
-            t = new Tmpl ( vm );
+            t = new Tmpl ( { state : vm } );
         t.mount ( d, true, true );
-    	expect ( d.firstChild.firstChild.nodeValue ).toBe ( "success" );
-        expect ( d.firstChild.nextSibling.firstChild.nodeValue ).toBe ( "success123" );
+    	expect ( d.children [ 0 ].children [ 0 ].nodeValue ).toBe ( "success" );
+        expect ( d.children [ 0 ].nextSibling ().children [ 0 ].nodeValue ).toBe ( "success123" );
 
         vm.expr = "hello";
-        expect ( d.firstChild.firstChild.nodeValue ).toBe ( "hello" );
-        expect ( d.firstChild.nextSibling.firstChild.nodeValue ).toBe ( "hello123" );
+        expect ( d.children [ 0 ].children [ 0 ].nodeValue ).toBe ( "hello" );
+        expect ( d.children [ 0 ].nextSibling ().children [ 0 ].nodeValue ).toBe ( "hello123" );
     } );
   
 	it ( "directive expression will mount in attribute node", () => {
-        d.innerHTML = '<p id="{{ id }}">attr expr</p><p id="{{ id }}456">attr expr2</p>';
+        d.appendChild ( VElement ( "p", { id: "{{ id }}" }, null, [ VTextNode ( "attr expr" ) ] ) );
+        d.appendChild ( VElement ( "p", { id: "{{ id }}456" }, null, [ VTextNode ( "attr expr2" ) ] ) );
+
         let vm = new ViewModel ( {
                 id : "text",
             } ),
-            t = new Tmpl ( vm );
+            t = new Tmpl ( { state : vm } );
         t.mount ( d, true, true );
 
-    	expect ( d.firstChild.getAttribute ( "id" ) ).toBe ( "text" );
-        expect ( d.querySelector ( "#text" ).firstChild.nodeValue ).toBe ( "attr expr" );
-        expect ( d.querySelector ( "#text456" ).firstChild.nodeValue ).toBe ( "attr expr2" );
+        expect ( d.children [ 0 ].attr ( "id" ) ).toBe ( "text" );
+        expect ( d.children [ 1 ].attr ( "id" ) ).toBe ( "text456" );
 
         vm.id = "success";
-        expect ( d.firstChild.getAttribute ( "id" ) ).toBe ( "success" );
-        expect ( d.querySelector ( "#success" ).firstChild.nodeValue ).toBe ( "attr expr" );
-        expect ( d.querySelector ( "#success456" ).firstChild.nodeValue ).toBe ( "attr expr2" );
+        expect ( d.children [ 0 ].attr ( "id" ) ).toBe ( "success" );
+        expect ( d.children [ 1 ].attr ( "id" ) ).toBe ( "success456" );
     } );
 
     it ( "multiple directive expression in single attribute or single text", () => {
-        d.innerHTML = '<p id="{{ id }}{{ text }}">{{ hello }} {{ id }}</p>';
+        d.appendChild ( VElement ( "p", { id : "{{ id }}{{ text }}" }, null, [ VTextNode ( "{{ hello }} {{ id }}" ) ] ) );
+
         let vm = new ViewModel ( {
                 id : "text",
                 text : "222",
                 hello : "hello",
             } ),
-            t = new Tmpl ( vm );
+            t = new Tmpl ( { state : vm } );
         t.mount ( d, true, true );
 
-        expect ( d.querySelector ( "#text222" ).firstChild.nodeValue ).toBe ( "hello text" );
+        expect ( d.children [ 0 ].attr ( "id" ) ).toBe ( "text222" );
+        expect ( d.children [ 0 ].children [ 0 ].nodeValue ).toBe ( "hello text" );
     } );
 
-    it ( "Special treatment at attribute \"style\" and \"class\" with directive expression", () => {
-        d.innerHTML = '<p class="{{ clazz }}" style="{{ color }}">hello icejs</p>';
-        let vm = new ViewModel ( {
-                clazz: [ "a", "b", "c" ],
-                color: {
-                    background: "red",
-                    color: "white",
-                    fontSize: 20,
-                }
-            } ),
-            t = new Tmpl ( vm );
-        t.mount ( d, true, true );
+    // 废弃
+    // 节点属性”class“、”style“的特殊表现将在"vnode/patch.spec.js"中测试
+    // it ( "Special treatment at attribute \"style\" and \"class\" with directive expression", () => {
+    //     d.appendChild ( VElement ( "p", { class: "{{ clazz }}", style: "{{ color }}" }, null, [ VTextNode ( "hello icejs" ) ] ) );
 
-        expect ( d.querySelector ( ".a" ) ).toEqual ( jasmine.any ( Object ) );
-        expect ( d.querySelector ( ".b" ) ).toEqual ( jasmine.any ( Object ) );
-        expect ( d.querySelector ( ".c" ) ).toEqual ( jasmine.any ( Object ) );
-        expect ( d.firstChild.style.background ).toBe ( "red" );
-        expect ( d.firstChild.style.color ).toBe ( "white" );
-        expect ( d.firstChild.style.fontSize ).toBe ( "20px" );
-    } );
+    //     let vm = new ViewModel ( {
+    //             clazz: [ "a", "b", "c" ],
+    //             color: {
+    //                 background: "red",
+    //                 color: "white",
+    //                 fontSize: 20,
+    //             }
+    //         } ),
+    //         t = new Tmpl ( vm );
+    //     t.mount ( d, true, true );
+
+    //     expect ( d.querySelector ( ".a" ) ).toEqual ( jasmine.any ( Object ) );
+    //     expect ( d.querySelector ( ".b" ) ).toEqual ( jasmine.any ( Object ) );
+    //     expect ( d.querySelector ( ".c" ) ).toEqual ( jasmine.any ( Object ) );
+    //     expect ( d.firstChild.style.background ).toBe ( "red" );
+    //     expect ( d.firstChild.style.color ).toBe ( "white" );
+    //     expect ( d.firstChild.style.fontSize ).toBe ( "20px" );
+    // } );
 } );

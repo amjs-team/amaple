@@ -60,15 +60,15 @@ function initModuleLifeCycle ( module, vm ) {
 		lifeCycle = [ "queryChanged", "paramChanged", "unmount" ],
         lifeCycleContainer = {};
             
-        foreach ( lifeCycle, cycleItem => {
-            lifeCycleContainer [ cycleItem ] = vm [ cycleItem ] || noop;
-            module [ cycleItem ] = () => {
-                lifeCycleContainer [ cycleItem ].apply ( module, cache.getDependentPlugib ( lifeCycleContainer [ cycleItem ] ) );
-            }
-            
-            delete vm [ cycleItem ];
-        } );
-    },
+    foreach ( lifeCycle, cycleItem => {
+        lifeCycleContainer [ cycleItem ] = vm [ cycleItem ] || noop;
+        module [ cycleItem ] = () => {
+            lifeCycleContainer [ cycleItem ].apply ( module, cache.getDependentPlugib ( lifeCycleContainer [ cycleItem ] ) );
+        }
+        
+        delete vm [ cycleItem ];
+    } );
+}
 
 /**
 	Module ( moduleName: String|DOMObject|Object, vmData: Object )

@@ -42,7 +42,8 @@ describe ( "diff vnode => ", () => {
 		const patcher = vnode2.diff ( vnode1 );
 		expect ( patcher.patches.length ).toBe ( 1 );
 		expect ( patcher.patches [ 0 ].type ).toBe ( NodePatcher.TEXTNODE );
-		expect ( patcher.patches [ 0 ].val ).toBe ( "hello icejs2" );
+		expect ( patcher.patches [ 0 ].replaceNode.nodeValue ).toBe ( "hello icejs" );
+		expect ( patcher.patches [ 0 ].item.nodeValue ).toBe ( "hello icejs2" );
 	} );
 
 	it ( "Diff two different vnode", () => {

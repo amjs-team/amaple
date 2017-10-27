@@ -52,7 +52,7 @@ function initState ( states, context ) {
 					watch.call ( context, newVal, oldVal );
 
 					// 更新视图
-					subs.notify ( newVal );
+					subs.notify ();
 				}
    			}, context );
     } );
@@ -82,7 +82,7 @@ function initComputed ( computeds, context ) {
         		state = getter ();
 
         		// 更新视图
-				subs.notify ( state );
+				subs.notify ();
         	}, getter );
       	
       	// 设置计算属性为监听数据
@@ -99,7 +99,7 @@ function initComputed ( computeds, context ) {
 					computed.set.call ( context, newVal );
 
 					// 更新视图
-					subs.notify ( newVal );
+					subs.notify ();
 				}
 			} : noop, context );
 	} );
@@ -124,7 +124,7 @@ function initArray ( array, subs, context ) {
         		const res = nativeMethod.apply ( this, args );
               	
               	// 更新视图
-				subs.notify ( this );
+				subs.notify ();
               	
               	return res;
         	},

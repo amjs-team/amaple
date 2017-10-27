@@ -1,5 +1,4 @@
 import { extend, type, foreach, noop } from "../func/util";
-import { attr } from "../func/node";
 import { runtimeErr } from "../error";
 import slice from "../var/slice";
 import Subscriber from "./Subscriber";
@@ -69,7 +68,7 @@ export default function ViewWatcher ( directive, node, expr, tmpl, scoped ) {
 	// 移除相关属性指令表达式
 	// 当属性指令表达式与指令名称不同的时候可将对应表达式赋值给this.attrExpr
 	if ( node.nodeType === 1 ) {
-		attr ( node, Tmpl.directivePrefix + ( this.attrExpr || directive.name ), null );
+		node.attr ( Tmpl.directivePrefix + ( this.attrExpr || directive.name ), null );
 	}
 
 	this.getter = makeFn ( this.expr );
@@ -91,7 +90,7 @@ export default function ViewWatcher ( directive, node, expr, tmpl, scoped ) {
 extend ( ViewWatcher.prototype, {
 
 	/**
-		update ( newVal: Any )
+		update ()
 	
 		Return Type:
 		void
@@ -104,10 +103,11 @@ extend ( ViewWatcher.prototype, {
 		URL doc:
 		http://icejs.org/######
 	*/
-	update ( newVal ) {
-		const parentNodeBackup = this.parentNode.clone ();
-    	this.directive.update.call ( this, newVal );
-    	this.parentNode.diff ( parentNodeBackup ).patch ();
+	update () {
+		// const parentNodeBackup = this.parentNode.clone ();
+    	this.directive.update.call ( this, this.getter ( runtimeErr ) );
+    	// this.parentNode.render ();
+    	// this.parentNode.diff ( parentNodeBackup ).patch ();
     },
 	
 	/**

@@ -32,14 +32,14 @@ function preTreat ( vnode ) {
         _elseif = Tmpl.directivePrefix + "else-if",
         _else = Tmpl.directivePrefix + "else";
 
-    let nextSib, parent;
-    const condition = vnode.attr ( _if );
+    let nextSib, parent, 
+        condition = vnode.attr ( _if );
 
     if ( condition && !vnode.conditionElems ) {
         vnode.conditions = [ condition ];
         vnode.conditionElems = [ vnode ];
-        parent = elem.parent;
-        while ( nextSib = elem.nextSibling () ) {
+        parent = vnode.parent;
+        while ( nextSib = vnode.nextSibling () ) {
             if ( condition = nextSib.attr ( _elseif ) ) {
                 vnode.conditions.push ( condition );
                 vnode.conditionElems.push ( nextSib );

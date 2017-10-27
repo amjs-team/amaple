@@ -39,7 +39,7 @@ extend ( Subscriber.prototype, {
     },
 
     /**
-        notify ( newVal: Any )
+        notify ()
     
         Return Type:
         void
@@ -50,9 +50,9 @@ extend ( Subscriber.prototype, {
         URL doc:
         http://icejs.org/######
     */
-	notify ( newVal ) {
+	notify () {
     	foreach ( this.watchers, watcher => {
-        	watcher.update ( newVal );
+        	watcher.update ();
         } );
     }
 } );
