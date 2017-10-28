@@ -1,9 +1,11 @@
-import Component from "src/core/component/core";
+import Component from "core/component/core";
 import Class from "src/Class";
 import ViewModel from "src/core/ViewModel";
 import { attr } from "src/func/node";
+import VElement from "core/vnode/VElement";
+import VFragment from "core/vnode/VFragment";
 
-xdescribe ( "define component =>", () => {
+describe ( "define component =>", () => {
 	it ( "use the function Class to define a component derivative", () => {
 		const TestComp = Class ( "TestComp" ).extends ( Component ) ( {
 			init () {
@@ -33,23 +35,41 @@ xdescribe ( "define component =>", () => {
 
 		const 
 			tc = new TestComp (),
-			fragment = document.createDocumentFragment (),
-			div = document.createElement ( "div" );
+			fragment = VFragment (),
+			div = VElement ( "div" );
 
 		fragment.appendChild ( div );
 		tc.__init__ ( div, {} );
 
-		expect ( fragment.firstChild.nodeName ).toBe ( "BUTTON" );
-		expect ( fragment.firstChild.firstChild.nodeValue ).toBe ( "test-btn" );
+		// expect ( fragment.firstChild.nodeName ).toBe ( "BUTTON" );
+		// expect ( fragment.firstChild.firstChild.nodeValue ).toBe ( "test-btn" );
 
-		tc.action.print ( "hello icejs" );
-		expect ( fragment.firstChild.nextElementSibling.firstChild.nodeValue ).toBe ( "hello icejs" );
-		expect ( fragment.firstChild.nextElementSibling.style.color ).toBe ( "rgb(0, 170, 230)" );
+		// tc.action.print ( "hello icejs" );
+		// expect ( fragment.firstChild.nextElementSibling.firstChild.nodeValue ).toBe ( "hello icejs" );
+		// expect ( fragment.firstChild.nextElementSibling.style.color ).toBe ( "rgb(0, 170, 230)" );
 	} );
 
-	it ( "validate component props without vm data", () => {
+	xit ( "validate component props without vm data", () => {
 		const TestComp = Class ( "TestComp" ).extends ( Component ) ( {
 			init () {
+				this.propsType ( {
+					text : {
+						validate : String,
+						require : true,
+						default : "default button",
+					},
+					link : {
+						validate ( val ) {
+							return val.length > 5;
+						},
+						default : "javascript:;"
+					},
+					suffix : {
+						require : true,
+					},
+					classname : [ /abc/, function ( val ) { return val.length > 4; } ]
+				} );
+				
 				const self = this;
 				return {
 					btn : self.props.text,
@@ -71,25 +91,6 @@ xdescribe ( "define component =>", () => {
 			        	fontSize : 20,
 			        }
 			    } );
-			},
-			validateProps () {
-				this.propsType ( {
-					text : {
-						validate : String,
-						require : true,
-						default : "default button",
-					},
-					link : {
-						validate ( val ) {
-							return val.length > 5;
-						},
-						default : "javascript:;"
-					},
-					suffix : {
-						require : true,
-					},
-					classname : [ /abc/, function ( val ) { return val.length > 4; } ]
-				} );
 			}
 		} );
 
@@ -149,7 +150,7 @@ xdescribe ( "define component =>", () => {
 		expect ( fragment.firstChild.className ).toBe ( "abcde" );
 	} );
 
-	it ( "validate the Two-way binding props of component with vm data", () => {
+	xit ( "validate the Two-way binding props of component with vm data", () => {
 		const TestComp = Class ( "TestComp" ).extends ( Component ) ( {
 			init () {
 				const self = this;

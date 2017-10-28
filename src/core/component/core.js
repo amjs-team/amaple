@@ -5,7 +5,7 @@ import { componentErr } from "../../error";
 import slice from "../../var/slice";
 import check from "../../check";
 import ViewModel from "../ViewModel";
-import moduleConstructor from "../moduleConstructor";
+import componentConstructor from "./componentConstructor";
 import Tmpl from "../tmpl/Tmpl";
 import cache from "../../cache/core";
 
@@ -17,33 +17,37 @@ export default function Component () {
 
 extend ( Component.prototype, {
 	
+    /**
+        __init__ ( componentVNode: Object, moduleVm: Object )
+    
+        Return Type:
+        void
+    
+        Description:
+        初始化一个对应的组件对象
+    
+        URL doc:
+        http://icejs.org/######
+    */
 	__init__ ( componentVNode, moduleVm ) {
         let propsValidator;
-
-    	if ( type ( this.validateProps ) === "function" ) {
-
-    		// 构造属性验证获取器获取属性验证参数
-    		this.propsType = ( validator ) => {
-              	propsValidator = validator || {};
-            };
-
-    		this.validateProps.apply ( this, cache.getDependentPlugin ( this.validateProps ) );
-
-    		delete this.propsType;
-    	}
-
-    	// 获取props，如果有需要则验证它们
-    	this.props = moduleConstructor.initProps ( componentVNode, moduleVm, propsValidator );
     	
     	//////////////////////////////////////////
     	// 获取init方法返回值并初始化vm数据
-		const 
-    		componentVm = new ViewModel ( this.init.apply ( this, cache.getDependentPlugin ( this.init ) ) );
+        // 构造属性验证获取器获取属性验证参数
+        this.propsType = ( validator ) => {
+            propsValidator = validator || {};
+        };
+		const componentVm = new ViewModel ( this.init.apply ( this, cache.getDependentPlugin ( this.init ) ) );
+        delete this.propsType;
 
         this.state = componentVm;
+
+        // 获取props，如果有需要则验证它们
+        this.props = componentConstructor.initProps ( componentVNode, moduleVm, propsValidator );
     	
     	// 初始化生命周期
-		moduleConstructor.initLifeCycle ( this, lifeCycle, componentVm );
+		componentConstructor.initLifeCycle ( this );
 
     	/////////////////////
     	// 转换组件代表元素为实际的组件元素节点
@@ -86,8 +90,8 @@ extend ( Component.prototype, {
 
     		// 处理模块并挂载数据 
     		const 
-            	vfragment = moduleConstructor.initTemplate ( componentString, scopedStyle ),
-                subElements = moduleConstructor.initSubElements ( componentVNode, subElementNames ),
+            	vfragment = componentConstructor.initTemplate ( componentString, scopedStyle ),
+                subElements = componentConstructor.initSubElements ( componentVNode, subElementNames ),
                 tmpl = new Tmpl ( componentVm, this.components || [] );
         	
     		tmpl.mount ( vfragment, false, Tmpl.defineScoped ( subElements ) );
@@ -104,7 +108,7 @@ extend ( Component.prototype, {
     	if ( this.action ) {
     		const actions = this.action.apply ( this, cache.getDependentPlugin ( this.action ) );
 
-    		moduleConstructor.initAction ( this, actions );
+    		componentConstructor.initAction ( this, actions );
     	}
     	
     	// 如果有saveRef方法则表示此组件需被引用
@@ -114,6 +118,18 @@ extend ( Component.prototype, {
     	( this.apply || noop ).apply ( this, cache.getDependentPlugin ( this.apply || noop ) );
     },
 	
+    /**
+        depComponents ( comps: Array )
+    
+        Return Type:
+        void
+    
+        Description:
+        指定此组件模板内的依赖组件类
+    
+        URL doc:
+        http://icejs.org/######
+    */
 	depComponents ( ...comps ) {
     	this.components = [];
     	
@@ -132,12 +148,41 @@ extend ( Component.prototype, {
 } );
 
 extend ( Component, {
+
+    // 全局组件类
+    // 所有的模板内都可以在不指定组件的情况下使用
 	globalClass : {},
 
+    /**
+        defineGlobal ( componentDerivative: Function|Class )
+    
+        Return Type:
+        void
+    
+        Description:
+        定义一个全局组件
+        组件对象必须为一个方法(或一个类)
+    
+        URL doc:
+        http://icejs.org/######
+    */
 	defineGlobal ( componentDerivative ) {
 		globalClass [ componentDerivative.name ] = componentDerivative;
 	},
 
+    /**
+        getGlobal ( name: String )
+    
+        Return Type:
+        Function|Class
+        对应的组件类
+    
+        Description:
+        通过组件类名获取对应的组件类
+    
+        URL doc:
+        http://icejs.org/######
+    */
 	getGlobal ( name ) {
 		return this.globalClass [ name ];
 	}

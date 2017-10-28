@@ -108,7 +108,7 @@ extend ( Structure.prototype, {
 
     /**
         signCurrentRender ( structureItem: Object, param: Object, args: String, data: Object )
-    
+        
         Return Type:
         void
     
@@ -157,7 +157,7 @@ extend ( Structure.prototype, {
     */
     saveSubModuleNode ( node ) {
     	foreach ( this.currentRender.children, child => {
-        	if ( child.name === ( attr ( node, iceAttr.module ) || "default" ) && !child.moduleNode ) {
+        	if ( child.name === ( node.attr ( iceAttr.module ) || "default" ) && !child.moduleNode ) {
             	child.moduleNode = elem;
             	
                 return false;

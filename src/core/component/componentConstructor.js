@@ -1,14 +1,14 @@
-import slice from "../var/slice";
-import { foreach, noop, type, isPlainObject } from "../func/util";
-import { query } from "../func/node";
-import { defineReactiveProperty, transformCompName } from "../func/private";
-import { rexpr, rvar } from "../var/const";
-import { componentErr } from "../error";
-import { noUnitHook } from "../var/const";
-import Subscriber from "./Subscriber";
-import ValueWatcher from "./ValueWatcher";
-import VNode from "./vnode/VNode";
-import VFragment from "./vnode/VFragment";
+import slice from "../../var/slice";
+import { foreach, noop, type, isPlainObject } from "../../func/util";
+import { query } from "../../func/node";
+import { defineReactiveProperty, transformCompName } from "../../func/private";
+import { rexpr, rvar } from "../../var/const";
+import { componentErr } from "../../error";
+import { noUnitHook } from "../../var/const";
+import Subscriber from "../Subscriber";
+import ValueWatcher from "../ValueWatcher";
+import VNode from "../vnode/VNode";
+import VFragment from "../vnode/VFragment";
 
 const dataType = [ String, Number, Function, Boolean, Object ];
 
@@ -74,14 +74,14 @@ export default {
         URL doc:
         http://icejs.org/######
     */
-	initProps ( componentNode, moduleVm, propsValidator ) {
-    	let props = {}, match;
+    initProps ( componentNode, moduleVm, propsValidator ) {
+        let props = {}, match;
 
-    	foreach ( slice.call ( componentNode.attributes ), attr => {
-        	
-        	// 属性名需符合变量的命名规则
-        	if ( rvar.test ( attr.name ) ) {
-            	if ( match = attr.value.match ( rexpr ) ) {
+        foreach ( componentNode.attrs, ( attrVal, name ) => {
+            
+            // 属性名需符合变量的命名规则
+            if ( rvar.test ( name ) ) {
+                if ( match = attrVal.match ( rexpr ) ) {
                     const 
                         subs = new Subscriber (),
                         propName = match [ 1 ],
@@ -97,9 +97,11 @@ export default {
                         subs.notify ();
                     }, getter );
 
-                    defineReactiveProperty ( attr.name, () => {
+                    //////////////////////////////
+                    //////////////////////////////
+                    //////////////////////////////
+                    defineReactiveProperty ( name, () => {
                             subs.subscribe ();
-
                             return propValue;
                         },
                         ( newVal ) => {
@@ -111,15 +113,15 @@ export default {
                         }, props );
                 }
                 else {
-            		props [ attr.name ] = attr.value;
+                    props [ name ] = attrVal;
                 }
 
                 // 验证属性值
-                const validateItem = propsValidator && propsValidator [ attr.name ];
+                const validateItem = propsValidator && propsValidator [ name ];
                 if ( validateItem ) {
                     const validate = isPlainObject ( validateItem ) ? validateItem.validate : validateItem;
-                    if ( validate && !validateProp ( props [ attr.name ], validate ) ) {
-                        throw componentErr ( "prop:" + attr.name, "组件传递属性" + attr.name + "的值未通过验证，请检查该值的正确性或修改验证规则" );
+                    if ( validate && !validateProp ( props [ name ], validate ) ) {
+                        throw componentErr ( `prop: ${ name }`, `组件传递属性'${ name }'的值未通过验证，请检查该值的正确性或修改验证规则` );
                     }
                 }
             }
@@ -138,7 +140,7 @@ export default {
             }
         } );
 
-    	return props;
+        return props;
     },
 
     /**
@@ -153,7 +155,7 @@ export default {
         URL doc:
         http://icejs.org/######
     */
-	initLifeCycle ( component ) {
+    initLifeCycle ( component ) {
         const lifeCycle = [ "update", "unmount" ];
             
         foreach ( lifeCycle, cycleItem => {
@@ -178,10 +180,10 @@ export default {
         http://icejs.org/######
     */
     initTemplate ( template, scopedStyle ) {
-    	const 
-        	d = document.createElement ( "div" ),
-        	f = document.createDocumentFragment ();
-    	
+        const 
+            d = document.createElement ( "div" ),
+            f = document.createDocumentFragment ();
+        
         d.innerHTML = template;
 
         // 为对应元素添加内嵌样式
@@ -194,14 +196,14 @@ export default {
                 } );
             } );
         } );
-    	
-    	foreach ( slice.call ( d.childNodes ), child => {
-        	f.appendChild ( child );
+        
+        foreach ( slice.call ( d.childNodes ), child => {
+            f.appendChild ( child );
         } );
     
-    	return VNode.domToVNode ( f );
+        return VNode.domToVNode ( f );
     },
-	
+    
     /**
         initSubElements ( componentVNode: Object, subElementNames: Object )
     
@@ -215,9 +217,9 @@ export default {
         URL doc:
         http://icejs.org/######
     */
-	initSubElements ( componentVNode, subElementNames ) {
-    	const _subElements = {
-        	default : ""
+    initSubElements ( componentVNode, subElementNames ) {
+        const _subElements = {
+            default : ""
         };
 
         foreach ( subElementNames, ( multiple, subElemName ) => {
@@ -225,8 +227,8 @@ export default {
                 _subElements [ subElemName ] = [];
             }
         } );
-    	
-    	let componentName, subElemName, vf;
+        
+        let componentName, subElemName, vf;
         foreach ( componentVNode.children, vnode => {
             componentName = transformCompName ( vnode.nodeName || "" );
 
@@ -248,10 +250,10 @@ export default {
                 _subElements.default.appendChild ( node );
             }
         } );
-    	
-    	return { subElements: _subElements };
+        
+        return { subElements: _subElements };
     },
-	
+    
     /**
         initAction ( component: Object, actions: Object )
     
@@ -264,11 +266,11 @@ export default {
         URL doc:
         http://icejs.org/######
     */
-	initAction ( component, actions ) {
+    initAction ( component, actions ) {
         component.action = {};
-    	foreach ( actions, ( action, name ) => {
-        	if ( type ( action ) !== "function" ) {
-            	throw componentErr ( "actionType", "action \"" + name + "\"不是方法，组件action返回的对象属性必须为方法，它表示此组件的行为" );
+        foreach ( actions, ( action, name ) => {
+            if ( type ( action ) !== "function" ) {
+                throw componentErr ( "actionType", "action \"" + name + "\"不是方法，组件action返回的对象属性必须为方法，它表示此组件的行为" );
             }
             else if ( component [ name ] ) {
                 throw componentErr ( "duplicate", "此组件对象上已存在名为’" + name + "‘的属性或方法" );

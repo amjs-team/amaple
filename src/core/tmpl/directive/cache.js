@@ -1,3 +1,4 @@
+import { directiveErr } from "../../../error";
 import Tmpl from "../Tmpl";
 
 Tmpl.defineDirective ( {
@@ -5,6 +6,12 @@ Tmpl.defineDirective ( {
 	
 	// static为true时，模板将不会挂载watcher在对应vm下
 	static : true,
+
+    before () {
+        if ( !/^true|false$/.test ( this.expr ) ) {
+            throw directiveErr ( "cache", "cache指令的值只能为'true'或'false'，表示是否缓存此模块内容" );
+        }
+    },
 
     /**
         update ( isCache: String )
@@ -14,16 +21,12 @@ Tmpl.defineDirective ( {
     
         Description:
         将:cache存入vnode中
+        此时的isCache参数将会在getter方法中转换为实际的boolean值
     
         URL doc:
         http://icejs.org/######
     */
 	update ( isCache ) {
-    	if ( isCache === "true" ) {
-        	this.node.cache = true;
-        }
-    	else if ( isCache === "false" ) {
-        	this.node.cache === false;
-        }
+    	this.node.cache = isCache;
     }
 } );

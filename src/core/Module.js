@@ -4,7 +4,6 @@ import { matchFnArgs, parseGetQuery } from "../func/private";
 import slice from "../var/slice";
 import cache from "../cache/core";
 import { newClassCheck } from "../Class.js";
-// import ModuleCaller from "./ModuleCaller";
 import ViewModel from "./ViewModel";
 import Tmpl from "./tmpl/Tmpl";
 import iceAttr from "../single/iceAttr";

@@ -355,7 +355,7 @@ extend ( ModuleLoader, {
 	        	// 编译module为可执行函数
 				// 将请求的html替换到module模块中
 	            const updateFn = compileModule ( moduleString, moduleNode.attr ( Module.identifier ) );
-
+	            
 	            // 满足缓存条件时缓存模块更新函数
             	if ( moduleConfig.cache === true && moduleNode.cache !== false ) {
 	            	cache.pushModule ( path, { updateFn, time : timestamp () } );
