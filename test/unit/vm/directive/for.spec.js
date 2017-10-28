@@ -18,7 +18,7 @@ describe ( "directive for => ", () => {
         let vm = new ViewModel ( {
                 list: [ "a", "b", "c" ]
             } ),
-            t = new Tmpl ( { state : vm } ),
+            t = new Tmpl ( vm, [], {} ),
             children;
         t.mount ( d, true );
 
@@ -43,7 +43,7 @@ describe ( "directive for => ", () => {
                 list: [ "a", "b", "c" ],
                 show: "hello icejs",
             } ),
-            t = new Tmpl ( { state : vm } ),
+            t = new Tmpl ( vm, [], {} ),
             children, keyA, keyB, keyC, keyD;
         t.mount ( d, true );
 
@@ -108,7 +108,7 @@ describe ( "directive for => ", () => {
                 list: [ "a", "b", "c" ],
                 next: "a",
             } ),
-            t = new Tmpl ( { state : vm } ),
+            t = new Tmpl ( vm, [], {} ),
             children;
         t.mount ( d, true );
 
@@ -132,7 +132,7 @@ describe ( "directive for => ", () => {
                 list: [ "a", "b", "c" ],
                 next: "b",
             } ),
-            t = new Tmpl ( { state : vm } ),
+            t = new Tmpl ( vm, [], {} ),
             children;
         t.mount ( d, true );
 
@@ -166,7 +166,7 @@ describe ( "directive for => ", () => {
                 list: [ "a", "b", "c" ],
                 next: "b",
             } ),
-            t = new Tmpl ( { state : vm } ),
+            t = new Tmpl ( vm, [], {} ),
             children;
         t.mount ( d, true );
 
@@ -198,7 +198,7 @@ describe ( "directive for => ", () => {
         let vm = new ViewModel ( {
                 list: [ "a", "b", "c" ],
             } ),
-            t = new Tmpl ( { state : vm } ),
+            t = new Tmpl ( vm, [], {} ),
             children;
         t.mount ( d, true );
 
@@ -237,7 +237,7 @@ describe ( "directive for => ", () => {
                 list: [ "a", "b", "c" ],
                 next: "a",
             } ),
-            t = new Tmpl ( { state : vm } ),
+            t = new Tmpl ( vm, [], {} ),
             children;
         t.mount ( d, true );
 

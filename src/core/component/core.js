@@ -18,7 +18,7 @@ export default function Component () {
 extend ( Component.prototype, {
 	
     /**
-        __init__ ( componentVNode: Object, moduleVm: Object )
+        __init__ ( componentVNode: Object, moduleObj: Object )
     
         Return Type:
         void
@@ -29,7 +29,7 @@ extend ( Component.prototype, {
         URL doc:
         http://icejs.org/######
     */
-	__init__ ( componentVNode, moduleVm ) {
+	__init__ ( componentVNode, moduleObj ) {
         let propsValidator;
     	
     	//////////////////////////////////////////
@@ -44,10 +44,7 @@ extend ( Component.prototype, {
         this.state = componentVm;
 
         // 获取props，如果有需要则验证它们
-        this.props = componentConstructor.initProps ( componentVNode, moduleVm, propsValidator );
-    	
-    	// 初始化生命周期
-		componentConstructor.initLifeCycle ( this );
+        this.props = componentConstructor.initProps ( componentVNode, moduleObj.state, propsValidator );
 
     	/////////////////////
     	// 转换组件代表元素为实际的组件元素节点
@@ -92,7 +89,7 @@ extend ( Component.prototype, {
     		const 
             	vfragment = componentConstructor.initTemplate ( componentString, scopedStyle ),
                 subElements = componentConstructor.initSubElements ( componentVNode, subElementNames ),
-                tmpl = new Tmpl ( componentVm, this.components || [] );
+                tmpl = new Tmpl ( componentVm, this.components || [], this );
         	
     		tmpl.mount ( vfragment, false, Tmpl.defineScoped ( subElements ) );
 
@@ -100,19 +97,21 @@ extend ( Component.prototype, {
         	componentVNode.component = this;
         	componentVNode.componentNodes = vfragment.children;
 
-    		// 调用mount钩子函数
-    		( this.mount || noop ).apply ( this, cache.getDependentPlugin ( this.mount || noop ) );
+    		// 调用mounted钩子函数
+    		( this.mounted || noop ).apply ( this, cache.getDependentPlugin ( this.mounted || noop ) );
     	}
 
     	// 初始化action
     	if ( this.action ) {
     		const actions = this.action.apply ( this, cache.getDependentPlugin ( this.action ) );
-
     		componentConstructor.initAction ( this, actions );
     	}
     	
     	// 如果有saveRef方法则表示此组件需被引用
-    	( componentVNode.saveRef || noop ) ( this.action );
+    	this.refUnmountFn = ( componentVNode.saveRef || noop ) ( this.action ) || noop;
+
+        // 初始化生命周期
+        componentConstructor.initLifeCycle ( this, moduleObj );
 
     	// 组件初始化完成，调用apply钩子函数
     	( this.apply || noop ).apply ( this, cache.getDependentPlugin ( this.apply || noop ) );

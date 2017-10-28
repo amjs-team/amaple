@@ -301,39 +301,51 @@ extend ( VNode.prototype, {
         let f;
     	switch ( this.nodeType ) {
         	case 1:
-        		if ( this.node === undefined ) {
-        			this.node = document.createElement ( this.nodeName );
-    				foreach ( this.attrs, ( attrVal, name ) => {
-                        if ( attrAssignmentHook.indexOf ( name ) === -1 ) {
-                            attr ( this.node, name, attrVal );
-                        }
-                        else {
-                            this.node [ name ] = attrVal;
-                        }
-                    } );
-                    foreach ( this.events, ( handlers, type ) => {
-                        foreach ( handlers, handler => {
-                            event.on ( this.node, type, handler );
+        		if ( !this.node ) {
+                    if ( this.isComponent ) {
+                        this.node = [];
+                        foreach ( this.componentNodes, vnode => {
+                            this.node.push ( vnode.render () );
                         } );
-                    } );
+
+
+                    }
+                    else {
+            			this.node = document.createElement ( this.nodeName );
+        				foreach ( this.attrs, ( attrVal, name ) => {
+                            if ( attrAssignmentHook.indexOf ( name ) === -1 ) {
+                                attr ( this.node, name, attrVal );
+                            }
+                            else {
+                                this.node [ name ] = attrVal;
+                            }
+                        } );
+                        foreach ( this.events, ( handlers, type ) => {
+                            foreach ( handlers, handler => {
+                                event.on ( this.node, type, handler );
+                            } );
+                        } );
+                    }
          		}
             	
-            	f = document.createDocumentFragment ();
-    			foreach ( this.children, child => {
-        			f.appendChild ( child.render () );
-                } );
-            	
-            	this.node.appendChild ( f );
+                if ( this.children.length > 0 ) {
+                    f = document.createDocumentFragment ();
+                    foreach ( this.children, child => {
+                        f.appendChild ( child.render () );
+                    } );
+                    
+                    this.node.appendChild ( f );
+                }
             	
             	break;
         	case 3:
-            	if ( this.node === undefined ) {
+            	if ( !this.node ) {
         			this.node = document.createTextNode ( this.nodeValue || "" );
                 }
             	
             	break;
         	case 11:
-            	if ( this.node === undefined ) {
+            	if ( !this.node ) {
         			this.node = document.createDocumentFragment ();
                 }
         		
@@ -347,6 +359,15 @@ extend ( VNode.prototype, {
                 break;
         }
     	
+        if ( type ( this.node ) === "array" ) {
+            f = document.createDocumentFragment ();
+            foreach ( this.node, node => {
+                f.appendChild ( node );
+            } );
+
+            return f;
+        }
+
     	return this.node;
     },
 
@@ -431,9 +452,12 @@ extend ( VNode.prototype, {
         http://icejs.org/######
     */
     diff ( oldVNode ) {
-
         const nodePatcher = new NodePatcher ();
-    	if ( this.nodeType === 3 && oldVNode.nodeType === 3 ) {
+
+        if ( !oldVNode ) {
+            nodePatcher.addNode ( this, this.parent.children.indexOf ( this ) );
+        }
+    	else if ( this.nodeType === 3 && oldVNode.nodeType === 3 ) {
         	if ( this.nodeValue !== oldVNode.nodeValue ) {
             	
             	// 文本节点内容不同时更新文本内容

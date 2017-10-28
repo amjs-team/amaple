@@ -36,6 +36,16 @@ Tmpl.defineDirective ( {
             	case "array" :
                     refs [ refName ].push ( refObj );
             }
+
+            // 返回卸载函数
+            return () => {
+                if ( type ( refs [ refName ] ) === "array" ) {
+                    refs [ refName ].splice ( refs [ refName ].indexOf ( refObj ), 1 );
+                }
+                else {
+                    delete refs [ refName ];
+                }
+            }
         }
     	
         if ( this.node.isComponent === true ) {

@@ -150,17 +150,19 @@ extend ( NodePatcher.prototype, {
 	patch () {
 		let p;
 		foreach ( this.patches, patchItem => {
+			patchItem.item.render ();
+
         	switch ( patchItem.type ) {
               	case NodePatcher.ATTR_REORDER :
             		attr ( patchItem.item.node, patchItem.name, patchItem.val );
                 	
                 	break;
                 case NodePatcher.ATTR_REMOVE :
-            		attt ( patchItem.item.node, patchItem.name, null );
+            		attr ( patchItem.item.node, patchItem.name, null );
                 	
                 	break;
                 case NodePatcher.TEXTNODE :
-                	patchItem.replaceNode.node.nodeValue = patchItem.item.node.nodeValue;
+                	patchItem.replaceNode.node.nodeValue = patchItem.item.nodeValue;
                 	patchItem.item.node = patchItem.replaceNode.node;
             	
                 	break;
@@ -228,7 +230,7 @@ extend ( NodePatcher.prototype, {
                     	patchItem.replaceNode.component.unmount ();
                     }
                 	else {
-                    	let node;
+                    	let node = patchItem.item.node;
                     	if ( patchItem.item.isComponent ) {
                         	node = document.createDocumentFragment ();
                         	foreach ( patchItem.item.componentNodes, vnode => {

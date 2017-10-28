@@ -27,6 +27,6 @@ Tmpl.defineDirective ( {
         http://icejs.org/######
     */
 	update ( isCache ) {
-    	this.node.cache = isCache;
+    	this.node.cache = isCache === "true" ? true : false;
     }
 } );

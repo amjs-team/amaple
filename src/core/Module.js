@@ -164,7 +164,7 @@ export default function Module ( module, vmData = { init: function () { return {
 		vm = new ViewModel ( vmData.init.apply ( this, cache.getDependentPlugin ( vmData.init ) ) ),
 
 		// 使用vm解析模板
-		tmpl = new Tmpl ( this, components );
+		tmpl = new Tmpl ( vm, components, this );
 	
 	// this.view = slice.call ( moduleElem.childNodes ) || [];
 	this.state = vm;

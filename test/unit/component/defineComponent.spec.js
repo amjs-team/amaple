@@ -38,11 +38,14 @@ describe ( "define component =>", () => {
 			fragment = VFragment (),
 			div = VElement ( "div" );
 
+		div.isComponent = true;
 		fragment.appendChild ( div );
 		tc.__init__ ( div, {} );
+		// console.log ( fragment );
+		// console.log ( fragment.render () );
 
-		// expect ( fragment.firstChild.nodeName ).toBe ( "BUTTON" );
-		// expect ( fragment.firstChild.firstChild.nodeValue ).toBe ( "test-btn" );
+		// expect ( fragment.node.firstChild.nodeName ).toBe ( "BUTTON" );
+		// expect ( fragment.node.firstChild.firstChild.nodeValue ).toBe ( "test-btn" );
 
 		// tc.action.print ( "hello icejs" );
 		// expect ( fragment.firstChild.nextElementSibling.firstChild.nodeValue ).toBe ( "hello icejs" );

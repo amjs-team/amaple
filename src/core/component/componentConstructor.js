@@ -155,12 +155,25 @@ export default {
         URL doc:
         http://icejs.org/######
     */
-    initLifeCycle ( component ) {
-        const lifeCycle = [ "update", "unmount" ];
+    initLifeCycle ( component, moduleObj ) {
+        const lifeCycleHook = {
+            update : noop,
+            unmount () {
+
+                // 在对应module.components中移除此组件
+                moduleObj.components.splice ( moduleObj.components.indexOf ( component ), 1 );
+
+                // 如果在module.refs中存在也一并移除
+                component.refUnmountFn ();
+            }
+        };
             
-        foreach ( lifeCycle, cycleItem => {
-            component [ cycleItem ] = () => {
-                ( component [ cycleItem ] || noop ).apply ( component, cache.getDependentPlugib ( component [ cycleItem ] || noop ) );
+        foreach ( lifeCycleHook, ( hookFn, cycleName ) => {
+            component [ cycleName ] = () => {
+                ( component [ cycleName ] || noop ).apply ( component, cache.getDependentPlugib ( component [ cycleName ] || noop ) );
+
+                // 钩子函数调用
+                hookFn ();
             }
         } );
     },
@@ -270,10 +283,10 @@ export default {
         component.action = {};
         foreach ( actions, ( action, name ) => {
             if ( type ( action ) !== "function" ) {
-                throw componentErr ( "actionType", "action \"" + name + "\"不是方法，组件action返回的对象属性必须为方法，它表示此组件的行为" );
+                throw componentErr ( "actionType", `action'${ name }'不是方法，组件action返回的对象属性必须为方法，它表示此组件的行为` );
             }
             else if ( component [ name ] ) {
-                throw componentErr ( "duplicate", "此组件对象上已存在名为’" + name + "‘的属性或方法" );
+                throw componentErr ( "duplicate", `此组件对象上已存在名为'${ name }'的属性或方法` );
             }
 
             component.action [ name ] = ( ...args ) => {

@@ -86,7 +86,7 @@ describe ( "vnode functions => ", () => {
 	} );
 
 	it ( "Call the function 'render'", () => {
-
+		
 		let fragment = vf.render ();
 
 		expect ( fragment.nodeType ).toBe ( 11 );

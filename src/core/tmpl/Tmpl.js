@@ -89,9 +89,10 @@ function concatHandler ( target, source ) {
     URL doc:
     http://icejs.org/######
 */
-export default function Tmpl ( module, components ) {
-	this.module = module;
+export default function Tmpl ( vm, components, module ) {
+    this.vm = vm;
     this.components = {};
+    this.module = module;
     
     foreach ( components, comp => {
         this.components [ comp.name ] = comp;
@@ -210,20 +211,20 @@ extend ( Tmpl.prototype, {
             foreach ( compileHandlers.watchers, watcher => {
                 new ViewWatcher ( watcher.handler, watcher.targetNode, watcher.expr, this, scoped );
             } );
-        
+            
         	// 渲染组件
             this.module.components = this.module.components || [];
         	foreach ( compileHandlers.components, comp => {
             	const instance = new comp.Class ();
                 this.module.components.push ( instance );
-           
-                instance.__init__ ( comp.vnode, this.getViewModel () );
+                
+                instance.__init__ ( comp.vnode, this.module );
             } );
         }
     },
 
     getViewModel () {
-        return this.module.state;
+        return this.vm;
     },
 	
 	getComponent ( name ) {

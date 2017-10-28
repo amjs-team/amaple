@@ -17,7 +17,7 @@ describe ( "directive model => ", () => {
         let vm = new ViewModel ( {
                 text : "hello icejs"
             } ),
-            t = new Tmpl ( { state : vm } );
+            t = new Tmpl ( vm, [], {} );
         t.mount ( d, true );
         d.render ();
 
@@ -39,7 +39,7 @@ describe ( "directive model => ", () => {
         let vm = new ViewModel ( {
                 text : "hello icejs"
             } ),
-            t = new Tmpl ( { state : vm } );
+            t = new Tmpl ( vm, [], {} );
         t.mount ( d, true );
         d.render ();
 
@@ -62,7 +62,7 @@ describe ( "directive model => ", () => {
         let vm = new ViewModel ( {
                 text : "a"
             } ),
-            t = new Tmpl ( { state : vm } );
+            t = new Tmpl ( vm, [], {} );
         t.mount ( d, true );
         d.render ();
 
@@ -93,7 +93,7 @@ describe ( "directive model => ", () => {
     	let vm = new ViewModel ( {
                 arr : [ "b" ]
             } ),
-            t = new Tmpl ( { state : vm } );
+            t = new Tmpl ( vm, [], {} );
         t.mount ( d, true );
         d.render ();
     	

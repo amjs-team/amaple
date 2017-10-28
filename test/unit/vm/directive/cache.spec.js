@@ -7,7 +7,7 @@ describe ( "directive cache => ", () => {
     it ( "the directive will take the ':cache' attribute to the vnode's member variable", () => {
         const 
             d = VElement ( "div", { ":cache" : "true" } ),
-            t = new Tmpl ( { state : {} } );
+            t = new Tmpl ( {}, [], {} );
 
         t.mount ( d, true );
 

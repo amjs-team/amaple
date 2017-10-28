@@ -15,14 +15,16 @@ import { foreach } from "../../func/util";
 export function diffAttrs ( newVNode, oldVNode, nodePatcher ) {
 	foreach ( newVNode.attrs, ( attr, name ) => {
         if ( oldVNode.attrs [ name ] !== attr ) {
-            nodePatcher.reorderAttr ( newVNode, name, attr );
+
+            // 新旧节点的属性对比出来后的差异需在旧节点上修改，移除时同理
+            nodePatcher.reorderAttr ( oldVNode, name, attr );
         }
     } );
 
     //找出移除的属性
     foreach ( oldVNode.attrs, ( attr, name ) => {
         if ( !newVNode.attrs.hasOwnProperty ( name ) ) {
-            nodePatcher.removeAttr ( newVNode, name );
+            nodePatcher.removeAttr ( oldVNode, name );
         }
     } );
 }
@@ -131,20 +133,29 @@ export function diffChildren ( newChildren, oldChildren, nodePatcher ) {
 
 
     // 对每个分类的新旧节点进行对比
-    let moveItems, oldIndex, oldChildrenCopy,
+    let moveItems, oldIndex, oldChildrenCopy, oldItem,
         offset = 0;
     foreach ( newNodeClassification,  ( newItem, i ) => {
+        oldItem = oldNodeClassification [ i ];
+
         if ( newItem.keyType === 0 ) {
 
             // key为undefined时直接对比同位置的两个节点
             foreach ( newItem.children, ( newChild, j ) => {
-                nodePatcher.concat ( newChild.diff ( oldNodeClassification [ i ].children [ j ] ) );
+                nodePatcher.concat ( newChild.diff ( oldItem.children [ j ] ) );
             } );
+
+            // 如果旧节点数量比新节点多，则移除旧节点中多出的节点
+            if ( newItem.children.length < oldItem.children.length ) {
+                for ( let j = newItem.children.length; j < oldItem.children.length; j ++ ) {
+                    nodePatcher.removeNode ( oldItem.children [ j ] );
+                }
+            }
         }
         else if ( newItem.keyType === 1 ) {
 
             // key不为undefined时需对比节点增加、移除及移动
-            oldChildrenCopy = oldNodeClassification [ i ].children;
+            oldChildrenCopy = oldItem.children;
             foreach ( newItem.children, ( newChild, j ) => {
                 if ( indexOf ( oldChildrenCopy, newChild ) === -1 ) {
                     nodePatcher.addNode ( newChild, j + offset );

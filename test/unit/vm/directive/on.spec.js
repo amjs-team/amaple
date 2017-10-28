@@ -21,7 +21,7 @@ describe ( "directive event bind => ", () => {
                     expect ( event.type ).toBe ( "click" );
                 }
             } ),
-            t = new Tmpl ( { state : vm } );
+            t = new Tmpl ( vm, [], {} );
         t.mount ( d, true );
         d.render ();
 
@@ -41,7 +41,7 @@ describe ( "directive event bind => ", () => {
                     expect ( arg2 ).toBe ( "555" );
                 }
             } ),
-            t = new Tmpl ( { state : vm } );
+            t = new Tmpl ( vm, [], {} );
         t.mount ( d, true );
         d.render ();
 
@@ -61,7 +61,7 @@ describe ( "directive event bind => ", () => {
                     expect ( arg ).toBe ( "hello icejs" );
                 }
             } ),
-            t = new Tmpl ( { state : vm } );
+            t = new Tmpl ( vm, [], {} );
         t.mount ( d, true );
         d.render ();
 
@@ -81,7 +81,7 @@ describe ( "directive event bind => ", () => {
                     expect ( arg ).toBe ( "hello icejs" + key );
                 }
             } ),
-            t = new Tmpl ( { state : vm } );
+            t = new Tmpl ( vm, [], {} );
         t.mount ( d, true );
         d.render ();
 

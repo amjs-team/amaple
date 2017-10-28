@@ -1,3 +1,5 @@
+import { type, foreach } from "../../../func/util";
+import { noUnitHook } from "../../../var/const";
 import Tmpl from "../Tmpl";
 
 Tmpl.defineDirective ( {
@@ -50,6 +52,38 @@ Tmpl.defineDirective ( {
         http://icejs.org/######
     */
 	update ( val ) {
-        this.node [ this.attrName ] = val;
+        const 
+            node = this.node,
+            tval = type ( val );
+
+        // 特殊处理
+        // 绑定style属性时可传入对象，键为样式名的驼峰式，值为样式值
+        if ( this.attrName === "style" ) {
+            if ( tval === "object" ) {
+                const styleArray = [];
+                let num;
+
+                foreach ( val, ( v, k ) => {
+                    // 将驼峰式变量名转换为横杠式变量名
+                    k = k.replace ( /[A-Z]/g, match => "-" + match.toLowerCase () );
+
+                    // 如果值为数字并且不是NaN，并且属性名不在noUnitHook中的，需添加”px“
+                    num = parseInt ( v );
+                    v += type ( num ) === "number" && ( num >= 0 || num <= 0 ) && noUnitHook.indexOf ( k ) === -1 ? "px" : "";
+                    styleArray.push ( k + ":" + v );
+                } );
+
+                node [ this.attrName ] = styleArray.join ( ";" );
+            }
+        }
+        // 绑定元素的class时可传入数组，绑定渲染时会自动用空格隔开
+        else if ( this.attrName === "class" ) {
+            if ( tval === "array" ) {
+                node [ this.attrName ] = val.join ( " " );
+            }
+        }
+        else {
+            node [ this.attrName ] = val.toString ();
+        }
     }
 } );

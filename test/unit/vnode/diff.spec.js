@@ -22,7 +22,7 @@ describe ( "diff vnode => ", () => {
 			id : "the-div2", 
 			"ice-module2": "root2" 
 		} );
-
+		
 		const patcher = vnode2.diff ( vnode1 );
 		expect ( patcher.patches.length ).toBe ( 3 );
 		expect ( patcher.patches [ 0 ].type ).toBe ( NodePatcher.ATTR_REORDER );
@@ -54,7 +54,7 @@ describe ( "diff vnode => ", () => {
 		expect ( patcher.patches [ 0 ].item ).toBe ( vnode2 );
 	} );
 
-	it ( "Diff tow vnodes that have different children", () => {
+	it ( "Diff tow vnodes that have different children with vnode key", () => {
 		vnode1.appendChild ( VElement ( "div" ) );
 		vnode1.appendChild ( VElement ( "span" ) );
 		let childNode = VElement ( "div" );
@@ -113,5 +113,77 @@ describe ( "diff vnode => ", () => {
 		expect ( patcher.patches [ 5 ].index ).toBe ( 5 );
 		expect ( patcher.patches [ 6 ].type ).toBe ( NodePatcher.NODE_REPLACE );
 		expect ( patcher.patches [ 6 ].item.nodeName ).toBe ( "P" );
+	} );
+
+	it ( "Diff tow vnodes that old vnode's children more than new vnode's children and they are without key", () => {
+		let childNode = VElement ( "div" );
+		vnode1.appendChild ( childNode );
+		childNode = VElement ( "div", { class: "wrap-bd" } );
+		vnode1.appendChild ( childNode );
+		childNode = VElement ( "div" );
+		vnode1.appendChild ( childNode );
+		childNode = VElement ( "div" );
+		vnode1.appendChild ( childNode );
+		childNode = VElement ( "div" );
+		vnode1.appendChild ( childNode );
+
+		childNode = VElement ( "div", { id: "icejs-666" } );
+		vnode2.appendChild ( childNode );
+		childNode = VElement ( "div" );
+		vnode2.appendChild ( childNode );
+		childNode = VElement ( "span" );
+		vnode2.appendChild ( childNode );
+
+		const patcher = vnode2.diff ( vnode1 );
+		
+		expect ( patcher.patches.length ).toBe ( 5 );
+		expect ( patcher.patches [ 0 ].type ).toBe ( NodePatcher.ATTR_REORDER );
+		expect ( patcher.patches [ 0 ].item.nodeName ).toBe ( "DIV" );
+		expect ( patcher.patches [ 0 ].name ).toBe ( "id" );
+		expect ( patcher.patches [ 0 ].val ).toBe ( "icejs-666" );
+		expect ( patcher.patches [ 1 ].type ).toBe ( NodePatcher.ATTR_REMOVE );
+		expect ( patcher.patches [ 1 ].name ).toBe ( "class" );
+		expect ( patcher.patches [ 2 ].type ).toBe ( NodePatcher.NODE_REPLACE );
+		expect ( patcher.patches [ 2 ].item.nodeName ).toBe ( "SPAN" );
+		expect ( patcher.patches [ 3 ].type ).toBe ( NodePatcher.NODE_REMOVE );
+		expect ( patcher.patches [ 3 ].item.nodeName ).toBe ( "DIV" );
+		expect ( patcher.patches [ 4 ].type ).toBe ( NodePatcher.NODE_REMOVE );
+		expect ( patcher.patches [ 4 ].item.nodeName ).toBe ( "DIV" );
+	} );
+
+	it ( "Diff tow vnodes that old vnode's children less than new vnode's children and they are without key", () => {
+		let childNode = VElement ( "div" );
+		vnode1.appendChild ( childNode );
+		childNode = VElement ( "div", { class: "wrap-bd" } );
+		vnode1.appendChild ( childNode );
+		childNode = VElement ( "div" );
+		vnode1.appendChild ( childNode );
+
+		childNode = VElement ( "div", { id: "icejs-666" } );
+		vnode2.appendChild ( childNode );
+		childNode = VElement ( "div" );
+		vnode2.appendChild ( childNode );
+		childNode = VElement ( "span" );
+		vnode2.appendChild ( childNode );
+		childNode = VElement ( "div" );
+		vnode2.appendChild ( childNode );
+		childNode = VElement ( "div" );
+		vnode2.appendChild ( childNode );
+
+		const patcher = vnode2.diff ( vnode1 );
+		
+		expect ( patcher.patches.length ).toBe ( 5 );
+		expect ( patcher.patches [ 0 ].type ).toBe ( NodePatcher.ATTR_REORDER );
+		expect ( patcher.patches [ 0 ].item.nodeName ).toBe ( "DIV" );
+		expect ( patcher.patches [ 0 ].name ).toBe ( "id" );
+		expect ( patcher.patches [ 0 ].val ).toBe ( "icejs-666" );
+		expect ( patcher.patches [ 1 ].type ).toBe ( NodePatcher.ATTR_REMOVE );
+		expect ( patcher.patches [ 1 ].name ).toBe ( "class" );
+		expect ( patcher.patches [ 2 ].type ).toBe ( NodePatcher.NODE_REPLACE );
+		expect ( patcher.patches [ 2 ].item.nodeName ).toBe ( "SPAN" );
+		expect ( patcher.patches [ 3 ].type ).toBe ( NodePatcher.NODE_REORDER );
+		expect ( patcher.patches [ 3 ].item.nodeName ).toBe ( "DIV" );
+		expect ( patcher.patches [ 4 ].type ).toBe ( NodePatcher.NODE_REORDER );
+		expect ( patcher.patches [ 4 ].item.nodeName ).toBe ( "DIV" );
 	} );
 } );
