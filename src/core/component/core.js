@@ -30,21 +30,27 @@ extend ( Component.prototype, {
         http://icejs.org/######
     */
 	__init__ ( componentVNode, moduleObj ) {
-        let propsValidator;
+        let isCallPropsType = false;
     	
     	//////////////////////////////////////////
     	// 获取init方法返回值并初始化vm数据
         // 构造属性验证获取器获取属性验证参数
         this.propsType = ( validator ) => {
-            propsValidator = validator || {};
+            isCallPropsType = true;
+
+            // 获取props，如果有需要则验证它们
+            this.props = componentConstructor.initProps ( componentVNode, moduleObj.state, validator || {} );
         };
+
+        // 没有验证时手动调用初始化props
+        if ( !isCallPropsType ) {
+            this.propsType ();
+        }
+
 		const componentVm = new ViewModel ( this.init.apply ( this, cache.getDependentPlugin ( this.init ) ) );
         delete this.propsType;
 
         this.state = componentVm;
-
-        // 获取props，如果有需要则验证它们
-        this.props = componentConstructor.initProps ( componentVNode, moduleObj.state, propsValidator );
 
     	/////////////////////
     	// 转换组件代表元素为实际的组件元素节点
@@ -95,7 +101,7 @@ extend ( Component.prototype, {
 
     		// 保存组件对象和结构
         	componentVNode.component = this;
-        	componentVNode.componentNodes = vfragment.children;
+        	componentVNode.componentNodes = vfragment.children.concat ();
 
     		// 调用mounted钩子函数
     		( this.mounted || noop ).apply ( this, cache.getDependentPlugin ( this.mounted || noop ) );

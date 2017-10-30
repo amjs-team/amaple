@@ -81,9 +81,12 @@ Tmpl.defineDirective ( {
             if ( tval === "array" ) {
                 node [ this.attrName ] = val.join ( " " );
             }
+            else {
+                node [ this.attrName ] = ( val === undefined || val === null ? "" : val ).toString ();
+            }
         }
         else {
-            node [ this.attrName ] = val.toString ();
+            node [ this.attrName ] = ( val === undefined || val === null ? "" : val ).toString ();
         }
     }
 } );

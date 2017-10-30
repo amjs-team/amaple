@@ -427,6 +427,13 @@ extend ( VNode.prototype, {
                         } );
                     } );
                 }
+
+                if ( this.isComponent ) {
+                    vnode.componentNodes = [];
+                    foreach ( this.componentNodes, ( componentNode, i ) => {
+                        vnode.componentNodes.push ( componentNode.clone () );
+                    } );
+                }
             	
             	break;
         	case 3:
@@ -500,7 +507,15 @@ extend ( VNode.prototype, {
         }
     	else if ( this.nodeName === oldVNode.nodeName && this.key === oldVNode.key ) {
 			if ( this.isComponent ) {
-            	diffChildren ( this.componentNodes, oldVNode.componentNodes, nodePatcher );
+
+                // 还未tmpl.mount时oldVNode是没有isComponent的
+                // 此时需将该componentNode替换为组件内容
+                if ( !oldVNode.isComponent ) {
+                    nodePatcher.replaceNode ( VFragment ( this.componentNodes ), oldVNode );
+                }
+                else {
+                    diffChildren ( this.componentNodes, oldVNode.componentNodes, nodePatcher );
+                }
             }
         	else {
 
@@ -515,10 +530,10 @@ extend ( VNode.prototype, {
 
                 // 对比事件
                 diffEvents ( this, oldVNode, nodePatcher );
-        	
-        		// 比较子节点
-        		diffChildren ( this.children, oldVNode.children, nodePatcher );
             }
+
+            // 比较子节点
+            diffChildren ( this.children, oldVNode.children, nodePatcher );
         }
 		else {
         	

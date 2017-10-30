@@ -2,8 +2,11 @@ import Component from "src/core/component/core";
 import ViewModel from "src/core/ViewModel";
 import Class from "src/Class";
 import Tmpl from "src/core/tmpl/Tmpl";
+import VElement from "core/vnode/VElement";
+import VTextNode from "core/vnode/VTextNode";
+import VFragment from "core/vnode/VFragment";
 
-xdescribe ( "render component => ", () => {
+describe ( "render component => ", () => {
 	let TestComp;
 
 	beforeEach ( () => {
@@ -37,52 +40,71 @@ xdescribe ( "render component => ", () => {
 
 	it ( "render a simple component", () => {
 		const 
-			div = document.createElement ( "div" ),
-			tmpl = new Tmpl ( {}, [ TestComp ] );
+			moduleObj = {},
+			div = VElement ( "div" ),
+			tmpl = new Tmpl ( {}, [ TestComp ], moduleObj );
 
-		div.innerHTML = "<test-comp></test-comp>";
+		div.appendChild ( VElement ( "test-comp" ) );
+		let realDOM = div.render (),
+			dBackup = div.clone ();
 
-		tmpl.mount ( div );
+		tmpl.mount ( div, true );
+		
 
-		expect ( div.firstChild.nodeName ).toBe ( "BUTTON" );
-		expect ( div.firstChild.nextElementSibling.nodeName ).toBe ( "DIV" );
+		expect ( div.children [ 0 ].componentNodes [ 0 ].nodeName ).toBe ( "BUTTON" );
+		expect ( div.children [ 0 ].componentNodes [ 1 ].nodeName ).toBe ( "DIV" );
+		div.diff ( dBackup ).patch ();
+		expect ( realDOM.firstChild.nodeName ).toBe ( "BUTTON" );
+		expect ( realDOM.firstChild.nextElementSibling.nodeName ).toBe ( "DIV" );
 	} );
 
 	it ( "render a component with sub elements", () => {
 		let 
-			div = document.createElement ( "div" ),
-			tmpl = new Tmpl ( {}, [ TestComp ] );
+			moduleObj = {},
+			div = VElement ( "div" ),
+			tmpl = new Tmpl ( {}, [ TestComp ], moduleObj );
 
-		div.innerHTML = "<test-comp><sub-comp><span>SubComp</span></sub-comp></test-comp>";
-		tmpl.mount ( div );
+		div.appendChild ( VElement ( "test-comp", {}, null, [
+			VElement ( "sub-comp", {}, null, [
+				VElement ( "span", {}, null, [ VTextNode ( "SubComp" ) ] )
+			] )
+		] ) );
+		let realDOM = div.render (),
+			dBackup = div.clone ();
+		tmpl.mount ( div, true );
 
-		expect ( div.childNodes.length ).toBe ( 5 );
-		expect ( div.childNodes.item ( 2 ).nodeName ).toBe ( "SPAN" );
-		expect ( div.childNodes.item ( 2 ).firstChild.nodeValue ).toBe ( "SubComp" );
+		console.log ( div );
+		expect ( div.children [ 0 ].componentNodes.length ).toBe ( 5 );
+		expect ( div.children [ 0 ].componentNodes [ 2 ].nodeName ).toBe ( "SPAN" );
+		expect ( div.children [ 0 ].componentNodes [ 2 ].children [ 0 ].nodeValue ).toBe ( "SubComp" );
+		div.diff ( dBackup ).patch ();
+		expect ( realDOM.childNodes.length ).toBe ( 5 );
+		expect ( realDOM.childNodes.item ( 2 ).nodeName ).toBe ( "SPAN" );
+		expect ( realDOM.childNodes.item ( 2 ).firstChild.nodeValue ).toBe ( "SubComp" );
 
 		///////////////////////////////////
 		///////////////////////////////////
 		///////////////////////////////////
-		div = document.createElement ( "div" ),
-		tmpl = new Tmpl ( {}, [ TestComp ] );
+		// div = document.createElement ( "div" ),
+		// tmpl = new Tmpl ( {}, [ TestComp ], moduleObj );
 
-		div.innerHTML = "<test-comp><span>default</span></test-comp>";
-		tmpl.mount ( div );
+		// div.innerHTML = "<test-comp><span>default</span></test-comp>";
+		// tmpl.mount ( div, true );
 
-		expect ( div.querySelector ( "#default" ).firstChild.nodeName ).toBe ( "SPAN" );
-		expect ( div.querySelector ( "#default" ).firstChild.firstChild.nodeValue ).toBe ( "default" );
+		// expect ( div.querySelector ( "#default" ).firstChild.nodeName ).toBe ( "SPAN" );
+		// expect ( div.querySelector ( "#default" ).firstChild.firstChild.nodeValue ).toBe ( "default" );
 	} );
 
-	it ( "render a component with directive ':if'", () => {
+	xit ( "render a component with directive ':if'", () => {
 		const 
 			div = document.createElement ( "div" ),
 			vm = new ViewModel ( {
 				visible: false
 			} ),
-			tmpl = new Tmpl ( vm, [ TestComp ] );
+			tmpl = new Tmpl ( vm, [ TestComp ], moduleObj );
 
 		div.innerHTML = "<test-comp :if='visible'></test-comp>";
-		tmpl.mount ( div );
+		tmpl.mount ( div, true );
 
 		expect ( div.childNodes.length ).toBe ( 1 );
 		expect ( div.firstChild.nodeValue ).toBe ( "" );
@@ -94,16 +116,16 @@ xdescribe ( "render component => ", () => {
 		expect ( div.querySelector ( ".console" ).firstChild.nodeValue ).toBe ( "test-comp" );
 	} );
 
-	it ( "render a component with directive ':for'", () => {
+	xit ( "render a component with directive ':for'", () => {
 		const 
 			div = document.createElement ( "div" ),
 			vm = new ViewModel ( {
 				list: [ "a", "b","c" ]
 			} ),
-			tmpl = new Tmpl ( vm, [ TestComp ] );
+			tmpl = new Tmpl ( vm, [ TestComp ], moduleObj );
 
 		div.innerHTML = "<test-comp :for='i in list'>{{ i }}</test-comp>";
-		tmpl.mount ( div );
+		tmpl.mount ( div, true );
 
 		expect ( div.children.length ).toBe ( 12 );
 		expect ( div.children.item ( 0 ).nodeName ).toBe ( "BUTTON" );
@@ -122,17 +144,17 @@ xdescribe ( "render component => ", () => {
 		expect ( div.children.item ( 11 ).firstChild.nodeValue ).toBe ( "c" );
 	} );
 
-	it ( "render a component with both ':if' and ':for'", () => {
+	xit ( "render a component with both ':if' and ':for'", () => {
 		const 
 			div = document.createElement ( "div" ),
 			vm = new ViewModel ( {
 				list: [ "a", "b","c" ],
 				item: "b"
 			} ),
-			tmpl = new Tmpl ( vm, [ TestComp ] );
+			tmpl = new Tmpl ( vm, [ TestComp ], moduleObj );
 
 		div.innerHTML = "<test-comp :for='i in list' :if=\"i === item\">{{ i }}</test-comp>";
-		tmpl.mount ( div );
+		tmpl.mount ( div, true );
 
 		expect ( div.children.length ).toBe ( 4 );
 		expect ( div.children.item ( 3 ).firstChild.nodeValue ).toBe ( "b" );
@@ -142,30 +164,30 @@ xdescribe ( "render component => ", () => {
 		expect ( div.children.item ( 3 ).firstChild.nodeValue ).toBe ( "a" );
 	} );
 
-	it ( "ender a component that sub elements with express", () => {
+	xit ( "ender a component that sub elements with express", () => {
 		const 
 			div = document.createElement ( "div" ),
 			vm = new ViewModel ( {
 				expr: "hello icejs"
 			} ),
-			tmpl = new Tmpl ( vm, [ TestComp ] );
+			tmpl = new Tmpl ( vm, [ TestComp ], moduleObj );
 
 		div.innerHTML = "<test-comp>{{ expr }}</test-comp>";
-		tmpl.mount ( div );
+		tmpl.mount ( div, true );
 
 		expect ( div.querySelector ( "#default" ).firstChild.nodeValue ).toBe ( "hello icejs" );
 	} );
 
-	it ( "render a component that sub elements with ':if', ':else-if', ':else'", () => {
+	xit ( "render a component that sub elements with ':if', ':else-if', ':else'", () => {
 		const 
 			div = document.createElement ( "div" ),
 			vm = new ViewModel ( {
 				visible: "a"
 			} ),
-			tmpl = new Tmpl ( vm, [ TestComp ] );
+			tmpl = new Tmpl ( vm, [ TestComp ], moduleObj );
 
 		div.innerHTML = "<test-comp><span :if='visible === \"a\"'>a</span><span :else-if='visible === \"b\"'>b</span><span :else>c</span></test-comp>";
-		tmpl.mount ( div );
+		tmpl.mount ( div, true );
 		
 		expect ( div.querySelector ( "#default" ).firstChild.firstChild.nodeValue ).toBe ( "a" );
 
@@ -176,16 +198,16 @@ xdescribe ( "render component => ", () => {
 		expect ( div.querySelector ( "#default" ).firstChild.firstChild.nodeValue ).toBe ( "c" );
 	} );
 
-	it ( "render a component that sub elements with ':for'", () => {
+	xit ( "render a component that sub elements with ':for'", () => {
 		const 
 			div = document.createElement ( "div" ),
 			vm = new ViewModel ( {
 				list: [ "a", "b", "c" ]
 			} ),
-			tmpl = new Tmpl ( vm, [ TestComp ] );
+			tmpl = new Tmpl ( vm, [ TestComp ], moduleObj );
 
 		div.innerHTML = "<test-comp><span :for='i in list'>{{ i }}</span></test-comp>";
-		tmpl.mount ( div );
+		tmpl.mount ( div, true );
 
 		expect ( div.querySelector ( "#default" ).children.length ).toBe ( 3 );
 		expect ( div.querySelector ( "#default" ).children.item ( 0 ).firstChild.nodeValue ).toBe ( "a" );
@@ -193,13 +215,13 @@ xdescribe ( "render component => ", () => {
 		expect ( div.querySelector ( "#default" ).children.item ( 2 ).firstChild.nodeValue ).toBe ( "c" );
 	} );
 
-	it ( "render multiple components", () => {
+	xit ( "render multiple components", () => {
 		const 
 			div = document.createElement ( "div" ),
-			tmpl = new Tmpl ( {}, [ TestComp ] );
+			tmpl = new Tmpl ( {}, [ TestComp ], moduleObj );
 
 		div.innerHTML = "<test-comp>a<sub-comp2>1</sub-comp2></test-comp><test-comp>b<sub-comp2>2</sub-comp2><sub-comp2>3</sub-comp2></test-comp>";
-		tmpl.mount ( div );
+		tmpl.mount ( div, true );
 
 		expect ( div.children.length ).toBe ( 8 );
 		expect ( div.children.item ( 3 ).firstChild.nodeValue ).toBe ( "a" );
@@ -211,16 +233,16 @@ xdescribe ( "render component => ", () => {
 		expect ( div.children.item ( 6 ).children.item ( 1 ).firstChild.nodeValue ).toBe ( "3" );
 	} );
 
-	it ( "render multiple components with directive ':if',':else-if',':else'", () => {
+	xit ( "render multiple components with directive ':if',':else-if',':else'", () => {
 		const 
 			div = document.createElement ( "div" ),
 			vm = new ViewModel ( {
 				visible: "a"
 			} ),
-			tmpl = new Tmpl ( vm, [ TestComp ] );
+			tmpl = new Tmpl ( vm, [ TestComp ], moduleObj );
 
 		div.innerHTML = "<test-comp :if='visible === \"a\"'>a</test-comp><test-comp :else-if='visible === \"b\"'>b</test-comp><template :else><span>template</span></template>";
-		tmpl.mount ( div );
+		tmpl.mount ( div, true );
 		
 		expect ( div.children.length ).toBe ( 4 );
 		expect ( div.querySelector ( "#default" ).firstChild.nodeValue ).toBe ( "a" );
