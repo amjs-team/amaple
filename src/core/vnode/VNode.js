@@ -1,18 +1,16 @@
 import { newClassCheck } from "../../Class";
 import { extend, foreach, type, guid } from "../../func/util";
 import { attr } from "../../func/node";
+import { attrAssignmentHook } from "../../var/const";
 import { vnodeErr } from "../../error";
 import correctParam from "../../correctParam";
 import event from "../../event/core";
 import slice from "../../var/slice";
-import { diffAttrs, diffChildren } from "./diffs";
+import { diffAttrs, diffEvents, diffChildren } from "./diffs";
 import VElement from "./VElement";
 import VTextNode from "./VTextNode";
 import VFragment from "./VFragment";
 import NodePatcher from "./NodePatcher";
-
-// 直接赋值的属性
-const attrAssignmentHook = [ "value", "checked" ];
 
 /**
     supportCheck ( nodeType: Number, method: String )
@@ -307,8 +305,6 @@ extend ( VNode.prototype, {
                         foreach ( this.componentNodes, vnode => {
                             this.node.push ( vnode.render () );
                         } );
-
-
                     }
                     else {
             			this.node = document.createElement ( this.nodeName );
@@ -327,6 +323,18 @@ extend ( VNode.prototype, {
                         } );
                     }
          		}
+                else {
+
+                    // 存在对应node时修正node属性
+                    attr ( this.node, this.attrs );
+
+                    // 移除不存在的属性
+                    foreach ( slice.call ( this.node.attributes ), attrNode => {
+                        if ( !this.attrs.hasOwnProperty ( attrNode.name ) ) {
+                            attr ( this.node, attrNode.name, null );
+                        }
+                    } );
+                }
             	
                 if ( this.children.length > 0 ) {
                     f = document.createDocumentFragment ();
@@ -341,6 +349,11 @@ extend ( VNode.prototype, {
         	case 3:
             	if ( !this.node ) {
         			this.node = document.createTextNode ( this.nodeValue || "" );
+                }
+                else {
+                    if ( this.node.nodeValue !== this.nodeValue ) {
+                        this.node.nodeValue = this.nodeValue;
+                    }
                 }
             	
             	break;
@@ -372,7 +385,7 @@ extend ( VNode.prototype, {
     },
 
     /**
-        clone ()
+        clone ( realNode: DOMObject )
     
         Return Type:
         Object
@@ -381,13 +394,20 @@ extend ( VNode.prototype, {
         Description:
         克隆此vnode
         操作克隆的vnode不会影响此vnode
+        如果指定了参数realNode时，则会将此node按层级顺序被克隆的vnode引用
+        如果参数realNode为null时，则此vnode不会引用任何node
     
         URL doc:
         http://icejs.org/######
     */
-    clone () {
-        let vnode;
-        
+    clone ( realNode ) {
+        let vnode, 
+            node = this.node;
+
+        if ( realNode && realNode.nodeType || realNode === null ) {
+            node = realNode;
+        }
+
         switch ( this.nodeType ) {
         	case 1:
 
@@ -397,22 +417,36 @@ extend ( VNode.prototype, {
         			attrs [ name ] = attr;
         		} );
 
-                vnode = VElement ( this.nodeName, attrs, null, null, this.node, this.isComponent );
+                vnode = VElement ( this.nodeName, attrs, null, null, node, this.isComponent );
                 vnode.key = this.key;
+
+                if ( this.events ) {
+                    foreach ( this.events, ( handlers, type ) => {
+                        foreach ( handlers, handler => {
+                            vnode.bindEvent ( type, handler );
+                        } );
+                    } );
+                }
             	
             	break;
         	case 3:
-            	vnode = VTextNode ( this.nodeValue, null, this.node );
+            	vnode = VTextNode ( this.nodeValue, null, node );
                 vnode.key = this.key;
             	
             	break;
         	case 11:
-            	vnode = VFragment ( null, this.elem );
+            	vnode = VFragment ( null, node );
         }
 
         if ( this.children ) {
-            foreach ( this.children, child => {
-                vnode.appendChild ( child.clone () );
+            foreach ( this.children, ( child, i ) => {
+                if ( realNode && realNode.nodeType ) {
+                    node = realNode.childNodes.item ( i );
+                }
+                else if ( realNode === undefined || realNode === null ) {
+                    node = realNode;
+                }
+                vnode.appendChild ( child.clone ( node ) );
             } );
         }
     	
@@ -469,10 +503,18 @@ extend ( VNode.prototype, {
             	diffChildren ( this.componentNodes, oldVNode.componentNodes, nodePatcher );
             }
         	else {
+
+                // 防止使用”:if“、”:else-if“指令时相同元素导致无法匹配元素的问题
+                if ( this.node !== oldVNode.node ) {
+                    this.node = oldVNode.node;
+                }
             	
             	// 通过key对比出节点相同时
             	// 对比属性
         		diffAttrs ( this, oldVNode, nodePatcher );
+
+                // 对比事件
+                diffEvents ( this, oldVNode, nodePatcher );
         	
         		// 比较子节点
         		diffChildren ( this.children, oldVNode.children, nodePatcher );

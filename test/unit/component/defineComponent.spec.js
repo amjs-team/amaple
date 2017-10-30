@@ -41,8 +41,6 @@ describe ( "define component =>", () => {
 		div.isComponent = true;
 		fragment.appendChild ( div );
 		tc.__init__ ( div, {} );
-		// console.log ( fragment );
-		// console.log ( fragment.render () );
 
 		// expect ( fragment.node.firstChild.nodeName ).toBe ( "BUTTON" );
 		// expect ( fragment.node.firstChild.firstChild.nodeValue ).toBe ( "test-btn" );

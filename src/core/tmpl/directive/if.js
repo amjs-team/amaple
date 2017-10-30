@@ -27,6 +27,11 @@ Tmpl.defineDirective ( {
     	this.expr = "[" + elem.conditions.join ( "," ) + "]";
     	this.replacement = VTextNode ( "" );
 
+        // 如果有key则为占位元素设置相同key
+        if ( elem.key ) {
+            this.replacement.key = elem.key;
+        }
+
         // 将elem在DOM结构中去掉，以便在下面循环扫描时不会扫描到elem的nextSibling元素
         elem.parent.replaceChild ( this.replacement, elem );
         this.currentNode = this.replacement;

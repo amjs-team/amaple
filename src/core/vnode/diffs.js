@@ -30,6 +30,52 @@ export function diffAttrs ( newVNode, oldVNode, nodePatcher ) {
 }
 
 /**
+    diffEvents ( newVNode: Object, oldVNode: Object, nodePatcher: Object )
+
+    Return Type:
+    void
+
+    Description:
+    对比新旧vnode的事件，将差异存入nodePatcher中
+    ！！！场景需要，暂不实现卸载事件的功能
+
+    URL doc:
+    http://icejs.org/######
+*/
+export function diffEvents ( newVNode, oldVNode, nodePatcher ) {
+
+    if ( !oldVNode.events ) {
+
+        // 绑定新vnode上的所有事件
+        foreach ( newVNode.events, ( handlers, type ) => {
+            nodePatcher.addEvents ( oldVNode, type, handlers );
+        } );
+    }
+    else {
+        let addHandlers;
+        foreach ( newVNode.events, ( handlers, type ) => {
+
+            addHandlers = [];
+            if ( oldVNode.events.hasOwnProperty ( type ) ) {
+                foreach ( handlers, handler => {
+                    if ( oldVNode.events [ type ].indexOf ( handler ) === -1 ) {
+                        addHandlers.push ( handler );
+                    }
+                } );
+            }
+            else {
+                addHandlers = handlers;
+            }
+
+            // 存在没有绑定的时间方法时才绑定
+            if ( addHandlers.length > 0 ) {
+                nodePatcher.addEvents ( oldVNode, type, addHandlers );
+            }
+        } );
+    }
+}
+
+/**
     indexOf ( children: Array, searchNode: Object )
 
     Return Type:
@@ -136,7 +182,7 @@ export function diffChildren ( newChildren, oldChildren, nodePatcher ) {
     let moveItems, oldIndex, oldChildrenCopy, oldItem,
         offset = 0;
     foreach ( newNodeClassification,  ( newItem, i ) => {
-        oldItem = oldNodeClassification [ i ];
+        oldItem = oldNodeClassification [ i ] || { children : [] };
 
         if ( newItem.keyType === 0 ) {
 

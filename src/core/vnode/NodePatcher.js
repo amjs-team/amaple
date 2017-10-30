@@ -1,5 +1,7 @@
 import { extend, foreach } from "../../func/util";
 import { attr } from "../../func/node";
+import { attrAssignmentHook } from "../../var/const";
+import event from "../../event/core";
 
 export default function NodePatcher () {
 	this.patches = [];
@@ -118,6 +120,22 @@ extend ( NodePatcher.prototype, {
 	removeAttr ( item, name ) {
 		this.patches.push ( { type : NodePatcher.ATTR_REMOVE, item, name } );
 	},
+
+	/**
+		addEvents ( item: Object, eventType: String, handlers: Array )
+	
+		Return Type:
+		void
+	
+		Description:
+		记录事件绑定的记录
+	
+		URL doc:
+		http://icejs.org/######
+	*/
+	addEvents ( item, eventType, handlers ) {
+		this.patches.push ( { type : NodePatcher.EVENTS_ADD, item, eventType, handlers } );
+	},
 	
 	/**
 		concat ()
@@ -154,7 +172,12 @@ extend ( NodePatcher.prototype, {
 
         	switch ( patchItem.type ) {
               	case NodePatcher.ATTR_REORDER :
-            		attr ( patchItem.item.node, patchItem.name, patchItem.val );
+              		if ( attrAssignmentHook.indexOf ( patchItem.name ) === -1 ) {
+              		    attr ( patchItem.item.node, patchItem.name, patchItem.val );
+              		}
+              		else {
+              		    patchItem.item.node [ patchItem.name ] = patchItem.val;
+              		}
                 	
                 	break;
                 case NodePatcher.ATTR_REMOVE :
@@ -186,8 +209,8 @@ extend ( NodePatcher.prototype, {
                         }
                     }
                 	else {
-                		if ( patchItem.index < p.childNodes.length - 1 ) {
-            				p.insertBefore ( patchItem.item.node, p.childNodes.item ( patchItem.index + 1 ) );
+                		if ( patchItem.index < p.childNodes.length ) {
+            				p.insertBefore ( patchItem.item.node, p.childNodes.item ( patchItem.index ) );
                     	}
                 		else {
                     		p.appendChild ( patchItem.item.node );
@@ -242,6 +265,11 @@ extend ( NodePatcher.prototype, {
                     }
                 	
                 	break;
+                case NodePatcher.EVENTS_ADD : 
+                	foreach ( patchItem.handlers, handler => {
+                		event.on ( patchItem.item.node, patchItem.eventType, handler );
+                	} );
+                	break;
             }
         } );
 	}
@@ -264,5 +292,8 @@ extend ( NodePatcher, {
     NODE_REMOVE : 4,
 
     // 节点替换标识
-    NODE_REPLACE : 5
+    NODE_REPLACE : 5,
+
+    // 添加事件绑定
+    EVENTS_ADD : 6
 } );

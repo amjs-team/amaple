@@ -33,3 +33,6 @@ export const VNODE_MOVE = 2;
 // 重复利用的常量
 // 样式值为数字时不添加单位“px”的样式名
 export const noUnitHook = [ "z-index" ];
+
+// 直接赋值的元素属性，如果不在此的属性将会使用setAttribute设置属性
+export const attrAssignmentHook = [ "value", "checked" ];

@@ -46,9 +46,15 @@ Tmpl.defineDirective ( {
                 else {
                     vm [ expr ].splice ( vm [ expr ].indexOf ( this.value ), 1 );
                 }
+
+                // 同步虚拟dom的值
+                elem.attr ( "checked", this.checked );
             } : 
             function () {
                 vm [ expr ] = this.value;
+
+                // 同步虚拟dom的值
+                elem.attr ( "value", this.value );
             };
     	
 

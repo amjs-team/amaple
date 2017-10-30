@@ -107,6 +107,7 @@ describe ( "directive if => ", () => {
         d.appendChild ( VElement ( "p", { ":if" : "show > 1" }, null, [ VTextNode ( "hello icejs1" ) ] ) );
         d.appendChild ( VElement ( "p", { ":else-if" : "show === 1" }, null, [ VTextNode ( "hello icejs2" ) ] ) );
         d.appendChild ( VElement ( "p", { ":else" : "" }, null, [ VTextNode ( "hello icejs3" ) ] ) );
+
         d.appendChild ( VElement ( "p", { ":if" : "show2 === 'aa'" }, null, [ VTextNode ( "hello icejs4" ) ] ) );
         d.appendChild ( VElement ( "p", { ":else-if" : "show2 === 'bb'" }, null, [ VTextNode ( "hello icejs5" ) ] ) );
         const realDOM = d.render ();
@@ -152,7 +153,6 @@ describe ( "directive if => ", () => {
         d.diff ( dBackup ).patch ();
         expect ( realDOM.childNodes.length ).toBe ( 2 );
         expect ( realDOM.childNodes.item ( 1 ).childNodes.item ( 0 ).nodeValue ).toBe ( "hello icejs5" );
-        
 
         dBackup = d.clone ();
         vm.show2 = "cc";
@@ -163,8 +163,13 @@ describe ( "directive if => ", () => {
         expect ( realDOM.childNodes.item ( 1 ).nodeType ).toBe ( 3 );
         expect ( realDOM.childNodes.item ( 1 ).nodeValue ).toBe ( "" );
 
+        dBackup = d.clone ();
         vm.show2 = "bb";
-        console.log(realDOM);
+        expect ( d.children.length ).toBe ( 2 );
+        expect ( d.children [ 1 ].children [ 0 ].nodeValue ).toBe ( "hello icejs5" );
+        d.diff ( dBackup ).patch ();
+        expect ( realDOM.childNodes.length ).toBe ( 2 );
+        expect ( realDOM.childNodes.item ( 1 ).childNodes.item ( 0 ).nodeValue ).toBe ( "hello icejs5" );
     } );
 
     it ( "directive :if,:else-if,:else with nesting", () => {
@@ -184,8 +189,10 @@ describe ( "directive if => ", () => {
         d.appendChild ( VElement ( "div", { ":else" : undefined }, null, [ 
             VTextNode ( "hello icejs4" )
         ] ) );
+        const realDOM = d.render ();
 
-        let vm = new ViewModel ( {
+        let dBackup = d.clone (),
+            vm = new ViewModel ( {
                 show: 2,
                 show2: "aa",
                 show3: 'a'
@@ -195,21 +202,39 @@ describe ( "directive if => ", () => {
 
         expect ( d.children.length ).toBe ( 1 );
         expect ( d.children [ 0 ].children [ 0 ].children [ 0 ].nodeValue ).toBe ( "hello icejs1" );
+        d.diff ( dBackup ).patch ();
+        expect ( realDOM.childNodes.length ).toBe ( 1 );
+        expect ( realDOM.childNodes.item ( 0 ).childNodes.item ( 0 ).childNodes.item ( 0 ).nodeValue ).toBe ( "hello icejs1" );
 
+        dBackup = d.clone ();
         vm.show2 = false;
         expect ( d.children [ 0 ].children [ 0 ].nodeValue ).toBe ( "" );
+        d.diff ( dBackup ).patch ();
+        expect ( realDOM.childNodes.item ( 0 ).childNodes.item ( 0 ).nodeValue ).toBe ( "" );
 
+        dBackup = d.clone ();
         vm.show = 1;
         expect ( d.children [ 0 ].children [ 0 ].children [ 0 ].nodeValue ).toBe ( "hello icejs2" );
+        d.diff ( dBackup ).patch ();
+        expect ( realDOM.childNodes.item ( 0 ).childNodes.item ( 0 ).childNodes.item ( 0 ).nodeValue ).toBe ( "hello icejs2" );
 
+        dBackup = d.clone ();
         vm.show3 = 'b'
         expect ( d.children [ 0 ].children [ 0 ].children [ 0 ].nodeValue ).toBe ( "hello icejs3" );
+        d.diff ( dBackup ).patch ();
+        expect ( realDOM.childNodes.item ( 0 ).childNodes.item ( 0 ).childNodes.item ( 0 ).nodeValue ).toBe ( "hello icejs3" );
 
+        dBackup = d.clone ();
         vm.show3 = 'c';
         expect ( d.children [ 0 ].children [ 0 ].nodeValue ).toBe ( "" );
+        d.diff ( dBackup ).patch ();
+        expect ( realDOM.childNodes.item ( 0 ).childNodes.item ( 0 ).nodeValue ).toBe ( "" );
 
+        dBackup = d.clone ();
         vm.show = 0
         expect ( d.children [ 0 ].children [ 0 ].nodeValue ).toBe ( "hello icejs4" );
+        d.diff ( dBackup ).patch ();
+        expect ( realDOM.childNodes.item ( 0 ).childNodes.item ( 0 ).nodeValue ).toBe ( "hello icejs4" );
     } );
 
     it ( "directive :if,:else-if,:else in template node", () => {
@@ -228,8 +253,10 @@ describe ( "directive if => ", () => {
         d.appendChild ( VElement ( "div", { ":else" : "" }, null, [ 
             VTextNode ( "999" )
         ] ) );
+        const realDOM = d.render ();
 
-        let vm = new ViewModel ( {
+        let dBackup = d.clone (),
+            vm = new ViewModel ( {
                 show: 1,
                 num: 555,
             } ),
@@ -242,15 +269,30 @@ describe ( "directive if => ", () => {
         expect ( children [ 0 ].nodeName ).toBe ( "SPAN" );
         expect ( children [ 0 ].children [ 0 ].nodeValue ).toBe ( 555 );
         expect ( children [ 0 ].children [ 1 ].nodeValue ).toBe ( "666" );
+        d.diff ( dBackup ).patch ();
+        expect ( realDOM.childNodes.length ).toBe ( 1 );
+        expect ( realDOM.childNodes.item ( 0 ).nodeName ).toBe ( "SPAN" );
+        expect ( realDOM.childNodes.item ( 0 ).childNodes.item ( 0 ).nodeValue ).toBe ( "555" );
+        expect ( realDOM.childNodes.item ( 0 ).childNodes.item ( 1 ).nodeValue ).toBe ( "666" );
 
+        dBackup = d.clone ();
         vm.show = 2;
         expect ( children.length ).toBe ( 1 );
         expect ( children [ 0 ].nodeName ).toBe ( "SPAN" );
         expect ( children [ 0 ].children [ 0 ].nodeValue ).toBe ( "555123" );
         expect ( children [ 0 ].children [ 1 ].nodeValue ).toBe ( "888" );
+        d.diff ( dBackup ).patch ();
+        expect ( realDOM.childNodes.length ).toBe ( 1 );
+        expect ( realDOM.childNodes.item ( 0 ).nodeName ).toBe ( "SPAN" );
+        expect ( realDOM.childNodes.item ( 0 ).childNodes.item ( 0 ).nodeValue ).toBe ( "555123" );
+        expect ( realDOM.childNodes.item ( 0 ).childNodes.item ( 1 ).nodeValue ).toBe ( "888" );
 
+        dBackup = d.clone ();
         vm.show = 3;
         expect ( children.length ).toBe ( 1 );
         expect ( children [ 0 ].children [ 0 ].nodeValue ).toBe ( "999" );
+        d.diff ( dBackup ).patch ();
+        expect ( realDOM.childNodes.length ).toBe ( 1 );
+        expect ( realDOM.childNodes.item ( 0 ).childNodes.item ( 0 ).nodeValue ).toBe ( "999" );
     } );
 } );

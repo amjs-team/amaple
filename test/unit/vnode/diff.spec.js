@@ -186,4 +186,9 @@ describe ( "diff vnode => ", () => {
 		expect ( patcher.patches [ 4 ].type ).toBe ( NodePatcher.NODE_REORDER );
 		expect ( patcher.patches [ 4 ].item.nodeName ).toBe ( "DIV" );
 	} );
+
+	// 测试一个vnode中同时使用‘:for’和‘:if’指令时，在改变‘:if’值时的差异对比
+	it ( "Diff tow vnodes that use both directive ':for' and ':if' in the same vnode", () => {
+		
+	} );
 } );

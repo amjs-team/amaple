@@ -5,7 +5,7 @@ import Tmpl from "../Tmpl";
 import VTextNode from "../../vnode/VTextNode";
 import VFragment from "../../vnode/VFragment";
 
-function createVNode ( watcher, arg, index, key ) {
+function createVNode ( watcher, arg, index, realNode, key ) {
     const 
         f = VFragment (),
         elem = watcher.node,
@@ -13,12 +13,14 @@ function createVNode ( watcher, arg, index, key ) {
         // 定义范围变量
         scopedDefinition = {};
 
-    let itemNode = elem.clone ();
+    let itemNode = elem.clone ( realNode ),
+        nextSibClone;
 
     scopedDefinition [ watcher.item ] = arg;
 
     // 为itemNode指定key，如果没有传入key则生成一个新key
-	itemNode.key = key !== undefined ? key : guid ();
+	key = key !== undefined ? key : guid ();
+    itemNode.key = key;
     if ( watcher.index ) {
         scopedDefinition [ watcher.index ] = index;
     }
@@ -27,7 +29,9 @@ function createVNode ( watcher, arg, index, key ) {
         itemNode.conditionElems = [ itemNode ];
         foreach ( elem.conditionElems, ( nextSib, i ) => {
             if ( i > 0 ) {
-                itemNode.conditionElems.push ( nextSib.clone () );
+                nextSibClone = nextSib.clone ( realNode );
+                nextSibClone.key = key;
+                itemNode.conditionElems.push ( nextSibClone );
             }
         } );
         itemNode.conditions = elem.conditions;
@@ -40,7 +44,8 @@ function createVNode ( watcher, arg, index, key ) {
     watcher.tmpl.mount ( f, true, Tmpl.defineScoped ( scopedDefinition ) );
     itemNode = f.children [ 0 ];
 
-    return itemNode.nodeName && itemNode.nodeName === "TEMPLATE" ? VFragment ( itemNode.children ) : itemNode;
+    return itemNode.nodeName && itemNode.nodeName === "TEMPLATE" ? VFragment ( itemNode.children ) : 
+            elem.nodeName && elem.nodeName === "TEMPLATE" ? f : f.children [ 0 ];
 }
 
 Tmpl.defineDirective ( {
@@ -108,9 +113,9 @@ Tmpl.defineDirective ( {
         // 初始化视图时将模板元素替换为挂载后元素
         if ( elem.parent ) {
             foreach ( iterator, ( val, i ) => {
-            	itemNode = createVNode ( this, val, i );
+            	itemNode = createVNode ( this, val, i, null );
             	nodeMap.push ( {
-                	key : itemNode.key,
+                	itemNode,
                 	val,
                 } );
             	
@@ -127,18 +132,17 @@ Tmpl.defineDirective ( {
 
             // 改变数据后更新视图
         	foreach ( iterator, ( val, index ) => {
-                let key;
+                let itemNode = {};
 
                 // 在原数组中找到对应项时，使用该项的key创建vnode
         		foreach ( this.nodeMap, item => {
                 	if ( item.val === val ) {
-                    	key = item.key;
-
+                    	itemNode = item.itemNode;
             			return false;
                     }
                 } );
-                itemNode = createVNode ( this, val, index, key );
-    			nodeMap.push ( { key : itemNode.key, val } );
+                itemNode = createVNode ( this, val, index, itemNode.node || null, itemNode.key );
+    			nodeMap.push ( { itemNode, val } );
 
     			fragment.appendChild ( itemNode );
             } );

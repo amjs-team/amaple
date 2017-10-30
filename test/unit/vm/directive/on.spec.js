@@ -14,8 +14,10 @@ describe ( "directive event bind => ", () => {
         d.appendChild ( VElement ( "p", { ":onclick" : "click" }, null, [
             VTextNode ( "btn" )
         ] ) );
+        const realDOM = d.render ();
 
-        let vm = new ViewModel ( {
+        let dBackup = d.clone (),
+            vm = new ViewModel ( {
                 click : function ( event ){
                     done ();
                     expect ( event.type ).toBe ( "click" );
@@ -23,8 +25,8 @@ describe ( "directive event bind => ", () => {
             } ),
             t = new Tmpl ( vm, [], {} );
         t.mount ( d, true );
-        d.render ();
 
+        d.diff ( dBackup ).patch ();
         d.children [ 0 ].node.click ();
     } );
 
@@ -32,8 +34,10 @@ describe ( "directive event bind => ", () => {
         d.appendChild ( VElement ( "p", { ":onclick" : "click ( 666, '555' )" }, null, [
             VTextNode ( "btn" )
         ] ) );
+        const realDOM = d.render ();
 
-        let vm = new ViewModel ( {
+        let dBackup = d.clone (),
+            vm = new ViewModel ( {
                 click : function ( event, arg, arg2 ){
                     done ();
                     expect ( event.type ).toBe ( "click" );
@@ -43,8 +47,8 @@ describe ( "directive event bind => ", () => {
             } ),
             t = new Tmpl ( vm, [], {} );
         t.mount ( d, true );
-        d.render ();
 
+        d.diff ( dBackup ).patch ();
         d.children [ 0 ].node.click ();
     } );
 
@@ -52,8 +56,10 @@ describe ( "directive event bind => ", () => {
         d.appendChild ( VElement ( "p", { ":onclick" : "click ( text )" }, null, [
             VTextNode ( "btn" )
         ] ) );
+        const realDOM = d.render ();
 
-        let vm = new ViewModel ( {
+        let dBackup = d.clone (),
+            vm = new ViewModel ( {
                 text: "hello icejs",
                 click : function ( event, arg ){
                     done ();
@@ -63,8 +69,8 @@ describe ( "directive event bind => ", () => {
             } ),
             t = new Tmpl ( vm, [], {} );
         t.mount ( d, true );
-        d.render ();
 
+        d.diff ( dBackup ).patch ();
         d.children [ 0 ].node.click ();
     } );
 
@@ -72,8 +78,10 @@ describe ( "directive event bind => ", () => {
         d.appendChild ( VElement ( "p", { ":for" : "( item, key ) in list", ":onclick" : "click ( item, key )" }, null, [
                 VTextNode ( "btn" )
             ] ) );
+        const realDOM = d.render ();
 
-        let vm = new ViewModel ( {
+        let dBackup = d.clone (),
+            vm = new ViewModel ( {
                 list : [ "hello icejs0", "hello icejs1", "hello icejs2" ],
                 click : function ( event, arg, key ) {
                     done ();
@@ -83,8 +91,8 @@ describe ( "directive event bind => ", () => {
             } ),
             t = new Tmpl ( vm, [], {} );
         t.mount ( d, true );
-        d.render ();
 
+        d.diff ( dBackup ).patch ();
         // d.children [ 0 ]为startNode
         d.children [ 1 ].node.click ();
         d.children [ 2 ].node.click ();
