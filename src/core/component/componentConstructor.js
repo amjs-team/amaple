@@ -260,7 +260,7 @@ export default {
             }
             else {
                 _subElements.default = _subElements.default || VFragment ();
-                _subElements.default.appendChild ( node );
+                _subElements.default.appendChild ( vnode );
             }
         } );
         

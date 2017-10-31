@@ -496,6 +496,20 @@ extend ( VNode.prototype, {
         const nodePatcher = new NodePatcher ();
 
         if ( !oldVNode ) {
+            let i = 0,
+                insertIndex = 0,
+                childVNode = this.parent.children [ i ];
+
+            while ( childVNode !== this ) {
+                if ( childVNode.isComponent ) {
+                    insertIndex += childVNode.componentNodes.length;
+                }
+                else {
+                    insertIndex ++;
+                }
+
+                childVNode = this.parent.children [ ++ i ];
+            }
             nodePatcher.addNode ( this, this.parent.children.indexOf ( this ) );
         }
     	else if ( this.nodeType === 3 && oldVNode.nodeType === 3 ) {
@@ -530,10 +544,10 @@ extend ( VNode.prototype, {
 
                 // 对比事件
                 diffEvents ( this, oldVNode, nodePatcher );
-            }
 
-            // 比较子节点
-            diffChildren ( this.children, oldVNode.children, nodePatcher );
+                // 比较子节点
+                diffChildren ( this.children, oldVNode.children, nodePatcher );
+            }
         }
 		else {
         	

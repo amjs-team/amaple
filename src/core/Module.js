@@ -175,8 +175,6 @@ export default function Module ( module, vmData = { init: function () { return {
 	// 普通模式下，如果parent为对象时表示此模块不是最上层模块，不需挂载
 	tmpl.mount ( moduleElem, Structure.currentPage ? false : !parent );
 	
-	moduleElem.render ();
-	
 	// 对比新旧vnode计算出差异
 	// 并根据差异更新到实际dom中
 	moduleElem.diff ( moduleElemBackup ).patch ();

@@ -112,6 +112,7 @@ Tmpl.defineDirective ( {
     	
         // 初始化视图时将模板元素替换为挂载后元素
         if ( elem.parent ) {
+            fragment.appendChild ( this.startNode );
             foreach ( iterator, ( val, i ) => {
             	itemNode = createVNode ( this, val, i, null );
             	nodeMap.push ( {
@@ -122,8 +123,6 @@ Tmpl.defineDirective ( {
                 fragment.appendChild ( itemNode );
             	
             } );
-
-            fragment.insertBefore ( this.startNode, fragment.children [ 0 ] );
             fragment.appendChild ( this.endNode );
             
             elem.parent.replaceChild ( fragment, elem );

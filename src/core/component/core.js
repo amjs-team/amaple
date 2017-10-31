@@ -95,9 +95,12 @@ extend ( Component.prototype, {
     		const 
             	vfragment = componentConstructor.initTemplate ( componentString, scopedStyle ),
                 subElements = componentConstructor.initSubElements ( componentVNode, subElementNames ),
-                tmpl = new Tmpl ( componentVm, this.components || [], this );
+                tmpl = new Tmpl ( componentVm, this.components || [], this ),
+                vfragmentBackup = vfragment.clone ();
         	
     		tmpl.mount ( vfragment, false, Tmpl.defineScoped ( subElements ) );
+
+            vfragment.diff ( vfragmentBackup ).patch ();
 
     		// 保存组件对象和结构
         	componentVNode.component = this;

@@ -232,9 +232,10 @@ extend ( NodePatcher.prototype, {
                 	
                 	break;
                 case NodePatcher.NODE_REPLACE :
-                	p = patchItem.replaceNode.node.parentNode;
+                	let node;
                 	if ( patchItem.replaceNode.isComponent ) {
-                    	let node;
+                		p = patchItem.replaceNode.componentNodes [ 0 ].node.parentNode;
+
                     	if ( patchItem.item.isComponent ) {
                         	node = document.createDocumentFragment ();
                         	foreach ( patchItem.item.componentNodes, vnode => {
@@ -249,11 +250,10 @@ extend ( NodePatcher.prototype, {
                     	foreach ( patchItem.replaceNode.componentNodes, vnode => {
                         	p.removeChild ( vnode.node );
                         } );
-                    	
-                    	patchItem.replaceNode.component.unmount ();
                     }
                 	else {
-                    	let node = patchItem.item.node;
+                		p = patchItem.replaceNode.node.parentNode;
+                    	node = patchItem.item.node;
                     	if ( patchItem.item.isComponent ) {
                         	node = document.createDocumentFragment ();
                         	foreach ( patchItem.item.componentNodes, vnode => {
