@@ -198,7 +198,7 @@ extend ( NodePatcher.prototype, {
                         } );
                     	
                     	if ( patchItem.index < p.childNodes.length - 1 ) {
-            				p.insertBefore ( f, p.childNodes.item ( patchItem.index + 1 ) );
+            				p.insertBefore ( f, p.childNodes.item ( patchItem.index ) );
                     	}
                 		else {
                     		p.appendChild ( f );
@@ -221,7 +221,7 @@ extend ( NodePatcher.prototype, {
                 case NodePatcher.NODE_REMOVE :
                 	if ( patchItem.item.isComponent ) {
                     	foreach ( patchItem.item.componentNodes, vnode => {
-                        	vnode.parent.node.removeChild ( vnode.node );
+                        	vnode.node.parentNode.removeChild ( vnode.node );
                         } );
                     	
                     	patchItem.item.component.unmount ();

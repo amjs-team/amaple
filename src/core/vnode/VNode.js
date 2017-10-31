@@ -6,7 +6,7 @@ import { vnodeErr } from "../../error";
 import correctParam from "../../correctParam";
 import event from "../../event/core";
 import slice from "../../var/slice";
-import { diffAttrs, diffEvents, diffChildren } from "./diffs";
+import { getInsertIndex, diffAttrs, diffEvents, diffChildren } from "./diffs";
 import VElement from "./VElement";
 import VTextNode from "./VTextNode";
 import VFragment from "./VFragment";
@@ -325,15 +325,20 @@ extend ( VNode.prototype, {
          		}
                 else {
 
-                    // 存在对应node时修正node属性
-                    attr ( this.node, this.attrs );
+                    // vnode为组件时，node为一个数组，代表了此组件的模板元素
+                    // 此时不需要修正属性
+                    if ( this.node.nodeType ) {
 
-                    // 移除不存在的属性
-                    foreach ( slice.call ( this.node.attributes ), attrNode => {
-                        if ( !this.attrs.hasOwnProperty ( attrNode.name ) ) {
-                            attr ( this.node, attrNode.name, null );
-                        }
-                    } );
+                        // 存在对应node时修正node属性
+                        attr ( this.node, this.attrs );
+
+                        // 移除不存在的属性
+                        foreach ( slice.call ( this.node.attributes ), attrNode => {
+                            if ( !this.attrs.hasOwnProperty ( attrNode.name ) ) {
+                                attr ( this.node, attrNode.name, null );
+                            }
+                        } );
+                    }
                 }
             	
                 if ( this.children.length > 0 ) {
@@ -429,6 +434,8 @@ extend ( VNode.prototype, {
                 }
 
                 if ( this.isComponent ) {
+                    vnode.component = this.component;
+
                     vnode.componentNodes = [];
                     foreach ( this.componentNodes, ( componentNode, i ) => {
                         vnode.componentNodes.push ( componentNode.clone () );
@@ -496,21 +503,7 @@ extend ( VNode.prototype, {
         const nodePatcher = new NodePatcher ();
 
         if ( !oldVNode ) {
-            let i = 0,
-                insertIndex = 0,
-                childVNode = this.parent.children [ i ];
-
-            while ( childVNode !== this ) {
-                if ( childVNode.isComponent ) {
-                    insertIndex += childVNode.componentNodes.length;
-                }
-                else {
-                    insertIndex ++;
-                }
-
-                childVNode = this.parent.children [ ++ i ];
-            }
-            nodePatcher.addNode ( this, this.parent.children.indexOf ( this ) );
+            nodePatcher.addNode ( this, getInsertIndex ( this.parent.children.indexOf ( this ), this.parent.children ) );
         }
     	else if ( this.nodeType === 3 && oldVNode.nodeType === 3 ) {
         	if ( this.nodeValue !== oldVNode.nodeValue ) {

@@ -147,143 +147,293 @@ describe ( "render component => ", () => {
 		expect ( realDOM.querySelector ( ".console" ).firstChild.nodeValue ).toBe ( "test-comp" );
 	} );
 
-	xit ( "render a component with directive ':for'", () => {
+	it ( "render a component with directive ':for'", () => {
 		const 
-			div = document.createElement ( "div" ),
+			moduleObj = {},
+			div = VElement ( "div" ),
 			vm = new ViewModel ( {
 				list: [ "a", "b","c" ]
 			} ),
 			tmpl = new Tmpl ( vm, [ TestComp ], moduleObj );
 
-		div.innerHTML = "<test-comp :for='i in list'>{{ i }}</test-comp>";
+		div.appendChild ( VElement ( "test-comp", { ":for" : "i in list" }, null, [
+			VTextNode ( "{{ i }}" )
+		] ) );
+		let realDOM = div.render (),
+			dBackup = div.clone ();
 		tmpl.mount ( div, true );
 
-		expect ( div.children.length ).toBe ( 12 );
-		expect ( div.children.item ( 0 ).nodeName ).toBe ( "BUTTON" );
-		expect ( div.children.item ( 4 ).nodeName ).toBe ( "BUTTON" );
-		expect ( div.children.item ( 8 ).nodeName ).toBe ( "BUTTON" );
+		expect ( div.children.length ).toBe ( 5 );
+		expect ( div.children [ 1 ].componentNodes [ 0 ].nodeName ).toBe ( "BUTTON" );
+		expect ( div.children [ 1 ].componentNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "a" );
+		expect ( div.children [ 2 ].componentNodes [ 0 ].nodeName ).toBe ( "BUTTON" );
+		expect ( div.children [ 2 ].componentNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "b" );
+		expect ( div.children [ 3 ].componentNodes [ 0 ].nodeName ).toBe ( "BUTTON" );
+		expect ( div.children [ 3 ].componentNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "c" );
+		div.diff ( dBackup ).patch ();
+		expect ( realDOM.children.length ).toBe ( 12 );
+		expect ( realDOM.children.item ( 0 ).nodeName ).toBe ( "BUTTON" );
+		expect ( realDOM.children.item ( 4 ).nodeName ).toBe ( "BUTTON" );
+		expect ( realDOM.children.item ( 8 ).nodeName ).toBe ( "BUTTON" );
 
+		dBackup = div.clone ();
 		vm.list.splice ( 0, 1 );
-		expect ( div.children.length ).toBe ( 8 );
-		expect ( div.children.item ( 3 ).firstChild.nodeValue ).toBe ( "b" );
-		expect ( div.children.item ( 7 ).firstChild.nodeValue ).toBe ( "c" );
-
+		expect ( div.children.length ).toBe ( 4 );
+		expect ( div.children [ 1 ].componentNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "b" );
+		expect ( div.children [ 2 ].componentNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "c" );
+		div.diff ( dBackup ).patch ();
+		expect ( realDOM.children.length ).toBe ( 8 );
+		expect ( realDOM.children.item ( 3 ).firstChild.nodeValue ).toBe ( "b" );
+		expect ( realDOM.children.item ( 7 ).firstChild.nodeValue ).toBe ( "c" );
+		
+		dBackup = div.clone ();
 		vm.list.unshift ( "aa" );
-		expect ( div.children.length ).toBe ( 12 );
-		expect ( div.children.item ( 3 ).firstChild.nodeValue ).toBe ( "aa" );
-		expect ( div.children.item ( 7 ).firstChild.nodeValue ).toBe ( "b" );
-		expect ( div.children.item ( 11 ).firstChild.nodeValue ).toBe ( "c" );
+		expect ( div.children.length ).toBe ( 5 );
+		expect ( div.children [ 1 ].componentNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "aa" );
+		expect ( div.children [ 2 ].componentNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "b" );
+		expect ( div.children [ 3 ].componentNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "c" );
+		div.diff ( dBackup ).patch ();
+		expect ( realDOM.children.length ).toBe ( 12 );
+		expect ( realDOM.children.item ( 3 ).firstChild.nodeValue ).toBe ( "aa" );
+		expect ( realDOM.children.item ( 7 ).firstChild.nodeValue ).toBe ( "b" );
+		expect ( realDOM.children.item ( 11 ).firstChild.nodeValue ).toBe ( "c" );
 	} );
 
-	xit ( "render a component with both ':if' and ':for'", () => {
+	it ( "render a component with both ':if' and ':for'", () => {
 		const 
-			div = document.createElement ( "div" ),
+			moduleObj = {},
+			div = VElement ( "div" ),
 			vm = new ViewModel ( {
-				list: [ "a", "b","c" ],
+				list: [ "a", "b", "c" ],
 				item: "b"
 			} ),
 			tmpl = new Tmpl ( vm, [ TestComp ], moduleObj );
 
-		div.innerHTML = "<test-comp :for='i in list' :if=\"i === item\">{{ i }}</test-comp>";
+		div.appendChild ( VElement ( "test-comp", { ":for" : "i in list", ":if" : "i === item" }, null, [
+			VTextNode ( "{{ i }}" )
+		] ) );
+		let realDOM = div.render (),
+			dBackup = div.clone ();
 		tmpl.mount ( div, true );
 
-		expect ( div.children.length ).toBe ( 4 );
-		expect ( div.children.item ( 3 ).firstChild.nodeValue ).toBe ( "b" );
+		expect ( div.children.length ).toBe ( 5 );
+		expect ( div.children [ 2 ].componentNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "b" );
+		div.diff ( dBackup ).patch ();
+		expect ( realDOM.children.length ).toBe ( 4 );
+		expect ( realDOM.children.item ( 3 ).firstChild.nodeValue ).toBe ( "b" );
 
+		dBackup = div.clone ();
 		vm.item = "a";
-		expect ( div.children.length ).toBe ( 4 );
-		expect ( div.children.item ( 3 ).firstChild.nodeValue ).toBe ( "a" );
+		expect ( div.children.length ).toBe ( 5 );
+		expect ( div.children [ 1 ].componentNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "a" );
+		div.diff ( dBackup ).patch ();
+		expect ( realDOM.children.length ).toBe ( 4 );
+		expect ( realDOM.children.item ( 3 ).firstChild.nodeValue ).toBe ( "a" );
+
+		dBackup = div.clone ();
+		vm.item = "d";
+		expect ( div.children.length ).toBe ( 5 );
+		expect ( div.children [ 1 ].nodeType ).toBe ( 3 );
+		expect ( div.children [ 2 ].nodeType ).toBe ( 3 );
+		expect ( div.children [ 3 ].nodeType ).toBe ( 3 );
+		div.diff ( dBackup ).patch ();
+		expect ( realDOM.childNodes.item ( 1 ).nodeType ).toBe ( 3 );
+		expect ( realDOM.childNodes.item ( 2 ).nodeType ).toBe ( 3 );
+		expect ( realDOM.childNodes.item ( 3 ).nodeType ).toBe ( 3 );
+
+		dBackup = div.clone ();
+		vm.item = "c";
+		expect ( div.children.length ).toBe ( 5 );
+		expect ( div.children [ 3 ].componentNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "c" );
+		div.diff ( dBackup ).patch ();
+		expect ( realDOM.children.length ).toBe ( 4 );
+		expect ( realDOM.children.item ( 3 ).firstChild.nodeValue ).toBe ( "c" );
 	} );
 
-	xit ( "render a component that sub elements with express", () => {
+	it ( "render a component that sub elements with express", () => {
 		const 
-			div = document.createElement ( "div" ),
+			moduleObj = {},
+			div = VElement ( "div" ),
 			vm = new ViewModel ( {
 				expr: "hello icejs"
 			} ),
 			tmpl = new Tmpl ( vm, [ TestComp ], moduleObj );
 
-		div.innerHTML = "<test-comp>{{ expr }}</test-comp>";
+		div.appendChild ( VElement ( "test-comp", {}, null, [
+			VTextNode ( "{{ expr }}" )
+		] ) );
+		let realDOM = div.render (),
+			dBackup = div.clone ();
 		tmpl.mount ( div, true );
 
-		expect ( div.querySelector ( "#default" ).firstChild.nodeValue ).toBe ( "hello icejs" );
+		expect ( div.children [ 0 ].componentNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "hello icejs" );
+		div.diff ( dBackup ).patch ();
+		expect ( realDOM.querySelector ( "#default" ).firstChild.nodeValue ).toBe ( "hello icejs" );
 	} );
 
-	xit ( "render a component that sub elements with ':if', ':else-if', ':else'", () => {
+	it ( "render a component that sub elements with ':if', ':else-if', ':else'", () => {
 		const 
-			div = document.createElement ( "div" ),
+			moduleObj = {},
+			div = VElement ( "div" ),
 			vm = new ViewModel ( {
 				visible: "a"
 			} ),
 			tmpl = new Tmpl ( vm, [ TestComp ], moduleObj );
 
-		div.innerHTML = "<test-comp><span :if='visible === \"a\"'>a</span><span :else-if='visible === \"b\"'>b</span><span :else>c</span></test-comp>";
+		div.appendChild ( VElement ( "test-comp", {}, null, [
+			VElement ( "span", { ":if" : "visible === 'a'" }, null, [
+				VTextNode ( "a" )
+			] ),
+			VElement ( "span", { ":else-if" : "visible === 'b'" }, null, [
+				VTextNode ( "b" )
+			] ),
+			VElement ( "span", { ":else" : "" }, null, [
+				VTextNode ( "c" )
+			] ),
+		] ) );
+		let realDOM = div.render (),
+			dBackup = div.clone ();
 		tmpl.mount ( div, true );
 		
-		expect ( div.querySelector ( "#default" ).firstChild.firstChild.nodeValue ).toBe ( "a" );
+		expect ( div.children [ 0 ].componentNodes [ 4 ].children [ 0 ].children [ 0 ].nodeValue ).toBe ( "a" );
+		div.diff ( dBackup ).patch ();
+		expect ( realDOM.querySelector ( "#default" ).firstChild.firstChild.nodeValue ).toBe ( "a" );
 
+		dBackup = div.clone ();
 		vm.visible = "b";
-		expect ( div.querySelector ( "#default" ).firstChild.firstChild.nodeValue ).toBe ( "b" );
+		expect ( div.children [ 0 ].componentNodes [ 4 ].children [ 0 ].children [ 0 ].nodeValue ).toBe ( "b" );
+		div.diff ( dBackup ).patch ();
+		expect ( realDOM.querySelector ( "#default" ).firstChild.firstChild.nodeValue ).toBe ( "b" );
 
+		dBackup = div.clone ();
 		vm.visible = "c";
-		expect ( div.querySelector ( "#default" ).firstChild.firstChild.nodeValue ).toBe ( "c" );
+		expect ( div.children [ 0 ].componentNodes [ 4 ].children [ 0 ].children [ 0 ].nodeValue ).toBe ( "c" );
+		div.diff ( dBackup ).patch ();
+		expect ( realDOM.querySelector ( "#default" ).firstChild.firstChild.nodeValue ).toBe ( "c" );
 	} );
 
-	xit ( "render a component that sub elements with ':for'", () => {
+	it ( "render a component that sub elements with ':for'", () => {
 		const 
-			div = document.createElement ( "div" ),
+			moduleObj = {},
+			div = VElement ( "div" ),
 			vm = new ViewModel ( {
 				list: [ "a", "b", "c" ]
 			} ),
 			tmpl = new Tmpl ( vm, [ TestComp ], moduleObj );
 
-		div.innerHTML = "<test-comp><span :for='i in list'>{{ i }}</span></test-comp>";
+		div.appendChild ( VElement ( "test-comp", {}, null, [
+			VElement ( "span", { ":for" : "i in list" }, null, [ VTextNode ( "{{ i }}" ) ] )
+		] ) );
+		let realDOM = div.render (),
+			dBackup = div.clone ();
 		tmpl.mount ( div, true );
 
-		expect ( div.querySelector ( "#default" ).children.length ).toBe ( 3 );
-		expect ( div.querySelector ( "#default" ).children.item ( 0 ).firstChild.nodeValue ).toBe ( "a" );
-		expect ( div.querySelector ( "#default" ).children.item ( 1 ).firstChild.nodeValue ).toBe ( "b" );
-		expect ( div.querySelector ( "#default" ).children.item ( 2 ).firstChild.nodeValue ).toBe ( "c" );
+		// 附带startNode、endNode两个标识节点
+		expect ( div.children [ 0 ].componentNodes [ 4 ].children.length ).toBe ( 5 );
+		expect ( div.children [ 0 ].componentNodes [ 4 ].children [ 1 ].children [ 0 ].nodeValue ).toBe ( "a" );
+		expect ( div.children [ 0 ].componentNodes [ 4 ].children [ 2 ].children [ 0 ].nodeValue ).toBe ( "b" );
+		expect ( div.children [ 0 ].componentNodes [ 4 ].children [ 3 ].children [ 0 ].nodeValue ).toBe ( "c" );
+		div.diff ( dBackup ).patch ();
+		expect ( realDOM.querySelector ( "#default" ).children.length ).toBe ( 3 );
+		expect ( realDOM.querySelector ( "#default" ).children.item ( 0 ).firstChild.nodeValue ).toBe ( "a" );
+		expect ( realDOM.querySelector ( "#default" ).children.item ( 1 ).firstChild.nodeValue ).toBe ( "b" );
+		expect ( realDOM.querySelector ( "#default" ).children.item ( 2 ).firstChild.nodeValue ).toBe ( "c" );
+
+		dBackup = div.clone ();
+		vm.list.shift ();
+		// 附带startNode、endNode两个标识节点
+		expect ( div.children [ 0 ].componentNodes [ 4 ].children.length ).toBe ( 4 );
+		expect ( div.children [ 0 ].componentNodes [ 4 ].children [ 1 ].children [ 0 ].nodeValue ).toBe ( "b" );
+		expect ( div.children [ 0 ].componentNodes [ 4 ].children [ 2 ].children [ 0 ].nodeValue ).toBe ( "c" );
+		div.diff ( dBackup ).patch ();
+		expect ( realDOM.querySelector ( "#default" ).children.length ).toBe ( 2 );
+		expect ( realDOM.querySelector ( "#default" ).children.item ( 0 ).firstChild.nodeValue ).toBe ( "b" );
+		expect ( realDOM.querySelector ( "#default" ).children.item ( 1 ).firstChild.nodeValue ).toBe ( "c" );
 	} );
 
-	xit ( "render multiple components", () => {
+	it ( "render multiple components", () => {
 		const 
-			div = document.createElement ( "div" ),
+			moduleObj = {},
+			div = VElement ( "div" ),
 			tmpl = new Tmpl ( {}, [ TestComp ], moduleObj );
 
-		div.innerHTML = "<test-comp>a<sub-comp2>1</sub-comp2></test-comp><test-comp>b<sub-comp2>2</sub-comp2><sub-comp2>3</sub-comp2></test-comp>";
+		div.appendChild ( VElement ( "test-comp", {}, null, [
+			VTextNode ( "a" ),
+			VElement ( "sub-comp2", {}, null, [ VTextNode ( "1" ) ] )
+		] ) );
+		div.appendChild ( VElement ( "test-comp", {}, null, [
+			VTextNode ( "b" ),
+			VElement ( "sub-comp2", {}, null, [ VTextNode ( "2" ) ] ),
+			VElement ( "sub-comp2", {}, null, [ VTextNode ( "3" ) ] )
+		] ) );
+		let realDOM = div.render (),
+			dBackup = div.clone ();
 		tmpl.mount ( div, true );
 
-		expect ( div.children.length ).toBe ( 8 );
-		expect ( div.children.item ( 3 ).firstChild.nodeValue ).toBe ( "a" );
-		expect ( div.children.item ( 7 ).firstChild.nodeValue ).toBe ( "b" );
-		expect ( div.children.item ( 2 ).children.length ).toBe ( 1 );
-		expect ( div.children.item ( 2 ).children.item ( 0 ).firstChild.nodeValue ).toBe ( "1" );
-		expect ( div.children.item ( 6 ).children.length ).toBe ( 2 );
-		expect ( div.children.item ( 6 ).children.item ( 0 ).firstChild.nodeValue ).toBe ( "2" );
-		expect ( div.children.item ( 6 ).children.item ( 1 ).firstChild.nodeValue ).toBe ( "3" );
+		expect ( div.children.length ).toBe ( 2 );
+		expect ( div.children [ 0 ].componentNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "a" );
+		// 附带startNode、endNode两个标识节点
+		expect ( div.children [ 0 ].componentNodes [ 3 ].children.length ).toBe ( 3 );
+		expect ( div.children [ 0 ].componentNodes [ 3 ].children [ 1 ].children [ 0 ].nodeValue ).toBe ( "1" );
+		expect ( div.children [ 1 ].componentNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "b" );
+		// 附带startNode、endNode两个标识节点
+		expect ( div.children [ 1 ].componentNodes [ 3 ].children.length ).toBe ( 4 );
+		expect ( div.children [ 1 ].componentNodes [ 3 ].children [ 1 ].children [ 0 ].nodeValue ).toBe ( "2" );
+		expect ( div.children [ 1 ].componentNodes [ 3 ].children [ 2 ].children [ 0 ].nodeValue ).toBe ( "3" );
+		div.diff ( dBackup ).patch ();
+		expect ( realDOM.children.length ).toBe ( 8 );
+		expect ( realDOM.children.item ( 3 ).firstChild.nodeValue ).toBe ( "a" );
+		expect ( realDOM.children.item ( 7 ).firstChild.nodeValue ).toBe ( "b" );
+		expect ( realDOM.children.item ( 2 ).children.length ).toBe ( 1 );
+		expect ( realDOM.children.item ( 2 ).children.item ( 0 ).firstChild.nodeValue ).toBe ( "1" );
+		expect ( realDOM.children.item ( 6 ).children.length ).toBe ( 2 );
+		expect ( realDOM.children.item ( 6 ).children.item ( 0 ).firstChild.nodeValue ).toBe ( "2" );
+		expect ( realDOM.children.item ( 6 ).children.item ( 1 ).firstChild.nodeValue ).toBe ( "3" );
 	} );
 
-	xit ( "render multiple components with directive ':if',':else-if',':else'", () => {
+	it ( "render multiple components with directive ':if',':else-if',':else'", () => {
 		const 
-			div = document.createElement ( "div" ),
+			moduleObj = {},
+			div = VElement ( "div" ),
 			vm = new ViewModel ( {
 				visible: "a"
 			} ),
 			tmpl = new Tmpl ( vm, [ TestComp ], moduleObj );
 
-		div.innerHTML = "<test-comp :if='visible === \"a\"'>a</test-comp><test-comp :else-if='visible === \"b\"'>b</test-comp><template :else><span>template</span></template>";
+		div.appendChild ( VElement ( "test-comp", { ":if" : "visible === 'a'" }, null, [
+			VTextNode ( "a" )
+		] ) );
+		div.appendChild ( VElement ( "test-comp", { ":else-if" : "visible === 'b'" }, null, [
+			VTextNode ( "b" )
+		] ) );
+		div.appendChild ( VElement ( "template", { ":else" : "" }, null, [
+			VElement ( "span", {}, null, [ VTextNode ( "b" ) ] )
+		] ) );
+		let realDOM = div.render (),
+			dBackup = div.clone ();
 		tmpl.mount ( div, true );
 		
-		expect ( div.children.length ).toBe ( 4 );
-		expect ( div.querySelector ( "#default" ).firstChild.nodeValue ).toBe ( "a" );
+		expect ( div.children [ 0 ].componentNodes.length ).toBe ( 5 );
+		expect ( div.children [ 0 ].componentNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "a" );
+		div.diff ( dBackup ).patch ();
+		expect ( realDOM.children.length ).toBe ( 4 );
+		expect ( realDOM.querySelector ( "#default" ).firstChild.nodeValue ).toBe ( "a" );
 
+		dBackup = div.clone ();
 		vm.visible = "b";
-		expect ( div.children.length ).toBe ( 4 );
-		expect ( div.querySelector ( "#default" ).firstChild.nodeValue ).toBe ( "b" );
+		expect ( div.children [ 0 ].componentNodes.length ).toBe ( 5 );
+		expect ( div.children [ 0 ].componentNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "b" );
+		div.diff ( dBackup ).patch ();
+		expect ( realDOM.children.length ).toBe ( 4 );
+		expect ( realDOM.querySelector ( "#default" ).firstChild.nodeValue ).toBe ( "b" );
 
+		dBackup = div.clone ();
 		vm.visible = "c";
 		expect ( div.children.length ).toBe ( 1 );
-		expect ( div.firstChild.firstChild.nodeValue ).toBe ( "template" );
+		expect ( div.children [ 0 ].children [ 0 ].nodeValue ).toBe ( "b" );
+		div.diff ( dBackup ).patch ();
+		// expect ( div.children.length ).toBe ( 1 );
+		// expect ( div.firstChild.firstChild.nodeValue ).toBe ( "b" );
+		console.log ( realDOM );
 	} );
 } );

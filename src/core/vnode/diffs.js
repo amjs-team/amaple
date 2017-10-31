@@ -1,6 +1,35 @@
 import { foreach } from "../../func/util";
 
 /**
+    getInsertIndex ( index: Number, children: Array )
+
+    Return Type:
+    Number
+    插入元素的位置索引
+
+    Description:
+    获取元素插入的位置索引
+    因为插入前的元素中可能有组件元素，组件元素渲染为对应实际dom时可能有多个，所以需判断前面的组件元素，并加上他们的模板元素数量
+
+    URL doc:
+    http://icejs.org/######
+*/
+export function getInsertIndex ( index, children ) {
+    let insertIndex = 0;
+
+    for ( let i = 0; i < index; i ++ ) {
+        if ( children [ i ].isComponent ) {
+            insertIndex += children [ i ].componentNodes.length;
+        }
+        else {
+            insertIndex ++;
+        }
+    }
+
+    return insertIndex;
+}
+
+/**
     diffAttrs ( newVNode: Object, oldVNode: Object, nodePatcher: Object )
 
     Return Type:
@@ -216,7 +245,7 @@ export function diffChildren ( newChildren, oldChildren, nodePatcher ) {
                 oldChildrenCopy = oldItem.children;
                 foreach ( newItem.children, ( newChild, j ) => {
                     if ( indexOf ( oldChildrenCopy, newChild ) === -1 ) {
-                        nodePatcher.addNode ( newChild, j + offset );
+                        nodePatcher.addNode ( newChild, getInsertIndex ( j, newItem.children ) + offset );
 
                         oldChildrenCopy.splice ( j, 0, newChild );
                     }
@@ -258,7 +287,7 @@ export function diffChildren ( newChildren, oldChildren, nodePatcher ) {
                 } );
             }
 
-            offset += newItem.children.length;
+            offset += getInsertIndex ( newItem.children.length, newItem.children );
         } );
     }
 }

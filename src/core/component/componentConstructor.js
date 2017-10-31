@@ -1,6 +1,7 @@
 import slice from "../../var/slice";
 import { foreach, noop, type, isPlainObject } from "../../func/util";
 import { query } from "../../func/node";
+import cache from "../../cache/core";
 import { defineReactiveProperty, transformCompName } from "../../func/private";
 import { rexpr, rvar } from "../../var/const";
 import { componentErr } from "../../error";
@@ -167,10 +168,11 @@ export default {
                 component.refUnmountFn ();
             }
         };
-            
+        
         foreach ( lifeCycleHook, ( hookFn, cycleName ) => {
+            const cycleFunc = component [ cycleName ];
             component [ cycleName ] = () => {
-                ( component [ cycleName ] || noop ).apply ( component, cache.getDependentPlugib ( component [ cycleName ] || noop ) );
+                ( cycleFunc || noop ).apply ( component, cache.getDependentPlugin ( cycleFunc || noop ) );
 
                 // 钩子函数调用
                 hookFn ();
@@ -242,7 +244,7 @@ export default {
         } );
         
         let componentName, subElemName, vf;
-        foreach ( componentVNode.children, vnode => {
+        foreach ( componentVNode.children.concat (), vnode => {
             componentName = transformCompName ( vnode.nodeName || "" );
 
             if ( subElementNames.hasOwnProperty ( componentName ) ) {
