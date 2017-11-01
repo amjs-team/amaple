@@ -14,45 +14,40 @@ Tmpl.defineDirective ( {
         void
     
         Description:
-        元素或组件引用
+        将引用元素/组件保存到对应的模块中
     
         URL doc:
         http://icejs.org/######
     */
 	update ( refName ) {
-    	const refs = this.tmpl.module.refs;
-    	function saveRef ( refObj ) {
-        	const tref = type ( refs [ refName ] );
-        	switch ( tref ) {
-            	case "undefined" :
-                	refs [ refName ] = refObj;
-                	
-                	break;
-            	case "object" :
-                	refs [ refName ] = [ refs [ ref ] ];
-                	refs [ refName ].push ( refObj );
-                    
-                    break;
-            	case "array" :
-                    refs [ refName ].push ( refObj );
-            }
+    	const 
+            refs = this.tmpl.module.refs,
+            tref = type ( refs [ refName ] ),
+            node = this.node;
 
-            // 返回卸载函数
-            return () => {
-                if ( type ( refs [ refName ] ) === "array" ) {
-                    refs [ refName ].splice ( refs [ refName ].indexOf ( refObj ), 1 );
-                }
-                else {
-                    delete refs [ refName ];
-                }
+        switch ( tref ) {
+            case "undefined" :
+                refs [ refName ] = node;
+                
+                break;
+            case "object" :
+                refs [ refName ] = [ refs [ ref ] ];
+                refs [ refName ].push ( node );
+                   
+               break;
+            case "array" :
+               refs [ refName ].push ( node );
+        }
+
+
+        // 保存将引用元素/组件从对应的模块中移除的函数
+        node.delRef = () => {
+            if ( type ( refs [ refName ] ) === "array" ) {
+                refs [ refName ].splice ( refs [ refName ].indexOf ( node ), 1 );
             }
-        }
-    	
-        if ( this.node.isComponent === true ) {
-			this.node.saveRef = saveRef;
-        }
-    	else {
-        	saveRef ( this.node );
+            else {
+                delete refs [ refName ];
+            }
         }
     }
 } );

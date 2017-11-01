@@ -153,5 +153,25 @@ extend ( ViewWatcher.prototype, {
                 delete vm [ varName ]
             }
 		} );
+    },
+
+    /**
+    	unmount ( subscribe: Object )
+    
+    	Return Type:
+    	void
+    
+    	Description:
+    	卸载此watcher对象
+    	当被绑定元素在DOM树上移除后，那对应vm属性对此元素的订阅也需移除
+    
+    	URL doc:
+    	http://icejs.org/######
+    */
+    unmount ( subscribe ) {
+    	const index = subscribe.watchers.indexOf ( this );
+    	if ( index > -1 ) {
+    		subscribe.watchers.splice ( index, 1 );
+    	}
     }
 } );

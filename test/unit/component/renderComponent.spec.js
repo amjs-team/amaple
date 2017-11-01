@@ -432,8 +432,15 @@ describe ( "render component => ", () => {
 		expect ( div.children.length ).toBe ( 1 );
 		expect ( div.children [ 0 ].children [ 0 ].nodeValue ).toBe ( "b" );
 		div.diff ( dBackup ).patch ();
-		// expect ( div.children.length ).toBe ( 1 );
-		// expect ( div.firstChild.firstChild.nodeValue ).toBe ( "b" );
-		console.log ( realDOM );
+		expect ( realDOM.children.length ).toBe ( 1 );
+		expect ( realDOM.firstChild.firstChild.nodeValue ).toBe ( "b" );
+
+		dBackup = div.clone ();
+		vm.visible = "b";
+		expect ( div.children [ 0 ].componentNodes.length ).toBe ( 5 );
+		expect ( div.children [ 0 ].componentNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "b" );
+		div.diff ( dBackup ).patch ();
+		expect ( realDOM.children.length ).toBe ( 4 );
+		expect ( realDOM.querySelector ( "#default" ).firstChild.nodeValue ).toBe ( "b" );
 	} );
 } );

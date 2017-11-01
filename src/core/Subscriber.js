@@ -1,4 +1,5 @@
 import { extend, foreach, type } from "../func/util";
+import ViewWatcher from "./ViewWatcher";
 
 /**
     Subscriber ()
@@ -34,10 +35,16 @@ extend ( Subscriber.prototype, {
 	subscribe () {
     	if ( type ( Subscriber.watcher ) === "object" ) {
 
-            // 在被订阅的watcher中反引用此订阅者对象
-            // 用于在不再使用此watcher时在订阅它的订阅者对象中移除，以提高性能
-            // Subscriber.watcher.subs = Subscriber.watcher.subs || [];
-            // Subscriber.watcher.subs.push ( this );
+            if ( Subscriber.watcher instanceof ViewWatcher ) {
+
+                const watcher = Subscriber.watcher;
+                // 在被订阅的vnode中生成此watcher的卸载函数
+                // 用于在不再使用此watcher时在订阅它的订阅者对象中移除，以提高性能
+                watcher.node.watcherUnmounts = watcher.node.watcherUnmounts || [];
+                watcher.node.watcherUnmounts.push ( () => {
+                    watcher.unmount ( this );
+                } );
+            }
 
         	this.watchers.push ( Subscriber.watcher );
         	Subscriber.watcher = undefined;

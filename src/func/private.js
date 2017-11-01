@@ -60,3 +60,28 @@ export function transformCompName ( compName, mode ) {
 		compName.replace ( /([A-Z])/g, ( match, rep, i ) => ( i > 0 ? "-" : "" ) + rep.toLowerCase () ) 
 	);
 }
+
+/**
+	unmountWatchers ( vnode: Object )
+
+	Return Type:
+	void
+
+	Description:
+	watcher卸载函数遍历调用
+
+	URL doc:
+	http://icejs.org/######
+*/
+export function unmountWatchers ( vnode ) {
+
+	do {
+		foreach ( vnode.watcherUnmounts || [], watcherUnmount => {
+			watcherUnmount ();
+		} );
+
+		if ( vnode.children && vnode.children [ 0 ] ) {
+			unmountWatchers ( vnode.children [ 0 ] );
+		}
+	} while ( vnode = vnode.nextSibling () );
+}

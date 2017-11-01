@@ -110,24 +110,41 @@ describe ( "directive for => ", () => {
         expect ( realDOM.childNodes.item ( 4 ).childNodes.item ( 1 ).childNodes.item ( 0 ).nodeValue ).toBe ( "hello icejs2" );
 
         dBackup = d.clone ();
+        vm.show = "hello icejs5";
+        expect ( children.length ).toBe ( 6 );
+        expect ( children [ 1 ].children [ 1 ].children [ 0 ].nodeValue ).toBe ( "hello icejs5" );
+        expect ( children [ 2 ].children [ 1 ].children [ 0 ].nodeValue ).toBe ( "hello icejs5" );
+        expect ( children [ 3 ].children [ 1 ].children [ 0 ].nodeValue ).toBe ( "hello icejs5" );
+        expect ( children [ 4 ].children [ 1 ].children [ 0 ].nodeValue ).toBe ( "hello icejs5" );
+        expect ( children [ 1 ].key ).toBe ( keyA );
+        expect ( children [ 2 ].key ).toBe ( keyB );
+        expect ( children [ 3 ].key ).toBe ( keyC );
+        d.diff ( dBackup ).patch ();
+        expect ( realDOM.childNodes.length ).toBe ( 6 );
+        expect ( realDOM.childNodes.item ( 1 ).childNodes.item ( 1 ).childNodes.item ( 0 ).nodeValue ).toBe ( "hello icejs5" );
+        expect ( realDOM.childNodes.item ( 2 ).childNodes.item ( 1 ).childNodes.item ( 0 ).nodeValue ).toBe ( "hello icejs5" );
+        expect ( realDOM.childNodes.item ( 3 ).childNodes.item ( 1 ).childNodes.item ( 0 ).nodeValue ).toBe ( "hello icejs5" );
+        expect ( realDOM.childNodes.item ( 4 ).childNodes.item ( 1 ).childNodes.item ( 0 ).nodeValue ).toBe ( "hello icejs5" );
+
+        dBackup = d.clone ();
         vm.list.splice ( 1, 1, "e", "f" );
         expect ( children.length ).toBe ( 7 );
         expect ( children [ 2 ].children [ 0 ].nodeValue ).toBe ( "e1" );
-        expect ( children [ 2 ].children [ 1 ].children [ 0 ].nodeValue ).toBe ( "hello icejs2" );
+        expect ( children [ 2 ].children [ 1 ].children [ 0 ].nodeValue ).toBe ( "hello icejs5" );
         expect ( children [ 3 ].children [ 0 ].nodeValue ).toBe ( "f2" );
-        expect ( children [ 3 ].children [ 1 ].children [ 0 ].nodeValue ).toBe ( "hello icejs2" );
+        expect ( children [ 3 ].children [ 1 ].children [ 0 ].nodeValue ).toBe ( "hello icejs5" );
         expect ( children [ 4 ].children [ 0 ].nodeValue ).toBe ( "c3" );
-        expect ( children [ 4 ].children [ 1 ].children [ 0 ].nodeValue ).toBe ( "hello icejs2" );
+        expect ( children [ 4 ].children [ 1 ].children [ 0 ].nodeValue ).toBe ( "hello icejs5" );
         expect ( children [ 1 ].key ).toBe ( keyA );
         expect ( children [ 4 ].key ).toBe ( keyC );
         expect ( children [ 5 ].key ).toBe ( keyD );
         d.diff ( dBackup ).patch ();
         expect ( realDOM.childNodes.item ( 2 ).childNodes.item ( 0 ).nodeValue ).toBe ( "e1" );
-        expect ( realDOM.childNodes.item ( 2 ).childNodes.item ( 1 ).childNodes.item ( 0 ).nodeValue ).toBe ( "hello icejs2" );
+        expect ( realDOM.childNodes.item ( 2 ).childNodes.item ( 1 ).childNodes.item ( 0 ).nodeValue ).toBe ( "hello icejs5" );
         expect ( realDOM.childNodes.item ( 3 ).childNodes.item ( 0 ).nodeValue ).toBe ( "f2" );
-        expect ( realDOM.childNodes.item ( 3 ).childNodes.item ( 1 ).childNodes.item ( 0 ).nodeValue ).toBe ( "hello icejs2" );
+        expect ( realDOM.childNodes.item ( 3 ).childNodes.item ( 1 ).childNodes.item ( 0 ).nodeValue ).toBe ( "hello icejs5" );
         expect ( realDOM.childNodes.item ( 4 ).childNodes.item ( 0 ).nodeValue ).toBe ( "c3" );
-        expect ( realDOM.childNodes.item ( 4 ).childNodes.item ( 1 ).childNodes.item ( 0 ).nodeValue ).toBe ( "hello icejs2" );
+        expect ( realDOM.childNodes.item ( 4 ).childNodes.item ( 1 ).childNodes.item ( 0 ).nodeValue ).toBe ( "hello icejs5" );
     } );
 
     it ( "directive :for with nesting directive", () => {

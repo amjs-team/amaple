@@ -1,4 +1,5 @@
 import { foreach, guid } from "../../../func/util";
+import { unmountWatchers } from "../../../func/private";
 import { directiveErr } from "../../../error";
 import { VNODE_ADD, VNODE_REMOVE, VNODE_MOVE } from "../../../var/const";
 import Tmpl from "../Tmpl";
@@ -149,6 +150,10 @@ Tmpl.defineDirective ( {
         	let p = this.startNode.parent,
          		el;
         	while ( ( el = this.startNode.nextSibling () ) !== this.endNode ) {
+
+                // 卸载node的watchers
+                unmountWatchers ( el.isComponent ? VFragment ( el.templateNodes ) : el );
+
         		p.removeChild ( el );
             }
         	

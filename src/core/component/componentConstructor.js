@@ -163,9 +163,6 @@ export default {
 
                 // 在对应module.components中移除此组件
                 moduleObj.components.splice ( moduleObj.components.indexOf ( component ), 1 );
-
-                // 如果在module.refs中存在也一并移除
-                component.refUnmountFn ();
             }
         };
         

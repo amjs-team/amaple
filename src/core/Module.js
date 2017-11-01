@@ -184,14 +184,50 @@ export default function Module ( module, vmData = { init: function () { return {
 }
 
 extend ( Module.prototype, {
+
+	/**
+		refs ( ref: String )
+	
+		Return Type:
+		DOMObject|Object
+		被引用的组件行为对象或元素
+	
+		Description:
+		获取被引用的组件行为对象或元素
+		当组件不可见时返回undefined
+	
+		URL doc:
+		http://icejs.org/######
+	*/
 	refs ( ref ) {
-    	return this.refs [ ref ] || null;
+		let refObj = this.refs [ ref ];
+		if ( refObj.parent ) {
+			refObj = refObj.isComponent ? refObj.component.action : refObj.node;
+		}
+		else {
+			refObj = undefined;
+		}
+    	return refObj;
     }
 } );
 
 extend ( Module, {
 	identifier : "ice-identifier",
 	
+	/**
+		getIdentifier ()
+	
+		Return Type:
+		String
+		模块标识字符串
+	
+		Description:
+		获取模块标识字符串
+		用于区分不同模块
+	
+		URL doc:
+		http://icejs.org/######
+	*/
 	getIdentifier () {
 		return "module" + guid ();
 	}

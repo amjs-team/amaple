@@ -506,6 +506,11 @@ extend ( VNode.prototype, {
             nodePatcher.addNode ( this, getInsertIndex ( this.parent.children.indexOf ( this ), this.parent.children ) );
         }
     	else if ( this.nodeType === 3 && oldVNode.nodeType === 3 ) {
+            
+            // 防止使用”:if“、”:else-if“指令时相同元素导致无法匹配元素的问题
+            if ( this.node !== oldVNode.node ) {
+                this.node = oldVNode.node;
+            }
         	if ( this.nodeValue !== oldVNode.nodeValue ) {
             	
             	// 文本节点内容不同时更新文本内容

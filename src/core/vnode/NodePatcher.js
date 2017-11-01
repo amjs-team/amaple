@@ -219,6 +219,7 @@ extend ( NodePatcher.prototype, {
                 	
                 	break;
                 case NodePatcher.NODE_REMOVE :
+                	let unmountNodes;
                 	if ( patchItem.item.isComponent ) {
                     	foreach ( patchItem.item.componentNodes, vnode => {
                         	vnode.node.parentNode.removeChild ( vnode.node );

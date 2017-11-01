@@ -117,7 +117,7 @@ extend ( Component.prototype, {
     	}
     	
     	// 如果有saveRef方法则表示此组件需被引用
-    	this.refUnmountFn = ( componentVNode.saveRef || noop ) ( this.action ) || noop;
+        ( componentVNode.saveRef || noop ) ( this.action ) || noop;
 
         // 初始化生命周期
         componentConstructor.initLifeCycle ( this, moduleObj );

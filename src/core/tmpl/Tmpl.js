@@ -151,7 +151,7 @@ extend ( Tmpl.prototype, {
                     	vnode.isComponent = true;
         			}
                     
-                    foreach ( vnode.attrs, ( attr, name, attrs ) => {
+                    foreach ( vnode.attrs, ( attr, name ) => {
                         directive = rattr.exec ( name );
                         if ( directive ) {
                             directive = directive [ 1 ];
@@ -180,7 +180,7 @@ extend ( Tmpl.prototype, {
                         else if ( rexpr.test ( attr ) ) {
 
                             // 属性值表达式绑定
-                            compileHandlers.watchers.push ( { handler: Tmpl.directives.attrExpr, targetNode : attrs, expr : `${ name }:${ attr }` } );
+                            compileHandlers.watchers.push ( { handler: Tmpl.directives.attrExpr, targetNode : vnode, expr : `${ name }:${ attr }` } );
                         }
                     } );
                 }

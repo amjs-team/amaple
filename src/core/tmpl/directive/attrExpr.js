@@ -73,20 +73,20 @@ Tmpl.defineDirective ( {
                     styleArray.push ( k + ":" + v );
                 } );
 
-                node [ this.attrName ] = styleArray.join ( ";" );
+                node.attr ( this.attrName, styleArray.join ( ";" ) );
             }
         }
         // 绑定元素的class时可传入数组，绑定渲染时会自动用空格隔开
         else if ( this.attrName === "class" ) {
             if ( tval === "array" ) {
-                node [ this.attrName ] = val.join ( " " );
+                node.attr ( this.attrName, val.join ( " " ) );
             }
             else {
-                node [ this.attrName ] = ( val === undefined || val === null ? "" : val ).toString ();
+                node.attr ( this.attrName, ( val === undefined || val === null ? "" : val ).toString () );
             }
         }
         else {
-            node [ this.attrName ] = ( val === undefined || val === null ? "" : val ).toString ();
+            node.attr ( this.attrName, ( val === undefined || val === null ? "" : val ).toString () );
         }
     }
 } );
