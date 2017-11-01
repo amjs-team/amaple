@@ -18,8 +18,8 @@ export function getInsertIndex ( index, children ) {
     let insertIndex = 0;
 
     for ( let i = 0; i < index; i ++ ) {
-        if ( children [ i ].isComponent ) {
-            insertIndex += children [ i ].componentNodes.length;
+        if ( children [ i ].templateNodes ) {
+            insertIndex += children [ i ].templateNodes.length;
         }
         else {
             insertIndex ++;
@@ -272,7 +272,7 @@ export function diffChildren ( newChildren, oldChildren, nodePatcher ) {
                             moveItems.push ( {
                                 item : newChild,
                                 from : oldIndex,
-                                to : j,
+                                to : getInsertIndex ( j, newItem.children ),
                                 list : oldChildrenCopy.concat ()
                             } );
 

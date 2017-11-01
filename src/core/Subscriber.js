@@ -36,8 +36,8 @@ extend ( Subscriber.prototype, {
     	if ( type ( Subscriber.watcher ) === "object" ) {
 
             if ( Subscriber.watcher instanceof ViewWatcher ) {
-
                 const watcher = Subscriber.watcher;
+
                 // 在被订阅的vnode中生成此watcher的卸载函数
                 // 用于在不再使用此watcher时在订阅它的订阅者对象中移除，以提高性能
                 watcher.node.watcherUnmounts = watcher.node.watcherUnmounts || [];

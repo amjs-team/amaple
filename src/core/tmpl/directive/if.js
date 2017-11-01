@@ -26,6 +26,7 @@ Tmpl.defineDirective ( {
 		
     	this.expr = "[" + elem.conditions.join ( "," ) + "]";
     	this.replacement = VTextNode ( "" );
+        this.replacement.conditionElems = elem.conditionElems;
 
         // 如果有key则为占位元素设置相同key
         if ( elem.key ) {
@@ -58,54 +59,23 @@ Tmpl.defineDirective ( {
     */
 	update ( conditions ) {
 
-        // 当元素为组件元素时纠正当前节点的指向问题
-        // 因为在组件初始化时替换了当前在DOM树上的组件元素导致当前节点变量指向错误
-        // if ( this.node.isComponent && this.currentNode === this.node && !this.node.parent ) {
-            // this.currentNode = this.node.templateNodes;
-        // }
-
 		const 
             elem = this.node,
             conditionElems = elem.conditionElems,
             cNode = this.currentNode,
-            tcurNode = type ( cNode ) === "array",
-            parent = ( tcurNode ? cNode [ 0 ] : cNode ).parent;
+            parent = cNode.parent;
 
         let newNode, _cNode;
 
         foreach ( conditions, ( cond, i ) => {
         	if ( cond ) {
-                if ( conditionElems [ i ].templateNodes ) {
-                    const f = VFragment ();
-                    foreach ( conditionElems [ i ].templateNodes, node => {
-                        if ( node.parent !== parent ) {
-                            f.appendChild ( node );
-                        }
-                        else {
-                            return false;
-                        }
-                    } );
-
-                    newNode = f;
-                }
-                else {
-                    newNode = conditionElems [ i ];
-                }
+                newNode = conditionElems [ i ];
             	return false;
             }
         } );
         
-        // 当新节点为fragment对象但没有子节点时表示已显示节点即为需显示节点
         // 当新节点为空时表示没有找到符合条件的节点，则不显示任何节点（即显示replacement空文本节点）
-        if ( newNode && newNode.nodeType === 11 ) {
-            if ( newNode.children.length <= 0 ) {
-                newNode = null;
-            }
-            else {
-                _cNode = newNode.children.concat ();
-            }
-        }
-        else if ( !newNode ) {
+        if ( !newNode ) {
             newNode = this.replacement;
             _cNode = newNode;
         }
@@ -114,17 +84,7 @@ Tmpl.defineDirective ( {
         }
     
     	if ( newNode && !newNode.parent ) {
-
-            // 当前显示节点为<template>内容
-            if ( tcurNode ) {
-                parent.insertBefore ( newNode, cNode [ 0 ] );
-                foreach ( cNode, node => {
-                    parent.removeChild ( node );
-                } );
-            }
-            else {
-                parent.replaceChild ( newNode, cNode );
-            }
+            parent.replaceChild ( newNode, cNode );
 
             this.currentNode = _cNode;
         }

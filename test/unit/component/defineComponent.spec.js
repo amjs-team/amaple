@@ -46,17 +46,17 @@ describe ( "define component =>", () => {
 		tc.__init__ ( div, {} );
 
 		expect ( fragment.children [ 0 ].nodeName ).toBe ( "DIV" );
-		expect ( fragment.children [ 0 ].componentNodes [ 0 ].nodeName ).toBe ( "BUTTON" );
-		expect ( fragment.children [ 0 ].componentNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( "test-btn" );
-		expect ( fragment.children [ 0 ].componentNodes [ 1 ].children [ 0 ].nodeValue ).toBe ( "" );
+		expect ( fragment.children [ 0 ].templateNodes [ 0 ].nodeName ).toBe ( "BUTTON" );
+		expect ( fragment.children [ 0 ].templateNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( "test-btn" );
+		expect ( fragment.children [ 0 ].templateNodes [ 1 ].children [ 0 ].nodeValue ).toBe ( "" );
 		fragment.diff ( fBackup ).patch ();
 		expect ( realDOM.firstChild.nodeName ).toBe ( "BUTTON" );
 		expect ( realDOM.firstChild.firstChild.nodeValue ).toBe ( "test-btn" );
 
 		fBackup = fragment.clone ();
 		tc.action.print ( "hello icejs" );
-		expect ( fragment.children [ 0 ].componentNodes [ 1 ].children [ 0 ].nodeValue ).toBe ( "hello icejs" );
-		expect ( fragment.children [ 0 ].componentNodes [ 1 ].attr ( "style" ) ).toEqual ( "color: rgb(0, 170, 230);" );
+		expect ( fragment.children [ 0 ].templateNodes [ 1 ].children [ 0 ].nodeValue ).toBe ( "hello icejs" );
+		expect ( fragment.children [ 0 ].templateNodes [ 1 ].attr ( "style" ) ).toEqual ( "color: rgb(0, 170, 230);" );
 		fragment.diff ( fBackup ).patch ();
 		expect ( realDOM.firstChild.nextElementSibling.firstChild.nodeValue ).toBe ( "hello icejs" );
 		expect ( realDOM.firstChild.nextElementSibling.style.color ).toBe ( "rgb(0, 170, 230)" );
@@ -123,9 +123,9 @@ describe ( "define component =>", () => {
 		tc.__init__ ( div, {} );
 
 
-		expect ( fragment.children [ 0 ].componentNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( "default button.ice" );
-		expect ( fragment.children [ 0 ].componentNodes [ 0 ].attr ( "href" ) ).toBe ( "javascript:;" );
-		expect ( fragment.children [ 0 ].componentNodes [ 0 ].attr ( "class" ) ).toBe ( "" );
+		expect ( fragment.children [ 0 ].templateNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( "default button.ice" );
+		expect ( fragment.children [ 0 ].templateNodes [ 0 ].attr ( "href" ) ).toBe ( "javascript:;" );
+		expect ( fragment.children [ 0 ].templateNodes [ 0 ].attr ( "class" ) ).toBe ( "" );
 		fragment.diff ( fBackup ).patch ();
 		expect ( realDOM.firstChild.firstChild.nodeValue ).toBe ( "default button.ice" );
 		expect ( realDOM.firstChild.href ).toBe ( "javascript:;" );
@@ -156,8 +156,8 @@ describe ( "define component =>", () => {
 		div.attr ( "link", "./a/b/c" );
 		tc.__init__ ( div, {} );
 
-		expect ( fragment.children [ 0 ].componentNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( "external button.ice" );
-		expect ( fragment.children [ 0 ].componentNodes [ 0 ].attr ( "href" ) ).toBe ( "./a/b/c" );
+		expect ( fragment.children [ 0 ].templateNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( "external button.ice" );
+		expect ( fragment.children [ 0 ].templateNodes [ 0 ].attr ( "href" ) ).toBe ( "./a/b/c" );
 		fragment.diff ( fBackup ).patch ();
 		expect ( realDOM.firstChild.firstChild.nodeValue ).toBe ( "external button.ice" );
 		expect ( realDOM.firstChild.pathname ).toBe ( "/a/b/c" );
@@ -183,7 +183,7 @@ describe ( "define component =>", () => {
 
 		div.attr ( "classname", "abcde" );
 		tc.__init__ ( div, {} );
-		expect ( fragment.children [ 0 ].componentNodes [ 0 ].attr ( "class" ) ).toBe ( "abcde" );
+		expect ( fragment.children [ 0 ].templateNodes [ 0 ].attr ( "class" ) ).toBe ( "abcde" );
 		fragment.diff ( fBackup ).patch ();
 		expect ( realDOM.firstChild.className ).toBe ( "abcde" );
 	} );
@@ -244,8 +244,8 @@ describe ( "define component =>", () => {
 		} );
 		tc.__init__ ( div, { state : vm } );
 
-		expect ( fragment.children [ 0 ].componentNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( "button" );
-		expect ( fragment.children [ 0 ].componentNodes [ 0 ].attr ( "href" ) ).toBe ( "./b" );
+		expect ( fragment.children [ 0 ].templateNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( "button" );
+		expect ( fragment.children [ 0 ].templateNodes [ 0 ].attr ( "href" ) ).toBe ( "./b" );
 		fragment.diff ( fBackup ).patch ();
 		expect ( realDOM.firstChild.firstChild.nodeValue ).toBe ( "button" );
 		expect ( realDOM.firstChild.pathname ).toBe ( "/b" );
@@ -256,21 +256,21 @@ describe ( "define component =>", () => {
 		fBackup = fragment.clone ();
 		vm.text = "button2";
 		//未使用计算属性做props代理的时候，vm的属性改变不会影响组件内使用该组件的绑定
-		expect ( fragment.children [ 0 ].componentNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( "button" );
+		expect ( fragment.children [ 0 ].templateNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( "button" );
 		fragment.diff ( fBackup ).patch ();
 		expect ( realDOM.firstChild.firstChild.nodeValue ).toBe ( "button" );
 
 		//使用计算属性做props代理后，vm的属性改变会影响组件内使用该组件的绑定
 		fBackup = fragment.clone ();
 		vm.link = "./c";
-		expect ( fragment.children [ 0 ].componentNodes [ 0 ].attr ( "href" ) ).toBe ( "./c" );
+		expect ( fragment.children [ 0 ].templateNodes [ 0 ].attr ( "href" ) ).toBe ( "./c" );
 		fragment.diff ( fBackup ).patch ();
 		expect ( realDOM.firstChild.pathname ).toBe ( "/c" );
 
 		fBackup = fragment.clone ();
 		tc.action.changeLink ( "./d" );
 		expect ( vm.link ).toBe ( "./d" );
-		expect ( fragment.children [ 0 ].componentNodes [ 0 ].attr ( "href" ) ).toBe ( "./d" );
+		expect ( fragment.children [ 0 ].templateNodes [ 0 ].attr ( "href" ) ).toBe ( "./d" );
 		fragment.diff ( fBackup ).patch ();
 		expect ( realDOM.firstChild.pathname ).toBe ( "/d" );
 	} );

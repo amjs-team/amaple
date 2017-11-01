@@ -300,9 +300,9 @@ extend ( VNode.prototype, {
     	switch ( this.nodeType ) {
         	case 1:
         		if ( !this.node ) {
-                    if ( this.isComponent ) {
+                    if ( this.templateNodes ) {
                         this.node = [];
-                        foreach ( this.componentNodes, vnode => {
+                        foreach ( this.templateNodes, vnode => {
                             this.node.push ( vnode.render () );
                         } );
                     }
@@ -341,7 +341,7 @@ extend ( VNode.prototype, {
                     }
                 }
             	
-                if ( this.children.length > 0 ) {
+                if ( this.children.length > 0 && !this.templateNodes ) {
                     f = document.createDocumentFragment ();
                     foreach ( this.children, child => {
                         f.appendChild ( child.render () );
@@ -433,12 +433,14 @@ extend ( VNode.prototype, {
                     } );
                 }
 
-                if ( this.isComponent ) {
-                    vnode.component = this.component;
+                if ( this.templateNodes ) {
+                    if ( vnode.isComponent ) {
+                        vnode.component = this.component;
+                    }
 
-                    vnode.componentNodes = [];
-                    foreach ( this.componentNodes, ( componentNode, i ) => {
-                        vnode.componentNodes.push ( componentNode.clone () );
+                    vnode.templateNodes = [];
+                    foreach ( this.templateNodes, ( templateNode, i ) => {
+                        vnode.templateNodes.push ( templateNode.clone () );
                     } );
                 }
             	
@@ -518,15 +520,17 @@ extend ( VNode.prototype, {
             }
         }
     	else if ( this.nodeName === oldVNode.nodeName && this.key === oldVNode.key ) {
-			if ( this.isComponent ) {
 
-                // 还未tmpl.mount时oldVNode是没有isComponent的
-                // 此时需将该componentNode替换为组件内容
-                if ( !oldVNode.isComponent ) {
-                    nodePatcher.replaceNode ( VFragment ( this.componentNodes ), oldVNode );
+            // 如果当前为组件或template vnode，则处理templateNodes
+			if ( this.templateNodes ) {
+
+                // 还未挂载的组件或template是没有templateNodes的
+                // 此时需将该templateNodes替换为组件内容
+                if ( !oldVNode.templateNodes ) {
+                    nodePatcher.replaceNode ( VFragment ( this.templateNodes ), oldVNode );
                 }
                 else {
-                    diffChildren ( this.componentNodes, oldVNode.componentNodes, nodePatcher );
+                    diffChildren ( this.templateNodes, oldVNode.templateNodes, nodePatcher );
                 }
             }
         	else {

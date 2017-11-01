@@ -191,20 +191,21 @@ extend ( NodePatcher.prototype, {
                 	break;
                 case NodePatcher.NODE_REORDER :
                 	p = patchItem.item.parent.node;
-              		if ( patchItem.item.isComponent ) {
+              		if ( patchItem.item.templateNodes ) {
                     	const f = document.createDocumentFragment ();
-                    	foreach ( patchItem.item.componentNodes, vnode => {
+                    	foreach ( patchItem.item.templateNodes, vnode => {
                         	f.appendChild ( vnode.node );
                         } );
                     	
-                    	if ( patchItem.index < p.childNodes.length - 1 ) {
+                    	if ( patchItem.index < p.childNodes.length ) {
             				p.insertBefore ( f, p.childNodes.item ( patchItem.index ) );
                     	}
                 		else {
                     		p.appendChild ( f );
                     	}
                     	
-                    	if ( patchItem.isMove ) {
+                    	// 移动操作的组件需调用组件的update生命周期函数
+                    	if ( patchItem.isMove && patchItem.item.isComponent ) {
                         	patchItem.item.component.update ();
                         }
                     }
@@ -220,12 +221,15 @@ extend ( NodePatcher.prototype, {
                 	break;
                 case NodePatcher.NODE_REMOVE :
                 	let unmountNodes;
-                	if ( patchItem.item.isComponent ) {
-                    	foreach ( patchItem.item.componentNodes, vnode => {
+                	if ( patchItem.item.templateNodes ) {
+                    	foreach ( patchItem.item.templateNodes, vnode => {
                         	vnode.node.parentNode.removeChild ( vnode.node );
                         } );
                     	
-                    	patchItem.item.component.unmount ();
+                    	// 移除的组件需调用unmount生命周期函数
+                    	if ( patchItem.item.isComponent ) {
+                    		patchItem.item.component.unmount ();
+                    	}
                     }
                 	else {
                 		patchItem.item.node.parentNode.removeChild ( patchItem.item.node );
@@ -234,12 +238,12 @@ extend ( NodePatcher.prototype, {
                 	break;
                 case NodePatcher.NODE_REPLACE :
                 	let node;
-                	if ( patchItem.replaceNode.isComponent ) {
-                		p = patchItem.replaceNode.componentNodes [ 0 ].node.parentNode;
+                	if ( patchItem.replaceNode.templateNodes ) {
+                		p = patchItem.replaceNode.templateNodes [ 0 ].node.parentNode;
 
-                    	if ( patchItem.item.isComponent ) {
+                    	if ( patchItem.item.templateNodes ) {
                         	node = document.createDocumentFragment ();
-                        	foreach ( patchItem.item.componentNodes, vnode => {
+                        	foreach ( patchItem.item.templateNodes, vnode => {
                             	node.appendChild ( vnode.node );
                             } );
                         }
@@ -247,17 +251,17 @@ extend ( NodePatcher.prototype, {
                         	node = patchItem.item.node;
                         }
                     	
-                    	p.insertBefore ( node, patchItem.replaceNode.componentNodes [ 0 ].node );
-                    	foreach ( patchItem.replaceNode.componentNodes, vnode => {
+                    	p.insertBefore ( node, patchItem.replaceNode.templateNodes [ 0 ].node );
+                    	foreach ( patchItem.replaceNode.templateNodes, vnode => {
                         	p.removeChild ( vnode.node );
                         } );
                     }
                 	else {
                 		p = patchItem.replaceNode.node.parentNode;
                     	node = patchItem.item.node;
-                    	if ( patchItem.item.isComponent ) {
+                    	if ( patchItem.item.templateNodes ) {
                         	node = document.createDocumentFragment ();
-                        	foreach ( patchItem.item.componentNodes, vnode => {
+                        	foreach ( patchItem.item.templateNodes, vnode => {
                             	node.appendChild ( vnode.node );
                             } );
                         }

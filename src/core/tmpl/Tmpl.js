@@ -36,17 +36,20 @@ function preTreat ( vnode ) {
         condition = vnode.attr ( _if );
 
     if ( condition && !vnode.conditionElems ) {
+
         vnode.conditions = [ condition ];
         vnode.conditionElems = [ vnode ];
         parent = vnode.parent;
         while ( nextSib = vnode.nextSibling () ) {
             if ( condition = nextSib.attr ( _elseif ) ) {
+                nextSib.mainVNode = vnode;
                 vnode.conditions.push ( condition );
                 vnode.conditionElems.push ( nextSib );
                 nextSib.attr ( _elseif, null );
                 parent.removeChild ( nextSib );
             }
             else if ( nextSib.attrs.hasOwnProperty ( _else ) ) {
+                nextSib.mainVNode = vnode;
                 vnode.conditions.push ( "true" );
                 vnode.conditionElems.push ( nextSib );
                 nextSib.attr ( _else, null );
@@ -58,14 +61,6 @@ function preTreat ( vnode ) {
             }
         }
     }
-
-    foreach ( vnode.conditionElems || [], nextSib => {
-        if ( nextSib.nodeName === "TEMPLATE" ) {
-
-            // 需拷贝一份数组，直接引用会在后续对children的操作就相当于操作templateNodes
-            nextSib.templateNodes = nextSib.children.concat ();
-        }
-    } );
     
     return vnode;
 }
@@ -75,6 +70,7 @@ function concatHandler ( target, source ) {
 	
 	concats.watchers = target.watchers.concat ( source.watchers );
 	concats.components = target.components.concat ( source.components );
+    concats.templates = target.templates.concat ( source.templates );
 
 	return concats;
 }
@@ -122,7 +118,8 @@ extend ( Tmpl.prototype, {
         let directive, handler, targetNode, expr, forAttrValue, firstChild,
             compileHandlers = {
             	watchers : [],
-            	components : []
+            	components : [],
+                templates : []
             };
         
         do {
@@ -140,16 +137,22 @@ extend ( Tmpl.prototype, {
                 }
                 else {
                 	
-                	// 收集组件元素待渲染
-        			// 局部没有找到组件则查找全局组件
-        			const 
-                    	componentName = transformCompName ( vnode.nodeName ),
-                    	ComponentDerivative = this.getComponent ( componentName ) || Component.getGlobal ( componentName );
-        			if ( ComponentDerivative && ComponentDerivative.__proto__.name === "Component" ) {
-                    	compileHandlers.components.push ( { vnode, Class : ComponentDerivative } );
-                    	
-                    	vnode.isComponent = true;
-        			}
+                    if ( vnode.nodeName === "TEMPLATE" ) {
+                        compileHandlers.templates.push ( vnode );
+                    }
+                    else {
+
+                    	// 收集组件元素待渲染
+            			// 局部没有找到组件则查找全局组件
+            			const 
+                        	componentName = transformCompName ( vnode.nodeName ),
+                        	ComponentDerivative = this.getComponent ( componentName ) || Component.getGlobal ( componentName );
+            			if ( ComponentDerivative && ComponentDerivative.__proto__.name === "Component" ) {
+                        	compileHandlers.components.push ( { vnode, Class : ComponentDerivative } );
+                        	
+                        	vnode.isComponent = true;
+            			}
+                    }
                     
                     foreach ( vnode.attrs, ( attr, name ) => {
                         directive = rattr.exec ( name );
@@ -210,6 +213,11 @@ extend ( Tmpl.prototype, {
             // 为相应模板元素挂载数据
             foreach ( compileHandlers.watchers, watcher => {
                 new ViewWatcher ( watcher.handler, watcher.targetNode, watcher.expr, this, scoped );
+            } );
+
+            // 处理template元素
+            foreach ( compileHandlers.templates, vnode => {
+                vnode.templateNodes = vnode.children.concat ();
             } );
             
         	// 渲染组件

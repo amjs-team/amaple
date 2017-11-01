@@ -33,6 +33,7 @@ function createVNode ( watcher, arg, index, realNode, key ) {
                 nextSibClone = nextSib.clone ( realNode );
                 nextSibClone.key = key;
                 itemNode.conditionElems.push ( nextSibClone );
+                nextSibClone.mainVNode = itemNode;
             }
         } );
         itemNode.conditions = elem.conditions;
@@ -45,8 +46,7 @@ function createVNode ( watcher, arg, index, realNode, key ) {
     watcher.tmpl.mount ( f, true, Tmpl.defineScoped ( scopedDefinition ) );
     itemNode = f.children [ 0 ];
 
-    return itemNode.nodeName && itemNode.nodeName === "TEMPLATE" ? VFragment ( itemNode.children ) : 
-            elem.nodeName && elem.nodeName === "TEMPLATE" ? f : f.children [ 0 ];
+    return itemNode;
 }
 
 Tmpl.defineDirective ( {
@@ -150,11 +150,10 @@ Tmpl.defineDirective ( {
         	let p = this.startNode.parent,
          		el;
         	while ( ( el = this.startNode.nextSibling () ) !== this.endNode ) {
+        		p.removeChild ( el );
 
                 // 卸载node的watchers
                 unmountWatchers ( el.isComponent ? VFragment ( el.templateNodes ) : el );
-
-        		p.removeChild ( el );
             }
         	
         	p.insertBefore ( fragment, this.endNode );

@@ -266,9 +266,10 @@ describe ( "directive if => ", () => {
 
         children = d.children;
         expect ( children.length ).toBe ( 1 );
-        expect ( children [ 0 ].nodeName ).toBe ( "SPAN" );
-        expect ( children [ 0 ].children [ 0 ].nodeValue ).toBe ( 555 );
-        expect ( children [ 0 ].children [ 1 ].nodeValue ).toBe ( "666" );
+        expect ( children [ 0 ].nodeName ).toBe ( "TEMPLATE" );
+        expect ( children [ 0 ].templateNodes [ 0 ].nodeName ).toBe ( "SPAN" );
+        expect ( children [ 0 ].templateNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( 555 );
+        expect ( children [ 0 ].templateNodes [ 0 ].children [ 1 ].nodeValue ).toBe ( "666" );
         d.diff ( dBackup ).patch ();
         expect ( realDOM.childNodes.length ).toBe ( 1 );
         expect ( realDOM.childNodes.item ( 0 ).nodeName ).toBe ( "SPAN" );
@@ -278,9 +279,10 @@ describe ( "directive if => ", () => {
         dBackup = d.clone ();
         vm.show = 2;
         expect ( children.length ).toBe ( 1 );
-        expect ( children [ 0 ].nodeName ).toBe ( "SPAN" );
-        expect ( children [ 0 ].children [ 0 ].nodeValue ).toBe ( "555123" );
-        expect ( children [ 0 ].children [ 1 ].nodeValue ).toBe ( "888" );
+        expect ( children [ 0 ].nodeName ).toBe ( "TEMPLATE" );
+        expect ( children [ 0 ].templateNodes [ 0 ].nodeName ).toBe ( "SPAN" );
+        expect ( children [ 0 ].templateNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( "555123" );
+        expect ( children [ 0 ].templateNodes [ 0 ].children [ 1 ].nodeValue ).toBe ( "888" );
         d.diff ( dBackup ).patch ();
         expect ( realDOM.childNodes.length ).toBe ( 1 );
         expect ( realDOM.childNodes.item ( 0 ).nodeName ).toBe ( "SPAN" );

@@ -91,7 +91,7 @@ extend ( Component.prototype, {
         	delete this.style;
         	delete this.subElements;
 
-    		// 处理模块并挂载数据 
+    		// 处理模块并挂载数据
     		const 
             	vfragment = componentConstructor.initTemplate ( componentString, scopedStyle ),
                 subElements = componentConstructor.initSubElements ( componentVNode, subElementNames ),
@@ -104,7 +104,7 @@ extend ( Component.prototype, {
 
     		// 保存组件对象和结构
         	componentVNode.component = this;
-        	componentVNode.componentNodes = vfragment.children.concat ();
+        	componentVNode.templateNodes = vfragment.children.concat ();
 
     		// 调用mounted钩子函数
     		( this.mounted || noop ).apply ( this, cache.getDependentPlugin ( this.mounted || noop ) );

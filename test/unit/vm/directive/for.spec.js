@@ -294,21 +294,22 @@ describe ( "directive for => ", () => {
 
         children = d.children;
 
-        // 带有startNode、endNode两个标识节点
-        expect ( children.length ).toBe ( 8 );
-        expect ( children [ 1 ].children [ 0 ].nodeValue ).toBe ( "a" );
-        expect ( children [ 3 ].children [ 0 ].nodeValue ).toBe ( "b" );
-        expect ( children [ 5 ].children [ 0 ].nodeValue ).toBe ( "c" );
+        // 带有startNode、endNode两个标识节点，3个template节点
+        expect ( children.length ).toBe ( 5 );
+        expect ( children [ 1 ].templateNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( "a" );
+        expect ( children [ 2 ].templateNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( "b" );
+        expect ( children [ 3 ].templateNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( "c" );
         d.diff ( dBackup ).patch ();
         expect ( realDOM.childNodes.length ).toBe ( 8 );
         expect ( realDOM.childNodes.item ( 1 ).childNodes.item ( 0 ).nodeValue ).toBe ( "a" );
         expect ( realDOM.childNodes.item ( 3 ).childNodes.item ( 0 ).nodeValue ).toBe ( "b" );
-        expect ( realDOM.childNodes.item ( 5 ).childNodes.item ( 0 ).nodeValue ).toBe ( "c" );
+        expect ( children [ 2 ].templateNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( "b" );
 
         dBackup = d.clone ();
         vm.list.push ( "d" );
-        expect ( children.length ).toBe ( 10 );
-        expect ( children [ 7 ].children [ 0 ].nodeValue ).toBe ( "d" );
+        // 带有startNode、endNode两个标识节点，4个template节点
+        expect ( children.length ).toBe ( 6 );
+        expect ( children [ 4 ].templateNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( "d" );
         d.diff ( dBackup ).patch ();
         expect ( realDOM.childNodes.length ).toBe ( 10 );
         expect ( realDOM.childNodes.item ( 7 ).childNodes.item ( 0 ).nodeValue ).toBe ( "d" );
@@ -343,9 +344,18 @@ describe ( "directive for => ", () => {
         t.mount ( d, true );
 
         children = d.children;
+        // 带有startNode、endNode两个标识节点，4个template节点
+        expect ( children.length ).toBe ( 5 );
+        expect ( children [ 1 ].templateNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( "a" );
+        expect ( children [ 2 ].templateNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( "b else" );
+        expect ( children [ 3 ].templateNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( "c else" );
         d.diff ( dBackup ).patch ();
+        expect ( realDOM.childNodes.item ( 1 ).childNodes.item ( 0 ).nodeValue ).toBe ( "a" );
+        expect ( realDOM.childNodes.item ( 3 ).childNodes.item ( 0 ).nodeValue ).toBe ( "b else" );
+        expect ( realDOM.childNodes.item ( 5 ).childNodes.item ( 0 ).nodeValue ).toBe ( "c else" );
+
         // 调用list方法时会重新克隆元素，然后再进行渲染，此时相关监听变量会再次监听克隆出来的新的元素，但旧的监听已经需要删除了
-        // vm.list.splice ( 0, 1 );
-        // vm.next = "b";
+        vm.list.splice ( 0, 1 );
+        vm.next = "b";
     } );
 } );

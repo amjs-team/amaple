@@ -7,9 +7,11 @@ import VTextNode from "core/vnode/VTextNode";
 import VFragment from "core/vnode/VFragment";
 
 describe ( "render component => ", () => {
-	let TestComp;
+	let TestComp, updateSpy;
 
 	beforeEach ( () => {
+		updateSpy = jasmine.createSpy ( "updateSpy" )
+
 		TestComp = Class ( "TestComp" ).extends ( Component ) ( {
 			init () {
 				return {
@@ -27,6 +29,9 @@ describe ( "render component => ", () => {
 			        }
 			    } )
 			    .subElements ( "SubComp", { elem: "SubComp2", multiple: true } );
+			},
+			update () {
+				updateSpy ();
 			},
 			action () {
 				return {
@@ -51,8 +56,8 @@ describe ( "render component => ", () => {
 		tmpl.mount ( div, true );
 		
 
-		expect ( div.children [ 0 ].componentNodes [ 0 ].nodeName ).toBe ( "BUTTON" );
-		expect ( div.children [ 0 ].componentNodes [ 1 ].nodeName ).toBe ( "DIV" );
+		expect ( div.children [ 0 ].templateNodes [ 0 ].nodeName ).toBe ( "BUTTON" );
+		expect ( div.children [ 0 ].templateNodes [ 1 ].nodeName ).toBe ( "DIV" );
 		div.diff ( dBackup ).patch ();
 		expect ( realDOM.firstChild.nodeName ).toBe ( "BUTTON" );
 		expect ( realDOM.firstChild.nextElementSibling.nodeName ).toBe ( "DIV" );
@@ -72,9 +77,9 @@ describe ( "render component => ", () => {
 			dBackup = div.clone ();
 		tmpl.mount ( div, true );
 
-		expect ( div.children [ 0 ].componentNodes.length ).toBe ( 5 );
-		expect ( div.children [ 0 ].componentNodes [ 2 ].nodeName ).toBe ( "SPAN" );
-		expect ( div.children [ 0 ].componentNodes [ 2 ].children [ 0 ].nodeValue ).toBe ( "SubComp" );
+		expect ( div.children [ 0 ].templateNodes.length ).toBe ( 5 );
+		expect ( div.children [ 0 ].templateNodes [ 2 ].nodeName ).toBe ( "SPAN" );
+		expect ( div.children [ 0 ].templateNodes [ 2 ].children [ 0 ].nodeValue ).toBe ( "SubComp" );
 		div.diff ( dBackup ).patch ();
 		expect ( realDOM.childNodes.length ).toBe ( 5 );
 		expect ( realDOM.childNodes.item ( 2 ).nodeName ).toBe ( "SPAN" );
@@ -93,8 +98,8 @@ describe ( "render component => ", () => {
 		dBackup = div.clone ();
 		tmpl.mount ( div, true );
 
-		expect ( div.children [ 0 ].componentNodes [ 4 ].children [ 0 ].nodeName ).toBe ( "SPAN" );
-		expect ( div.children [ 0 ].componentNodes [ 4 ].children [ 0 ].children [ 0 ].nodeValue ).toBe ( "default" );
+		expect ( div.children [ 0 ].templateNodes [ 4 ].children [ 0 ].nodeName ).toBe ( "SPAN" );
+		expect ( div.children [ 0 ].templateNodes [ 4 ].children [ 0 ].children [ 0 ].nodeValue ).toBe ( "default" );
 		div.diff ( dBackup ).patch ();
 		expect ( realDOM.querySelector ( "#default" ).firstChild.nodeName ).toBe ( "SPAN" );
 		expect ( realDOM.querySelector ( "#default" ).firstChild.firstChild.nodeValue ).toBe ( "default" );
@@ -122,7 +127,7 @@ describe ( "render component => ", () => {
 
 		dBackup = div.clone ();
 		vm.visible = true;
-		expect ( div.children [ 0 ].componentNodes [ 0 ].nodeName ).toBe ( "BUTTON" );
+		expect ( div.children [ 0 ].templateNodes [ 0 ].nodeName ).toBe ( "BUTTON" );
 		div.diff ( dBackup ).patch ();
 		expect ( realDOM.firstChild.nodeName ).toBe ( "BUTTON" );
 
@@ -136,13 +141,13 @@ describe ( "render component => ", () => {
 
 		dBackup = div.clone ();
 		vm.visible = true;
-		expect ( div.children [ 0 ].componentNodes [ 0 ].nodeName ).toBe ( "BUTTON" );
+		expect ( div.children [ 0 ].templateNodes [ 0 ].nodeName ).toBe ( "BUTTON" );
 		div.diff ( dBackup ).patch ();
 		expect ( realDOM.firstChild.nodeName ).toBe ( "BUTTON" );
 
 		dBackup = div.clone ();
 		moduleObj.components [ 0 ].action.print ( "test-comp" );
-		expect ( div.children [ 0 ].componentNodes [ 1 ].children [ 0 ].nodeValue ).toBe ( "test-comp" );
+		expect ( div.children [ 0 ].templateNodes [ 1 ].children [ 0 ].nodeValue ).toBe ( "test-comp" );
 		div.diff ( dBackup ).patch ();
 		expect ( realDOM.querySelector ( ".console" ).firstChild.nodeValue ).toBe ( "test-comp" );
 	} );
@@ -164,12 +169,12 @@ describe ( "render component => ", () => {
 		tmpl.mount ( div, true );
 
 		expect ( div.children.length ).toBe ( 5 );
-		expect ( div.children [ 1 ].componentNodes [ 0 ].nodeName ).toBe ( "BUTTON" );
-		expect ( div.children [ 1 ].componentNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "a" );
-		expect ( div.children [ 2 ].componentNodes [ 0 ].nodeName ).toBe ( "BUTTON" );
-		expect ( div.children [ 2 ].componentNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "b" );
-		expect ( div.children [ 3 ].componentNodes [ 0 ].nodeName ).toBe ( "BUTTON" );
-		expect ( div.children [ 3 ].componentNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "c" );
+		expect ( div.children [ 1 ].templateNodes [ 0 ].nodeName ).toBe ( "BUTTON" );
+		expect ( div.children [ 1 ].templateNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "a" );
+		expect ( div.children [ 2 ].templateNodes [ 0 ].nodeName ).toBe ( "BUTTON" );
+		expect ( div.children [ 2 ].templateNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "b" );
+		expect ( div.children [ 3 ].templateNodes [ 0 ].nodeName ).toBe ( "BUTTON" );
+		expect ( div.children [ 3 ].templateNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "c" );
 		div.diff ( dBackup ).patch ();
 		expect ( realDOM.children.length ).toBe ( 12 );
 		expect ( realDOM.children.item ( 0 ).nodeName ).toBe ( "BUTTON" );
@@ -179,8 +184,8 @@ describe ( "render component => ", () => {
 		dBackup = div.clone ();
 		vm.list.splice ( 0, 1 );
 		expect ( div.children.length ).toBe ( 4 );
-		expect ( div.children [ 1 ].componentNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "b" );
-		expect ( div.children [ 2 ].componentNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "c" );
+		expect ( div.children [ 1 ].templateNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "b" );
+		expect ( div.children [ 2 ].templateNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "c" );
 		div.diff ( dBackup ).patch ();
 		expect ( realDOM.children.length ).toBe ( 8 );
 		expect ( realDOM.children.item ( 3 ).firstChild.nodeValue ).toBe ( "b" );
@@ -189,14 +194,27 @@ describe ( "render component => ", () => {
 		dBackup = div.clone ();
 		vm.list.unshift ( "aa" );
 		expect ( div.children.length ).toBe ( 5 );
-		expect ( div.children [ 1 ].componentNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "aa" );
-		expect ( div.children [ 2 ].componentNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "b" );
-		expect ( div.children [ 3 ].componentNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "c" );
+		expect ( div.children [ 1 ].templateNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "aa" );
+		expect ( div.children [ 2 ].templateNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "b" );
+		expect ( div.children [ 3 ].templateNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "c" );
 		div.diff ( dBackup ).patch ();
 		expect ( realDOM.children.length ).toBe ( 12 );
 		expect ( realDOM.children.item ( 3 ).firstChild.nodeValue ).toBe ( "aa" );
 		expect ( realDOM.children.item ( 7 ).firstChild.nodeValue ).toBe ( "b" );
 		expect ( realDOM.children.item ( 11 ).firstChild.nodeValue ).toBe ( "c" );
+
+		dBackup = div.clone ();
+		vm.list.reverse ();
+		div.diff ( dBackup ).patch ();
+		expect ( realDOM.children.item ( 3 ).firstChild.nodeValue ).toBe ( "c" );
+		expect ( realDOM.children.item ( 7 ).firstChild.nodeValue ).toBe ( "b" );
+		expect ( realDOM.children.item ( 11 ).firstChild.nodeValue ).toBe ( "aa" );
+		expect ( updateSpy.calls.count() ).toBe ( 2 );
+
+		dBackup = div.clone ();
+		div.children [ 1 ].component.action.print ( "reverse test" );
+		div.diff ( dBackup ).patch ();
+		expect ( realDOM.children.item ( 1 ).firstChild.nodeValue ).toBe ( "reverse test" );
 	} );
 
 	it ( "render a component with both ':if' and ':for'", () => {
@@ -217,7 +235,7 @@ describe ( "render component => ", () => {
 		tmpl.mount ( div, true );
 
 		expect ( div.children.length ).toBe ( 5 );
-		expect ( div.children [ 2 ].componentNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "b" );
+		expect ( div.children [ 2 ].templateNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "b" );
 		div.diff ( dBackup ).patch ();
 		expect ( realDOM.children.length ).toBe ( 4 );
 		expect ( realDOM.children.item ( 3 ).firstChild.nodeValue ).toBe ( "b" );
@@ -225,7 +243,7 @@ describe ( "render component => ", () => {
 		dBackup = div.clone ();
 		vm.item = "a";
 		expect ( div.children.length ).toBe ( 5 );
-		expect ( div.children [ 1 ].componentNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "a" );
+		expect ( div.children [ 1 ].templateNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "a" );
 		div.diff ( dBackup ).patch ();
 		expect ( realDOM.children.length ).toBe ( 4 );
 		expect ( realDOM.children.item ( 3 ).firstChild.nodeValue ).toBe ( "a" );
@@ -244,7 +262,7 @@ describe ( "render component => ", () => {
 		dBackup = div.clone ();
 		vm.item = "c";
 		expect ( div.children.length ).toBe ( 5 );
-		expect ( div.children [ 3 ].componentNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "c" );
+		expect ( div.children [ 3 ].templateNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "c" );
 		div.diff ( dBackup ).patch ();
 		expect ( realDOM.children.length ).toBe ( 4 );
 		expect ( realDOM.children.item ( 3 ).firstChild.nodeValue ).toBe ( "c" );
@@ -266,7 +284,7 @@ describe ( "render component => ", () => {
 			dBackup = div.clone ();
 		tmpl.mount ( div, true );
 
-		expect ( div.children [ 0 ].componentNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "hello icejs" );
+		expect ( div.children [ 0 ].templateNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "hello icejs" );
 		div.diff ( dBackup ).patch ();
 		expect ( realDOM.querySelector ( "#default" ).firstChild.nodeValue ).toBe ( "hello icejs" );
 	} );
@@ -295,19 +313,19 @@ describe ( "render component => ", () => {
 			dBackup = div.clone ();
 		tmpl.mount ( div, true );
 		
-		expect ( div.children [ 0 ].componentNodes [ 4 ].children [ 0 ].children [ 0 ].nodeValue ).toBe ( "a" );
+		expect ( div.children [ 0 ].templateNodes [ 4 ].children [ 0 ].children [ 0 ].nodeValue ).toBe ( "a" );
 		div.diff ( dBackup ).patch ();
 		expect ( realDOM.querySelector ( "#default" ).firstChild.firstChild.nodeValue ).toBe ( "a" );
 
 		dBackup = div.clone ();
 		vm.visible = "b";
-		expect ( div.children [ 0 ].componentNodes [ 4 ].children [ 0 ].children [ 0 ].nodeValue ).toBe ( "b" );
+		expect ( div.children [ 0 ].templateNodes [ 4 ].children [ 0 ].children [ 0 ].nodeValue ).toBe ( "b" );
 		div.diff ( dBackup ).patch ();
 		expect ( realDOM.querySelector ( "#default" ).firstChild.firstChild.nodeValue ).toBe ( "b" );
 
 		dBackup = div.clone ();
 		vm.visible = "c";
-		expect ( div.children [ 0 ].componentNodes [ 4 ].children [ 0 ].children [ 0 ].nodeValue ).toBe ( "c" );
+		expect ( div.children [ 0 ].templateNodes [ 4 ].children [ 0 ].children [ 0 ].nodeValue ).toBe ( "c" );
 		div.diff ( dBackup ).patch ();
 		expect ( realDOM.querySelector ( "#default" ).firstChild.firstChild.nodeValue ).toBe ( "c" );
 	} );
@@ -329,10 +347,10 @@ describe ( "render component => ", () => {
 		tmpl.mount ( div, true );
 
 		// 附带startNode、endNode两个标识节点
-		expect ( div.children [ 0 ].componentNodes [ 4 ].children.length ).toBe ( 5 );
-		expect ( div.children [ 0 ].componentNodes [ 4 ].children [ 1 ].children [ 0 ].nodeValue ).toBe ( "a" );
-		expect ( div.children [ 0 ].componentNodes [ 4 ].children [ 2 ].children [ 0 ].nodeValue ).toBe ( "b" );
-		expect ( div.children [ 0 ].componentNodes [ 4 ].children [ 3 ].children [ 0 ].nodeValue ).toBe ( "c" );
+		expect ( div.children [ 0 ].templateNodes [ 4 ].children.length ).toBe ( 5 );
+		expect ( div.children [ 0 ].templateNodes [ 4 ].children [ 1 ].children [ 0 ].nodeValue ).toBe ( "a" );
+		expect ( div.children [ 0 ].templateNodes [ 4 ].children [ 2 ].children [ 0 ].nodeValue ).toBe ( "b" );
+		expect ( div.children [ 0 ].templateNodes [ 4 ].children [ 3 ].children [ 0 ].nodeValue ).toBe ( "c" );
 		div.diff ( dBackup ).patch ();
 		expect ( realDOM.querySelector ( "#default" ).children.length ).toBe ( 3 );
 		expect ( realDOM.querySelector ( "#default" ).children.item ( 0 ).firstChild.nodeValue ).toBe ( "a" );
@@ -342,13 +360,17 @@ describe ( "render component => ", () => {
 		dBackup = div.clone ();
 		vm.list.shift ();
 		// 附带startNode、endNode两个标识节点
-		expect ( div.children [ 0 ].componentNodes [ 4 ].children.length ).toBe ( 4 );
-		expect ( div.children [ 0 ].componentNodes [ 4 ].children [ 1 ].children [ 0 ].nodeValue ).toBe ( "b" );
-		expect ( div.children [ 0 ].componentNodes [ 4 ].children [ 2 ].children [ 0 ].nodeValue ).toBe ( "c" );
+		expect ( div.children [ 0 ].templateNodes [ 4 ].children.length ).toBe ( 4 );
+		expect ( div.children [ 0 ].templateNodes [ 4 ].children [ 1 ].children [ 0 ].nodeValue ).toBe ( "b" );
+		expect ( div.children [ 0 ].templateNodes [ 4 ].children [ 2 ].children [ 0 ].nodeValue ).toBe ( "c" );
 		div.diff ( dBackup ).patch ();
 		expect ( realDOM.querySelector ( "#default" ).children.length ).toBe ( 2 );
 		expect ( realDOM.querySelector ( "#default" ).children.item ( 0 ).firstChild.nodeValue ).toBe ( "b" );
 		expect ( realDOM.querySelector ( "#default" ).children.item ( 1 ).firstChild.nodeValue ).toBe ( "c" );
+
+		dBackup = div.clone ();
+		vm.list.reverse ();
+		div.diff ( dBackup ).patch ();
 	} );
 
 	it ( "render multiple components", () => {
@@ -371,15 +393,15 @@ describe ( "render component => ", () => {
 		tmpl.mount ( div, true );
 
 		expect ( div.children.length ).toBe ( 2 );
-		expect ( div.children [ 0 ].componentNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "a" );
+		expect ( div.children [ 0 ].templateNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "a" );
 		// 附带startNode、endNode两个标识节点
-		expect ( div.children [ 0 ].componentNodes [ 3 ].children.length ).toBe ( 3 );
-		expect ( div.children [ 0 ].componentNodes [ 3 ].children [ 1 ].children [ 0 ].nodeValue ).toBe ( "1" );
-		expect ( div.children [ 1 ].componentNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "b" );
+		expect ( div.children [ 0 ].templateNodes [ 3 ].children.length ).toBe ( 3 );
+		expect ( div.children [ 0 ].templateNodes [ 3 ].children [ 1 ].children [ 0 ].nodeValue ).toBe ( "1" );
+		expect ( div.children [ 1 ].templateNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "b" );
 		// 附带startNode、endNode两个标识节点
-		expect ( div.children [ 1 ].componentNodes [ 3 ].children.length ).toBe ( 4 );
-		expect ( div.children [ 1 ].componentNodes [ 3 ].children [ 1 ].children [ 0 ].nodeValue ).toBe ( "2" );
-		expect ( div.children [ 1 ].componentNodes [ 3 ].children [ 2 ].children [ 0 ].nodeValue ).toBe ( "3" );
+		expect ( div.children [ 1 ].templateNodes [ 3 ].children.length ).toBe ( 4 );
+		expect ( div.children [ 1 ].templateNodes [ 3 ].children [ 1 ].children [ 0 ].nodeValue ).toBe ( "2" );
+		expect ( div.children [ 1 ].templateNodes [ 3 ].children [ 2 ].children [ 0 ].nodeValue ).toBe ( "3" );
 		div.diff ( dBackup ).patch ();
 		expect ( realDOM.children.length ).toBe ( 8 );
 		expect ( realDOM.children.item ( 3 ).firstChild.nodeValue ).toBe ( "a" );
@@ -413,16 +435,16 @@ describe ( "render component => ", () => {
 			dBackup = div.clone ();
 		tmpl.mount ( div, true );
 		
-		expect ( div.children [ 0 ].componentNodes.length ).toBe ( 5 );
-		expect ( div.children [ 0 ].componentNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "a" );
+		expect ( div.children [ 0 ].templateNodes.length ).toBe ( 5 );
+		expect ( div.children [ 0 ].templateNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "a" );
 		div.diff ( dBackup ).patch ();
 		expect ( realDOM.children.length ).toBe ( 4 );
 		expect ( realDOM.querySelector ( "#default" ).firstChild.nodeValue ).toBe ( "a" );
 
 		dBackup = div.clone ();
 		vm.visible = "b";
-		expect ( div.children [ 0 ].componentNodes.length ).toBe ( 5 );
-		expect ( div.children [ 0 ].componentNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "b" );
+		expect ( div.children [ 0 ].templateNodes.length ).toBe ( 5 );
+		expect ( div.children [ 0 ].templateNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "b" );
 		div.diff ( dBackup ).patch ();
 		expect ( realDOM.children.length ).toBe ( 4 );
 		expect ( realDOM.querySelector ( "#default" ).firstChild.nodeValue ).toBe ( "b" );
@@ -430,15 +452,15 @@ describe ( "render component => ", () => {
 		dBackup = div.clone ();
 		vm.visible = "c";
 		expect ( div.children.length ).toBe ( 1 );
-		expect ( div.children [ 0 ].children [ 0 ].nodeValue ).toBe ( "b" );
+		expect ( div.children [ 0 ].templateNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( "b" );
 		div.diff ( dBackup ).patch ();
 		expect ( realDOM.children.length ).toBe ( 1 );
 		expect ( realDOM.firstChild.firstChild.nodeValue ).toBe ( "b" );
 
 		dBackup = div.clone ();
 		vm.visible = "b";
-		expect ( div.children [ 0 ].componentNodes.length ).toBe ( 5 );
-		expect ( div.children [ 0 ].componentNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "b" );
+		expect ( div.children [ 0 ].templateNodes.length ).toBe ( 5 );
+		expect ( div.children [ 0 ].templateNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "b" );
 		div.diff ( dBackup ).patch ();
 		expect ( realDOM.children.length ).toBe ( 4 );
 		expect ( realDOM.querySelector ( "#default" ).firstChild.nodeValue ).toBe ( "b" );

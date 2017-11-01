@@ -62,7 +62,7 @@ export function transformCompName ( compName, mode ) {
 }
 
 /**
-	unmountWatchers ( vnode: Object )
+	unmountWatchers ( vnode: Object, isWatchCond: Boolean )
 
 	Return Type:
 	void
@@ -73,12 +73,22 @@ export function transformCompName ( compName, mode ) {
 	URL doc:
 	http://icejs.org/######
 */
-export function unmountWatchers ( vnode ) {
+export function unmountWatchers ( vnode, isWatchCond ) {
 
 	do {
 		foreach ( vnode.watcherUnmounts || [], watcherUnmount => {
 			watcherUnmount ();
 		} );
+
+		// 被“:if”绑定的元素有些不在vdom树上，需通过此方法解除绑定
+		if ( ( vnode.conditionElems || vnode.mainVNode ) && isWatchCond !== false ) {
+			const conditionElems = vnode.conditionElems || vnode.mainVNode.conditionElems;
+			foreach ( conditionElems, conditionElem => {
+				if ( conditionElem !== vnode ) {
+					unmountWatchers ( conditionElem, false );
+				}
+			} );
+		}
 
 		if ( vnode.children && vnode.children [ 0 ] ) {
 			unmountWatchers ( vnode.children [ 0 ] );
