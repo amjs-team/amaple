@@ -9,47 +9,7 @@
 	(global.ice = factory());
 }(this, (function () { 'use strict';
 
-// 目前所支持的状态标记符号，如果所传入的状态标记符号不在此列表中，则会使用默认的状态标记符号@
-var allowState = ["@", "$", "^", "*", "|", ":", "~", "!"];
-
-var defaultParams = {
-	// 异步加载时的依赖目录，设置后默认在此目录下查找，此对象下有4个依赖目录的设置，如果不设置则表示不依赖任何目录
-	base: {
-
-		// url请求base路径，设置此参数后则跳转请求都依赖此路径
-		// 此参数可传入string类型的路径字符串，也可传入一个方法，当传入方法时必须返回一个路径字符串，否则使用""
-		url: "",
-
-		// 插件加载base路径，设置此参数后动态加载插件均依赖此路径
-		// 此参数可传入string类型的路径字符串，也可传入一个方法，当传入方法时必须返回一个路径字符串，否则路径设置无效
-		plugin: "",
-
-		// 元素驱动器base路径，设置此参数后动态加载元素驱动器均依赖此路径
-		// 此参数可传入string类型的路径字符串，也可传入一个方法，当传入方法时必须返回一个路径字符串，否则路径设置无效
-		driver: ""
-	},
-
-	// url地址中的状态标识符，如http://...@login表示当前页面在login的状态
-	stateSymbol: allowState[0],
-
-	// 是否开启跳转缓存，默认开启。跳转缓存是当页面无刷新跳转时缓存跳转数据，当此页面实时性较低时建议开启，以提高相应速度
-	directionCache: true,
-
-	// url中模块名称与模块内容标识的分隔符，默认为"-"
-	moduleSeparator: "-",
-
-	// 自定义ajax请求时的url规则，通过设置此规则将规则中的模块名称与模块内容标识替换为当前请求环境的真实值，此规则与base.url和ice-base关联，即当设置了base.url且ice-base不为false时将自动添加base.url到此url前，如果ice-base为false时，此规则转换后的url将会从根目录当做url的起始路径，即在设置规则时第一个字符如果不是"/"，则系统将自动添加"/"到url的开头部分。默认规则为":m/:v.html"
-	urlRule: ":m/:v.html",
-
-	// 元素驱动器别名，当一个元素设置了别名后可在页面中直接使用别名使用对应的元素加载器。格式为{alias1: driver1, alias2: driver2...}
-	alias: {},
-
-	// 定义404页面显示模块及请求地址，格式为{moduleName: 404url}
-	page404: "",
-
-	// 定义500页面显示模块及请求地址，格式为{moduleName: 500url}
-	page500: ""
-};
+var slice = Array.prototype.slice;
 
 /**
 	error ( errorType: String )
@@ -76,20 +36,24 @@ function error(errorType) {
 	return function (errorCode, errorText) {
 
 		// 打印的错误信息
-		let errMsg = "[ice:" + (errorType ? errorType + "-" : "") + errCode + "] " + err;
+		let errMsg = "[ice:" + (errorType ? errorType + "-" : "") + errorCode + "] " + errorText;
 		return new Error(errMsg);
 	};
 }
 
- // 环境错误
-let argErr = error("arg"); // 参数错误
-let checkErr = error("check"); // 参数检查错误
- // 请求错误
-let configErr = error("config"); // 配置错误
-let runtimeErr = error("runtime"); // 运行时错误
-let vmComputedErr = error("vm-computed"); // 模块错误
-
-var toString = Object.prototype.toString;
+const envErr = error("env"); // 环境错误
+const argErr = error("arg"); // 参数错误
+const checkErr = error("check"); // 参数检查错误
+const requestErr = error("request"); // 请求错误
+ // 配置错误
+const moduleErr = error("module"); // 模块错误
+const runtimeErr = error("runtime"); // 运行时错误
+const vmComputedErr = error("vm-computed"); // 模块错误
+const classErr = error("class"); // 类定义错误
+const RouterErr = error("router"); // 路由定义错误
+ // 指令使用错误
+const componentErr = error("component"); // 组件错误
+const vnodeErr = error("vnode"); // 虚拟节点错误
 
 /**
     check ( variable: Any )
@@ -105,16 +69,18 @@ var toString = Object.prototype.toString;
     http://icejs.org/######
 */
 function check(variable) {
-    this.target = variable;
-    this.condition = [];
+    if (this) {
+        this.target = variable;
+        this.condition = [];
 
-    this.code = "";
-    this.text = "";
+        this.code = "";
+        this.text = "";
+    }
 
     return this instanceof check ? null : new check(variable);
 }
 
-extend$1(check.prototype, {
+extend(check.prototype, {
 
     /**
         or ()
@@ -150,11 +116,15 @@ extend$1(check.prototype, {
            http://icejs.org/######
        */
     prior(priorCb) {
-        let i = this.condition.push("prior") - 1;
-        priorCb(this);
-        this.condition.splice(i, this.condition.length - i);
+        let conditionBackup = this.condition;
+        this.condition = [];
 
-        check.compare.call(this, [check.calculate(this.condition.slice(1))], _var => _var);
+        priorCb(this);
+
+        Array.prototype.push.apply(conditionBackup, /^(?:&&|\|\|)$/.test(conditionBackup[conditionBackup.length - 1]) ? [this.condition] : ["&&", this.condition]);
+        this.condition = conditionBackup;
+
+        return this;
     },
 
     /**
@@ -207,7 +177,6 @@ extend$1(check.prototype, {
         URL doc:
         http://icejs.org/######
     */
-    // [true, "&&", false, "||", true]
     do() {
 
         // 如果值为false则抛出错误
@@ -229,8 +198,8 @@ extend$1(check.prototype, {
         http://icejs.org/######
     */
     be(...vars) {
-        check.compare.call(this, vars, _var => {
-            return this.target === _var;
+        check.compare.call(this, vars, (target, _var) => {
+            return target === _var;
         });
 
         return this;
@@ -249,8 +218,8 @@ extend$1(check.prototype, {
         http://icejs.org/######
     */
     notBe(...vars) {
-        check.compare.call(this, vars, _var => {
-            return this.target !== _var;
+        check.compare.call(this, vars, (target, _var) => {
+            return target !== _var;
         });
 
         return this;
@@ -269,8 +238,8 @@ extend$1(check.prototype, {
         http://icejs.org/######
     */
     type(...strs) {
-        check.compare.call(this, strs, str => {
-            return type$1(this.target) === str;
+        check.compare.call(this, strs, (target, str) => {
+            return type$1(target) === str;
         });
 
         return this;
@@ -289,22 +258,25 @@ extend$1(check.prototype, {
         http://icejs.org/######
     */
     notType(...strs) {
-        check.compare.call(this, vars, _var => {
-            return type$1(this.target) !== _var;
+        check.compare.call(this, strs, (target, str) => {
+            return type$1(target) !== str;
         });
 
         return this;
     }
 });
 
-extend$1(check, {
+extend(check, {
     compare(vars, compareFn) {
-        Array.prototype.push.apply(this.condition, (type$1(this.condition[this.condition.length - 1]) === "boolean" ? ["&&"] : []).concat((() => {
-            let _var, res;
-            while (_var = vars.shift()) {
-                res = res || compareFn(_var);
-            }
-        })()));
+        let target = this.target;
+        Array.prototype.push.apply(this.condition, (type$1(this.condition[this.condition.length - 1]) === "function" ? ["&&"] : []).concat(() => {
+            let res;
+            foreach(vars, _var => {
+                res = res || compareFn(target, _var);
+            });
+
+            return res;
+        }));
     },
 
     calculate(condition) {
@@ -312,18 +284,39 @@ extend$1(check, {
             throw checkErr("condition", "没有设置检查条件");
         } else if (/^\|\|$/.test(condition[condition.length - 1])) {
             throw checkErr("condition", "\"or()\"应该需要紧跟条件，而不能作为最后的条件调用方法");
-        } else if (this.condition.length % 2 === 1) {
-            let res = this.condition[0];
-            for (let i = 0; this.condition[i]; i += 2) {
-                switch (this.condition[i + 1]) {
-                    case "&&":
-                        res = res && this.condition[i + 2];
-                        break;
-                    case "||":
-                        res = res || this.condition[i + 2];
-                        break;
+        } else if (condition.length % 2 === 1) {
+            let res = false,
+                symbol,
+                titem,
+                bool;
+            foreach(condition, item => {
+                titem = type$1(item);
+
+                if (titem !== "string") {
+                    if (titem === "array") {
+                        bool = check.calculate(item);
+                    } else if (titem === "function") {
+                        bool = item();
+                    }
+
+                    switch (symbol) {
+                        case "&&":
+                            res = res && bool;
+                            break;
+                        case "||":
+                            res = res || bool;
+                            break;
+                        default:
+                            res = bool;
+                    }
+                } else {
+                    if (item === "&&" && res === false || item === "||" && res === true) {
+                        return false;
+                    } else {
+                        symbol = item;
+                    }
                 }
-            }
+            });
 
             return res;
         }
@@ -363,37 +356,47 @@ function type$1(arg) {
 function noop() {}
 
 /**
-	foreach ( target: Array|Object, callback: Function, mode?: Boolean )
+	foreach ( target: Array|Object|ArrayLike, callback: Function )
 
 	Return Type:
 	Boolean
-	是否继续循环，如果返回false，则跳出循环
+	是否继续跳出外层循环，如果返回false，则继续跳出循环
 
 	Description:
 	遍历数组或对象
+    可遍历带有length的类数组对象如NodeList对象，如果遍历对象为空或不可遍历，则直接返回
+    
+    回调函数中返回false跳出此循环，且此返回值会在foreach中返回，在需跳出多层循环时return foreach (...)实现
 
 	URL doc:
 	http://icejs.org/######
 */
-function foreach$1(target, callback, mode) {
+function foreach(target, callback) {
 
-	check(target).type("array", "object").ifNot("target", "第一个参数类型必须为array或object").do();
-	check(callback).type("function").ifNot("callback", "第二个参数类型必须为function").do();
+	// 判断目标变量是否可被变量
+	if (!target || (target.length || Object.keys(target).length) <= 0) {
+		return;
+	}
 
-	var isContinue,
+	let isContinue,
+	    i,
 	    tTarget = type$1(target),
-	    tCallback = type$1(callback),
-	    i = 0;
+	    tCallback = type$1(callback);
 
-	if (tTarget === "array" && mode === true) {
-		for (; i < target.length; i++) {
+	if (tTarget === "object" && target.length) {
+		target = slice.call(target);
+		tTarget = "array";
+	}
+
+	if (tTarget === "array") {
+		for (i = 0; i < target.length; i++) {
 			isContinue = callback(target[i], i, target);
 
 			if (isContinue === false) {
 				break;
 			}
 		}
-	} else if (tTarget === "object" || mode !== true) {
+	} else if (tTarget === "object") {
 		for (i in target) {
 			isContinue = callback(target[i], i, target);
 
@@ -402,6 +405,8 @@ function foreach$1(target, callback, mode) {
 			}
 		}
 	}
+
+	return isContinue;
 }
 
 /**
@@ -422,7 +427,7 @@ function isEmpty(object) {
 	check(object).type("array", "object").ifNot("object", "参数类型必须为array或object").do();
 
 	let result = true;
-	foreach$1(object, () => {
+	foreach(object, () => {
 		result = false;
 
 		// 跳出循环
@@ -460,7 +465,7 @@ function isEmpty(object) {
 	URL doc:
 	http://icejs.org/######
 */
-function extend$1(...args) {
+function extend(...args) {
 
 	let target = args[0],
 	    ttarget = type$1(target),
@@ -468,16 +473,14 @@ function extend$1(...args) {
 
 	args = args.slice(1);
 
-	check(target).type("array", "object", "function").ifNot("target", "合并父体类型需为array、object或function").do();
-
 	// 依次处理被继承参数
-	foreach$1(args, function (arg) {
+	foreach(args, function (arg) {
 		targ = type$1(arg);
 
 		if (ttarget === "array") {
 			if (targ === "array" || targ === "object") {
-				foreach$1(arg, function (arg) {
-					if (!inArray(target, arg)) {
+				foreach(arg, function (arg) {
+					if (target.indexOf(arg) <= -1) {
 						target.push(arg);
 					}
 				});
@@ -488,7 +491,7 @@ function extend$1(...args) {
 
 			// 只处理object类型的被继承参数，其他类型的将会被忽略
 			if (targ === "object") {
-				foreach$1(arg, function (arg, key) {
+				foreach(arg, function (arg, key) {
 					target[key] = arg;
 				});
 			}
@@ -497,21 +500,6 @@ function extend$1(...args) {
 
 	return target;
 }
-
-/**
-	replaceAll ( str: String, search: String, replaces: String )
-
-	Return Type:
-	String
-	替换后的字符串
-
-	Description:
-	将str中所有search替换为replace，特殊字符自动转义
-
-	URL doc:
-	http://icejs.org/######
-*/
-
 
 /**
 	isWindow ( object: Object )
@@ -543,7 +531,7 @@ function extend$1(...args) {
 	http://icejs.org/######
 */
 function isPlainObject(object) {
-	return toString.call(object) === "[object Object]";
+	return object.__proto__.constructor === Object && object.__proto__.toString && object.__proto__.valueOf;
 }
 
 /**
@@ -562,38 +550,27 @@ function guid() {
 	return setTimeout(1) + "";
 }
 
-// 初始化配置方法
-var config$1 = function () {
+/**
+	timestamp ()
 
-	// config API
-	function config(params) {
-		// 配置参数的类型固定为object
-		if (type$1(params) !== "object" || isEmpty(params)) {
-			throw configErr("params", "配置参数要求为非空object");
-		}
+	Return Type:
+	Number
+	当前时间戳
 
-		if (type$1(base) && !isEmpty(base)) {
-			let _type,
-			    base = params.base;
+	Description:
+	获取当前时间戳
 
-			foreach(base, (item, key, base) => {
-				_type = type$1(item);
+	URL doc:
+	http://icejs.org/######
+*/
+function timestamp() {
+	return Math.floor(Date.now() / 1000);
+}
 
-				base[key] = _type === "string" ? base[key] : _type === "function" ? base[key]() : "";
-				base[key] = base[key].substr(-1, 1) === "/" ? base[key] : base[key] + "/";
-			});
-		} else {
-			delete params.base;
-		}
-
-		params.stateSymbol = allowState.indexOf(params.stateSymbol) === -1 ? allowState[0] : params.stateSymbol;
-		params.redirectCache = params.redirectCache !== false ? true : false;
-
-		extend(config, params);
-	}
-
-	// 设置默认参数
-	return extend(config, defaultParams);
+var map = {
+	HTMLEvents: "load, unload, abort, error, select, change, submit, reset, focus, blur, resize, scroll",
+	KeyboartEvent: "keypress, keyup, keydown",
+	MouseEvents: "contextmenu, click, dbclick, mouseout, mouseover, mouseenter, mouseleave, mousemove, mousedown, mouseup, mousewheel"
 };
 
 var plugin = {
@@ -601,8 +578,23 @@ var plugin = {
 	plugins: {},
 
 	/**
- 	plugin
- 		push ( name: String, plugin: Object|Function )
+ 	push ( name: String )
+ 
+ 	Return Type:
+ 	void
+ 
+ 	Description:
+ 	查看是否存在指定插件
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	has(name) {
+		return !!this.plugins[name];
+	},
+
+	/**
+ 	push ( name: String, plugin: Object|Function )
  
  	Return Type:
  	void
@@ -613,23 +605,8 @@ var plugin = {
  	URL doc:
  	http://icejs.org/######
  */
-	push: function (name, plugin) {
-
-		if (name && type$1(name) === "string") {
-			var _plugin = {};
-
-			_plugin[name] = plugin;
-			plugin = _plugin;
-		}
-
-		// 遍历插件对象组依次缓存
-		foreach$1(plugin, (item, name) => {
-			if (!this.plugins.hasOwnProperty(name)) {
-				this.plugins[name] = item;
-			} else {
-				throw moduleErr("plugin", name + "插件已存在");
-			}
-		});
+	push(name, plugin) {
+		this.plugins[name] = plugin;
 	},
 
 	/**
@@ -645,45 +622,67 @@ var plugin = {
  	URL doc:
  	http://icejs.org/######
  */
-	get: function (name) {
+	get(name) {
 		return this.plugins[name] || null;
 	}
 };
 
-var driver = {
+var module$1 = {
 
-	drivers: {},
+	modules: {},
 
 	/**
- 	driver
- 		push ( name: String, driver: Object )
+ 	push ( name: String, module: DOMString|DOMObject )
  
  	Return Type:
  	void
  
  	Description:
- 	添加元素驱动器
+ 	添加页面模块缓存
  
  	URL doc:
  	http://icejs.org/######
  */
-	push: function (name, driver) {
+	push(name, module) {
+		this.modules[name] = module;
+	},
 
-		if (name && type$1(name) === "string") {
-			var _driver = {};
+	/**
+ 	get ( name: String )
+ 
+ 	Return Type:
+ 	DOMString|DOMObject
+ 	缓存模块
+ 
+ 	Description:
+ 	获取页面模块缓存，没有找到则返回null
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	get(name) {
+		return this.modules[name] || null;
+	}
+};
 
-			_driver[name] = driver;
-			driver = _driver;
-		}
+var component = {
 
-		// 遍历插件对象组依次缓存
-		foreach$1(driver, (item, name) => {
-			if (!drivers.hasOwnProperty(name)) {
-				drivers[name] = item;
-			} else {
-				throw moduleErr("driver", name + "元素驱动器已存在");
-			}
-		});
+	components: {},
+
+	/**
+ 	push ( name: String, component: Object )
+ 
+ 	Return Type:
+ 	void
+ 
+ 	Description:
+ 	添加组件
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	push(name, component) {
+		this.components[name] = component;
 	},
 
 	/**
@@ -699,56 +698,12 @@ var driver = {
  	URL doc:
  	http://icejs.org/######
  */
-	get: function (name) {
-		return this.drivers[name] || null;
+	get(name) {
+		return this.components[name] || null;
 	}
 };
 
-var direction = {
-
-	directions: {},
-
-	/**
- 	direction
- 		push ( name: String, direction: DOMString|DOMObject )
- 
- 	Return Type:
- 	void
- 
- 	Description:
- 	添加跳转缓存模块
- 
- 	URL doc:
- 	http://icejs.org/######
- */
-	push: function (name, direction) {
-
-		if (!this.directions.hasOwnProperty(name)) {
-			this.directions[name] = direction;
-		} else {
-			throw moduleErr("module", name + "页面模块已存在");
-		}
-	},
-
-	/**
- 	get ( name: String )
- 
- 	Return Type:
- 	DOMString|DOMObject
- 	缓存模块
- 
- 	Description:
- 	获取跳转缓存模块，没有找打则返回null
- 
- 	URL doc:
- 	http://icejs.org/######
- */
-	get: function (name) {
-		return this.directions[name] || null;
-	}
-};
-
-var event$1 = {
+var event$2 = {
 
 	events: {},
 
@@ -766,7 +721,8 @@ var event$1 = {
  	http://icejs.org/######
  */
 	push(type, listener) {
-		this.events[type] = listener;
+		this.events[type] = this.events[type] || [];
+		this.events[type].push(listener);
 	},
 
 	/**
@@ -817,465 +773,60 @@ var event$1 = {
 	URL doc:
 	http://icejs.org/######
 */
-var cache$1 = {
+var cache = {
+
+	getDependentPlugin(fn) {
+		const fnStr = fn.toString();
+		return ((/^function(?:\s+\w+)?\s*\((.*)\)\s*/.exec(fnStr) || /^\(?(.*?)\)?\s*=>/.exec(fnStr) || /^\S+\s*\((.*?)\)/.exec(fnStr) || [])[1] || "").split(",").filter(item => !!item).map(item => this.getPlugin(item.trim()));
+	},
+
+	// 查看是否存在指定插件
+	hasPlugin(name) {
+		return plugin.has(name);
+	},
 
 	// 添加插件缓存
-	pushPlugin: plugin.push,
+	pushPlugin(name, p) {
+		plugin.push(name, p);
+	},
 
 	// 获取已加载插件
-	getPlugin: plugin.get,
+	getPlugin(name) {
+		return plugin.get(name);
+	},
 
-	// 获取已加载元素驱动器
-	getDriver: driver.get,
+	pushComponent(name, comp) {
+		component.push(name, comp);
+	},
 
-	// 添加元素驱动器缓存
-	pushDriver: driver.push,
+	getComponent(name) {
+		return component.get(name);
+	},
 
-	// 添加跳转缓存模块
-	pushDirection: direction.push,
+	// 添加页面模块缓存
+	pushModule(name, d) {
+		module$1.push(name, d);
+	},
 
-	// 获取跳转缓存模块
-	getDirection: direction.get,
+	// 获取页面模块缓存
+	getModule(name) {
+		return module$1.get(name);
+	},
 
 	// 添加非元素事件缓存
-	pushEvent: event$1.push,
+	pushEvent(type, listener) {
+		event$2.push(type, listener);
+	},
 
 	// 获取非元素事件缓存
-	getEvent: event$1.get,
+	getEvent(type) {
+		return event$2.get(type);
+	},
 
 	// 获取所有事件
-	getAllEvent: event$1.getAll
-};
-
-var singleAttr = {
-	aModule: "ice-module",
-	aSrc: "ice-src",
-	aCache: "ice-cache",
-	aBase: "ice-base",
-
-	aHref: "href",
-	aAction: "action",
-	aTargetMod: "ice-target"
-};
-
-var clsProperty = {
-
-	// window.history封装
-	history: {
-
-		// window.history对象
-		entity: window.history,
-
-		/**
-  	replace ( state: Object, title: String, url: String )
-  
-  	Return Type:
-  	void
-  
-  	Description:
-  	对history.replaceState方法的封装
-  
-  	URL doc:
-  	http://icejs.org/######
-  */
-		replace(state, title, url) {
-			this.entity.replaceState(state, title, url);
-		},
-
-		/**
-  	push ( state: Object, title: String, url: String )
-  
-  	Return Type:
-  	void
-  
-  	Description:
-  	对history.pushState方法的封装
-  
-  	URL doc:
-  	http://icejs.org/######
-  */
-		push(state, title, url) {
-			this.entity.pushState(state, title, url);
-		},
-
-		/**
-  	getOriginalState ()
-  
-  	Return Type:
-  	Object
-  
-  	Description:
-  	获取参数传递对象
-  
-  	URL doc:
-  	http://icejs.org/######
-  */
-		getOriginalState() {
-			return this.entity.state;
-		},
-
-		////////////////////////////////////
-		/// 页面刷新前的状态记录，浏览器前进/后退时将在此记录中获取相关状态信息，根据这些信息刷新页面
-		/// 
-		state: {},
-
-		// 状态记录标记
-		signature: null,
-
-		/**
-  	setState ( key: String, value: Object, mode?: Boolean )
-  
-  	Return Type:
-  	void
-  
-  	Description:
-  	设置状态记录，并标记此条记录
-  	先查找key对应的记录，找到时更新此记录并标记，未找到时添加一条记录并标记
-  	注意：mode为true时不标记此条记录
-  
-  	URL doc:
-  	http://icejs.org/######
-  */
-		setState(key, value, mode) {
-
-			this.state[key] = value;
-
-			mode === true || (this.signature = key);
-		},
-
-		/**
-  	getState ( key: String )
-  
-  	Return Type:
-  	Object
-  
-  	Description:
-  	获取对应记录
-  
-  	URL doc:
-  	http://icejs.org/######
-  */
-		getState(key) {
-
-			return this.state[key];
-		}
-	},
-
-	////////////////////////////////////
-	/// 模块路径记录数组
-	/// 记录页面的所有模块名及对应模块中当前所显示的模块内容
-	/// 
-	moduleRecord: {},
-
-	/**
- 	setModuleRecord ( moduleName: 模块名称, value: String, filter: Boolean )
- 
- 	Return Type:
- 	void
- 
- 	Description:
- 	将最新的模块和对应的模块内容标识添加或更新到moduleRecord数组中
- 	filter = true时过滤moduleRecord数组中不存在于当前页面中的模块记录，filter = false时不过滤
- 
- 	URL doc:
- 	http://icejs.org/######
- */
-	setModuleRecord(moduleName, value, filter) {
-
-		// 更新或添加一项到moduleRecord数组中
-		single.moduleRecord[moduleName] = value;
-
-		if (filter === true) {
-
-			// 过滤moduleRecord数组中不存在于当前页面中的模块记录
-			var _record = {};
-
-			util.foreach(single.moduleRecord, function (recordItem, key) {
-				util.type(util.s("*[ice-module=" + key + "]")) === "object" && (_record[key] = recordItem);
-			});
-
-			single.moduleRecord = _record;
-		}
-	},
-
-	/**
- 	getModuleRecord ( moduleName: String )
- 
- 	Return Type:
- 	String
- 
- 	Description:
- 	获取对应模块名称的模块内容标识
- 
- 	URL doc:
- 	http://icejs.org/######
- */
-	getModuleRecord(moduleName) {
-		return single.moduleRecord[moduleName];
-	},
-
-	/**
- 	getFormatModuleRecord ()
- 
- 	Return Type:
- 	String
- 
- 	Description:
- 	获取moduleRecord格式化为pathname后的字符串
- 
- 	URL doc:
- 	http://icejs.org/######
- */
-	getFormatModuleRecord() {
-		var _array = [];
-
-		util.foreach(single.moduleRecord, function (recordItem, key) {
-			push.call(_array, key + (config.params.moduleSeparator || "") + recordItem);
-		});
-
-		return "/" + join.call(_array, "/");
-	},
-
-	/**
- 	requestEvent ( e: Object )
- 
- 	Return Type:
- 	void
- 
- 	Description:
- 	无刷新跳转的事件封装
- 	预先绑定到同时具有href和ice-target的元素，或具有action和ice-target的form元素
- 
- 	URL doc:
- 	http://icejs.org/######
- */
-	requestEvent: function (e) {
-
-		var
-
-		// 临时存储目标模块名称
-		_moduleName = this.getAttribute(single.aTargetMod),
-		    src = this.getAttribute(single.aHref) || this.getAttribute(single.aAction),
-
-
-		// 获取当前按钮操作的模块
-		module = util.s("*[" + single.aModule + "=" + _moduleName + "]"),
-		    method,
-		    data;
-
-		if (this.nodeName === "FORM") {
-			method = "POST";
-			data = this;
-		}
-
-		e.preventDefault();
-		if (util.type(module) === "object") {
-
-			//  url, module, data, title, method, timeout, before, success, error, abort, pushStack, onpopstate 
-			// 当前模块路径与请求路径不相同时，调用single方法
-			getCurrentPath$(module) === src || single(src, module, data, config.params.header[src], method, null, null, null, null, null, true);
-		} else {
-			throw moduleErr("module", "找不到" + _moduleName + "模块");
-		}
+	getAllEvent() {
+		return event$2.getAll();
 	}
-};
-
-/**
-	single ( url: String|Object, module: DMOObject, data?: String|Object, title?:String, method?:String, timeout?: Number, before?: Function, success?: Function, error?: Function, abort?: Function, pushStack?: Boolean, onpopstate?: Boolean )
-
-	Return Type:
-	void
-
-	Description:
-	根据url请求html并将html放入module（module为模块节点）
-	如果pushStack为true则将url和title压入history栈内。如果pushStack不为true，则不压入history栈内
-	浏览器前进/后退调用时，不调用pushState方法
-	
-	此函数可通过第一个参数传入数组的方式同时更新多个模块
-	多模块同时更新时的参数格式为：
-	[
-		{url: url1, entity: module1, data: data1},
-		{url: url2, entity: module2, data: data2},
-		...
-	], title, timeout, before, success, error, abort, pushStack, onpopstate
-
-	URL doc:
-	http://icejs.org/######
-*/
-function single$1(url, module, data, title, method, timeout, before, success, error, abort, pushStack, onpopstate) {
-
-	var moduleName,
-	    aCache,
-	    isCache,
-	    isBase,
-	    modules,
-	    historyMod,
-	    html,
-	    ttitle = util.type(title),
-
-
-	// 模块名占位符
-	modPlaceholder = ":m",
-
-
-	// 模块内容标识占位符
-	conPlaceholder = ":v",
-
-
-	// 模块内容缓存key
-	directionKey,
-
-
-	//////////////////////////////////////////////////
-	/// 请求url处理相关
-	///
-
-	/** @type {String} 完整请求url初始化 */
-	complateUrl,
-	    hasSeparator,
-
-
-	/** @type {String} 临时保存刷新前的title */
-	currentTitle = document.title,
-
-
-	/** @type {String} 上一页面的路径 */
-	lastPath,
-	    _state = [];
-
-	// 判断传入的url的类型，如果是string，是普通的参数传递，即只更新一个模块的数据； 如果是array，它包括一个或多个模块更新的数据
-	if (util.type(url) === "string") {
-
-		// 统一为modules数组
-		modules = [{ url: url, entity: module, data: data }];
-	} else {
-		modules = url;
-	}
-
-	// 循环modules，依次更新模块
-	util.foreach(modules, function (moduleItem, i) {
-
-		moduleName = moduleItem.entity.getAttribute(single$1.aModule);
-		directionKey = moduleName + "_" + moduleItem.url;
-		complateUrl = config.params.urlRule;
-
-		aCache = moduleItem.entity.getAttribute(single$1.aCache);
-		isCache = aCache === "true" || config.params.redirectCache === true && aCache !== "false";
-		isBase = moduleItem.entity.getAttribute(single$1.aBase) !== "false" && config.params.base.url.length > 0;
-
-		// isCache=true、标题为固定的字符串、cache已有当前模块的缓存时，才使用缓存
-		// 如果当标题为function时，很有可能需要服务器实时返回的codeKey字段来获取标题，所以一定需要重新请求
-		// 根据不同的codeKey来刷新不同模块也一定需要重新请求，不能做缓存（后续添加）
-		if (moduleItem.isCache === true && type !== "function" && (historyMod = cache.getRedirect(directionKey))) {
-
-			util.html(moduleItem.entity, historyMod);
-
-			if (ttitle === "string" && title.length > 0) {
-				document.title = title;
-			}
-		} else {
-
-			// 通过url规则转换url，并通过ice-base来判断是否添加base路径
-			complateUrl = util.replaceAll(complateUrl || "", modPlaceholder, moduleName);
-			complateUrl = util.replaceAll(complateUrl || "", conPlaceholder, moduleItem.url);
-
-			hasSeparator = complateUrl.indexOf("/");
-			complateUrl = isBase ? config.params.base.url + (hasSeparator === 0 ? substr.call(complateUrl, 1) : complateUrl) : hasSeparator === 0 ? complateUrl : "/" + complateUrl;
-
-			http.request({
-
-				url: complateUrl,
-				data: moduleItem.data || "",
-				method: /^(GET|POST)$/i.test(method) ? method.toUpperCase() : "GET",
-				timeout: timeout || 0,
-				beforeSend: function () {
-					util.type(before) === "function" && before(moduleItem);
-				},
-				abort: function () {
-					util.type(abort) === "function" && abort(moduleItem);
-				}
-
-			}).done(function (result) {
-				try {
-					result = JSON.parse(result);
-					html = result[config.params.htmlKey];
-				} catch (e) {
-					html = result;
-				}
-
-				/////////////////////////////////////////////////////////
-				// 将请求的html替换到module模块中
-				//
-				util.html(moduleItem.entity, html);
-
-				/////////////////////////////////////////////////////////
-				// 如果需要缓存，则将html缓存起来
-				//
-				moduleItem.isCache === true && cache.addRedirect(directionKey, html);
-
-				// 将moduleItem.title统一为字符串
-				// 如果没有获取到字符串则为null
-				title = ttitle === "string" ? title : ttitle === "function" ? title(result[config.params.codeKey] || null) || null : null;
-
-				if (util.type(title) === "string" && title.length > 0) {
-					document.title = title;
-				}
-
-				// 调用success回调
-				util.type(success) === "function" && success(moduleItem);
-			}).fail(function (error) {
-				util.type(error) === "function" && error(module, error);
-			});
-		}
-
-		// 先保存上一页面的path用于上一页面的状态保存，再将模块的当前路径更新为刷新后的url
-		lastPath = getCurrentPath$(moduleItem.entity);
-		setCurrentPath$(moduleItem.entity, moduleItem.url);
-
-		_state.push({
-			url: lastPath,
-			moduleName: moduleName,
-			data: moduleItem.data,
-			title: i === "0" ? currentTitle : undefined
-		});
-
-		if (pushStack === true) {
-			single$1.setModuleRecord(moduleName, moduleItem.url, true);
-		}
-	});
-
-	// 判断是否调用pushState
-	if (pushStack === true) {
-
-		// 需判断是否支持history API新特性
-		if (single$1.history.entity.pushState) {
-
-			/////////////////////////////////////////////////////////
-			// 保存跳转前的页面状态
-			//
-			single$1.history.setState(single$1.history.signature, _state, true);
-
-			if (onpopstate !== true) {
-				single$1.history.push(null, modules[0].title, single$1.getFormatModuleRecord());
-			}
-
-			// 初始化一条将当前页的空值到single.history.state中
-			single$1.history.setState(window.location.pathname, null);
-		} else {
-			throw envErr("History API", "浏览器不支持HTML5 History API");
-		}
-	}
-}
-
-//////////////////////////////////////////
-// module无刷新跳转相关属性通用参数，为避免重复定义，统一挂载到single对象上
-// single相关静态变量与方法
-extend$1(single$1, singleAttr, clsProperty);
-
-var map = {
-	HTMLEvents: "load, unload, abort, error, select, change, submit, reset, focus, blur, resize, scroll",
-	KeyboartEvent: "keypress, keyup, keydown",
-	MouseEvents: "contextmenu, click, dbclick, mouseout, mouseover, mouseenter, mouseleave, mousemove, mousedown, mouseup, mousewheel"
 };
 
 // 表示ice.module()
@@ -1287,63 +838,135 @@ var map = {
 // 表示driver()
 
 
-// 表达式正则表达式
-const rexpr = /{{\s*(.*?)\s*}}/g;
-
 // 连续字符正则表达式
 const rword = /\S+/g;
 
-const types = ["string", "number", "boolean", "object", "null", "undefined", "array"];
+// 变量正则表达式
+const rvar = /[^0-9][\w$]*/;
+
+// 模板表达式匹配正则
+const rexpr = /{{\s*(.*?)\s*}}/;
+
+// 组件名正则表达式
+const rcomponentName = /^[A-Z][a-zA-Z0-9]*/;
+
+// 模块事件常量
+const MODULE_UPDATE = "update";
+const MODULE_REQUEST = "request";
+const MODULE_RESPONSE = "response";
+
+// viewModel更新数组时的虚拟DOM处理类型
+
+
+
+
+// 重复利用的常量
+// 样式值为数字时不添加单位“px”的样式名
+const noUnitHook = ["z-index"];
+
+// 直接赋值的元素属性，如果不在此的属性将会使用setAttribute设置属性
+const attrAssignmentHook = ["value", "checked"];
+
+const types = ["string", "number", "function", "boolean", "object", "null", "undefined", "array"];
 
 function correctParam(...params) {
     return {
+
+        /**
+            to ( condition1: any, condition2?: any, condition3?: any, ... )
+        
+            Return Type:
+            Object
+            链式调用对象
+        
+            Description:
+            匹配参数期望条件
+            通过后向匹配纠正参数位置
+        
+            URL doc:
+            http://icejs.org/######
+        */
         to(...condition) {
             let offset = 0,
                 _params = [],
-                res;
-            foreach$1(params, (param, i) => {
-                if (!condition[i + offset]) {
-                    return false;
-                }
+                res,
+                item,
+                j;
+            foreach(params, (param, i) => {
 
-                res = false;
-                for (let j = i + offset; j < condition.length; j++) {
+                res = null;
+                for (j = i + offset; j < condition.length; j++) {
 
                     // 统一为数组
-                    item = type$1(item) !== "array" ? [item] : item;
+                    item = type$1(condition[j]) !== "array" ? [condition[j]] : condition[j];
 
-                    foreach$1(item, s => {
+                    res = false;
+                    foreach(item, s => {
                         res = res || (() => {
                             return types.indexOf(s) !== -1 ? type$1(param) === s : s instanceof RegExp ? s.test(param) : param === s;
                         })();
                     });
 
+                    // 已匹配成功
                     if (res) {
                         _params.push(param);
                         break;
-                    } else {
-                        _params.push(undefined);
-                        offset++;
                     }
+
+                    // 匹配失败，继续匹配
+                    else {
+                            _params.push(undefined);
+                            offset++;
+                        }
+                }
+
+                // 未进入匹配操作，直接继承原顺序
+                if (res === null) {
+                    _params.push(param);
                 }
             });
 
-            this._params = _params;
+            this._params = _params.slice(0, params.length);
             return this;
         },
 
+        /**
+            done ( callback: Function )
+        
+            Return Type:
+            void
+        
+            Description:
+            回调函数返回纠正后参数
+            如果开发者传入的回调函数的参数与纠正参数数量不同，则会以一个数组的形式传入回调函数
+            如果开发者传入的回调函数的参数与纠正参数数量相同，则会直接将参数按顺序传入回调函数
+            如果开发者没有传入回调函数参数，则通过this对象的$1、$2、$3...去按顺序获取纠正后的参数
+        
+            URL doc:
+            http://icejs.org/######
+        */
         done(callback) {
+            let args = (/^function\s*\((.*?)\)/.exec(callback.toString()) || /^\(?(.*?)\)?\s*=>/.exec(callback.toString()))[1],
+                l = args ? args.split(",").length : 0,
+                _this = {};
 
-            if (params.length === /^function.*\((.*?)\)/.exec(callback.toString())[1].split(",").length) {
+            if (params.length === l) {
                 callback.apply(null, this._params);
-            } else {
+            } else if (l === 1) {
                 callback(this._params);
+            } else {
+                foreach(this._params, (p, i) => {
+                    _this["$" + (i + 1)] = p;
+                });
+
+                callback.call(_this);
             }
         }
     };
 }
 
 let eventMap = map;
+let expando = "eventExpando" + Date.now();
 let special = {
 
 	// DOMContentLoaded事件的判断方式
@@ -1366,18 +989,16 @@ let special = {
 	http://icejs.org/######
 */
 function handler(e) {
-	let _listeners = this ? this.valueOf[e.type] : cache$1.getEvent(e.type);
-	if (type$1(_listeners) === "array" && _listeners.length > 0) {
+	let _listeners = this ? this[expando] ? this[expando][e.type] : [] : cache.getEvent(e.type);
 
-		foreach$1(_listeners, listener => {
-			listener.call(this, e);
+	foreach(_listeners || [], listener => {
+		listener.call(this, e);
 
-			// 如果该回调函数只执行一次则移除
-			if (listener.once === true) {
-				event.remove(this, e.type, listener, listener.useCapture);
-			}
-		});
-	}
+		// 如果该回调函数只执行一次则移除
+		if (listener.once === true) {
+			handler.event.remove(this, e.type, listener, listener.useCapture);
+		}
+	});
 }
 
 /**
@@ -1391,10 +1012,10 @@ function handler(e) {
 	URL doc:
 	http://icejs.org/######
 */
-var event$2 = event = {
+var event$1 = event = {
 
 	/**
- 	support ( type: String, elem?: DOMObject )
+ 	support ( eventType: String, elem?: DOMObject )
  
  	Return Type:
  	Boolean
@@ -1406,19 +1027,20 @@ var event$2 = event = {
  	URL doc:
  	http://icejs.org/######
  */
-	support(type, elem = document.createElement("div")) {
+	support(eventType, elem = document.createElement("div")) {
 		let support;
 
-		if (type(special[type]) === "function") {
-			support = special[type]();
+		if (type$1(special[eventType]) === "function") {
+			support = special[eventType]();
 		} else {
-			type = "on" + type;
-			support = type in elem;
+			eventType = "on" + eventType;
+			support = eventType in elem;
 
 			if (!support && elem.setAttribute) {
-				attr(elem, type, "");
+				attr(elem, eventType, "");
 
-				support = type(elem[type]) === "function";
+				support = type$1(elem[eventType]) === "function";
+				attr(elem, eventType, null);
 			}
 		}
 
@@ -1426,7 +1048,7 @@ var event$2 = event = {
 	},
 
 	/**
- 	on ( elem: DOMObject, types: String, listener: Function, useCapture?: Boolean, once?: Boolean )
+ 	on ( elem?: DOMObject, types: String, listener: Function, useCapture?: Boolean, once?: Boolean )
  
  	Return Type:
  	void
@@ -1442,11 +1064,11 @@ var event$2 = event = {
 	on(elem, types, listener, useCapture, once) {
 
 		// 纠正参数
-		correctParam(elem, types, listener, useCapture).to("object", "string").done(args => {
-			elem = args[0];
-			types = args[1];
-			listener = args[2];
-			useCapture = args[3];
+		correctParam(elem, types, listener, useCapture).to("object", "string").done(function () {
+			elem = this.$1;
+			types = this.$2;
+			listener = this.$3;
+			useCapture = this.$4;
 		});
 
 		check(types).type("string").ifNot("function event.on:types", "types参数类型必须为string").do();
@@ -1462,7 +1084,7 @@ var event$2 = event = {
 
 		// 如果once为true，则该回调只执行一次
 		if (once === true) {
-			listener.once = true;
+			listener.once = once;
 			listener.useCapture = !!useCapture;
 		}
 
@@ -1472,23 +1094,25 @@ var event$2 = event = {
 		(types || "").replace(rword, type => {
 
 			if (elem) {
-				events = elem.valueOf[type] = elem.valueOf[type] || [];
+				elem[expando] = elem[expando] || {};
+				events = elem[expando][type] = elem[expando][type] || [];
 				events.push(listener);
 			} else {
-				cache$1.pushEvent(type, listener);
+				cache.pushEvent(type, listener);
 			}
 
 			// 元素对象存在，且元素支持浏览器事件时绑定事件，以方便浏览器交互时触发事件
 			// 元素不支持时属于自定义事件，需手动调用event.emit()触发事件
 			// IE.version >= 9
 			if (elem && this.support(type, elem) && elem.addEventListener) {
+				handler.event = this;
 				elem.addEventListener(type, handler, !!useCapture);
 			}
 		});
 	},
 
 	/**
- 	remove ( elem: DOMObject, types: String, listener: Function, useCapture: Boolean )
+ 	remove ( elem?: DOMObject, types: String, listener: Function, useCapture?: Boolean )
  
  	Return Type:
  	void
@@ -1518,24 +1142,25 @@ var event$2 = event = {
 		let i, events;
 		(types || "").replace(rword, type => {
 			if (elem) {
-				events = elem.valueOf[type] = elem.valueOf[type] || [];
+				events = elem[expando] && elem[expando][type] || [];
 			} else {
-				events = cache$1.getEvent(type) || [];
+				events = cache.getEvent(type) || [];
 			}
 
 			// 获取事件监听回调数组
-			if (i = events.length > 0) {
+			i = events.length;
+			if (i > 0) {
 
 				// 符合要求则移除事件回调
 				while (--i > -1) {
-					if (events[i] && events[i].guid === listener.guid) {
+					if (events[i].guid === listener.guid) {
 						events.splice(i, 1);
 					}
 				}
 
 				// 如果该事件的监听回调为空时，则解绑事件并删除监听回调数组
 				if (events.length === 0) {
-					delete (elem ? elem.valueOf[type] : cache$1.getAllEvent()[type]);
+					delete (elem ? elem[expando][type] : cache.getAllEvent()[type]);
 
 					if (elem && this.support(type, elem) && elem.removeEventListener) {
 						elem.removeEventListener(type, handler, !!useCapture);
@@ -1546,7 +1171,7 @@ var event$2 = event = {
 	},
 
 	/**
- 	emit ( elem: DOMObject, types: String )
+ 	emit ( elem?: DOMObject, types: String )
  
  	Return Type:
  	void
@@ -1560,28 +1185,33 @@ var event$2 = event = {
 	emit(elem, types) {
 
 		// 纠正参数
-		let args = correctParam(elem, types).to("object", "string").done((e, t) => {
-			elem = e;
-			types = t;
+		let args = correctParam(elem, types).to("object", "string").done(function () {
+			elem = this.$1;
+			types = this.$2;
 		});
 
-		check(elem.nodeType).notBe(3).notBe(8).ifNot("function event.emit:elem", "elem参数不能为文本节点或注释节点").do();
-		check(types).type("string").ifNot("function event.emit:types", "types参数类型必须为string").do()(types || "").replace(rword, type => {
-			if (this.support(type, elem)) {
+		if (elem) {
+			check(elem.nodeType).notBe(3).notBe(8).ifNot("function event.emit:elem", "elem参数不能为文本节点或注释节点").do();
+		}
+		check(types).type("string").ifNot("function event.emit:types", "types参数类型必须为string").do();
+
+		(types || "").replace(rword, t => {
+			if (elem && this.support(t, elem)) {
 
 				// 使用creaeEvent创建事件
 				let e, eventType;
-				foreach$1(eventMap, (k, v) => {
-					if (v.indexOf(type) !== -1) {
+				foreach(eventMap, (k, v) => {
+					if (v.indexOf(t) !== -1) {
 						eventType = k;
 					}
 				});
 				e = document.createEvent(eventType || "CustomEvent");
-				e.initEvent(type, true, false);
+				e.initEvent(t, true, false);
 
 				elem.dispatchEvent(e);
 			} else {
-				handler.call(elem, { type: type });
+				handler.event = event;
+				handler.call(elem, { type: t });
 			}
 		});
 	}
@@ -1600,12 +1230,12 @@ var event$2 = event = {
 	http://icejs.org/######
 */
 function query(selector, context, all) {
-	var elem = (context || document)[all ? "querySelectorAll" : "querySelector"](selector);
-	return elem.length ? Array.prototype.slice.call(elem) : elem;
+	let elem = (context || document)[all ? "querySelectorAll" : "querySelector"](selector);
+	return all ? slice.call(elem) : elem;
 }
 
 /**
-	appendScript ( node: DOMObject, success: Function, error: Function )
+	appendScript ( node: DOMObject, success?: Function, error?: Function )
 
 	Return Type:
 	void
@@ -1616,12 +1246,12 @@ function query(selector, context, all) {
 	URL doc:
 	http://icejs.org/######
 */
-function appendScript(node, success, error) {
-	var script = document.createElement("script");
+function appendScript(node, success = noop, error = noop) {
+	let script = document.createElement("script");
 	script.type = "text/javascript";
 
 	// 将node的所有属性转移到将要解析的script节点上
-	foreach$1(node.attributes, attr => {
+	foreach(node.attributes, attr => {
 		if (attr.nodeType === 2) {
 			script.setAttribute(attr.nodeName, attr.nodeValue);
 		}
@@ -1631,15 +1261,16 @@ function appendScript(node, success, error) {
 		script.async = true;
 
 		// 绑定加载事件，加载完成后移除此元素
-		event$2.on(script, "load readystatechange", function (event) {
+		event$1.on(script, "load readystatechange", function (event) {
 			if (!this.readyState || this.readyState === "loaded" || this.raeadyState === "complete") {
-				success && success(event);
+				success(event);
 			}
 
 			script.parentNode.removeChild(script);
 		});
 
-		event$2.on(script, "error", () => {
+		event$1.on(script, "error", () => {
+			error();
 			script.parentNode.removeChild(script);
 		});
 
@@ -1647,11 +1278,12 @@ function appendScript(node, success, error) {
 	} else if (node.text) {
 		script.text = node.text || "";
 		document.head.appendChild(script).parentNode.removeChild(script);
+		success();
 	}
 }
 
 /**
-	scriptEval ( code: Array|DOMScript|String )
+	scriptEval ( code: Array|DOMScript|String, callback?: Function )
 
 	Return Type:
 	void
@@ -1664,43 +1296,50 @@ function appendScript(node, success, error) {
 	URL doc:
 	http://icejs.org/######
 */
-function scriptEval(code) {
-	check(code).type("string", "array").or().prior(function () {
-		this.type("object").check(code.nodeType).be(1).check(code.nodeName.toLowerCase()).be("script");
+function scriptEval(code, callback = noop) {
+	check(code).type("string", "array").or().prior(_this => {
+		_this.type("object").check(code.nodeType).be(1).check(code.nodeName).be("SCRIPT");
 	}).ifNot("function scriptEval:code", "参数必须为javascript代码片段、script标签或script标签数组").do();
 
-	var tcode = type$1(code);
+	let tcode = type$1(code);
 	if (tcode === "string") {
 
-		var script = document.createElement("script");
+		let script = document.createElement("script");
 		script.type = "text/javascript";
 		script.text = code;
 
-		appendScript(script);
+		appendScript(script, callback);
 	} else if (tcode === "object" && code.nodeType === 1 && code.nodeName.toLowerCase() === "script") {
-		appendScript(code);
+		appendScript(code, callback);
 	} else if (tcode === "array") {
-		var scripts = code.slice(0);
-		foreach$1(code, _script => {
-			//删除数组中的当前值，以便于将剩下未执行的javascript通过回调函数传递
-			Array.prototype.splice.call(scripts, 0, 1);
+		let scripts = code.concat(),
+		    _cb;
 
-			if (!_script.src) {
-				appendScript(_script);
-			} else {
-				// 通过script的回调函数去递归执行未执行的script标签
-				appendScript(_script, () => {
-					scripts.length > 0 && scriptEval(scripts);
-				});
+		if (scripts.length > 0) {
+			foreach(code, _script => {
+				// 删除数组中的当前值，以便于将剩下未执行的javascript通过回调函数传递
+				scripts.splice(0, 1);
 
-				return false;
-			}
-		});
+				if (!_script.src) {
+					_cb = scripts.length === 0 ? callback : noop;
+					appendScript(_script, _cb, _cb);
+				} else {
+					_cb = scripts.length === 0 ? callback : () => {
+						scriptEval(scripts, callback);
+					};
+
+					// 通过script的回调函数去递归执行未执行的script标签
+					appendScript(_script, _cb, _cb);
+
+					return false;
+				}
+			});
+		}
 	}
 }
 
 /**
-	append ( context: DOMObject, node: DOMObject|DOMString|String )
+	append ( context: DOMObject, node: DOMObject|DOMString|DocumentFragmentObject|String, callback?: Function )
 
 	Return Type:
 	DOMObject
@@ -1712,62 +1351,7 @@ function scriptEval(code) {
 	URL doc:
 	http://icejs.org/######
 */
-function append(context, node) {
-	check(context.nodeType).toBe(1).ifNot("fn append:context", "context必须为DOM节点").do();
 
-	var rhtml = /<|&#?\w+;/,
-	    telem = type$1(node),
-	    i = 0,
-	    fragment,
-	    _elem,
-	    script,
-	    nodes = [],
-	    scripts = [];
-
-	if (telem === "string" && !rhtml.test(node)) {
-
-		// 插入纯文本，没有标签时的处理
-		nodes.push(document.createTextNode(node));
-	} else if (telem === "object") {
-		node.nodeType && nodes.push(node);
-	} else {
-		fragment = document.createDocumentFragment(), _elem = fragment.appendChild(document.createElement("div"));
-
-		// 将node字符串插入_elem中等待处理
-		_elem.innerHTML = node;
-
-		for (; i < _elem.childNodes.length; i++) {
-			nodes.push(_elem.childNodes[i]);
-		}
-
-		// 清空_elem
-		_elem.textContent = "";
-
-		// 清空fragment并依次插入元素
-		fragment.textContent = "";
-	}
-
-	foreach$1(nodes, node => {
-		context.appendChild(node);
-
-		if (node.nodeType === 1) {
-			_elem = query("script", node, true).concat(node.nodeName === "SCRIPT" ? [node] : []);
-
-			i = 0;
-			while (script = _elem[i++]) {
-				// 将所有script标签放入scripts数组内等待执行
-				scripts.push(script);
-			}
-		}
-	});
-
-	// scripts数组不空则顺序执行script
-	isEmpty(scripts) || scriptEval(scripts);
-
-	// 需控制新添加的html内容。。。。。。
-
-	return context;
-}
 
 /**
 	clear ( context: DOMObject )
@@ -1782,21 +1366,10 @@ function append(context, node) {
 	URL doc:
 	http://icejs.org/######
 */
-function clear(context) {
 
-	check(context.nodeType).be(1).ifNot("function clear:context", "元素类型必须是dom节点").do();
-
-	// 防止内存泄漏，需删除context节点内的其他内容
-	// add...
-
-	// 删除此元素所有内容
-	context.textContent = "";
-
-	return context;
-}
 
 /**
-	html ( context: DOMObject, node: DOMObject|DOMString|String )
+	html ( context: DOMObject, node: DOMObject|DOMString|DocumentFragmentObject|String, callback?: Function )
 
 	Return Type:
 	DOMObject
@@ -1809,12 +1382,7 @@ function clear(context) {
 	URL doc:
 	http://icejs.org/######
 */
-function html(context, node) {
-	context = clear(context);
-	context = append(context, node);
 
-	return context;
-}
 
 /**
 	attr ( context: DOMObject, name: String, val: Object|String|null )
@@ -1829,9 +1397,10 @@ function html(context, node) {
 	http://icejs.org/######
 */
 function attr(context, name, val) {
-	let args = correctParam(name, val).to("string", ["string", "object"]);
-	name = args[0];
-	val = arg[1];
+	correctParam(name, val).to("string", ["string", "object", null]).done(function () {
+		name = this.$1;
+		val = this.$2;
+	});
 
 	switch (type$1(val)) {
 		case "string":
@@ -1840,7 +1409,7 @@ function attr(context, name, val) {
 		case "undefined":
 			return context.getAttribute(name);
 		case "object":
-			foreach$1(val, (k, v) => {
+			foreach(val, (v, k) => {
 				context.setAttribute(k, v);
 			});
 			break;
@@ -1850,48 +1419,2867 @@ function attr(context, name, val) {
 }
 
 /**
-	NodeLite ( node: DOMObject|DOMString )
+	serialize ( form: DOMObject )
+
+	Return Type:
+	Object
+	序列化后表单信息对象
+
+	Description:
+	将表单内的信息序列化为表单信息对象
+
+	URL doc:
+	http://icejs.org/######
+*/
+function serialize(form) {
+	if (!form.nodeName || form.nodeName.toUpperCase() !== "FORM") {
+		return form;
+	}
+
+	const rcheckableType = /^(?:checkbox|radio)$/i,
+	      rsubmitterTypes = /^(?:submit|button|image|reset|file)$/i,
+	      rsubmittable = /^(?:input|select|textarea|keygen)/i,
+	      rCRLF = /\r?\n/g,
+	      inputs = slice.call(form.elements),
+	      formObject = {};
+
+	// 判断表单中是否含有上传文件
+	foreach(inputs, inputItem => {
+		if (inputItem.name && !attr(inputItem, "disabled") && rsubmittable.test(inputItem.nodeName) && !rsubmitterTypes.test(inputItem.type) && (inputItem.checked || !rcheckableType.test(inputItem.type))) {
+
+			formObject[name] = inputItem.value.replace(rCRLF, "\r\n");
+		}
+	});
+
+	return formObject;
+}
+
+// 目前所支持的状态标记符号，如果所传入的状态标记符号不在此列表中，则会使用默认的状态标记符号@
+var allowState = ["@", "$", "^", "*", "|", ":", "~", "!"];
+
+var defaultParams = {
+	// 异步加载时的依赖目录，设置后默认在此目录下查找，此对象下有4个依赖目录的设置，如果不设置则表示不依赖任何目录
+	// url请求base路径，设置此参数后则跳转请求都依赖此路径
+	// 此参数可传入string类型的路径字符串，也可传入一个方法，当传入方法时必须返回一个路径字符串，否则使用""
+	baseURL: "",
+
+	// url地址中的状态标识符，如http://...@login表示当前页面在login的状态
+	// stateSymbol : allowState [ 0 ],
+
+	// 模块相关配置
+	module: {
+
+		// 是否开启跳转缓存，默认开启。跳转缓存是当页面无刷新跳转时的缓存跳转数据，当此页面实时性较低时建议开启，以提高相应速度
+		cache: true,
+		expired: 0
+	},
+
+	moduleSuffix: ".ice"
+};
+
+let paramStore = defaultParams;
+
+/**
+	configuration ( params: Object )
 
 	Return Type:
 	void
 
 	Description:
-	模块对象封装类
-	在模块定义中的init方法和apply方法中会自动注入一个NodeLite的对象
+	处理并存储配置参数
 
 	URL doc:
 	http://icejs.org/######
 */
-function NodeLite(node) {
-	this.originNode = node;
+function configuration(params) {
+
+	const _type = type$1(params.baseURL);
+
+	params.baseURL = _type === "string" ? params.baseURL : _type === "function" ? params.baseURL() : "";
+	params.baseURL = params.baseURL.substr(-1, 1) === "/" ? params.baseURL : params.baseURL + "/";
+
+	params.stateSymbol = allowState.indexOf(params.stateSymbol) === -1 ? allowState[0] : params.stateSymbol;
+	params.redirectCache = params.redirectCache !== false ? true : false;
+
+	paramStore = extend(paramStore, params);
 }
 
-extend(NodeLite.prototype, {
-	append(node) {
-		append(this.originNode, node);
-		return this;
-	},
-
-	clear() {
-		clear(this.originNode);
-		return this;
-	},
-
-	html(node) {
-		html(this.originNode, node);
-		return this;
-	},
-
-	query(selector, all) {
-		query(selector, this.originNode, all);
-		return this;
-	},
-
-	attr(name, val) {
-		attr(this.originNode, name, val);
-
-		return this;
+extend(configuration, {
+	getConfigure(param) {
+		return paramStore[param];
 	}
+});
+
+var iceAttr = {
+	module: ":module",
+	title: ":title",
+
+	href: "href",
+	action: "action"
+};
+
+/**
+	ComponentLoader ( load: Object )
+
+	Return Type:
+	void
+
+	Description:
+	依赖加载器
+
+	URL doc:
+	http://icejs.org/######
+*/
+function ComponentLoader(load) {
+
+	// 需要加载的依赖，加载完成所有依赖需要遍历此对象上的所有依赖并调用相应回调函数
+	this.load = load;
+
+	// 等待加载完成的依赖，每加载完成一个依赖都会将此依赖在waiting对象上移除，当waiting为空时则表示相关依赖已全部加载完成
+	this.waiting = [];
+
+	this.factory;
+}
+
+extend(ComponentLoader.prototype, {
+
+	/**
+ 	putWaiting ( name: String )
+ 
+ 	Return Type:
+ 	void
+ 
+ 	Description:
+ 	将等待加载完成的依赖名放入context.waiting中
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	putWaiting(name) {
+		this.waiting.push(name);
+	},
+
+	/**
+ 	dropWaiting ( name: String )
+ 
+ 	Return Type:
+ 	Number
+ 
+ 	Description:
+ 	将已加载完成的依赖从等待列表中移除
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	dropWaiting(name) {
+		const pointer = this.waiting.indexOf(name);
+		if (pointer !== -1) {
+			this.waiting.splice(pointer, 1);
+		}
+
+		return this.waiting.length;
+	},
+
+	/**
+ 	inject ( module: Object )
+ 
+ 	Return Type:
+ 	Object
+ 
+ 	Description:
+ 	依赖注入方法实现
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	inject() {
+
+		const deps = [];
+
+		foreach(this.load.deps, dep => {
+
+			// 查找插件
+			deps[dep] = cache.getComponent(dep);
+		});
+
+		// 返回注入后工厂方法
+		this.factory = () => {
+			this.load.factory.apply(null, deps);
+		};
+	},
+
+	/**
+ 	fire ()
+ 
+ 	Return Type:
+ 	void
+ 
+ 	Description:
+ 	触发依赖工厂方法
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	fire() {
+		this.factory();
+	}
+});
+
+extend(ComponentLoader, {
+
+	// 文件后缀
+	suffix: ".js",
+
+	// js插件的依赖名称属性，通过此属性可以得到加载完成的依赖名
+	depName: "data-depName",
+
+	// script加载依赖时用于标识依赖
+	loaderID: "loader-ID",
+
+	// 保存正在使用的依赖加载器对象，因为当同时更新多个依赖时将会存在多个依赖加载器对象
+	loaderMap: {},
+
+	/**
+ 	create ( guid: Number, name: String, loadDep: Object )
+ 
+ 	Return Type:
+ 	Object
+ 
+ 	Description:
+ 	创建Loader对象保存于Loader.LoaderMap中
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	create(guid$$1, loadDep) {
+		return ComponentLoader.loaderMap[guid$$1] = new ComponentLoader(loadDep);
+	},
+
+	/**
+ 	getCurrentPath ()
+ 
+ 	Return Type:
+ 	Object
+ 
+ 	Description:
+ 	获取当前正在执行的依赖名与对应的依赖加载器编号
+  	此方法使用报错的方式获取错误所在路径，使用正则表达式解析出对应依赖信息
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	getCurrentPath() {
+		if (document.currentScript) {
+
+			// Chrome, Firefox, Safari高版本
+			return document.currentScript.src;
+		} else {
+
+			// IE10+, Safari低版本, Opera9
+			try {
+				____a.____b();
+			} catch (e) {
+				const stack = e.stack || e.sourceURL || e.stacktrace;
+				if (stack) {
+					return (e.stack.match(/(?:http|https|file):\/\/.*?\/.+?\.js/) || [""])[0];
+				} else {
+
+					// IE9
+					const scripts = slice.call(document.querySelectorAll("script"));
+					for (let i = scripts.length - 1, script; script = script[i--];) {
+						if (script.readyState === "interative") {
+							return script.src;
+						}
+					}
+				}
+			}
+		}
+	},
+
+	/**
+ 	onScriptLoaded ( event: Object, : , :  )
+ 
+ 	Return Type:
+ 	void
+ 
+ 	Description:
+ 	js依赖加载onload事件回调函数
+ 	此函数不是直接在其他地方调用，而是赋值给script的onload事件的，所以函数里的this都需要使用ComponentLoader来替代
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	onScriptLoaded(e) {
+
+		const loadID = e.target[ComponentLoader.loaderID],
+		      curLoader = ComponentLoader.loaderMap[loadID];
+
+		// 执行
+		if (curLoader.dropWaiting(e.target[ComponentLoader.depName]) === 0) {
+
+			// 依赖注入后的工厂方法
+			curLoader.inject();
+
+			// 调用工厂方法
+			curLoader.fire(factory);
+
+			delete ComponentLoader.loaderMap[loadID];
+		}
+	}
+});
+
+/**
+	require ( deps: Object, factory: Function )
+
+	Return Type:
+	void
+
+	Description:
+	依赖处理方法
+	此方法主要实现了deps的动态加载并依赖注入到factory中
+
+	URL doc:
+	http://icejs.org/######
+*/
+function require(deps, factory) {
+
+	// 正在加载的依赖数
+	let loadingCount = 0;
+
+	const nguid = guid(),
+	      module = {
+		deps: deps,
+		factory: factory
+	},
+	      loadObj = ComponentLoader.create(nguid, module);
+
+	// 遍历依赖，如果依赖未被加载，则放入waiting中等待加载完成
+	foreach(deps, depStr => {
+		if (!cache.getComponent(depStr)) {
+
+			// 放入待加载列表中等待加载
+			loadObj.putWaiting(depStr);
+
+			// 加载依赖
+			const script = document.createElement("script");
+
+			script.src = depStr + ComponentLoader.suffix;
+			script[ComponentLoader.depName] = depStr;
+			script[ComponentLoader.ComponentLoaderID] = nguid;
+
+			appendScript(script, ComponentLoader.onScriptLoaded);
+
+			loadingCount++;
+		}
+	});
+
+	// 如果顶层执行依赖没有待加载的依赖参数，或可以直接触发，则直接执行
+	if (loadingCount === 0 && name === ComponentLoader.topName) {
+		loadObj.inject();
+		loadObj.fire();
+	}
+}
+
+// 转换存取器属性
+function defineReactiveProperty(key, getter, setter, target) {
+	Object.defineProperty(target, key, {
+		enumerable: true,
+		configurable: true,
+		get: getter,
+		set: setter
+	});
+}
+
+/**
+	parseGetQuery ( getString: String )
+
+	Return Type:
+	Object
+	解析后的get参数对象
+
+	Description:
+	将形如“?a=1&b=2”的get参数解析为参数对象
+
+	URL doc:
+	http://icejs.org/######
+*/
+function parseGetQuery(getString) {
+	const getObject = {};
+	if (getString) {
+		let kv;
+		foreach((getString.substr(0, 1) === "?" ? getString.substr(1) : getString).split("&"), getObjectItem => {
+			kv = getObjectItem.split("=");
+			getObject[kv[0]] = kv[1] || "";
+		});
+	}
+
+	return getObject;
+}
+
+/**
+	transformCompName ( compName: String, mode?: Boolean )
+
+	Return Type:
+	驼峰式或中划线式的组件名
+
+	Description:
+	mode不为true时，将中划线风格的组件名转换为驼峰式的组件名
+	mode为true时，将驼峰式风格的组件名转换为中划线的组件名
+
+	URL doc:
+	http://icejs.org/######
+*/
+function transformCompName(compName, mode) {
+	return mode !== true ? compName.toLowerCase().replace(/^([a-z])|-(.)/g, (match, rep1, rep2) => (rep1 || rep2).toUpperCase()) : compName.replace(/([A-Z])/g, (match, rep, i) => (i > 0 ? "-" : "") + rep.toLowerCase());
+}
+
+/**
+	unmountWatchers ( vnode: Object, isWatchCond: Boolean )
+
+	Return Type:
+	void
+
+	Description:
+	watcher卸载函数遍历调用
+
+	URL doc:
+	http://icejs.org/######
+*/
+
+const rconstructor = /^(?:constructor\s*|function\s*)?\((.*?)\)\s*(?:=>\s*)?{([\s\S]*)}$/;
+const rscriptComment = /\/\/(.*?)\n|\/\*([\s\S]*?)\*\//g;
+
+/**
+	newClassCheck ( object: Object, constructor: Function )
+
+	Return Type:
+	void
+
+	Description:
+	检查一个类不能被当做函数调用，否则会抛出错误
+
+	URL doc:
+	http://icejs.org/######
+*/
+function newClassCheck(object, constructor) {
+	if (!(object instanceof constructor)) {
+		throw classErr("define", "Cannot call a class as a function");
+	}
+}
+
+/**
+	defineMemberFunction ( constructor: Function, proto: Object )
+
+	Return Type:
+	void
+
+	Description:
+	为一个类添加原型方法和静态变量
+
+	URL doc:
+	http://icejs.org/######
+*/
+function defineMemberFunction(constructor, proto) {
+	foreach(proto, (prop, name) => {
+		if (name === "statics") {
+			foreach(prop, (staticProp, staticName) => {
+				Object.defineProperty(constructor, staticName, {
+					value: staticProp,
+					enumerable: false,
+					configurable: true,
+					writable: true
+				});
+			});
+		} else {
+			Object.defineProperty(constructor.prototype, name, {
+				value: prop,
+				enumerable: false,
+				configurable: true,
+				writable: true
+			});
+		}
+	});
+}
+
+function inherits(subClass, superClass) {
+
+	// Object.create第二个参数修复子类的constructor
+	subClass.prototype = Object.create(superClass && superClass.prototype, {
+		constructor: {
+			value: subClass,
+			enumerable: false,
+			writable: true,
+			configurable: true
+		}
+	});
+
+	if (superClass) {
+		Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+	}
+}
+
+function getSuperConstructorReturn(subInstance, constructorReturn) {
+	const tcr = type$1(constructorReturn);
+	return constructorReturn && (tcr === "function" || tcr === "object") ? constructorReturn : subInstance;
+}
+
+function defineSuper(subInstance, superConstructor, superReturn) {
+	subInstance.__super = () => {
+		superReturn.value = superConstructor.apply(subInstance, arguments);
+		delete subInstance.__super;
+	};
+}
+
+/**
+	Plugin Class
+	( clsName?: String )
+
+	Description:
+	创建一个类
+	clsName为类名，proto为类体
+
+	用法与ES6的类创建相似：
+	创建一个类：Class("clsName") ( {
+		constructor : function () {
+			// 名为”constructor“的方法为此方法构造函数
+		},
+		statics : {
+			// 名为”statics“的对象内为该类的静态变量
+		}
+	} );
+
+	URL doc:
+	http://icejs.org/######
+*/
+function Class(clsName) {
+	let _superClass;
+
+	function classDefiner(proto) {
+		const customConstructor = proto.constructor,
+		      constructor = function (...args) {
+			try {
+				(customConstructor || noop).apply(this, args);
+			} catch (e) {
+				customConstructor = new Function("return " + customConstructor.toString().replace(/this\.depComponents\s*\((.+?)\)/, (match, rep) => {
+					return match.replace(rep, rep.split(",").map(item => "\"" + item.trim() + "\"").join(","));
+				}))();
+
+				customConstructor.apply(this, args);
+			}
+		};
+		// proto.constructor = proto.constructor || noop;
+
+		let fnBody = `return function ${clsName} (`,
+		    mustNew = `newClassCheck(this, ${clsName});`,
+		    constructMatch = rconstructor.exec(proto.constructor.toString() || "") || [],
+		    args = constructMatch[1] || "",
+		    codeNoComment = (constructMatch[2] || "").replace(rscriptComment, match => "").trim(),
+		    classFn;
+
+		fnBody += `${args}){`;
+
+		// 此类有继承另一个类的时候
+		if (_superClass !== undefined) {
+
+			fnBody += `${mustNew}var __superReturn = {};`;
+
+			if (constructMatch[2]) {
+				const ruseThisBeforeCallSuper = /[\s{;]this\s*\.[\s\S]+this\.__super/,
+				      rsuperCount = /[\s{;]?this.__super\s*\(/,
+				      rscriptComment = /\/\/(.*?)\n|\/\*(.*?)\*\//g;
+
+				if (ruseThisBeforeCallSuper.test(codeNoComment)) {
+					throw classErr("constructor", "\"this\" is not allow before call this.__super()");
+				}
+
+				let superCallCount = 0;
+				codeNoComment = codeNoComment.replace(rsuperCount, match => {
+					superCallCount++;
+					return match;
+				});
+
+				if (superCallCount === 0) {
+					throw classErr("constructor", "Must call \"this.__super()\" in subclass before accessing \"this\" or returning from subclass constructor");
+				} else if (superCallCount > 1) {
+					throw classErr("constructor", "\"this.__super()\" may only be called once");
+				}
+
+				fnBody += `defineSuper(this,(${clsName}.__proto__ || Object.getPrototypeOf(${clsName})), __superReturn);`;
+			} else {
+				fnBody += `__superReturn.value = (${clsName}.__proto__ || Object.getPrototypeOf(${clsName})).call(this);`;
+			}
+
+			fnBody += `constructor.call(this${args && "," + args});return getSuperConstructorReturn(this,__superReturn.value);}`;
+
+			classFn = new Function("constructor", "newClassCheck", "defineSuper", "getSuperConstructorReturn", fnBody)(constructor, newClassCheck, defineSuper, getSuperConstructorReturn);
+
+			inherits(classFn, _superClass);
+		} else {
+			fnBody += `${mustNew}constructor.call(this${args && "," + args});}`;
+			classFn = new Function("constructor", "newClassCheck", fnBody)(constructor, newClassCheck);
+		}
+
+		delete proto.constructor;
+
+		// 定义成员方法
+		if (!isEmpty(proto)) {
+			defineMemberFunction(classFn, proto);
+		}
+
+		// 将此组件类保存至缓存中
+		cache.pushComponent(ComponentLoader.getCurrentPath(), classFn);
+
+		return classFn;
+	}
+
+	// 继承函数
+	classDefiner.extends = superClass => {
+		// superClass需要为函数类型，否则会报错
+		if (type$1(superClass) !== 'function' && superClass !== null) {
+			throw classErr("extends", "Class extends value is not a constructor or null");
+		}
+
+		_superClass = superClass;
+		return classDefiner;
+	};
+
+	return classDefiner;
+}
+
+/**
+	ValueWatcher ( updateFn: Function, getter: Function )
+
+	Return Type:
+	void
+
+	Description:
+	计算属性监听类
+	vm中所有依赖监听属性的计算属性都将依次创建ComputedWatcher类的对象被对应的监听属性监听
+	当监听属性发生变化时，这些对象负责更新对应的计算属性值
+
+	URL doc:
+	http://icejs.org/######
+*/
+function ValueWatcher(updateFn, getter) {
+
+	this.updateFn = updateFn;
+	this.getter = getter;
+
+	// 将获取表达式的真实值并将此watcher对象绑定到依赖监听属性中
+	Subscriber.watcher = this;
+	updateFn(getter());
+}
+
+extend(ValueWatcher.prototype, {
+
+	/**
+ 	update ( newVal: Any )
+ 
+ 	Return Type:
+ 	void
+ 
+ 	Description:
+ 	更新视图
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	update() {
+		this.updateFn(this.getter());
+	}
+
+});
+
+/**
+    getInsertIndex ( index: Number, children: Array )
+
+    Return Type:
+    Number
+    插入元素的位置索引
+
+    Description:
+    获取元素插入的位置索引
+    因为插入前的元素中可能有组件元素，组件元素渲染为对应实际dom时可能有多个，所以需判断前面的组件元素，并加上他们的模板元素数量
+
+    URL doc:
+    http://icejs.org/######
+*/
+function getInsertIndex(index, children) {
+    let insertIndex = 0;
+
+    for (let i = 0; i < index; i++) {
+        if (children[i].templateNodes) {
+            insertIndex += children[i].templateNodes.length;
+        } else {
+            insertIndex++;
+        }
+    }
+
+    return insertIndex;
+}
+
+/**
+    diffAttrs ( newVNode: Object, oldVNode: Object, nodePatcher: Object )
+
+    Return Type:
+    void
+
+    Description:
+    对比新旧vnode的属性，将差异存入nodePatcher中
+
+    URL doc:
+    http://icejs.org/######
+*/
+function diffAttrs(newVNode, oldVNode, nodePatcher) {
+    foreach(newVNode.attrs, (attr, name) => {
+        if (oldVNode.attrs[name] !== attr) {
+
+            // 新旧节点的属性对比出来后的差异需在旧节点上修改，移除时同理
+            nodePatcher.reorderAttr(oldVNode, name, attr);
+        }
+    });
+
+    //找出移除的属性
+    foreach(oldVNode.attrs, (attr, name) => {
+        if (!newVNode.attrs.hasOwnProperty(name)) {
+            nodePatcher.removeAttr(oldVNode, name);
+        }
+    });
+}
+
+/**
+    diffEvents ( newVNode: Object, oldVNode: Object, nodePatcher: Object )
+
+    Return Type:
+    void
+
+    Description:
+    对比新旧vnode的事件，将差异存入nodePatcher中
+    ！！！场景需要，暂不实现卸载事件的功能
+
+    URL doc:
+    http://icejs.org/######
+*/
+function diffEvents(newVNode, oldVNode, nodePatcher) {
+
+    if (!oldVNode.events) {
+
+        // 绑定新vnode上的所有事件
+        foreach(newVNode.events, (handlers, type) => {
+            nodePatcher.addEvents(newVNode, type, handlers);
+        });
+    } else {
+        let addHandlers;
+        foreach(newVNode.events, (handlers, type) => {
+
+            addHandlers = [];
+            if (oldVNode.events.hasOwnProperty(type)) {
+                foreach(handlers, handler => {
+                    if (oldVNode.events[type].indexOf(handler) === -1) {
+                        addHandlers.push(handler);
+                    }
+                });
+            } else {
+                addHandlers = handlers;
+            }
+
+            // 存在没有绑定的时间方法时才绑定
+            if (addHandlers.length > 0) {
+                nodePatcher.addEvents(newVNode, type, addHandlers);
+            }
+        });
+    }
+}
+
+/**
+    indexOf ( children: Array, searchNode: Object )
+
+    Return Type:
+    Number
+    查找的node在children数组中的位置，如果没有找打则返回-1
+
+    Description:
+    获取查找的node在children数组中的位置，如果没有找打则返回-1
+
+    URL doc:
+    http://icejs.org/######
+*/
+function indexOf(children, searchNode) {
+    let index = -1;
+    foreach(children, (child, i) => {
+        if (child.key === searchNode.key) {
+            index = i;
+            return false;
+        }
+    });
+
+    return index;
+}
+
+/**
+    diffChildren ( newChildren: Array, oldChildren: Array, nodePatcher: Object )
+
+    Return Type:
+    void
+
+    Description:
+    比较新旧节点的子节点，将差异存入nodePatcher中
+
+    URL doc:
+    http://icejs.org/######
+*/
+function diffChildren(newChildren, oldChildren, nodePatcher) {
+
+    if (oldChildren && oldChildren.length > 0 && (!newChildren || newChildren.length <= 0)) {
+        foreach(oldChildren, oldChild => {
+            nodePatcher.removeNode(oldChild);
+        });
+    } else if (newChildren && newChildren.length > 0 && (!oldChildren || oldChildren.length <= 0)) {
+        foreach(newChildren, (newChild, i) => {
+            nodePatcher.addNode(newChild, i);
+        });
+    } else if (newChildren && newChildren.length > 0 && oldChildren && oldChildren.length > 0) {
+
+        let keyType = newChildren[0] && newChildren[0].key === undefined ? 0 : 1,
+            obj = { keyType, children: [] };
+
+        const newNodeClassification = [obj],
+              oldNodeClassification = [];
+        foreach(newChildren, newChild => {
+
+            // key为undefined的分类
+            if (keyType === 0) {
+                if (newChild.key === undefined) {
+                    obj.children.push(newChild);
+                } else {
+                    keyType = 1;
+                    obj = { keyType, children: [newChild] };
+                    newNodeClassification.push(obj);
+                }
+            } else if (keyType === 1) {
+
+                // key为undefined的分类
+                if (newChild.key !== undefined) {
+                    obj.children.push(newChild);
+                } else {
+                    keyType = 0;
+                    obj = { keyType, children: [newChild] };
+                    newNodeClassification.push(obj);
+                }
+            }
+        });
+
+        keyType = oldChildren[0] && oldChildren[0].key === undefined ? 0 : 1;
+        obj = { keyType, children: [] };
+        oldNodeClassification.push(obj);
+        foreach(oldChildren, oldChild => {
+
+            // key为undefined的分类
+            if (keyType === 0) {
+                if (oldChild.key === undefined) {
+                    obj.children.push(oldChild);
+                } else {
+                    keyType = 1;
+                    obj = { keyType, children: [oldChild] };
+                    oldNodeClassification.push(obj);
+                }
+            } else if (keyType === 1) {
+
+                // key为undefined的分类
+                if (oldChild.key !== undefined) {
+                    obj.children.push(oldChild);
+                } else {
+                    keyType = 0;
+                    obj = { keyType, children: [oldChild] };
+                    oldNodeClassification.push(obj);
+                }
+            }
+        });
+
+        // 对每个分类的新旧节点进行对比
+        let moveItems,
+            oldIndex,
+            oldChildrenCopy,
+            oldItem,
+            offset = 0;
+        foreach(newNodeClassification, (newItem, i) => {
+            oldItem = oldNodeClassification[i] || { children: [] };
+
+            if (newItem.keyType === 0) {
+
+                // key为undefined时直接对比同位置的两个节点
+                foreach(newItem.children, (newChild, j) => {
+                    nodePatcher.concat(newChild.diff(oldItem.children[j]));
+                });
+
+                // 如果旧节点数量比新节点多，则移除旧节点中多出的节点
+                if (newItem.children.length < oldItem.children.length) {
+                    for (let j = newItem.children.length; j < oldItem.children.length; j++) {
+                        nodePatcher.removeNode(oldItem.children[j]);
+                    }
+                }
+            } else if (newItem.keyType === 1) {
+
+                // key不为undefined时需对比节点增加、移除及移动
+                oldChildrenCopy = oldItem.children;
+                foreach(newItem.children, (newChild, j) => {
+                    if (indexOf(oldChildrenCopy, newChild) === -1) {
+                        nodePatcher.addNode(newChild, getInsertIndex(j, newItem.children) + offset);
+
+                        oldChildrenCopy.splice(j, 0, newChild);
+                    }
+                });
+
+                let k = 0;
+                while (oldChildrenCopy[k]) {
+                    if (indexOf(newItem.children, oldChildrenCopy[k]) === -1) {
+                        nodePatcher.removeNode(oldChildrenCopy[k]);
+                        oldChildrenCopy.splice(k, 1);
+                    } else {
+                        k++;
+                    }
+                }
+
+                moveItems = [];
+                oldIndex = 0;
+                foreach(newItem.children, (newChild, j) => {
+                    oldIndex = indexOf(oldChildrenCopy, newChild);
+                    if (oldIndex > -1) {
+                        nodePatcher.concat(newChild.diff(oldChildrenCopy[oldIndex]));
+                        if (oldIndex !== j) {
+                            moveItems.push({
+                                item: newChild,
+                                from: oldIndex,
+                                to: getInsertIndex(j, newItem.children),
+                                list: oldChildrenCopy.concat()
+                            });
+
+                            oldChildrenCopy.splice(oldIndex, 1);
+                            oldChildrenCopy.splice(j, 0, newChild);
+                        }
+                    }
+                });
+
+                foreach(optimizeSteps(moveItems), move => {
+                    nodePatcher.moveNode(move.item, move.to + offset);
+                });
+            }
+
+            offset += getInsertIndex(newItem.children.length, newItem.children);
+        });
+    }
+}
+
+/**
+    optimizeSteps ( patches: Array )
+
+    Return Type:
+    void
+
+    Description:
+    优化步骤
+    主要优化为子节点的移动步骤优化
+
+    URL doc:
+    http://icejs.org/######
+*/
+function optimizeSteps(patches) {
+    let i = 0;
+    while (patches[i]) {
+        const step = patches[i],
+              optimizeItems = [],
+              span = step.from - step.to,
+              nextStep = patches[i + 1],
+
+
+        // 合并的步骤
+        mergeItems = { alternates: [], eliminates: [], previous: [] };
+
+        if (step.to < step.from && (nextStep && nextStep.to === step.to + 1 && nextStep.from - nextStep.to >= span || !nextStep)) {
+            for (let j = step.from - 1; j >= step.to; j--) {
+
+                const optimizeItem = {
+                    type: step.type,
+                    item: step.list[j],
+                    from: j,
+                    to: j + 1
+                };
+
+                //向前遍历查看是否有可合并的项
+                for (let j = i - 1; j >= 0; j--) {
+                    let mergeStep = patches[j];
+
+                    // 只有一个跨度的项可以分解出来
+                    if (mergeStep.from - mergeStep.to === 1) {
+                        mergeStep = {
+                            type: mergeStep.type,
+                            item: mergeStep.list[mergeStep.to],
+                            from: mergeStep.to,
+                            to: mergeStep.from
+                        };
+                    }
+
+                    if (mergeStep.item === optimizeItem.item && mergeStep.to === optimizeItem.from) {
+                        mergeItems.previous.push({
+                            step: mergeStep, optimizeItem,
+                            exchangeItems: patches.slice(j + 1, i).concat(optimizeItems)
+                        });
+
+                        break;
+                    }
+                }
+
+                optimizeItems.push(optimizeItem);
+            }
+        } else {
+            i++;
+            continue;
+        }
+
+        let toOffset = 1,
+            j = i + 1,
+            lastStep = step,
+            mergeStep,
+            mergeSpan;
+
+        while (patches[j]) {
+            mergeStep = patches[j], mergeSpan = mergeStep.from - mergeStep.to;
+
+            let merge = false;
+            if (step.to + toOffset === mergeStep.to) {
+
+                if (mergeSpan === span) {
+                    mergeItems.eliminates.push(mergeStep);
+
+                    merge = true;
+                    lastStep = mergeStep;
+                } else if (mergeSpan > span) {
+                    mergeItems.alternates.push(mergeStep);
+
+                    merge = true;
+                    lastStep = mergeStep;
+                }
+
+                toOffset++;
+            }
+
+            j++;
+
+            if (!merge) {
+                break;
+            }
+        }
+
+        // 判断是否分解进行合并，依据为合并后至少不会更多步骤
+        // 合并项分为相同跨度的项、向前遍历可合并的项
+        // +1是因为需算上当前合并项，但在eliminates中并没有算当前合并项
+        if (optimizeItems.length <= mergeItems.eliminates.length + mergeItems.previous.length + 1) {
+            Array.prototype.splice.apply(patches, [patches.indexOf(lastStep) + 1, 0].concat(optimizeItems));
+            patches.splice(i, 1);
+
+            let mergeStep;
+            foreach(mergeItems.previous, prevItem => {
+                mergeStep = prevItem.step;
+
+                // 如果两个合并项之间还有其他项，则需与合并项调换位置
+                // 调换位置时，合并项的from在调换项的from与to之间（包括from与to）则合并项的from-1；调换项的to在合并项的from与to之间（包括from与to）则调换项的to+1
+                let mergeFrom, mergeTo, exchangeFrom, exchangeTo;
+                foreach(prevItem.exchangeItems, exchangeItem => {
+                    mergeFrom = mergeStep.from;
+                    mergeTo = mergeStep.to;
+                    exchangeFrom = exchangeItem.from;
+                    exchangeTo = exchangeItem.to;
+
+                    if (mergeFrom >= exchangeFrom && mergeFrom <= exchangeTo) {
+                        mergeStep.from--;
+                    }
+                    if (mergeTo >= exchangeFrom && mergeTo <= exchangeTo) {
+                        mergeStep.to--;
+                    }
+
+                    if (exchangeFrom >= mergeFrom && exchangeFrom <= mergeTo) {
+                        exchangeItem.from++;
+                    }
+                    if (exchangeTo >= mergeFrom && exchangeTo <= mergeTo) {
+                        exchangeItem.to++;
+                    }
+                });
+
+                prevItem.optimizeItem.from = mergeStep.from;
+                patches.splice(patches.indexOf(mergeStep), 1);
+
+                // 向前合并了一个项，则i需-1，不然可能会漏掉可合并项
+                i--;
+            });
+
+            foreach(mergeItems.eliminates, eliminateItem => {
+                foreach(optimizeItems, optimizeItem => {
+                    optimizeItem.to++;
+                });
+
+                patches.splice(patches.indexOf(eliminateItem), 1);
+            });
+
+            foreach(mergeItems.alternates, alternateItem => {
+                foreach(optimizeItems, optimizeItem => {
+                    optimizeItem.to++;
+                });
+
+                alternateItem.to += optimizeItems.length;
+            });
+        } else {
+            i++;
+        }
+    }
+
+    return patches;
+}
+
+function VElement(nodeName, attrs, parent, children, elem, isComponent) {
+	const vnode = new VNode(1, parent, elem);
+	vnode.nodeName = nodeName.toUpperCase();
+
+	vnode.attrs = attrs || {};
+	vnode.children = children && children.concat() || [];
+
+	foreach(vnode.children, child => {
+		changeParent(child, vnode);
+	});
+
+	if (isComponent === true) {
+		vnode.isComponent = true;
+	}
+
+	return vnode;
+}
+
+function VTextNode(nodeValue, parent, node) {
+	const vnode = new VNode(3, parent, node);
+	vnode.nodeValue = nodeValue;
+
+	return vnode;
+}
+
+function VFragment(children, docFragment) {
+	const vnode = new VNode(11, null, docFragment);
+	vnode.children = children && children.concat() || [];
+
+	foreach(vnode.children, child => {
+		changeParent(child, vnode);
+	});
+
+	return vnode;
+}
+
+function NodePatcher() {
+	this.patches = [];
+}
+
+extend(NodePatcher.prototype, {
+
+	/**
+ 	reorderNode ( item: Object, index: Number )
+ 
+ 	Return Type:
+ 	void
+ 
+ 	Description:
+ 	记录需增加或移动节点的信息
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	addNode(item, index) {
+		this.patches.push({ type: NodePatcher.NODE_REORDER, item, index });
+	},
+
+	/**
+ 	moveNode ( item: Object, index: Number )
+ 
+ 	Return Type:
+ 	void
+ 
+ 	Description:
+ 	记录需增加或移动节点的信息
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	moveNode(item, index) {
+		this.patches.push({ type: NodePatcher.NODE_REORDER, item, index, isMove: true });
+	},
+
+	/**
+ 	replaceNode ( item: Object, replaceNode: Object )
+ 
+ 	Return Type:
+ 	void
+ 
+ 	Description:
+ 	记录替换节点的信息
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	replaceNode(item, replaceNode) {
+		this.patches.push({ type: NodePatcher.NODE_REPLACE, item, replaceNode });
+	},
+
+	/**
+ 	removeNode ( item: Object )
+ 
+ 	Return Type:
+ 	void
+ 
+ 	Description:
+ 	记录移除节点的信息
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	removeNode(item) {
+		this.patches.push({ type: NodePatcher.NODE_REMOVE, item });
+	},
+
+	/**
+ 	replaceTextNode ( item: Object, val: String )
+ 
+ 	Return Type:
+ 	void
+ 
+ 	Description:
+ 	记录修改文本节点的信息
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	replaceTextNode(item, replaceNode) {
+		this.patches.push({ type: NodePatcher.TEXTNODE, item, replaceNode });
+	},
+
+	/**
+ 	reorderAttr ( item: Object, name: String, val: String )
+ 
+ 	Return Type:
+ 	void
+ 
+ 	Description:
+ 	记录重设或增加节点属性的信息
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	reorderAttr(item, name, val) {
+		this.patches.push({ type: NodePatcher.ATTR_REORDER, item, name, val });
+	},
+
+	/**
+ 	removeAttr ( item: Object, name: String )
+ 
+ 	Return Type:
+ 	void
+ 
+ 	Description:
+ 	记录移除节点属性的记录
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	removeAttr(item, name) {
+		this.patches.push({ type: NodePatcher.ATTR_REMOVE, item, name });
+	},
+
+	/**
+ 	addEvents ( item: Object, eventType: String, handlers: Array )
+ 
+ 	Return Type:
+ 	void
+ 
+ 	Description:
+ 	记录事件绑定的记录
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	addEvents(item, eventType, handlers) {
+		this.patches.push({ type: NodePatcher.EVENTS_ADD, item, eventType, handlers });
+	},
+
+	/**
+ 	concat ()
+ 
+ 	Return Type:
+ 	void
+ 
+ 	Description:
+ 	合并NodePatcher内的diff步骤
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	concat(nodePatcher) {
+		this.patches = this.patches.concat(nodePatcher.patches);
+	},
+
+	/**
+ 	patch ()
+ 
+ 	Return Type:
+ 	void
+ 
+ 	Description:
+ 	根据虚拟节点差异更新视图
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	patch() {
+		let p;
+		foreach(this.patches, patchItem => {
+			patchItem.item.render();
+
+			switch (patchItem.type) {
+				case NodePatcher.ATTR_REORDER:
+					if (attrAssignmentHook.indexOf(patchItem.name) === -1) {
+						attr(patchItem.item.node, patchItem.name, patchItem.val);
+					} else {
+						patchItem.item.node[patchItem.name] = patchItem.val;
+					}
+
+					break;
+				case NodePatcher.ATTR_REMOVE:
+					attr(patchItem.item.node, patchItem.name, null);
+
+					break;
+				case NodePatcher.TEXTNODE:
+					patchItem.replaceNode.node.nodeValue = patchItem.item.nodeValue;
+					patchItem.item.node = patchItem.replaceNode.node;
+
+					break;
+				case NodePatcher.NODE_REORDER:
+					p = patchItem.item.parent.node;
+					if (patchItem.item.templateNodes) {
+						const f = document.createDocumentFragment();
+						foreach(patchItem.item.templateNodes, vnode => {
+							f.appendChild(vnode.node);
+						});
+
+						if (patchItem.index < p.childNodes.length) {
+							p.insertBefore(f, p.childNodes.item(patchItem.index));
+						} else {
+							p.appendChild(f);
+						}
+
+						// 移动操作的组件需调用组件的update生命周期函数
+						if (patchItem.isMove && patchItem.item.isComponent) {
+							patchItem.item.component.update();
+						}
+					} else {
+						if (patchItem.index < p.childNodes.length) {
+							p.insertBefore(patchItem.item.node, p.childNodes.item(patchItem.index));
+						} else {
+							p.appendChild(patchItem.item.node);
+						}
+					}
+
+					break;
+				case NodePatcher.NODE_REMOVE:
+					let unmountNodes;
+					if (patchItem.item.templateNodes) {
+						foreach(patchItem.item.templateNodes, vnode => {
+							vnode.node.parentNode.removeChild(vnode.node);
+						});
+
+						// 移除的组件需调用unmount生命周期函数
+						if (patchItem.item.isComponent) {
+							patchItem.item.component.unmount();
+						}
+					} else {
+						patchItem.item.node.parentNode.removeChild(patchItem.item.node);
+					}
+
+					break;
+				case NodePatcher.NODE_REPLACE:
+					let node;
+					if (patchItem.replaceNode.templateNodes) {
+						p = patchItem.replaceNode.templateNodes[0].node.parentNode;
+
+						if (patchItem.item.templateNodes) {
+							node = document.createDocumentFragment();
+							foreach(patchItem.item.templateNodes, vnode => {
+								node.appendChild(vnode.node);
+							});
+						} else {
+							node = patchItem.item.node;
+						}
+
+						p.insertBefore(node, patchItem.replaceNode.templateNodes[0].node);
+						foreach(patchItem.replaceNode.templateNodes, vnode => {
+							p.removeChild(vnode.node);
+						});
+					} else {
+						p = patchItem.replaceNode.node.parentNode;
+						node = patchItem.item.node;
+						if (patchItem.item.templateNodes) {
+							node = document.createDocumentFragment();
+							foreach(patchItem.item.templateNodes, vnode => {
+								node.appendChild(vnode.node);
+							});
+						}
+
+						p.replaceChild(node, patchItem.replaceNode.node);
+					}
+
+					break;
+				case NodePatcher.EVENTS_ADD:
+					foreach(patchItem.handlers, handler => {
+						event$1.on(patchItem.item.node, patchItem.eventType, handler);
+					});
+					break;
+			}
+		});
+	}
+});
+
+extend(NodePatcher, {
+
+	// 虚拟DOM差异标识
+	// 属性差异标识
+	ATTR_REORDER: 0,
+	ATTR_REMOVE: 1,
+
+	// 文本节点差异标识
+	TEXTNODE: 2,
+
+	// 节点增加或移动标识
+	NODE_REORDER: 3,
+
+	// 节点移除标识
+	NODE_REMOVE: 4,
+
+	// 节点替换标识
+	NODE_REPLACE: 5,
+
+	// 添加事件绑定
+	EVENTS_ADD: 6
+});
+
+/**
+    supportCheck ( nodeType: Number, method: String )
+
+    Return Type:
+    void
+
+    Description:
+    检查vnode的类型是否支持调用某成员方法
+    nodeType为1或11时才能操作子节点
+
+    URL doc:
+    http://icejs.org/######
+*/
+function supportCheck(nodeType, method) {
+    if (nodeType !== 1 && nodeType !== 11) {
+        throw vnodeErr("NotSupport", `此类型的虚拟节点不支持${method}方法`);
+    }
+}
+
+/**
+    changeParent ( childVNode: Object, parent: Object )
+
+    Return Type:
+    void
+
+    Description:
+    更换父节点
+    如果此子节点已有父节点则将此子节点从父节点中移除
+
+    URL doc:
+    http://icejs.org/######
+*/
+function changeParent(childVNode, parent) {
+    if (childVNode && parent && childVNode.parent !== parent) {
+
+        // 如果有父节点，则从父节点中移除
+        if (childVNode.parent) {
+            childVNode.parent.removeChild(childVNode);
+        }
+
+        childVNode.parent = parent;
+    }
+}
+
+/**
+    VNode ( nodeType: Number, parent: Object, node: DOMObject )
+
+    Return Type:
+    void
+
+    Description:
+    虚拟DOM类
+
+    URL doc:
+    http://icejs.org/######
+*/
+function VNode(nodeType, parent, node) {
+    newClassCheck(this, VNode);
+
+    this.nodeType = nodeType;
+    this.parent = parent || null;
+    this.node = node;
+}
+
+extend(VNode.prototype, {
+
+    /**
+        appendChild ( childVNode: Object )
+    
+        Return Type:
+        void
+    
+        Description:
+        在此vnode的children末尾添加一个子vnode
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    appendChild(childVNode) {
+        supportCheck(this.nodeType, "appendChild");
+
+        changeParent(childVNode, this);
+
+        if (childVNode.nodeType === 11) {
+            foreach(childVNode.children, child => {
+                this.children.push(child);
+            });
+        } else {
+            this.children.push(childVNode);
+        }
+    },
+
+    /**
+        removeChild ( childVNode: Object )
+    
+        Return Type:
+        void
+    
+        Description:
+        在此vnode下移除一个子vnode
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    removeChild(childVNode) {
+        supportCheck(this.nodeType, "removeChild");
+
+        if (childVNode.parent === this) {
+            this.children.splice(this.children.indexOf(childVNode), 1);
+            childVNode.parent = null;
+        }
+    },
+
+    replaceChild(newVNode, oldVNode) {
+        supportCheck(this.nodeType, "replaceChild");
+
+        const i = this.children.indexOf(oldVNode);
+        if (i >= 0) {
+            let children;
+            if (newVNode.nodeType === 11) {
+                children = newVNode.children.concat();
+
+                Array.prototype.splice.apply(this.children, [i, 1].concat(children));
+            } else {
+                children = [newVNode];
+                this.children.splice(i, 1, newVNode);
+            }
+
+            // 更换父节点
+            foreach(children, child => {
+                changeParent(child, this);
+            });
+
+            oldVNode.parent = null;
+        }
+    },
+
+    /**
+        insertBefore ( newVNode: Object, existingVNode: Object )
+    
+        Return Type:
+        void
+    
+        Description:
+        在existingVNode前插入一个vnode
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    insertBefore(newVNode, existingVNode) {
+        supportCheck(this.nodeType, "insertBefore");
+
+        const i = this.children.indexOf(existingVNode);
+        if (i >= 0) {
+            let children;
+            if (newVNode.nodeType === 11) {
+                children = newVNode.children.concat();
+                Array.prototype.splice.apply(this.children, [i, 0].concat(newVNode.children));
+            } else {
+                children = [newVNode];
+                this.children.splice(i, 0, newVNode);
+            }
+
+            // 更换父节点
+            foreach(children, child => {
+                changeParent(child, this);
+            });
+        }
+    },
+
+    /**
+        html ( vnode: Object )
+    
+        Return Type:
+        void
+    
+        Description:
+        将此vnode下的内容替换为vnode
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    html(vnode) {
+        supportCheck(this.nodeType, "html");
+
+        foreach(this.children, child => {
+            child.parent = null;
+        });
+
+        this.children = [vnode];
+        changeParent(vnode, this);
+    },
+
+    /**
+           nextSibling ()
+       
+           Return Type:
+           void
+       
+           Description:
+           获取此vnode的下一个vnode
+       
+           URL doc:
+           http://icejs.org/######
+       */
+    nextSibling() {
+        if (this.parent) {
+            return this.parent.children[this.parent.children.indexOf(this) + 1];
+        }
+    },
+
+    /**
+        prevSibling ()
+    
+        Return Type:
+        void
+    
+        Description:
+        获取此vnode的下一个vnode
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    prevSibling() {
+        if (this.parent) {
+            return this.parent.children[this.parent.children.indexOf(this) - 1];
+        }
+    },
+
+    /**
+        attr ( name: String, val: Object|String|null )
+         Return Type:
+        void
+         Description:
+        获取、设置（单个或批量）、移除vnode属性
+         URL doc:
+        http://icejs.org/######
+    */
+    attr(name, val) {
+        supportCheck(this.nodeType, "attr");
+        correctParam(name, val).to("string", ["string", "object", null, "boolean"]).done(function () {
+            name = this.$1;
+            val = this.$2;
+        });
+
+        const tval = type$1(val);
+        if (tval === "undefined") {
+            return this.attrs[name];
+        } else if (tval === "null") {
+            delete this.attrs[name];
+        } else if (tval === "object") {
+            foreach(val, (v, k) => {
+                this.attrs[k] = v;
+            });
+        } else {
+            this.attrs[name] = val;
+        }
+    },
+
+    /**
+        render ()
+    
+        Return Type:
+        DOMObject
+        此vnode对应的实际DOM
+    
+        Description:
+        将此vnode渲染为实际DOM
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    render() {
+
+        let f;
+        switch (this.nodeType) {
+            case 1:
+                if (!this.node) {
+                    if (this.templateNodes) {
+                        this.node = [];
+                        foreach(this.templateNodes, vnode => {
+                            this.node.push(vnode.render());
+                        });
+                    } else {
+                        this.node = document.createElement(this.nodeName);
+                        foreach(this.attrs, (attrVal, name) => {
+                            if (attrAssignmentHook.indexOf(name) === -1) {
+                                attr(this.node, name, attrVal);
+                            } else {
+                                this.node[name] = attrVal;
+                            }
+                        });
+                        foreach(this.events, (handlers, type) => {
+                            foreach(handlers, handler => {
+                                event$1.on(this.node, type, handler);
+                            });
+                        });
+                    }
+                } else {
+
+                    // vnode为组件时，node为一个数组，代表了此组件的模板元素
+                    // 此时不需要修正属性
+                    if (this.node.nodeType) {
+
+                        // 存在对应node时修正node属性
+                        attr(this.node, this.attrs);
+
+                        // 移除不存在的属性
+                        foreach(slice.call(this.node.attributes), attrNode => {
+                            if (!this.attrs.hasOwnProperty(attrNode.name)) {
+                                attr(this.node, attrNode.name, null);
+                            }
+                        });
+                    }
+                }
+
+                if (this.children.length > 0 && !this.templateNodes) {
+                    f = document.createDocumentFragment();
+                    foreach(this.children, child => {
+                        f.appendChild(child.render());
+                    });
+
+                    this.node.appendChild(f);
+                }
+
+                break;
+            case 3:
+                if (!this.node) {
+                    this.node = document.createTextNode(this.nodeValue || "");
+                } else {
+                    if (this.node.nodeValue !== this.nodeValue) {
+                        this.node.nodeValue = this.nodeValue;
+                    }
+                }
+
+                break;
+            case 11:
+                if (!this.node) {
+                    this.node = document.createDocumentFragment();
+                }
+
+                f = document.createDocumentFragment();
+                foreach(this.children, child => {
+                    f.appendChild(child.render());
+                });
+
+                this.node.appendChild(f);
+
+                break;
+        }
+
+        if (type$1(this.node) === "array") {
+            f = document.createDocumentFragment();
+            foreach(this.node, node => {
+                f.appendChild(node);
+            });
+
+            return f;
+        }
+
+        return this.node;
+    },
+
+    /**
+        clone ( realNode: DOMObject )
+    
+        Return Type:
+        Object
+        此vnode的克隆vnode
+    
+        Description:
+        克隆此vnode
+        操作克隆的vnode不会影响此vnode
+        如果指定了参数realNode时，则会将此node按层级顺序被克隆的vnode引用
+        如果参数realNode为null时，则此vnode不会引用任何node
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    clone(realNode) {
+        let vnode,
+            node = this.node;
+
+        if (realNode && realNode.nodeType || realNode === null) {
+            node = realNode;
+        }
+
+        switch (this.nodeType) {
+            case 1:
+
+                // 复制attrs
+                const attrs = {};
+                foreach(this.attrs, (attr$$1, name) => {
+                    attrs[name] = attr$$1;
+                });
+
+                vnode = VElement(this.nodeName, attrs, null, null, node, this.isComponent);
+                vnode.key = this.key;
+
+                if (this.events) {
+                    foreach(this.events, (handlers, type) => {
+                        foreach(handlers, handler => {
+                            vnode.bindEvent(type, handler);
+                        });
+                    });
+                }
+
+                if (this.templateNodes) {
+                    if (vnode.isComponent) {
+                        vnode.component = this.component;
+                    }
+
+                    vnode.templateNodes = [];
+                    foreach(this.templateNodes, (templateNode, i) => {
+                        vnode.templateNodes.push(templateNode.clone());
+                    });
+                }
+
+                break;
+            case 3:
+                vnode = VTextNode(this.nodeValue, null, node);
+                vnode.key = this.key;
+
+                break;
+            case 11:
+                vnode = VFragment(null, node);
+        }
+
+        if (this.children) {
+            foreach(this.children, (child, i) => {
+                if (realNode && realNode.nodeType) {
+                    node = realNode.childNodes.item(i);
+                } else if (realNode === undefined || realNode === null) {
+                    node = realNode;
+                }
+                vnode.appendChild(child.clone(node));
+            });
+        }
+
+        return vnode;
+    },
+
+    /**
+        bindEvent ( type: String, listener: Function )
+    
+        Return Type:
+        void
+    
+        Description:
+        为此vnode绑定事件
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    bindEvent(type, listener) {
+        this.events = this.events || {};
+        this.events[type] = this.events[type] || [];
+
+        this.events[type].push(listener);
+    },
+
+    /**
+        diff ( oldVNode: Object )
+    
+        Return Type:
+        Object
+        此vnode与参数oldVNode对比后计算出的NodePatcher对象
+    
+        Description:
+        此vnode与参数oldVNode进行对比，并计算出差异
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    diff(oldVNode) {
+        const nodePatcher = new NodePatcher();
+
+        if (!oldVNode) {
+            nodePatcher.addNode(this, getInsertIndex(this.parent.children.indexOf(this), this.parent.children));
+        } else if (this.nodeType === 3 && oldVNode.nodeType === 3) {
+
+            // 防止使用”:if“、”:else-if“指令时相同元素导致无法匹配元素的问题
+            if (this.node !== oldVNode.node) {
+                this.node = oldVNode.node;
+            }
+            if (this.nodeValue !== oldVNode.nodeValue) {
+
+                // 文本节点内容不同时更新文本内容
+                nodePatcher.replaceTextNode(this, oldVNode);
+            }
+        } else if (this.nodeName === oldVNode.nodeName && this.key === oldVNode.key) {
+
+            // 如果当前为组件或template vnode，则处理templateNodes
+            if (this.templateNodes) {
+
+                // 还未挂载的组件或template是没有templateNodes的
+                // 此时需将该templateNodes替换为组件内容
+                if (!oldVNode.templateNodes) {
+                    nodePatcher.replaceNode(VFragment(this.templateNodes), oldVNode);
+                } else {
+                    diffChildren(this.templateNodes, oldVNode.templateNodes, nodePatcher);
+                }
+            } else {
+
+                // 防止使用”:if“、”:else-if“指令时相同元素导致无法匹配元素的问题
+                if (this.node !== oldVNode.node) {
+                    this.node = oldVNode.node;
+                }
+
+                // 通过key对比出节点相同时
+                // 对比属性
+                diffAttrs(this, oldVNode, nodePatcher);
+
+                // 对比事件
+                diffEvents(this, oldVNode, nodePatcher);
+
+                // 比较子节点
+                diffChildren(this.children, oldVNode.children, nodePatcher);
+            }
+        } else {
+
+            // 节点不同，直接替换
+            nodePatcher.replaceNode(this, oldVNode);
+        }
+
+        return nodePatcher;
+    },
+
+    /**
+        emit ( type: String )
+    
+        Return Type:
+        void
+    
+        Description:
+        触发事件
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    emit(type) {
+        if (this.node) {
+            event$1.emit(this.node, type);
+        }
+    }
+});
+
+extend(VNode, {
+
+    /**
+        domToVNode ( dom: DOMObject|DOMString, parent: Object )
+    
+        Return Type:
+        Object
+        实际DOM转换后的vnode对象
+    
+        Description:
+        将实际DOM或DOM String转换为vnode对象
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    domToVNode(dom) {
+        if (type$1(dom) === "string") {
+            const d = document.createElement("div"),
+                  f = document.createDocumentFragment();
+
+            d.innerHTML = dom;
+            foreach(slice.call(d.childNodes), childNode => {
+                f.appendChild(childNode);
+            });
+
+            dom = f;
+        }
+
+        let vnode;
+        switch (dom.nodeType) {
+            case 1:
+                const attrs = {};
+                foreach(slice.call(dom.attributes), attr$$1 => {
+                    attrs[attr$$1.name] = attr$$1.nodeValue;
+                });
+
+                vnode = VElement(dom.nodeName, attrs, null, null, dom);
+
+                break;
+            case 3:
+                vnode = VTextNode(dom.nodeValue, null, dom);
+
+                break;
+            case 11:
+                vnode = VFragment(null, dom);
+        }
+
+        foreach(slice.call(dom.nodeName === "TEMPLATE" ? dom.content.childNodes || dom.childNodes : dom.childNodes), child => {
+
+            child = VNode.domToVNode(child);
+            if (child instanceof VNode) {
+                vnode.appendChild(child);
+            }
+        });
+
+        return vnode;
+    }
+});
+
+function NodeTransaction() {
+	this.transactions = [];
+}
+
+extend(NodeTransaction.prototype, {
+
+	/**
+ 	start ()
+ 
+ 	Return Type:
+ 	Object
+ 	当前开启的事物对象
+ 
+ 	Description:
+ 	开启当前的事物对象
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	start() {
+		NodeTransaction.acting = this;
+		return this;
+	},
+
+	/**
+ 	collect ( newVNode: Object, oldVNode: Object )
+ 
+ 	Return Type:
+ 	void
+ 
+ 	Description:
+ 	收集对比的新旧虚拟节点
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	collect(newVNode, oldVNode) {
+		this.transactions.push({
+			backup: oldVNode,
+			update: newVNode
+		});
+	},
+
+	/**
+ 	commit ()
+ 
+ 	Return Type:
+ 	void
+ 
+ 	Description:
+ 	提交事物更新关闭已开启的事物
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	commit() {
+		foreach(this.transactions, comparedVNodes => {
+			comparedVNodes.update.diff(comparedVNodes.backup).patch();
+		});
+
+		NodeTransaction.acting = undefined;
+	}
+});
+
+const dataType$1 = [String, Number, Function, Boolean, Object];
+
+/**
+    validateProp ( prop: any, validate: Object )
+
+    Return Type:
+    Boolean
+    属性值是否通过验证
+
+    Description:
+    验证属性值，验证成功返回true，否则返回false
+
+    URL doc:
+    http://icejs.org/######
+*/
+function validateProp(prop, validate) {
+    let isPass = false;
+    const tvalidate = type$1(validate);
+
+    // 类型验证
+    if (dataType$1.indexOf(validate) >= 0) {
+        isPass = prop.constructor === validate;
+    }
+
+    // 正则表达式验证
+    else if (validate instanceof RegExp) {
+            isPass = validate.test(prop);
+        }
+
+        // 多个值的验证
+        else if (tvalidate === "array") {
+
+                // 如果验证参数为数组，则满足数组中任意一项即通过
+                foreach(validate, v => {
+                    isPass = isPass || !!validateProp(prop, v);
+                    if (isPass) {
+                        return false;
+                    }
+                });
+            }
+
+            // 方法验证
+            else if (tvalidate === "function") {
+                    isPass = validate(prop);
+                }
+
+    return isPass;
+}
+
+var componentConstructor = {
+
+    /**
+        initProps ( componentNode: DOMObject, moduleVm: Object, propsValidator: Object )
+    
+        Return Type:
+        props
+        转换后的属性对象
+    
+        Description:
+        获取并初始化属性对象
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    initProps(componentNode, moduleVm, propsValidator) {
+        let props = {},
+            match;
+
+        foreach(componentNode.attrs, (attrVal, name) => {
+
+            // 属性名需符合变量的命名规则
+            if (rvar.test(name)) {
+                if (match = attrVal.match(rexpr)) {
+                    const subs = new Subscriber(),
+                          propName = match[1],
+                          getter = () => {
+                        return moduleVm[propName];
+                    };
+
+                    let propValue;
+
+                    new ValueWatcher(newVal => {
+                        propValue = newVal;
+
+                        subs.notify();
+                    }, getter);
+
+                    //////////////////////////////
+                    //////////////////////////////
+                    //////////////////////////////
+                    defineReactiveProperty(name, () => {
+                        subs.subscribe();
+                        return propValue;
+                    }, newVal => {
+                        if (newVal !== propValue) {
+                            moduleVm[propName] = propValue = newVal;
+
+                            subs.notify();
+                        }
+                    }, props);
+                } else {
+                    props[name] = attrVal;
+                }
+
+                // 验证属性值
+                const validateItem = propsValidator && propsValidator[name];
+                if (validateItem) {
+                    const validate = isPlainObject(validateItem) ? validateItem.validate : validateItem;
+                    if (validate && !validateProp(props[name], validate)) {
+                        throw componentErr(`prop: ${name}`, `组件传递属性'${name}'的值未通过验证，请检查该值的正确性或修改验证规则`);
+                    }
+                }
+            }
+        });
+
+        // 再次检查是否为必须属性值与默认值赋值
+        // 默认值不会参与验证，即使不符合验证规则也会赋值给对应属性
+        foreach(propsValidator, (validatorItem, propName) => {
+            if (!props[propName]) {
+                if (validatorItem.require === true && validatorItem.default === undefined) {
+                    throw componentErr("prop:" + propName, "组件传递属性" + propName + "为必须值");
+                } else if (validatorItem.default !== undefined) {
+                    props[propName] = validatorItem.default;
+                }
+            }
+        });
+
+        return props;
+    },
+
+    /**
+        initLifeCycle ( component: Object )
+    
+        Return Type:
+        void
+    
+        Description:
+        初始化组件对象的生命周期
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    initLifeCycle(component, moduleObj) {
+        const lifeCycleHook = {
+            update: noop,
+            unmount() {
+
+                // 在对应module.components中移除此组件
+                moduleObj.components.splice(moduleObj.components.indexOf(component), 1);
+            }
+        };
+
+        foreach(lifeCycleHook, (hookFn, cycleName) => {
+            const cycleFunc = component[cycleName];
+            component[cycleName] = () => {
+                const nt = new NodeTransaction().start();
+                (cycleFunc || noop).apply(component, cache.getDependentPlugin(cycleFunc || noop));
+                nt.commit();
+
+                // 钩子函数调用
+                hookFn();
+            };
+        });
+    },
+
+    /**
+        initTemplate ( template: String, scopedStyle: Object )
+    
+        Return Type:
+        void
+    
+        Description:
+        初始化模板
+        为模板添加实际的DOM结构
+        为模板DOM结构添加样式
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    initTemplate(template, scopedStyle) {
+        const d = document.createElement("div"),
+              f = document.createDocumentFragment();
+
+        d.innerHTML = template;
+
+        // 为对应元素添加内嵌样式
+        let num;
+        foreach(scopedStyle, (styles, selector) => {
+            foreach(query(selector, d, true), elem => {
+                foreach(styles, (val, styleName) => {
+                    num = parseInt(val);
+                    elem.style[styleName] += val + (type$1(num) === "number" && (num >= 0 || num <= 0) && noUnitHook.indexOf(styleName) === -1 ? "px" : "");
+                });
+            });
+        });
+
+        foreach(slice.call(d.childNodes), child => {
+            f.appendChild(child);
+        });
+
+        return VNode.domToVNode(f);
+    },
+
+    /**
+        initSubElements ( componentVNode: Object, subElementNames: Object )
+    
+        Return Type:
+        Object
+        组件子元素对象
+    
+        Description:
+        获取组件子元素并打包成局部vm的数据对象
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    initSubElements(componentVNode, subElementNames) {
+        const _subElements = {
+            default: ""
+        };
+
+        foreach(subElementNames, (multiple, subElemName) => {
+            if (multiple === true) {
+                _subElements[subElemName] = [];
+            }
+        });
+
+        let componentName, subElemName, vf;
+        foreach(componentVNode.children.concat(), vnode => {
+            componentName = transformCompName(vnode.nodeName || "");
+
+            if (subElementNames.hasOwnProperty(componentName)) {
+                vf = VFragment();
+                foreach(vnode.children, subVNode => {
+                    vf.appendChild(subVNode);
+                });
+
+                if (subElementNames[componentName] === true) {
+                    _subElements[componentName].push(vf);
+                } else {
+                    _subElements[componentName] = vf;
+                }
+            } else {
+                _subElements.default = _subElements.default || VFragment();
+                _subElements.default.appendChild(vnode);
+            }
+        });
+
+        return { subElements: _subElements };
+    },
+
+    /**
+        initAction ( component: Object, actions: Object )
+    
+        Return Type:
+        void
+    
+        Description:
+        初始化组件行为
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    initAction(component, actions) {
+        component.action = {};
+        foreach(actions, (action, name) => {
+            if (type$1(action) !== "function") {
+                throw componentErr("actionType", `action'${name}'不是方法，组件action返回的对象属性必须为方法，它表示此组件的行为`);
+            } else if (component[name]) {
+                throw componentErr("duplicate", `此组件对象上已存在名为'${name}'的属性或方法`);
+            }
+
+            component.action[name] = (...args) => {
+                const nt = new NodeTransaction().start();
+                action.apply(component, args);
+                nt.commit();
+            };
+        });
+
+        // caller.action = actions;
+    }
+};
+
+function Component() {
+
+    // check
+    check(this.init).type("function").ifNot("component:" + this.constructor.name, "component derivative必须定义init方法").do();
+    check(this.render).type("function").ifNot("component:" + this.constructor.name, "component derivative必须定义render方法，因为组件必须存在组件模板HTML").do();
+}
+
+extend(Component.prototype, {
+
+    /**
+        __init__ ( componentVNode: Object, moduleObj: Object )
+    
+        Return Type:
+        void
+    
+        Description:
+        初始化一个对应的组件对象
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    __init__(componentVNode, moduleObj) {
+        let isCallPropsType = false;
+
+        //////////////////////////////////////////
+        // 获取init方法返回值并初始化vm数据
+        // 构造属性验证获取器获取属性验证参数
+        this.propsType = validator => {
+            isCallPropsType = true;
+
+            // 获取props，如果有需要则验证它们
+            this.props = componentConstructor.initProps(componentVNode, moduleObj.state, validator || {});
+        };
+
+        // 没有验证时手动调用初始化props
+        if (!isCallPropsType) {
+            this.propsType();
+        }
+
+        const componentVm = new ViewModel(this.init.apply(this, cache.getDependentPlugin(this.init)));
+        delete this.propsType;
+
+        this.state = componentVm;
+
+        /////////////////////
+        // 转换组件代表元素为实际的组件元素节点
+        let componentString,
+            scopedStyle,
+            subElementNames = {};
+
+        // 构造模板和样式的获取器获取模板和样式
+        this.template = str => {
+            componentString = str || "";
+            return this;
+        };
+
+        this.style = obj => {
+            scopedStyle = obj || {};
+            return this;
+        };
+
+        this.subElements = (...elemNames) => {
+            foreach(elemNames, nameObj => {
+                if (type$1(nameObj) === "string") {
+                    nameObj = { elem: nameObj, multiple: false };
+                }
+
+                if (!rcomponentName.test(nameObj.elem)) {
+                    throw componentErr("subElements", "组件子元素名\"" + nameObj.elem + "\"定义错误，组件子元素名的定义规则与组件名相同，需遵循首字母大写的驼峰式");
+                }
+
+                subElementNames[nameObj.elem] = nameObj.multiple;
+            });
+
+            return this;
+        };
+
+        this.render.apply(this, cache.getDependentPlugin(this.render));
+
+        delete this.template;
+        delete this.style;
+        delete this.subElements;
+
+        // 处理模块并挂载数据
+        const vfragment = componentConstructor.initTemplate(componentString, scopedStyle),
+              subElements = componentConstructor.initSubElements(componentVNode, subElementNames),
+              tmpl = new Tmpl(componentVm, this.components || [], this),
+              vfragmentBackup = vfragment.clone();
+
+        tmpl.mount(vfragment, false, Tmpl.defineScoped(subElements));
+
+        // 保存组件对象和结构
+        componentVNode.component = this;
+        componentVNode.templateNodes = vfragment.children.concat();
+
+        // 调用mounted钩子函数
+        (this.mounted || noop).apply(this, cache.getDependentPlugin(this.mounted || noop));
+
+        // 初始化action
+        if (this.action) {
+            const actions = this.action.apply(this, cache.getDependentPlugin(this.action));
+            componentConstructor.initAction(this, actions);
+        }
+
+        // 如果有saveRef方法则表示此组件需被引用
+        (componentVNode.saveRef || noop)(this.action) || noop;
+
+        // 初始化生命周期
+        componentConstructor.initLifeCycle(this, moduleObj);
+
+        // 组件初始化完成，调用apply钩子函数
+        (this.apply || noop).apply(this, cache.getDependentPlugin(this.apply || noop));
+
+        vfragment.diff(vfragmentBackup).patch();
+    },
+
+    /**
+        depComponents ( comps: Array )
+    
+        Return Type:
+        void
+    
+        Description:
+        指定此组件模板内的依赖组件类
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    depComponents(...comps) {
+        this.components = [];
+
+        foreach(comps, comp => {
+            if (comp && comp.__proto__.name === "Component") {
+                this.components.push(comp);
+            } else if (type$1(comp) === "string") {
+                const compObj = cache.getComponent(comp);
+                if (compObj && compObj.__proto__.name === "Component") {
+                    this.components.push(compObj);
+                }
+            }
+        });
+    }
+});
+
+extend(Component, {
+
+    // 全局组件类
+    // 所有的模板内都可以在不指定组件的情况下使用
+    globalClass: {},
+
+    /**
+        defineGlobal ( componentDerivative: Function|Class )
+    
+        Return Type:
+        void
+    
+        Description:
+        定义一个全局组件
+        组件对象必须为一个方法(或一个类)
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    defineGlobal(componentDerivative) {
+        globalClass[componentDerivative.name] = componentDerivative;
+    },
+
+    /**
+        getGlobal ( name: String )
+    
+        Return Type:
+        Function|Class
+        对应的组件类
+    
+        Description:
+        通过组件类名获取对应的组件类
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    getGlobal(name) {
+        return this.globalClass[name];
+    }
+});
+
+/**
+    preTreat ( vnode: Object )
+
+    Return Type:
+    Object
+    处理后的元素对象
+
+    Description:
+    元素预处理
+    主要对“:if”、“:for”两个指令的特殊处理
+
+    URL doc:
+    http://icejs.org/######
+*/
+function preTreat(vnode) {
+
+    const _if = Tmpl.directivePrefix + "if",
+          _elseif = Tmpl.directivePrefix + "else-if",
+          _else = Tmpl.directivePrefix + "else";
+
+    let nextSib,
+        parent,
+        condition = vnode.attr(_if);
+
+    if (condition && !vnode.conditionElems) {
+
+        vnode.conditions = [condition];
+        vnode.conditionElems = [vnode];
+        parent = vnode.parent;
+        while (nextSib = vnode.nextSibling()) {
+            if (condition = nextSib.attr(_elseif)) {
+                nextSib.mainVNode = vnode;
+                vnode.conditions.push(condition);
+                vnode.conditionElems.push(nextSib);
+                nextSib.attr(_elseif, null);
+                parent.removeChild(nextSib);
+            } else if (nextSib.attrs.hasOwnProperty(_else)) {
+                nextSib.mainVNode = vnode;
+                vnode.conditions.push("true");
+                vnode.conditionElems.push(nextSib);
+                nextSib.attr(_else, null);
+                parent.removeChild(nextSib);
+                break;
+            } else {
+                break;
+            }
+        }
+    }
+
+    return vnode;
+}
+
+function concatHandler(target, source) {
+    const concats = {};
+
+    concats.watchers = target.watchers.concat(source.watchers);
+    concats.components = target.components.concat(source.components);
+    concats.templates = target.templates.concat(source.templates);
+
+    return concats;
+}
+
+/**
+    Plugin Tmpl
+
+    Description:
+    模板类
+    解析模板
+
+    URL doc:
+    http://icejs.org/######
+*/
+function Tmpl(vm, components, module) {
+    this.vm = vm;
+    this.components = {};
+    this.module = module;
+
+    foreach(components, comp => {
+        this.components[comp.name] = comp;
+    });
+}
+
+extend(Tmpl.prototype, {
+
+    /**
+        mount ( vnode: Object, mountModule: Boolean, scoped?: Object )
+    
+        Return Type:
+        void
+    
+        Description:
+        使用vm对象挂载并动态绑定数据到模板
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    mount(vnode, mountModule, scoped) {
+        const isRoot = !vnode.parent,
+              rattr = /^:([\$\w]+)$/;
+
+        let directive,
+            handler,
+            targetNode,
+            expr,
+            forAttrValue,
+            firstChild,
+            compileHandlers = {
+            watchers: [],
+            components: [],
+            templates: []
+        };
+
+        do {
+            if (vnode.nodeType === 1 && mountModule) {
+
+                // 处理:for
+                // 处理:if :else-if :else
+                // 处理{{ expression }}
+                // 处理:on
+                // 处理:model
+                vnode = preTreat.call(this, vnode);
+                if (forAttrValue = vnode.attr(Tmpl.directivePrefix + "for")) {
+                    compileHandlers.watchers.push({ handler: Tmpl.directives.for, targetNode: vnode, expr: forAttrValue });
+                } else {
+
+                    if (vnode.nodeName === "TEMPLATE") {
+                        compileHandlers.templates.push(vnode);
+                    } else {
+
+                        // 收集组件元素待渲染
+                        // 局部没有找到组件则查找全局组件
+                        const componentName = transformCompName(vnode.nodeName),
+                              ComponentDerivative = this.getComponent(componentName) || Component.getGlobal(componentName);
+                        if (ComponentDerivative && ComponentDerivative.__proto__.name === "Component") {
+                            compileHandlers.components.push({ vnode, Class: ComponentDerivative });
+
+                            vnode.isComponent = true;
+                        }
+                    }
+
+                    foreach(vnode.attrs, (attr$$1, name) => {
+                        directive = rattr.exec(name);
+                        if (directive) {
+                            directive = directive[1];
+                            if (/^on/.test(directive)) {
+
+                                // 事件绑定
+                                handler = Tmpl.directives.on;
+                                targetNode = vnode, expr = `${directive.slice(2)}:${attr$$1}`;
+                            } else if (Tmpl.directives[directive]) {
+
+                                // 模板属性绑定
+                                handler = Tmpl.directives[directive];
+                                targetNode = vnode;
+                                expr = attr$$1;
+                            } else {
+
+                                // 没有找到该指令
+                                throw runtimeErr("directive", "没有找到\"" + directive + "\"指令或表达式");
+                            }
+
+                            compileHandlers.watchers.push({ handler, targetNode, expr });
+                        } else if (rexpr.test(attr$$1)) {
+
+                            // 属性值表达式绑定
+                            compileHandlers.watchers.push({ handler: Tmpl.directives.attrExpr, targetNode: vnode, expr: `${name}:${attr$$1}` });
+                        }
+                    });
+                }
+            } else if (vnode.nodeType === 3) {
+
+                // 文本节点表达式绑定
+                if (rexpr.test(vnode.nodeValue)) {
+                    compileHandlers.watchers.push({ handler: Tmpl.directives.textExpr, targetNode: vnode, expr: vnode.nodeValue });
+                }
+            }
+
+            firstChild = vnode.children && vnode.children[0];
+            if (firstChild && !forAttrValue) {
+                compileHandlers = concatHandler(compileHandlers, this.mount(firstChild, true, scoped, false));
+            }
+        } while (!isRoot && (vnode = vnode.nextSibling()));
+
+        if (!isRoot) {
+            return compileHandlers;
+        } else {
+
+            //////////////////////////////
+            //////////////////////////////
+            // 为相应模板元素挂载数据
+            foreach(compileHandlers.watchers, watcher => {
+                new ViewWatcher(watcher.handler, watcher.targetNode, watcher.expr, this, scoped);
+            });
+
+            // 处理template元素
+            foreach(compileHandlers.templates, vnode => {
+                vnode.templateNodes = vnode.children.concat();
+            });
+
+            // 渲染组件
+            this.module.components = this.module.components || [];
+            foreach(compileHandlers.components, comp => {
+                const instance = new comp.Class();
+                this.module.components.push(instance);
+
+                instance.__init__(comp.vnode, this.module);
+            });
+        }
+    },
+
+    getViewModel() {
+        return this.vm;
+    },
+
+    getComponent(name) {
+        return this.components[name];
+    }
+});
+
+extend(Tmpl, {
+
+    // 指令前缀
+    directivePrefix: ":",
+
+    /**
+       	defineScoped ( scopedDefinition: Object )
+       
+       	Return Type:
+       	Object
+       	局部变量操作对象
+       
+       	Description:
+    	定义模板局部变量
+    	此方法将生成局部变量操作对象，内含替身变量前缀
+       	此替身变量名不能为当前vm中已有的变量名，所以需取的生僻些
+       	在挂载数据时如果有替身则会将局部变量名替换为替身变量名来达到不重复vm中已有变量名的目的
+       
+       	URL doc:
+       	http://icejs.org/######
+       */
+    defineScoped(scopedDefinition) {
+        const scoped = {
+            prefix: "ICE_FOR_" + Date.now() + "_",
+            vars: {}
+        },
+              availableItems = [];
+
+        foreach(scopedDefinition, (val, varName) => {
+            if (varName) {
+                scoped.vars[scoped.prefix + varName] = val;
+
+                // 两边添加”\b“表示边界，以防止有些单词中包含局部变量名而错误替换
+                availableItems.push("\\b" + varName + "\\b");
+            }
+        });
+
+        scoped.regexp = new RegExp(availableItems.join("|"), "g");
+
+        return scoped;
+    },
+
+    /**
+        defineDirective ( directive: Object )
+    
+        Return Type:
+        void
+    
+        Description:
+        定义指令
+        指令对象必须包含”name“属性和”update“方法，”before“方法为可选项
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    defineDirective(directive) {
+        this.directives = this.directives || {};
+        this.directives[directive.name] = directive;
+    }
 });
 
 /**
@@ -1908,109 +4296,165 @@ extend(NodeLite.prototype, {
 	http://icejs.org/######
 */
 function makeFn(code) {
-	return new Function("obj", `with ( obj ) {
+	return new Function("runtimeErr", `let self = this,
+		 ret;
+	self.addScoped ();
+	with ( self.tmpl.getViewModel () ) {
 		try {
-			return ${code};
+			ret = ${code};
 		}
 		catch ( e ) {
-			throw runtimeErr ( "view model", e );
+			throw runtimeErr ( "vm", e );
 		}
-	}`);
+	}
+	self.removeScoped ();
+	return ret;`);
 }
 
 /**
-	Watcher ( directive: Object, node: DOMObject, expr: String, vm: Object, scoped: Object )
+	ViewWatcher ( directive: Object, node: DOMObject, expr: String, tmpl?: Object, scoped?: Object )
 
 	Return Type:
 	void
 
 	Description:
 	视图监听类
-	模板中所有需绑定的视图都将依次转换为此类的对象
+	模板中所有需绑定的视图都将依次转换为ViewWacther类的对象
 	当数据发生变化时，这些对象负责更新视图
 
 	URL doc:
 	http://icejs.org/######
 */
-function Watcher(directive, node, expr, vm, scoped) {
-
-	// 如果scoped为局部数据对象则将expr内的局部变量名替换为局部变量名
-	if (type$1(scoped) === "object" && scoped.__$reg__ instanceof RegExp) {
-		expr = expr.replace(scoped.__$reg__, match => scoped[match] || match);
-	}
+function ViewWatcher(directive, node, expr, tmpl, scoped) {
 
 	this.directive = directive;
 	this.node = node;
-	this.vm = vm;
-	this.getVal = makeFn(expr);
+	this.parent = node.parent || node;
+	this.expr = expr;
+	this.tmpl = tmpl;
+	this.scoped = scoped;
 
-	if (!directive.before.call(this)) {
-		return;
+	(directive.before || noop).call(this);
+
+	// 如果scoped为局部数据对象则将expr内的局部变量名替换为局部变量名
+	if (type$1(scoped) === "object" && scoped.regexp instanceof RegExp) {
+		this.expr = this.expr.replace(scoped.regexp, match => scoped.prefix + match);
 	}
 
-	// 将获取表达式的真实值并将此watcher对象绑定到依赖监听属性中
-	Subscriber.watcher = this;
-	let val = this.getVal(vm);
-	Subscriber.watcher = undefined;
+	// 移除相关属性指令表达式
+	// 当属性指令表达式与指令名称不同的时候可将对应表达式赋值给this.attrExpr
+	if (node.nodeType === 1) {
+		node.attr(Tmpl.directivePrefix + (this.attrExpr || directive.name), null);
+	}
 
-	// 移除局部变量
-	foreach$1(scoped || [], (k, v) => {
-		if (type$1(v) === "string") {
-			delete vm[v];
-		}
-	});
+	let val = this.expr;
+
+	// 当该指令为静态指令时，将不会去对应的vm中获取值，相应的也不会被监听
+	if (directive.static !== true) {
+		this.getter = makeFn(this.expr);
+
+		// 将获取表达式的真实值并将此watcher对象绑定到依赖监听属性中
+		Subscriber.watcher = this;
+		val = this.getter(runtimeErr);
+
+		// 局部变量没有设置监听，所以不会调用Subscriber.subscriber()，需手动设置为undefined
+		Subscriber.watcher = undefined;
+	}
 
 	directive.update.call(this, val);
 }
 
-extend$1(Watcher.prototype, {
+extend(ViewWatcher.prototype, {
 
 	/**
- 	update ( value: any )
+ 	update ()
  
  	Return Type:
  	void
  
  	Description:
  	更新视图
+ 	通过更新虚拟dom再对比计算出更新差异
+ 	最后更新视图
  
  	URL doc:
  	http://icejs.org/######
  */
-	update(value) {
-		this.directive.update.call(this, this.getVal(vm));
+	update() {
+		const parentBackup = this.parent.clone();
+		this.directive.update.call(this, this.getter(runtimeErr));
+
+		// 当已开启了一个事物时将收集新旧节点等待变更
+		// 当没有开启事物时直接处理更新操作
+		if (NodeTransaction.acting instanceof NodeTransaction) {
+			NodeTransaction.acting.collect(this.parent, parentBackup);
+		} else {
+			this.parent.diff(parentBackup).patch();
+		}
 	},
 
 	/**
- 	defineScoped ( scopedDefinition: Object, vm: Object )
+    	addScoped ()
+    
+    	Return Type:
+    	Object
+    	void
+    
+    	Description:
+ 	为vm增加局部变量
+    
+    	URL doc:
+    	http://icejs.org/######
+    */
+	addScoped() {
+		const vm = this.tmpl.getViewModel();
+
+		// 增加局部变量
+		foreach(this.scoped && this.scoped.vars || {}, (val, varName) => {
+			vm[varName] = val;
+		});
+	},
+
+	/**
+    	removeScoped ()
+    
+    	Return Type:
+    	Object
+    	void
+    
+    	Description:
+ 	移除vm中的局部变量
+    
+    	URL doc:
+    	http://icejs.org/######
+    */
+	removeScoped() {
+		const vm = this.tmpl.getViewModel();
+		foreach(this.scoped && this.scoped.vars || {}, (val, varName) => {
+			if (vm.hasOwnProperty(varName)) {
+				delete vm[varName];
+			}
+		});
+	},
+
+	/**
+ 	unmount ( subscribe: Object )
  
  	Return Type:
- 	Object
- 	局部变量操作对象
+ 	void
  
  	Description:
- 定义模板局部变量
- 此方法将生成局部变量操作对象（包含替身变量名）和增加局部变量属性到vm中
- 	此替身变量名不能为当前vm中已有的变量名，所以需取的生僻些
- 	在挂载数据时如果有替身则会将局部变量名替换为替身变量名来达到不重复vm中已有变量名的目的
+ 	卸载此watcher对象
+ 	当被绑定元素在DOM树上移除后，那对应vm属性对此元素的订阅也需移除
  
  	URL doc:
  	http://icejs.org/######
  */
-	defineScoped(scopedDefinition, vm) {
-		let scopedPrefix = "ICE_FOR_" + Date.now() + "_",
-		    scoped = {};
-
-		foreach$1(scopedDefinition, (variable, val) => {
-			if (variable) {
-				scoped[variable] = scopedPrefix + variable;
-				vm[scopedPrefix + variable] = val;
-			}
-		});
-
-		scoped.__$reg__ = new RegExp(Object.keys(scoped).join("|"), "g");
-
-		return scoped;
+	unmount(subscribe) {
+		const index = subscribe.watchers.indexOf(this);
+		if (index > -1) {
+			subscribe.watchers.splice(index, 1);
+		}
 	}
 });
 
@@ -2031,7 +4475,7 @@ function Subscriber() {
     this.watchers = [];
 }
 
-extend$1(Subscriber.prototype, {
+extend(Subscriber.prototype, {
 
     /**
         subscribe ()
@@ -2046,14 +4490,26 @@ extend$1(Subscriber.prototype, {
         http://icejs.org/######
     */
     subscribe() {
-        if (Subscriber.watcher instanceof Watcher) {
+        if (type$1(Subscriber.watcher) === "object") {
+
+            if (Subscriber.watcher instanceof ViewWatcher) {
+                const watcher = Subscriber.watcher;
+
+                // 在被订阅的vnode中生成此watcher的卸载函数
+                // 用于在不再使用此watcher时在订阅它的订阅者对象中移除，以提高性能
+                watcher.node.watcherUnmounts = watcher.node.watcherUnmounts || [];
+                watcher.node.watcherUnmounts.push(() => {
+                    watcher.unmount(this);
+                });
+            }
+
             this.watchers.push(Subscriber.watcher);
-            Subscribe.watcher = undefined;
+            Subscriber.watcher = undefined;
         }
     },
 
     /**
-        notify ()
+        notify ()
     
         Return Type:
         void
@@ -2065,41 +4521,36 @@ extend$1(Subscriber.prototype, {
         http://icejs.org/######
     */
     notify() {
-        foreach$1(this.watchers, watcher => {
+        foreach(this.watchers, watcher => {
             watcher.update();
         });
     }
 });
 
-// 转换存取器属性
-function defineProperty(key, getter, setter, target) {
-	Object.defineProperty(target, key, {
-		enumerable: true,
-		configurable: true,
-		get: getter,
-		set: setter
-	});
+function convertState(value, subs, context) {
+	return type$1(value) === "object" && isPlainObject(value) ? new ViewModel(value, false) : type$1(value) === "array" ? initArray(value, subs, context) : value;
 }
 
-function convertState(value, context) {
-	return type$1(value) === "object" && isPlainObject(value) ? new ViewModel(value, false) : type$1(value) === "array" ? initArray(value, context) : value;
-}
 // 初始化绑定事件
 function initMethod(methods, context) {
-	foreach$1(methods, (method, key) => {
-		context[key] = (...args) => {
+	foreach(methods, (method, key) => {
+		context[key] = function (...args) {
+			const nt = new NodeTransaction().start();
 			method.apply(context, args);
+
+			// 提交节点更新事物，更新所有已更改的vnode进行对比
+			nt.commit();
 		};
 	});
 }
 
 // 初始化监听属性
 function initState(states, context) {
-	let proxyState = {};
+	foreach(states, (state, key) => {
+		const subs = new Subscriber();
 
-	foreach$1(states, (state, key) => {
-		let subs = new Subscriber();
-		watch = noop, oldVal;
+		let watch = noop,
+		    oldVal;
 
 		// 如果属性带有watch方法
 		if (type$1(state) === "object" && Object.keys(state).length === 2 && state.hasOwnProperty("value") && state.hasOwnProperty("watch") && type$1(state.watch) === "function") {
@@ -2107,10 +4558,12 @@ function initState(states, context) {
 			state = state.value;
 		}
 
-		defineProperty(key, () => {
+		state = convertState(state, subs, context);
+
+		defineReactiveProperty(key, () => {
+
 			// 绑定视图
 			subs.subscribe();
-
 			return state;
 		}, newVal => {
 			if (state !== newVal) {
@@ -2120,75 +4573,76 @@ function initState(states, context) {
 				watch.call(context, newVal, oldVal);
 
 				// 更新视图
-				subs.notify(newVal);
+				subs.notify();
 			}
 		}, context);
-
-		// 代理监控数据
-		defineProperty(key, () => {
-			return context[key];
-		}, newVal => {
-			context[key] = newVal;
-		}, proxyState);
 	});
-
-	return proxyState;
 }
 
 // 初始化监听计算属性
-function initComputed(computeds, states, context) {
-	let descriptors = {};
+function initComputed(computeds, context) {
+	foreach(computeds, function (computed, key) {
 
-	foreach$1(computeds, function (computed, key) {
-
-		if (!computed || !t === "function" || !computed.hasOwnProperty("get")) {
+		if (type$1(computed) !== "function" && type$1(computed) === "object" && type$1(computed.get) !== "function") {
 			throw vmComputedErr(key, "计算属性必须包含get函数，可直接定义一个函数或对象内包含get函数");
 		}
 
-		let subs = new Subscriber(),
-		    state = descriptors[key] = type$1(computed) === "function" ? computed.call(context) : computed.get.call(states);
-
-		defineProperty(key, () => {
+		const subs = new Subscriber(),
+		      getter = (() => {
+			let computedGetter = type$1(computed) === "function" ? computed : computed.get;
 			return function () {
-				// 绑定视图
-				subs.subscribe();
-
-				return state;
+				return computedGetter.call(context);
 			};
+		})();
+
+		let state;
+
+		// 创建ComputedWatcher对象供依赖数据监听
+		new ValueWatcher(newVal => {
+			state = getter();
+
+			// 更新视图
+			subs.notify();
+		}, getter);
+
+		// 设置计算属性为监听数据
+		defineReactiveProperty(key, () => {
+
+			// 绑定视图
+			subs.subscribe();
+
+			return state;
 		}, type$1(computed.set) === "function" ? newVal => {
 			if (state !== newVal) {
-				state = computed.set.call(states, newVal);
+				computed.set.call(context, newVal);
 
 				// 更新视图
-				subs.notify(newVal);
+				subs.notify();
 			}
 		} : noop, context);
 	});
 }
 
 // 初始化监听数组
-function initArray(array, context) {
+function initArray(array, subs, context) {
 
 	// 监听数组转换
-	array = array.map(item => {
-		return convertState(item, context);
-	});
+	array = array.map(item => convertState(item, subs, context));
 
-	foreach$1(["push", "pop", "shift", "unshift", "splice", "sort", "reverse"], method => {
-		let nativeMethod = Array.prototype[method];
+	foreach(["push", "pop", "shift", "unshift", "splice", "sort", "reverse"], method => {
+		const nativeMethod = Array.prototype[method];
 
 		Object.defineProperty(array, method, {
-			value: function (...args) {
-
-				let res = nativeMethod.apply(this, args);
+			value(...args) {
 				if (/push|unshift|splice/.test(method)) {
 
 					// 转换数组新加入的项
-					convertState(method === "splice" ? args.slice(2) : args, this);
+					args = args.map(item => convertState(item, subs, context));
 				}
+				const res = nativeMethod.apply(this, args);
 
 				// 更新视图
-				// ...
+				subs.notify();
 
 				return res;
 			},
@@ -2197,10 +4651,12 @@ function initArray(array, context) {
 			enumeratable: false
 		});
 	});
+
+	return array;
 }
 
 /**
-	ViewModel ( vmData: Object, isRoot: Boolean )
+	ViewModel ( vmData: Object, isRoot?: Boolean )
 
 	Return Type:
 	void
@@ -2218,7 +4674,7 @@ function ViewModel(vmData, isRoot = true) {
 	    computed = {};
 
 	// 将vmData内的属性进行分类
-	foreach$1(vmData, (value, key) => {
+	foreach(vmData, (value, key) => {
 
 		// 转换普通方法
 		if (type$1(value) === "function") {
@@ -2227,489 +4683,3133 @@ function ViewModel(vmData, isRoot = true) {
 
 		// 转换计算属性
 		// 深层嵌套内的computed属性对象不会被当做计算属性初始化
-		else if (key === "computed" && type$1(value) === "object" && !isRoot) {
-				foreach$1(value, (v, k) => {
-					computed[k] = v;
-				});
+		else if (key === "computed" && type$1(value) === "object" && isRoot) {
+				computed = value;
 			}
 
 			// 转换监听属性，当值为包含value和watch时将watch转换为监听属性	
 			// 如果是对象则将此对象也转换为ViewModel的实例
 			// 如果是数组则遍历数组将其内部属性转换为对应监听数组
 			else {
-					state[key] = convertState(value, this);
+					state[key] = value;
 				}
 	});
 
 	// 初始化监听属性
 	initMethod(method, this);
-	initComputed(computed, initState(state, this), this);
+	initState(state, this);
+	initComputed(computed, this);
 }
 
-var directiveIf = {
+/**
+	findParentVm ( elem: DOMObject )
 
-    /**
-        before ()
-    
-        Return Type:
-        void|Boolean
-        返回false时停止往下执行
-    
-        Description:
-        更新视图前调用（即update方法调用前调用）
-        此方法只会在初始化挂载数据时调用一次
-    
-        URL doc:
-        http://icejs.org/######
-    */
-    before() {
-        let elem = this.node;
-        if (attr(elem, ":for")) {
-            return false;
-        }
+	Return Type:
+	Object|Null
+	父模块的vm对象
+	没有找到则返回null
 
-        attr(elem, ":if", null);
-        this.parent = this.elem.parentNode;
-        this.replacement = this.elem.ownerDocument.createTextNode("");
-    },
+	Description:
+	获取父模块的vm对象
 
-    /**
-        update ( val: Boolean )
-    
-        Return Type:
-        void
-    
-        Description:
-        “:if”属性对应的视图更新方法
-        初始化挂载数据时和对应数据更新时将会被调用
-    
-        URL doc:
-        http://icejs.org/######
-    */
-    update(val) {
-        let elem = this.node,
-            parent = elem.parent;
+	URL doc:
+	http://icejs.org/######
+*/
+function findParentVm(elem) {
 
-        if (val && !elem.parentNode) {
-            parent.replaceChild(this.replacement, elem);
-        } else if (!val && this.elem.parentNode == parent) {
-            parent.replaceChild(elem, replacement);
-        }
-    }
-};
+	let parentVm = null;
+	while (elem.parentNode) {
+		if (elem.__module__) {
+			parentVm = elem.__module__.vm;
+			break;
+		}
 
-const rforWord = /^\s*([$\w]+)\s+in\s+([$\w]+)\s*$/;
+		elem = elem.parentNode;
+	}
 
-var directiveFor = {
-
-    /**
-        before ()
-    
-        Return Type:
-        void|Boolean
-        返回false时停止往下执行
-    
-        Description:
-        更新视图前调用（即update方法调用前调用）
-        此方法只会在初始化挂载数据时调用一次
-    
-        URL doc:
-        http://icejs.org/######
-    */
-    before() {
-
-        let variable = rforWord.exec(this.expr),
-            elem = this.node;
-
-        this.startNode = elem.ownerDocument.createTextNode("");
-        this.endNode = this.startNode.cloneNode();
-
-        this.item = variable[1];
-        this.expr = variable[2];
-        this.key = attr(elem, ":key");
-
-        if (this.key) {
-            attr(elem, ":key", null);
-        }
-
-        attr(elem, ":for", null);
-    },
-
-    /**
-        update ( array: Array )
-    
-        Return Type:
-        void
-    
-        Description:
-        “:for”属性对应的视图更新方法
-        初始化挂载数据时和对应数据更新时将会被调用
-    
-        URL doc:
-        http://icejs.org/######
-    */
-    update(array) {
-        let elem = this.node,
-            vm = this.vm,
-            parent = elem.parentNode,
-            fragment = elem.ownerDocument.createDocumentFragment(),
-            itemNode,
-
-
-        // 局部变量定义
-        scopedDefinition = {};
-
-        foreach$1(array, (item, key) => {
-
-            // 定义范围变量
-            scopedDefinition[this.item] = item;
-            scopedDefinition[this.key] = key;
-
-            itemNode = elem.cloneNode(true);
-
-            // 为遍历克隆的元素挂载数据
-            Tmpl.mountElem(itemNode, vm, this.defineScoped(scopedDefinition, vm));
-
-            fragment.appendChild(itemNode);
-        });
-
-        // 初始化视图时将模板元素替换为挂载后元素
-        if (parent) {
-            fragment.insertBefore(this.startNode, fragment.firstChild);
-            fragment.appendChild(this.endNode);
-
-            parent.replaceChild(fragment, elem);
-        }
-
-        // 改变数据后更新视图
-        else {
-                let el = this.startNode,
-                    p = el.parentNode,
-                    removes = [];
-                while ((el = el.nextSibling) !== this.endNode) {
-                    removes.push(el);
-                }
-                reomves.map(item => {
-                    p.removeChild(item);
-                });
-
-                p.insertBefore(fragment, this.endNode);
-            }
-    }
-};
-
-var directiveExpr = {
-
-    /**
-        before ()
-    
-        Return Type:
-        void|Boolean
-        返回false时停止往下执行
-    
-        Description:
-        更新视图前调用（即update方法调用前调用）
-        此方法只会在初始化挂载数据时调用一次
-    
-        URL doc:
-        http://icejs.org/######
-    */
-    before() {
-        this.expr = "\"" + this.expr + "\"";
-
-        // 将表达式转换为字符串拼接代码
-        this.expr.replace(rexpr, (match, rep) => "\" + " + rep + " + \"");
-    },
-
-    /**
-        update ( val: String )
-    
-        Return Type:
-        void
-    
-        Description:
-        “{{ express }}”表达式对应的视图更新方法
-        该表达式可用于标签属性与文本中
-        初始化挂载数据时和对应数据更新时将会被调用
-    
-        URL doc:
-        http://icejs.org/######
-    */
-    update(val) {
-        this.node.nodeValue = val;
-    }
-};
-
-var directiveOn = {
-
-    /**
-        before ()
-    
-        Return Type:
-        void|Boolean
-        返回false时停止往下执行
-    
-        Description:
-        更新视图前调用（即update方法调用前调用）
-        此方法只会在初始化挂载数据时调用一次
-    
-        URL doc:
-        http://icejs.org/######
-    */
-    before() {
-        let rarg = /([$\w]+)\s*\((.*?)\)/,
-            expr = this.expr.split(":"),
-            argMatch = rarg.exec(expr[1]);
-
-        this.type = expr[0];
-        this.expr = argMatch ? argMatch[1] : expr[1];
-        this.arg = argMatch ? argMatch[1].split(",").map(item => item.trim()) : undefined;
-    },
-
-    /**
-        update ( listener: Function )
-    
-        Return Type:
-        void
-    
-        Description:
-        事件绑定方法
-    
-        URL doc:
-        http://icejs.org/######
-    */
-    update(listener) {
-        event$2.on(this.node, this.type, listener);
-    }
-};
-
-var directiveModel = {
-
-    /**
-        before ()
-    
-        Return Type:
-        void|Boolean
-        返回false时停止往下执行
-    
-        Description:
-        更新视图前调用（即update方法调用前调用）
-        此方法只会在初始化挂载数据时调用一次
-    
-        URL doc:
-        http://icejs.org/######
-    */
-    before() {
-        let support = {
-            input: {
-                nodeName: "TEXTAREA",
-                type: "text, password, color, search, week, date, datetime-local, month, time, email, range, tel, url"
-            },
-            change: {
-                nodeName: "SELECT",
-                inputType: "radio, checkbox"
-            }
-        },
-            elem = this.node,
-            expr = this.expr,
-            vm = this.vm,
-            nodeName = elem.nodeName.toUpperCase(),
-            type = attr(elem, "type").toLowerCase(),
-
-
-        // 如果是复选框则数据要以数组的形式表现
-        handler = nodeName === "INPUT" && type === "checkbox" ? function () {
-            vm[expr] = vm[expr] || [];
-            if (this.checked) {
-                vm[expr].push(this.value);
-            } else {
-                vm[expr].splice(vm[expr].indexOf(this.value), 1);
-            }
-        } : function () {
-            vm[expr] = this.value;
-        };
-
-        // 判断支持input事件的元素名称或对应type的input元素
-        if (nodeName === "INPUT" && support.input.type.indexOf(type) !== -1 || nodeName.indexOf(support.input.nodeName) !== -1) {
-            event$2(elem, "input", handler);
-        } else if (nodeName === "INPUT" && support.change.type.indexOf(type) !== -1 || nodeName.indexOf(support.change.nodeName) !== -1) {
-            event$2(elem, "change", handler);
-        }
-    },
-
-    /**
-        update ( val: String )
-    
-        Return Type:
-        void
-    
-        Description:
-        表单元素双向绑定方法
-    
-        URL doc:
-        http://icejs.org/######
-    */
-    update(val) {
-        this.node.value = val;
-    }
-};
+	return parentVm;
+}
 
 /**
-    Plugin Tmpl
+    initModuleLifeCycle ( module: Object, lifeCycle: Array, vm: Object, moduleElem: Object )
+    
+    Return Type:
+    void
+    
+    Description:
+    初始化模块对象的生命周期
+    
+    URL doc:
+    http://icejs.org/######
+*/
+function initModuleLifeCycle(module, vm, moduleElem) {
+	const
+	// Module生命周期
+	lifeCycle = ["queryChanged", "paramChanged", "unmount"],
+	      lifeCycleContainer = {};
+
+	foreach(lifeCycle, cycleItem => {
+		lifeCycleContainer[cycleItem] = vm[cycleItem] || noop;
+		module[cycleItem] = () => {
+
+			const nt = new NodeTransaction().start();
+			lifeCycleContainer[cycleItem].apply(module, cache.getDependentPlugib(lifeCycleContainer[cycleItem]));
+
+			// 提交节点更新事物，更新所有已更改的vnode进行对比
+			// 对比新旧vnode计算出差异并根据差异更新到实际dom中
+			nt.commit();
+		};
+
+		delete vm[cycleItem];
+	});
+}
+
+/**
+	Module ( moduleName: String|DOMObject|Object, vmData: Object )
+
+	Return Type:
+	Object
+	Module对象
+
+	Description:
+	创建模块对象初始化模块
+    初始化包括转换监听对象，动态绑定数据到视图层
+    module可传入：
+	1、module属性名，普通模式时的模块名，此方法将会根据模块名获取dom元素
+	2、实际dom和fragment，此方法将直接解析此元素
+
+	URL doc:
+	http://icejs.org/######
+*/
+function Module(module, vmData = { init: function () {
+		return {};
+	} }) {
+
+	newClassCheck(this, Module);
+
+	let moduleElem = {};
+	if (type$1(module) === "string") {
+		moduleElem = query(`*[${iceAttr.module}=${module}]`);
+	} else if (module.nodeType === 1 || module.nodeType === 3 || module.nodeType === 11) {
+		moduleElem = module;
+	}
+
+	// 检查参数
+	check(moduleElem.nodeType).be(1, 3, 11).ifNot("ice.Module", "module参数可传入模块元素的ice-module属性值或直接传入需挂在模块元素").do();
+	check(vmData).type("object").check(vmData.init).type("function").ifNot("ice.Module", "vmData参数必须为带有init方法的的object").do();
+
+	/////////////////////////////////
+	/////////////////////////////////
+
+	let parent;
+	if (Structure$1.currentPage) {
+
+		// 只有单页模式时Structure.currentPage会有值
+		// 单页模式时，使用Structure.currentPage.getCurrentParentVm()获取父级的vm
+		const currentRender = Structure$1.currentPage.getCurrentRender();
+		parent = currentRender.parent && currentRender.parent.module.vm;
+
+		this.params = currentRender.param;
+		this.get = parseGetQuery(currentRender.get);
+		this.post = currentRender.post;
+
+		// 参数传递过来后可移除，以免与下一次传递的参数混淆
+		delete currentRender.param;
+		delete currentRender.get;
+		delete currentRender.post;
+
+		// 将此Module对象保存到页面结构体的对应位置中
+		currentRender.module = this;
+	} else {
+
+		// 普通模式时，使用向上寻找DOM的形式获取父级vm
+		parent = findParentVm(moduleElem);
+
+		// 将当前Module对象保存在对应的模块根节点下，以便子模块寻找父模块的Module对象
+		moduleElem.__module__ = this;
+	}
+	this.parent = parent;
+
+	moduleElem = VNode.domToVNode(moduleElem);
+	initModuleLifeCycle(this, vmData, moduleElem);
+
+	const moduleElemBackup = moduleElem.clone(),
+	      components = (() => {
+		let compFn = vmData.depComponents,
+		    deps = cache.getDependentPlugin(compFn || noop);
+
+		try {
+			return (compFn || noop).apply(this, deps);
+		} catch (e) {
+			const depStrs = (compFn.toString().match(/return\s+\[(.+?)\]/) || ["", ""])[1].split(",").map(item => item.trim()),
+			      depComps = [];
+
+			foreach(depStrs, depObj => {
+				depComps.push(depObj);
+			});
+
+			return depComps;
+		}
+	})(),
+
+
+	// 获取后初始化vm的init方法
+	// 对数据模型进行转换
+	vm = new ViewModel(vmData.init.apply(this, cache.getDependentPlugin(vmData.init))),
+
+
+	// 使用vm解析模板
+	tmpl = new Tmpl(vm, components, this);
+
+	// this.view = slice.call ( moduleElem.childNodes ) || [];
+	this.state = vm;
+
+	// 解析模板，挂载数据
+	// 如果forceMount为true则强制挂载moduleElem
+	// 单页模式下未挂载的模块元素将会在ModuleLoader.load完成挂载
+	// 普通模式下，如果parent为对象时表示此模块不是最上层模块，不需挂载
+	tmpl.mount(moduleElem, Structure$1.currentPage ? false : !parent);
+
+	// 调用apply方法
+	(vmData.apply || noop).apply(this, cache.getDependentPlugin(vmData.apply || noop));
+
+	// 对比新旧vnode计算出差异
+	// 并根据差异更新到实际dom中
+	moduleElem.diff(moduleElemBackup).patch();
+}
+
+extend(Module.prototype, {
+
+	/**
+ 	refs ( ref: String )
+ 
+ 	Return Type:
+ 	DOMObject|Object
+ 	被引用的组件行为对象或元素
+ 
+ 	Description:
+ 	获取被引用的组件行为对象或元素
+ 	当组件不可见时返回undefined
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	refs(ref) {
+		let refObj = this.refs[ref];
+		if (refObj.parent) {
+			refObj = refObj.isComponent ? refObj.component.action : refObj.node;
+		} else {
+			refObj = undefined;
+		}
+		return refObj;
+	}
+});
+
+extend(Module, {
+	identifier: "ice-identifier",
+
+	/**
+ 	getIdentifier ()
+ 
+ 	Return Type:
+ 	String
+ 	模块标识字符串
+ 
+ 	Description:
+ 	获取模块标识字符串
+ 	用于区分不同模块
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	getIdentifier() {
+		return "module" + guid();
+	}
+});
+
+/**
+	parseModuleAttr ( moduleStrng: String, parses: Object )
+
+	Return Type:
+	String
+	解析后的模块字符串
+
+	Description:
+	解析出模板根节点的属性值
+
+	URL doc:
+	http://icejs.org/######
+*/
+function parseModuleAttr(moduleString, parses) {
+	const rend = /^\s*>/,
+	      rmoduleAttr = /^\s*(<Module\s+)?(?:([^\s"'<>/=]+))?(?:\s*(?:=)\s*(?:"([^"]*)"|'([^']*)'))?/;
+
+	let attrMatch;
+
+	parses.attrs = {};
+
+	// 匹配出Module标签内的属性
+	while (!rend.test(moduleString)) {
+		attrMatch = rmoduleAttr.exec(moduleString);
+		if (attrMatch) {
+			parses.attrs[attrMatch[2]] = attrMatch[3] || attrMatch[4] || "";
+			moduleString = moduleString.substr(attrMatch[0].length);
+		} else {
+			break;
+		}
+	}
+
+	return moduleString;
+}
+
+/**
+	parseTemplate ( moduleString: String, parses: Object )
+
+	Return Type:
+	String
+	解析后的模板字符串
+
+	Description:
+	解析出模板内容
+
+	URL doc:
+	http://icejs.org/######
+*/
+function parseTemplate(moduleString, parses) {
+	const rtemplate = /<template>([\s\S]+)<\/template>/,
+	      rblank = />(\s+)</g,
+	      rtext = /["'\/&]/g,
+	      viewMatch = rtemplate.exec(moduleString);
+
+	if (viewMatch) {
+		moduleString = moduleString.replace(viewMatch[0], "");
+		parses.view = (viewMatch[1] || "").trim();
+
+		// 去除所有标签间的空格，并转义"和'符号
+		parses.view = parses.view.replace(rblank, (match, rep) => match.replace(rep, "")).replace(rtext, match => "\\" + match);
+	}
+
+	return moduleString;
+}
+
+/**
+	parseStyle ( moduleString: String, identifier: String, parses: Object )
+
+	Return Type:
+	String
+	解析后的模板字符串
+
+	Description:
+	解析出模板样式
+
+	URL doc:
+	http://icejs.org/######
+*/
+function parseStyle(moduleString, identifier, parses) {
+
+	const rstyle = /<style(?:.*?)>([\s\S]*)<\/style>/,
+	      risScoped = /^<style(?:.*?)scoped(?:.*?)/i,
+	      raddScoped = /\s*([^/@%{}]+)\s*{[^{}]+}/g,
+	      rnoscoped = /^(from|to)\s*$/i,
+	      rstyleblank = /(>\s*|\s*[{:;}]\s*|\s*<)/g,
+	      styleMatch = rstyle.exec(moduleString);
+
+	if (styleMatch) {
+		moduleString = moduleString.replace(styleMatch[0], "");
+
+		if (risScoped.test(styleMatch[0])) {
+			const placeholder = "{{style}}";
+
+			parses.style = (styleMatch[1] || "").trim();
+			styleMatch[0] = styleMatch[0].replace(styleMatch[1], placeholder);
+
+			// 为每个样式添加模块前缀以达到控制范围的作用
+			parses.style = parses.style.replace(raddScoped, (match, rep) => match.replace(rep, rnoscoped.test(rep) ? rep : `[${Module.identifier}=${identifier}] ` + rep));
+
+			parses.style = styleMatch[0].replace(placeholder, parses.style);
+		} else {
+			parses.style = styleMatch[0];
+		}
+
+		// 去除所有标签间的空格
+		parses.style = parses.style.replace(rstyleblank, match => match.replace(/\s+/g, ""));
+	}
+
+	return moduleString;
+}
+
+/**
+	parseScript ( moduleString: String, parses: Object )
+
+	Return Type:
+	String
+	解析后的模板字符串
+
+	Description:
+	解析出模板脚本
+
+	URL doc:
+	http://icejs.org/######
+*/
+function parseScript(moduleString, scriptPaths, scriptNames, parses) {
+
+	const rscript = /<script(?:.*?)>([\s\S]+)<\/script>/,
+	      rscriptComment = /\/\/(.*?)\n|\/\*([\s\S]*?)\*\//g,
+	      rimport = /(?:(?:var|let|const)\s+)?([A-Za-z$_][\w$]+)\s*=\s*import\s*\(\s*"(.*?)"\s*\)\s*(?:,|;)/g,
+	      rhtmlComment = /<!--(.*?)-->/g,
+	      rmoduleDef = /new\s*ice\s*\.\s*Module\s*\(/,
+	      raddComponents = new RegExp(rmoduleDef.source + "\\s*\\{"),
+	      scriptMatch = rscript.exec(moduleString),
+	      scripts = {};
+
+	if (scriptMatch) {
+
+		const matchScript = (scriptMatch[1] || "").replace(rscriptComment, match => "");
+
+		// 获取import的script
+		parses.script = matchScript.replace(rimport, (match, rep1, rep2) => {
+			scripts[rep1] = rep2;
+			return "";
+		}).trim();
+
+		// 如果有引入组件则将组件传入new ice.Module中
+		if (!isEmpty(scripts)) {
+
+			// 去掉注释的html的代码
+			const matchView = parses.view.replace(rhtmlComment, match => "");
+
+			foreach(scripts, (path, name) => {
+
+				// 只有在view中有使用的component才会被使用
+				if (new RegExp("<\s*" + transformCompName(name, true)).test(matchView)) {
+					scriptPaths.push(`"${path}"`);
+					scriptNames.push(name);
+				}
+			});
+
+			// 需要组件时才将组件添加到对应模块中
+			if (!isEmpty(scriptNames)) {
+				parses.script = parses.script.replace(raddComponents, match => match + `depComponents:function(){return [${scriptNames.join(",")}];},`);
+			}
+		}
+
+		parses.script = parses.script.replace(rmoduleDef, match => `${match}moduleNode,`);
+	}
+
+	return moduleString;
+}
+
+/**
+	compileModule ( moduleString: String, identifier: String )
+
+	Return Type:
+	Function
+
+	Description:
+	编译模块为可执行的编译函数
+
+	URL doc:
+	http://icejs.org/######
+*/
+function compileModule(moduleString, identifier) {
+
+	// 模块编译正则表达式
+	const rmodule = /^<Module[\s\S]+<\/Module>/;
+	if (rmodule.test(moduleString)) {
+
+		const parses = {},
+		      scriptNames = [],
+		      scriptPaths = [];
+
+		// 解析出Module标签内的属性
+		moduleString = parseModuleAttr(moduleString, parses);
+
+		// 解析模板
+		moduleString = parseTemplate(moduleString, parses);
+
+		// 解析样式
+		moduleString = parseStyle(moduleString, identifier, parses);
+
+		// 解析js脚本
+		moduleString = parseScript(moduleString, scriptPaths, scriptNames, parses);
+
+		////////////////////////////////////////////////////////
+		////////////////////////////////////////////////////////
+		/// 检查参数
+		check(parses.view).notBe("").ifNot("module:template", "<Module>内的<template>为必须子元素，它的内部DOM tree代表模块的页面布局").do();
+
+		check(parses.script).notBe("").ifNot("module:script", "<Module>内的<script>为必须子元素，它的内部js代码用于初始化模块的页面布局").do();
+
+		const buildView = `moduleNode.html(VNode.domToVNode(view));`;
+
+		////////////////////////////////////////////////////////
+		////////////////////////////////////////////////////////
+		/// 构造编译函数
+		moduleString = `var title="${parses.attrs[iceAttr.title] || ""}",view="${parses.view}${parses.style}";`;
+
+		if (!isEmpty(scriptPaths)) {
+			moduleString += `require([${scriptPaths.join(",")}],function(${scriptNames.join(",")}){${buildView}${parses.script};});`;
+		} else {
+			moduleString += `${buildView}${parses.script};`;
+		}
+
+		moduleString += "return title;";
+	}
+
+	return new Function("ice", "moduleNode", "VNode", "require", moduleString);
+}
+
+/**
+	Plugin Promise
+
+	Description:
+	Promose实现类，用于以同步的方式去执行回调函数，而不用将回调函数传入执行函数中，更加符合逻辑，且在需要执行多重回调处理时，以链式结构来表示函数处理后的回调
+	此类创建的对象，主要有then()、done()、fail()、always()方法
+	此实现类符合Promises/A+规范。
+
+	eg:
+	1、var p = new Promise(function(resolve, reject) {
+			if(success) {
+				resolve(value);
+			}
+			else if(fail) {
+				reject(reason);
+			}
+	});
+
+	p.then(function(value) {
+			// do success callback...
+		}, function(reason) {
+			// do fail callback...
+		});
+
+	2. 创建Promise对象如同1
+	var p1 = p.then(function(value) {
+			// do success callback...
+			return new Promise(function(resolve, reject) {
+				if(success) {
+			 		resolve(value);
+			   }
+			   else if(fail) {
+				  reject(reason);
+			   }
+		    });
+		}, function(reason) {
+			// do fail callback...
+		});
+		
+		p1.then(function(value) {
+			// do success callback...
+		}, function(reason) {
+			// do fail callback...
+		});
+
+	// 如此这样以链式结构的方式来实现多重回调...
+
+	Promise原理：Promise相当于一个方法的状态机，来管理拥有回调的函数执行。Promise拥有三种状态，分别为Pending、Fulfilled、Rejected，
+	Pending：待发生状态，即待命状态
+	Fulfilled：成功状态，当状态为Fulfilled时，将会触发成功回调
+	Rejected：失败状态，当状态为Rejected时，将会触发失败回调
+	Fulfilled和Rejected状态都只能由Pending状态改变过来，且不可逆
+	
+	如上例子，Promose内部定义有三个最重要的方法，分别为then()、resolve()、reject()。
+	then方法用于回调函数的绑定
+	resolve方法用于在成功时的回调，它将修改当前Promise对象为Fulfilled状态并执行then方法绑定的成功回调函数
+	reject方法用于在失败时的回调，它将修改当前Promise对象为Rejected状态并执行then方法绑定的失败回调函数
+	
+	第一重函数处理：在创建Promise对象时将会执行第一重处理函数（有回调函数的函数）并将回调函数设为修改此Promise对象状态的函数，也就是resolve和reject方法，然后使用then方法将回调函数绑定到此Promise对象上，当第一重处理函数的回调函数执行时，也就是执行resolve或reject函数时，将会修改当前Promise对象的状态，并执行对应的绑定函数，如果没有绑定回调函数，则这两个方法只改变此Promise对象的状态。
+	第二重函数处理时：then方法将返回一个新创建的Promise对象作为第二重回调函数执行的代理对象，在第二次调用then方法时其实是将第二重处理函数的回调函数绑定在了此代理对象上。then方法中有对传入的回调函数（onFulfilled和onRejected）进行封装，以致于能够获取到回调函数的返回值，并判断当回调函数返回值为一个thenable对象时（thenable对象是拥有then方法的对象），则通知Promise代理对象去执行第二重的回调函数，是通过回调函数返回的thenable对象去调用then方法绑定回调函数，此回调函数的内容为通知代理对象执行回调函数做到的
+	以此类推第三重、第四重...
+
+	URL doc:
+	http://icejs.org/######
+*/
+function Promise(resolver) {
+
+	// 判断resolver是否为处理函数体
+	check(resolver).type("function").ifNot("function Promise", "构造函数需传入一个函数参数").do();
+
+	// 预定义的Promise对象对应的处理函数体信息
+	let resolveArgs,
+	    rejectArgs,
+	    state = Promise.PENDING,
+	    handlers = [];
+
+	/**
+ 	resolve ( arg1?: any, arg2?: any ... )
+ 
+ 	Return Type:
+ 	void
+ 
+ 	Description:
+ 	改变Promise对象的状态为Fulfilled并执行promise.handlers数组中所有的onFulfilled方法
+ 	此方法用于执行成功时的回调绑定
+ 	see Promise注释
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	function resolve(...args) {
+		if (state === Promise.PENDING) {
+			state = Promise.FULFILLED;
+			resolveArgs = args;
+
+			foreach(handlers, handler => {
+				(handler.onFulfilled || noop).apply(null, args);
+			});
+		}
+	}
+
+	/**
+ 	reject ( arg1?: any, arg2?: any ... )
+ 
+ 	Return Type:
+ 	void
+ 
+ 	Description:
+ 	改变Promise对象的状态为Rejected并执行promise.handlers数组中所有的onRejected方法
+ 	此方法用于执行失败时的回调绑定
+ 	see Promise注释
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	function reject(...args) {
+
+		if (state === Promise.PENDING) {
+			state = Promise.REJECTED;
+			rejectArgs = args;
+
+			foreach(handlers, handler => {
+				(handler.onRejected || noop).apply(null, args);
+			});
+		}
+	}
+
+	/**
+ 	handler ( handler: Object )
+ 
+ 	Return Type:
+ 	void
+ 
+ 	Description:
+ 	根据Promise对象来对回调函数做出相应处理
+ 	当状态为Pending时，将回调函数保存于promise.handlers数组中待调用
+ 	当状态为Fulfilled时，执行onFulfilled方法
+ 	当状态为Rejected时，执行onRejected方法
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	this.handle = handler => {
+		if (state === Promise.PENDING) {
+			handlers.push(handler);
+		} else if (state === Promise.FULFILLED) {
+			(handler.onFulfilled || noop).apply(null, resolveArgs);
+		} else if (state === Promise.REJECTED) {
+			(handler.onRejected || noop).apply(null, rejectArgs);
+		}
+	};
+
+	resolver(resolve, reject);
+}
+
+// Promise原型对象
+extend(Promise.prototype, {
+
+	/**
+ 	then ( onFulfilled: Function, onRejected: Function )
+ 
+ 	Return Type:
+ 	Object
+ 	新创建的Promise代理对象
+ 
+ 	Description:
+ 	Promise的主要方法之一，用于绑定或执行处理函数的回调函数，当成功时的回调函数返回值为thenable对象，则通知代理Promise对象执行回调函数
+ 	see Promise注释
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	then(onFulfilled, onRejected) {
+
+		return new Promise((resolve, reject) => {
+			this.handle({
+				onFulfilled(...args) {
+					const result = type$1(onFulfilled) === "function" && onFulfilled.apply(null, args) || args;
+					if (Promise.isThenable(result)) {
+						result.then((...args) => {
+							resolve.apply(null, args);
+						}, (...args) => {
+							reject.apply(null, args);
+						});
+					}
+				},
+
+				onRejected(...args) {
+					(type$1(onRejected) === "function" ? onRejected : noop).apply(null, args);
+				}
+			});
+		});
+	},
+
+	/**
+ 	done ( onFulfilled: Function )
+ 
+ 	Return Type:
+ 	Object
+ 	当前Promise对象
+ 
+ 	Description:
+ 	成功时的回调函数绑定
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	done(onFulfilled) {
+		this.handle({ onFulfilled });
+		return this;
+	},
+
+	/**
+ 	fail ( onRejected: Function )
+ 
+ 	Return Type:
+ 	Object
+ 	当前Promise对象
+ 	
+ 	Description:
+ 	失败时的回调函数绑定
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	fail(onRejected) {
+		this.handle({ onRejected });
+		return this;
+	},
+
+	/**
+ 	always ( callback: Function )
+ 
+ 	Return Type:
+ 	Object
+ 	当前Promise对象
+ 
+ 	Description:
+ 	绑定执行函数成功或失败时的回调函数，即不管执行函数成功与失败，都将调用此方法绑定的回调函数
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	always(callback) {
+		this.handle({
+			onFulfilled: callback,
+			onRejected: callback
+		});
+
+		return this;
+	}
+
+});
+
+extend(Promise, {
+
+	// Promise的三种状态定义
+	PENDING: 0,
+	FULFILLED: 1,
+	REJECTED: 2,
+
+	/**
+ 	when ( promise1: Object, promise2?: Object, promise3?: Object ... )
+ 
+ 	Return Type:
+ 	void
+ 
+ 	Description:
+ 	存储准备调用的promise对象，用于多个异步请求并发协作时使用。
+ 	此函数会等待传入的promise对象的状态发生变化再做具体的处理
+ 	传入参数为不定个数Promise的对象
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	when() {},
+
+	/**
+ 	isThenable ( value: Object|Function )
+ 
+ 	Return Type:
+ 	Boolean
+ 	是thenable对象返回true，否则返回false
+ 
+ 	Description:
+ 	用于判断对象是否为thenable对象（即是否包含then方法）
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	isThenable(value) {
+		const t = type$1(value);
+		if (value && (t === "object" || t === "function")) {
+			const then = value.then;
+			if (type$1(then) === "function") {
+				return true;
+			}
+		}
+
+		return false;
+	}
+});
+
+const rheader = /^(.*?):[ \t]*([^\r\n]*)$/mg;
+
+function ICEXMLHttpRequest() {
+
+	// 请求传送器，根据不同的请求类型来选择不同的传送器进行请求
+	this.transport = null;
+}
+
+extend(ICEXMLHttpRequest.prototype, {
+
+	/**
+ 	setRequestHeader ( header: String, value: String )
+ 
+ 	Return Type:
+ 	void
+ 
+ 	Description:
+ 	设置请求头
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	setRequestHeader(header, value) {
+		if (!this.transport.completed) {
+			this.transport.headers = this.transport.headers || {};
+			this.transport.headers[header.toLowerCase()] = value;
+		}
+	},
+
+	/**
+ 	getRequestHeader ( header: String )
+ 
+ 	Return Type:
+ 	String
+ 	对应返回头信息
+ 
+ 	Description:
+ 	获取返回头
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	getResponseHeader(header) {
+
+		let match;
+
+		if (this.transport.completed) {
+			if (!this.transport.respohseHeader) {
+				this.transport.respohseHeader = {};
+				while (match = rheader.exec(this.transport.responseHeadersString || "")) {
+					this.transport.respohseHeader[match[1].toLowerCase()] = match[2];
+				}
+			}
+
+			match = this.transport.responseHeader[header];
+		}
+
+		return match || null;
+	},
+
+	/**
+ 	getAllResponseHeaders ()
+ 
+ 	Return Type:
+ 	String
+ 	所有返回头信息
+ 
+ 	Description:
+ 	获取所有返回头信息
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	getAllResponseHeaders() {
+		return this.transport.completed ? this.transport.responseHeadersString : null;
+	},
+
+	/**
+ 	overrideMimeType ( mimetype: String )
+ 
+ 	Return Type:
+ 	void
+ 
+ 	Description:
+ 	设置mimeType
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	overrideMimeType(mimetype) {
+		if (!this.transport.completed) {
+			options.mimetype = mimetype;
+		}
+	},
+
+	/**
+ 	abort ( statusText: String )
+ 
+ 	Return Type:
+ 	void
+ 
+ 	Description:
+ 	触发请求中断
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	abort(statusText) {
+		if (this.transport) {
+			this.transport.abortText = statusText || "abort";
+			this.transport.abort();
+		}
+	},
+
+	/**
+ 	addEventListener ( type: String, callback: Function )
+ 
+ 	Return Type:
+ 	void
+ 
+ 	Description:
+ 	绑定xhr回调事件
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	addEventListener(type, callback) {
+		if (!this.transport.completed) {
+			this.transport.callbacks = this.transport.callbacks || {};
+			this.transport.callbacks[type] = callback || noop;
+		}
+	}
+});
+
+var text = function (text) {
+	return text;
+};
+
+var json = function (text) {
+	return type$1(text) === "object" ? text : JSON.parse(text);
+};
+
+var script = function (text) {
+	scriptEval(text);
+};
+
+// ajax返回数据转换器
+const ajaxConverters = { text, json, script };
+
+/**
+    complete ( iceXHR: Object )
+
+    Return Type:
+    void
 
     Description:
-    模板类
-    解析模板
+    请求回调调用
 
     URL doc:
     http://icejs.org/######
 */
-function Tmpl(tmplCode) {
-    this.tmplCode = tmplCode;
-}
+function complete(iceXHR) {
 
-extend$1(Tmpl.prototype, {
-    mount(vm) {
-        Tmpl.mountElem(this.tmplCode, vm);
-    }
-});
+	let transport = iceXHR.transport;
 
-extend$1(Tmpl, {
-    mountElem(elem, vm, scoped) {
-        const rattr = /^:([\$\w]+)$/;
-        let directive, handler, targetNode, expr;
+	if (transport.completed) {
+		return;
+	}
 
-        do {
-            if (elem.nodeType === 1) {
+	transport.completed = true;
 
-                // 处理:for
-                // 处理:if :else-if :else
-                // 处理{{ expression }}
-                // 处理:on、:onrequest :onresponse :onfinish事件
-                // 处理:model
-                foreach(elem.attributes, attr => {
-                    directive = rattr.exec(attr.nodeName);
-                    if (directive) {
-                        directive = directive[1];
-                        if (/^on/.test(directive)) {
+	// 如果存在计时ID，则清除此
+	if (transport.timeoutID) {
+		window.clearTimeout(transport.timeoutID);
+	}
 
-                            // 事件绑定
-                            handler = Tmpl.directives.on;
-                            targetNode = elem, expr = directive.slice(2) + ":" + attr.nodeValue;
-                        } else if (Tmpl.directives[directive]) {
+	// 如果解析错误也会报错，并调用error
+	if (transport.response) {
+		try {
+			transport.response = ajaxConverters[transport.dataType] && ajaxConverters[transport.dataType](transport.response);
+		} catch (e) {
+			transport.status = 500;
+			transport.statusText = "Parse Error: " + e;
+		}
+	}
 
-                            // 模板属性绑定
-                            handler = Tmpl.directives[directive];
-                            targetNode = elem;
-                            expr = attr.nodeValue;
-                        } else {
+	// 请求成功，调用成功回调，dataType为script时不执行成功回调
+	if ((transport.status >= 200 && transport.status < 300 || transport.status === 304) && transport.dataType !== "script") {
+		transport.callbacks.success(transport.response, transport.status, transport.statusText, iceXHR);
+	}
 
-                            // 没有找到该指令
-                            throw runtimeErr("directive", "没有找到\"" + directive + "\"指令或表达式");
-                        }
-                    } else {
-
-                        // 属性值表达式绑定
-                        handler = Tmpl.directives.expr;
-                        targetNode = attr;
-                        expr = attr.nodeValue;
-                    }
-                });
-            } else if (elem.nodeType === 3) {
-
-                // 文本节点表达式绑定
-                handler = Tmpl.directives.expr;
-                targetNode = elem;
-                expr = elem.nodeValue;
-            }
-
-            // 为视图创建Watcher实例
-            new Watcher(handler, targetNode, expr, vm, scoped);
-
-            Tmpl.mountElem(elem.firstChild, vm);
-        } while (elem = elem.nextSibling);
-    },
-
-    directives: {
-        for: directiveFor,
-        if: directiveIf,
-        expr: directiveExpr,
-        on: directiveOn,
-        model: directiveModel
-    }
-});
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////
-let ice = {
-	config: config$1(),
-
-	use(structure) {
-		// 查看是否有deps，有的时候，value类型分为以下情况：
-		// 1、若value为string，则使用cache.componentCreater方法获取插件，如果没有则使用模块加载器加载
-		// 2、若value为object，则调用use构建插件
-		// 判断是plugin还是driver，存入相应的cache中并返回
-	},
-
-	module(moduleName, vmData) {
-		// 检查参数
-		check(moduleName).toType("string").toNotBe("").ifNot("ice.module", "moduleName参数类型必须为string").do();
-		check(vmData).toType("Object").ifNot("ice.module", "vmData参数类型必须为object").do();
-
-		// 查看是否有deps，有的话，value类型分为以下情况：
-		// 1、若value为string，则使用cache.componentCreater方法获取插件，如果没有则使用模块加载器加载
-		// 2、若value为object，则调用use构建插件
-		if (type$1(vmData.deps) === "object" && !isEmpty(vmData.deps)) {
-
-			let rarg = /^function\s*\((.*)\)\s*/,
-
-
-			// 获取init方法参数
-			initArgs = rarg.exec(vmData.init.toString())[1].split(",").map(item => item.trim()),
-
-
-			// 获取apply方法参数
-			applyArgs = type$1(vmData.apply) === "function" ? rarg.exec(vmData.apply.toString())[1].split(",").map(item => item.trim()) : [],
-			    args = initArgs.concat(applyArgs).map(item => {
-				return item.trim();
-			}),
-			    deps = vmData.deps,
-			    _deps = {};
-
-			// 过滤多余的依赖项
-			foreach(deps, (item, key) => {
-				if (args.indexOf(key) > -1) {
-					_deps[key] = item;
-				}
-			});
-			deps = _deps;
-
-			// 依赖注入插件对象后
-			depend(loader.topName, deps, initArgs, (...depArray) => {
-
-				let moduleElem = query("*[" + single$1.aModule + "=" + moduleName + "]"),
-				    vm,
-				    tmpl;
-				if (!deps.hasOwnProperty(initArgs[0])) {
-					depArray.unshift(new NodeLite(moduleElem));
-				}
-
-				// 对数据模型进行转化
-				vm = new ViewModel(vmData.init.apply(depArray));
-
-				// 使用vm解析模板
-				tmpl = new Tmpl(moduleElem);
-				tmpl.mount(vm);
-			});
+	// 请求错误调用error回调
+	else if (transport.status === 404 || transport.status === 500) {
+			transport.callbacks.error(iceXHR, transport.status, transport.statusText);
 		}
 
-		// 获取后初始化vm的init方法，如果init方法不依赖任何deps，则不需要在加载完deps就可以调用
-		// 解析模板
-		// 查看是否有元素驱动器，有的话就加载驱动器对象
-		// 调用apply方法
+	// 调用complete回调
+	transport.callbacks.complete(iceXHR, transport.statusText);
+}
+
+var xhr$1 = function () {
+
+	return {
+
+		/**
+  	send ( options: Object, iceXHR: Object )
+  
+  	Return Type:
+  	void
+  
+  	Description:
+  	ajax请求前设置参数，并发送请求
+  
+  	URL doc:
+  	http://icejs.org/######
+  */
+		send(options, iceXHR) {
+
+			let i,
+			    self = this,
+
+
+			// 获取xhr对象
+			xhr = this.xhr = (() => {
+				try {
+					return new XMLHttpRequest();
+				} catch (e) {}
+			})();
+
+			if (options.crossDomain && !"withCredentials" in xhr) {
+				throw requestErr("crossDomain", "该浏览器不支持跨域请求");
+			}
+
+			xhr.open(options.method, options.url, options.async, options.username, options.password);
+
+			// 覆盖原有的mimeType
+			if (options.mimeType && xhr.overrideMimeType) {
+				xhr.overrideMimeType(options.mimeType);
+			}
+
+			xhr.setRequestHeader("X-Requested-With", "XMLHTTPRequest");
+			foreach(this.headers, (header, key) => {
+				xhr.setRequestHeader(key, header);
+			});
+
+			// 绑定请求中断回调
+			if (type$1(options.abort) === "function" && event$1.support("abort", xhr)) {
+				xhr.onabort = function () {
+					options.abort(this.statusText);
+				};
+			}
+
+			if (event$1.support("error", xhr)) {
+				xhr.onload = xhr.onerror = function (e) {
+
+					iceXHR.transport.status = xhr.status === 1223 ? 204 : xhr.status;
+
+					self.done(iceXHR);
+				};
+			} else {
+				xhr.onreadystatechange = function () {
+					if (xhr.readyState === XMLHttpRequest.DONE) {
+
+						// 兼容IE有时将204状态变为1223的问题
+						iceXHR.transport.status = xhr.status === 1223 ? 204 : xhr.status;
+
+						self.done(iceXHR);
+					}
+				};
+			}
+
+			// 发送请求
+			try {
+				xhr.send(options.hasContent && options.data || null);
+			} catch (e) {
+				throw requestErr("send", e);
+			}
+		},
+
+		/**
+  	done ( iceXHR: Object )
+  
+  	Return Type:
+  	void
+  
+  	Description:
+  	ajax请求完成后的处理
+  
+  	URL doc:
+  	http://icejs.org/######
+  */
+		done(iceXHR) {
+
+			var xhr = this.xhr;
+
+			xhr.onload = xhr.onerror = xhr.onreadystatechange = null;
+
+			// 获取所有返回头信息
+			this.responseHeadersString = xhr.getAllResponseHeaders();
+
+			this.status = xhr.status;
+			this.statusText = xhr.statusText;
+			this.response = xhr.responseText;
+
+			complete(iceXHR);
+		},
+
+		/**
+  	abort ()
+  
+  	Return Type:
+  	void
+  
+  	Description:
+  	ajax请求中断
+  
+  	URL doc:
+  	http://icejs.org/######
+  */
+		abort() {
+			this.status = 0;
+			this.statusText = this.abortText;
+
+			xhr.abort && xhr.abort();
+		}
+	};
+};
+
+// 动态执行script
+var script$1 = function (options) {
+
+	let script;
+
+	return {
+
+		/**
+  	send ( options: Object, iceXHR: Object )
+  
+  	Return Type:
+  	void
+  
+  	Description:
+  	动态执行javascript
+  
+  	URL doc:
+  	http://icejs.org/######
+  */
+		send(options, iceXHR) {
+			let self = this;
+
+			script = document.createElement("script");
+			script.src = options.url;
+
+			event$1.on(script, "load error", function (e) {
+
+				if (script.parentNode) {
+					script.parentNode.removeChild(script);
+				}
+
+				if (e.type === "load") {
+					this.status = 200;
+					this.statusText = "success";
+				} else {
+					this.status = 500;
+					this.statusText = "error";
+				}
+				self.done(iceXHR);
+			});
+
+			document.head.appendChild(script);
+		},
+
+		/**
+  	done ( iceXHR: Object )
+  
+  	Return Type:
+  	void
+  
+  	Description:
+  	完成或中断后的处理
+  
+  	URL doc:
+  	http://icejs.org/######
+  */
+		done(iceXHR) {
+
+			if (options.dataType === "JSONP") {
+
+				dataType = "json";
+
+				if (type(window[options.jsonpCallback]) !== "function") {
+					this.status = 200;
+					this.statusText = "success";
+					this.response = window[options.jsonpCallback];
+				} else {
+					this.status = 500;
+					this.statusText = "error";
+				}
+			}
+
+			complete(iceXHR);
+		},
+
+		/**
+  	abort ()
+  
+  	Return Type:
+  	void
+  
+  	Description:
+  	请求中断处理
+  
+  	URL doc:
+  	http://icejs.org/######
+  */
+		abort() {
+			if (script.parentNode) {
+				script.parentNode.removeChild(script);
+			}
+
+			this.status = 0;
+			this.statusText = this.abortText;
+
+			type(options.abort) === "function" && options.abort(this.statusText);
+		}
+	};
+};
+
+// jsonp跨域请求
+var jsonp = function (options) {
+
+	let scriptExtend = script$1(options),
+	    jsonpCallback = options.jsonpCallback = "jsonpCallback" + Date.now();
+
+	window[jsonpCallback] = result => {
+		window[jsonpCallback] = result;
+	};
+
+	options.data += (options.data ? "&" : "") + "callback=" + jsonpCallback;
+
+	return {
+		send(options, iceXHR) {
+			scriptExtend.send(options, iceXHR);
+		},
+
+		done(iceXHR) {
+			scriptExtend.done(iceXHR);
+		},
+
+		abort() {
+			scriptExtend.abort();
+		}
+	};
+};
+
+// 文件异步上传传送器，在不支持FormData的旧版本浏览器中使用iframe刷新的方法模拟异步上传
+var upload = function () {
+
+	let uploadFrame = document.createElement("iframe"),
+	    id = "upload-iframe-unique-" + guid();
+
+	attr(uploadFrame, {
+		id,
+		name: id
+	});
+	uploadFrame.style.position = "absolute";
+	uploadFrame.style.top = "9999px";
+	uploadFrame.style.left = "9999px";
+	(document.body || document.documentElement).appendChild(uploadFrame);
+
+	return {
+
+		/**
+  	send ( options: Object, iceXHR: Object )
+  
+  	Return Type:
+  	void
+  
+  	Description:
+  	文件上传请求，在不支持FormData进行文件上传的时候会使用此方法来实现异步上传
+   	此方法使用iframe来模拟异步上传
+  
+  	URL doc:
+  	http://icejs.org/######
+  */
+		send(options, iceXHR) {
+			let self = this,
+
+
+			// 备份上传form元素的原有属性，当form提交后再使用备份还原属性
+			backup = {
+				action: options.data.action || "",
+				method: options.data.method || "",
+				enctypt: options.data.enctypt || "",
+				target: options.data.target || ""
+			};
+
+			// 绑定回调
+			event$1.on(uploadFrame, "load", function () {
+				self.done(iceXHR);
+			}, false, true);
+
+			// 设置form的上传属性
+			attr(options.data, {
+				action: options.url,
+				method: "POST",
+				target: id
+			});
+
+			// 当表单没有设置enctype时自行加上，此时需设置encoding为multipart/form-data才有效
+			if (attr(options.data, "enctypt") !== "multipart/form-data") {
+				options.data.encoding = "multipart/form-data";
+			}
+
+			options.data.submit();
+
+			// 还原form备份参数
+			foreach(backup, (val, attribute) => {
+				if (val) {
+					attr(options.data, attribute, val);
+				} else {
+					// 移除attribute属性
+					attr(options.data, attribute, null);
+				}
+			});
+		},
+
+		/**
+  	done ( iceXHR: Object )
+  
+  	Return Type:
+  	void
+  
+  	Description:
+  	上传完成的处理，主要工作是获取返回数据，移除iframe
+  
+  	URL doc:
+  	http://icejs.org/######
+  */
+		done(iceXHR) {
+
+			// 获取返回数据
+			let child,
+			    entity,
+			    doc = uploadFrame.contentWindow.document;
+			if (doc.body) {
+
+				this.status = 200;
+				this.statusText = "success";
+
+				// 当mimeType为 text/javascript或application/javascript时，浏览器会将内容放在pre标签中
+				if ((child = doc.body.firstChild) && child.nodeName.toUpperCase() === "PRE" && child.firstChild) {
+					this.response = child.innerHTML;
+				} else {
+					this.response = doc.body.innerHTML;
+				}
+
+				// 如果response中包含转义符，则将它们转换为普通字符
+				if (/&\S+;/.test(this.response)) {
+					entity = {
+						lt: "<",
+						gt: ">",
+						nbsp: " ",
+						amp: "&",
+						quot: "\""
+					};
+					this.response = this.response.replace(/&(lt|gt|nbsp|amp|quot);/ig, (all, t) => {
+						return entity[t];
+					});
+				}
+			}
+
+			complete(iceXHR);
+
+			// 移除iframe
+			uploadFrame.parentNode.removeChild(uploadFrame);
+		},
+
+		/**
+  	abort ()
+  
+  	Return Type:
+  	void
+  
+  	Description:
+  	请求中断处理，此时无法中断
+  
+  	URL doc:
+  	http://icejs.org/######
+  */
+		abort() {}
+	};
+};
+
+/**
+	Plugin http
+	( method: String )
+
+	Description:
+	ajax请求外层包裹函数，该函数返回ajax具体实现的函数（以下简称此返回的函数为ajax函数）
+	ajax函数传入的参数与默认参数进行合并操作（开发者参数没有定义的将使用默认参数）
+	defaultOptions = 
+	{
+		method 			: "GET",		// 请求类型，默认为GET，可设置参数为{GET/POST}
+	  	url 			: "",			// 请求地址，默认为空
+	  	data 			: "",     		// 请求参数，默认为空
+	   	async 			: true,			// 是否异步请求，默认为异步，可设置参数为{true/false}
+	   	cache 			: true,			// 开启缓存，默认开启，可设置参数为{true/false}
+	   	contentType 	: "application/x-www-form-urlencoded; charset=UTF-8",  // 请求为post时设置的Content-Type，一般传入此参数
+	   	dataType 		: "TEXT"		// 返回的数据类型，默认文本，可设置参数为{TEXT/JSON/SCRIPT/JSONP}
+	}
+	此外层包裹方法定义了许多仅供ajax函数使用的内部固定变量，只需编译一次且只能由ajax函数访问即可，所以使用了外层包裹的方式来设计此函数，http中的request、get、post方法调用此外层包裹方法并传入不同参数来获取对应的ajax函数
+
+	URL doc:
+	http://icejs.org/######
+*/
+function request(method) {
+
+	const
+	// 相关正则表达式
+	r20 = /%20/g,
+	      rhash = /#.*$/,
+	      rts = /([?&])_=[^&]*/,
+	      rquery = /\?/,
+	      rnoContent = /^(?:GET|HEAD)$/,
+
+
+	// ajax支持的返回类型正则表达式
+	rtype = /^(?:TEXT|JSON|SCRIPT|JSONP)$/,
+	      accepts = {
+		"*": ["*/"] + ["*"], // 避免被压缩
+		text: "text/plain",
+		html: "text/html",
+		xml: "application/xml, text/xml",
+		json: "application/json, text/javascript"
 	},
 
-	drivenElem() {}
+
+	// 默认参数对象初始化
+	// ajax默认参数对象初始化
+	defaultOptions = {
+		method: "GET",
+		url: "",
+		data: "",
+		async: true,
+		cache: true,
+		contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+		dataType: "TEXT",
+		headers: {}
+	},
+
+
+	// 返回合并后的参数对象，参数对象的合并根据http.get、http.post、http.request请求方法进行区分
+	extendOptions = function (method) {
+
+		return function (options) {
+
+			// request请求时，参数肯定是一个对象，直接返回
+			if (method) {
+
+				let url = options[0];
+				args = options[1];
+				callback = options[2];
+				dataType = options[3];
+
+				// 纠正参数
+				// 1、如果没有传入args，则将callback的值给dataType，将args的值给callback，args设为undefined，
+				// 2、如果没有传入args和dataType，将args的值给callback，args设为undefined
+				correctParam(args, callback, dataType).to([/=/, "object"], "function", rtype).done(function () {
+					args = this.$1;
+					callback = this.$2;
+					dataType = this.$3;
+				});
+
+				// get请求参数初始化
+				params = {
+					url: url,
+					args: args,
+					success: callback,
+					dataType: dataType,
+					method: method
+				};
+			} else {
+				params = options[0];
+			}
+
+			// 合并参数
+			return extend({}, defaultOptions, params);
+		};
+	}(method),
+
+
+	//////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////
+	// ajax传送器，根据数据类型
+	ajaxTransports = { xhr: xhr$1, script: script$1, jsonp, upload };
+
+	let // GET、POST时的默认参数
+	url, args, callback, dataType, transportName, params, nohashUrl, hash;
+
+	/**
+ 	[anonymous] ()
+ 
+ 	Return Type:
+ 	Object
+ 	Promise对象
+ 
+ 	Description:
+ 	ajax异步请求方法实现
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	return function (...args) {
+
+		let // 合并参数
+		options = extendOptions(args),
+		    data = options.data,
+
+
+		// 自定义xhr对象，用于统一处理兼容问题
+		iceXHR = new ICEXMLHttpRequest();
+
+		// 如果传入的data参数为数据对象，则将{k1: v1, k2: v2}转为以k1=v1&k2=v2
+		if (type$1(data) === "object") {
+
+			// 判断是否为表单对象
+			// 如果是则使用FormData来提交
+			// 如果不支持FormData对象，则判断是否包含上传信息，如果不包含则将参数序列化出来post提交，如果包含，则使用iframe刷新的方法实现
+			if (data.nodeName && data.nodeName.toUpperCase() === "FORM") {
+
+				// 如果是表单对象则获取表单的提交方式，默认为POST
+				options.method = attr(data, "method") || "POST";
+
+				// 当data为form对象时，如果也提供了src参数则优先使用src参数
+				options.url = attr(data, "src") || options.url;
+
+				// 如果支持FormData则使用此对象进行数据提交
+				try {
+					options.data = new FormData(data);
+				} catch (e) {
+
+					let hasFile;
+
+					// 判断表单中是否含有上传文件
+					foreach(data.elements.slice(), inputItem => {
+						if (inputItem.type === "file") {
+							hasFile = true;
+							return false;
+						}
+					});
+
+					if (!hasFile) {
+
+						// 如果表单中不包含上传文件，则序列化表单数据以供xhr提交
+						options.data = serialize(data);
+					}
+				}
+			}
+
+			if (isPlainObject(options.data)) {
+				let args = [];
+				foreach(options.data, (_data, index) => {
+					args.push(index + "=" + _data);
+				});
+
+				options.data = args.join("&");
+			}
+		}
+
+		// 将method字符串转为大写以统一字符串为大写，以便下面判断
+		// 再将统一后的method传入查看是不是POST提交
+		options.hasContent = !rnoContent.test(options.method = options.method.toUpperCase());
+
+		// 将dataType字符串转为大写
+		// 如传入的dataType不符合rtype定义的，则默认为TEXT
+		options.dataType = rtype.test(options.dataType = (options.dataType || "").toUpperCase()) ? options.dataType : "TEXT";
+
+		// 修正timeout参数
+		options.timeout = options.timeout > 0 ? options.timeout : 0;
+
+		// 是否跨域
+		if (!options.crossDomain) {
+			let originAnchor = document.createElement("a"),
+			    urlAnchor = document.createElement("a");
+
+			originAnchor.href = location.href;
+			urlAnchor.href = options.url;
+			try {
+				options.crossDomain = originAnchor.protocol + "//" + originAnchor.host !== urlAnchor.protocol + "//" + urlAnchor.host;
+			} catch (e) {
+				options.crossDomain = true;
+			}
+		}
+
+		//////////////////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////////////////
+		//返回Promise对象
+		return new Promise((resolve, reject) => {
+
+			// 获取传送器名
+			// 根据上面判断，上传文件时如果支持FormData则使用此来实现上传，所以当data为form对象时，表示不支持FormData上传，需使用upload传送器实现上传
+			if (options.data.nodeName && options.data.nodeName.toUpperCase() === "FORM") {
+				transportName = "upload";
+			}
+
+			// 如果dataType为script但async为false时，使用xhr来实现同步请求
+			else if (options.dataType === "SCRIPT" && options.async === false) {
+					transportName = "xhr";
+				} else {
+					transportName = options.dataType.toLowerCase();
+				}
+
+			// 获取传送器对象，当没有匹配到传送器时统一使用xhr
+			iceXHR.transport = (ajaxTransports[transportName] || ajaxTransports.xhr)(options);
+
+			// 小写dataType
+			iceXHR.transport.dataType = options.dataType.toLowerCase();
+
+			// 当请求为GET或HEAD时，拼接参数和cache为false时的时间戳
+			if (!options.hasContent) {
+				nohashUrl = options.url.replace(rhash, "");
+
+				// 获取url中的hash
+				hash = options.url.slice(nohashUrl.length);
+
+				// 拼接data
+				nohashUrl += options.data ? (rquery.test(nohashUrl) ? "&" : "?") + options.data : "";
+
+				// 处理cache参数，如果为false则需要在参数后添加时间戳参数
+				nohashUrl = nohashUrl.replace(rts, "");
+				nohashUrl += options.cache === false ? (rquery.test(nohashUrl) ? "&" : "?") + "_=" + Date.now() : "";
+
+				options.url = nohashUrl + (hash || "");
+			} else if (options.data && type$1(options.data) === "string" && (options.contentType || "").indexOf("application/x-www-form-urlencoded") === 0) {
+				options.data = options.data.replace(r20, "+");
+			}
+
+			// 设置Content-Type
+			if (options.contentType) {
+				iceXHR.setRequestHeader("Content-Type", options.contentType);
+			}
+
+			// 设置Accept
+			iceXHR.setRequestHeader("Accept", accepts[iceXHR.transport.dataType] ? accepts[iceXHR.transport.dataType] + ", */*; q=0.01" : accepts["*"]);
+
+			// haders里面的首部
+			foreach(options.headers, (header, key) => {
+				iceXHR.setRequestHeader(key, header);
+			});
+
+			// 调用请求前回调函数
+			if (type$1(options.beforeSend) === "function") {
+				options.beforeSend(iceXHR, options);
+			}
+
+			// 将事件绑定在iceXHR中
+			foreach(["complete", "success", "error"], callbackName => {
+
+				// 如果是success或error回调，则使用resolve或reject代替
+				if (callbackName === "success") {
+					options[callbackName] = options[callbackName] || resolve;
+				} else if (callbackName === "error") {
+					options[callbackName] = options[callbackName] || reject;
+				}
+
+				iceXHR.addEventListener(callbackName, options[callbackName]);
+			});
+
+			// 处理超时
+			if (options.async && options.timeout > 0) {
+				iceXHR.transport.timeoutID = setTimeout(() => {
+					iceXHR.abort("timeout");
+				}, options.timeout);
+			}
+
+			iceXHR.transport.send(options, iceXHR);
+		});
+	};
+}
+
+// http请求插件方法构造
+var http = {
+
+	request: request(),
+
+	/**
+ 	get ( url: String, args?: String|Object, callback?: Function, dataType?: String )
+ 
+ 	Return Type:
+ 	Object
+ 	Promise对象
+ 
+ 	Description:
+ 	ajax GET请求，内部调用request方法实现
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	get: request("GET"),
+
+	/**
+ 	post ( url: String, args?: String|Object, callback?: Function, dataType?: String )
+ 
+ 	Return Type:
+ 	Object
+ 	Promise对象
+ 
+ 	Description:
+ 	ajax POST请求，内部调用request方法实现
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	post: request("POST")
+
+	// onrequest ( target, callback ) {
+
+	//    },
+
+	// oncomplete ( target, callback ) {
+
+	//    },
+
+	// onsuccess ( target, callback ) {
+
+	//    },
+
+	// onerror ( target, callback ) {
+
+	//    },
+
+	// onabort ( target, callback ) {
+
+	//    },
+
+	// onprogress ( target, callback ) {
+
+	//    },
+
+	// onuploadprogress ( target, callback ) {
+
+	//    },
+};
+
+function loopFlush(moduleUpdateContext) {
+
+	let title, _title;
+	foreach(moduleUpdateContext, moduleUpdateItem => {
+		_title = moduleUpdateItem.updateFn();
+		title = title || _title;
+
+		if (type$1(moduleUpdateItem.children) === "array") {
+			_title = loopFlush(moduleUpdateItem.children);
+			title = title || _title;
+		}
+	});
+
+	return title;
+}
+
+function compareArgs(newArgs, originalArgs) {
+	const len = Object.keys(newArgs).length;
+
+	let isChanged = false;
+	if (len !== Object.keys(originalArgs).length) {
+		isChanged = true;
+	} else {
+		if (len > 0) {
+			foreach(newArgs, (newVal, key) => {
+				if (newVal !== originalArgs[key]) {
+					isChanged = true;
+
+					return false;
+				}
+			});
+		}
+	}
+
+	return isChanged;
+}
+
+/**
+	ModuleLoader ( name: String, load: Object )
+
+	Return Type:
+	void
+
+	Description:
+	页面模块加载器
+
+	URL doc:
+	http://icejs.org/######
+*/
+function ModuleLoader() {
+
+	// 等待加载完成的页面模块，每加载完成一个页面模块都会将此页面模块在waiting对象上移除，当waiting为空时则表示相关页面模块已全部加载完成
+	this.waiting = [];
+
+	// 模块更新函数上下文
+	this.moduleUpdateContext = [];
+
+	// 加载错误时会将错误信息保存在此
+	this.moduleError = null;
+}
+
+extend(ModuleLoader.prototype, {
+
+	/**
+ 	addWaiting ( name: String )
+ 
+ 	Return Type:
+ 	void
+ 
+ 	Description:
+ 	将等待加载完成的页面模块名放入context.waiting中
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	addWaiting(name) {
+		this.waiting.push(name);
+	},
+
+	/**
+ 	delWaiting ( name: String )
+ 
+ 	Return Type:
+ 	void
+ 
+ 	Description:
+ 	将已加载完成的页面模块从等待列表中移除
+ 	如果等待队列已空则立即刷新模块
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	delWaiting(name) {
+		const pointer = this.waiting.indexOf(name);
+		if (pointer !== -1) {
+			this.waiting.splice(pointer, 1);
+		}
+
+		// 如果等待队列已空则立即刷新模块
+		if (isEmpty(this.waiting)) {
+			this.flush();
+		}
+	},
+
+	signModuleHierarchy(currentHierarchy) {
+		this.currentHierarchy = currentHierarchy;
+	},
+
+	saveModuleUpdateFn(updateFn) {
+		const moduleUpdateItem = { updateFn };
+
+		// 标记当前处理模块
+		this.moduleUpdateItem = moduleUpdateItem;
+		this.currentHierarchy.push(moduleUpdateItem);
+	},
+
+	addChildrenContext() {
+		const children = [];
+		this.moduleUpdateItem.children = children;
+		return children;
+	},
+
+	/**
+ 	load ( structure: Object, args: Object, currentHierarchy?: Array )
+ 
+ 	Return Type:
+ 	Object
+ 
+ 	Description:
+ 	根据structure对象来加载更新模块
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	load(structure, args, currentHierarchy = this.moduleUpdateContext) {
+
+		let toRender = false,
+		    param;
+
+		foreach(structure.entity, route => {
+			if (route.hasOwnProperty("notUpdate")) {
+				if (route.hasOwnProperty("forcedRender")) {
+					toRender = true;
+				} else {
+					param = args.param[route.name];
+
+					// 比较新旧param和get,post对象中的值，如果有改变则调用paramChanged和queryChanged
+					if (compareArgs(param, route.module.param)) {
+						route.module.param = param;
+						(route.module.paramChanged || noop).apply(route.module, cache.getDependentPlugin(route.module.paramChanged || noop));
+					}
+
+					if (compareArgs(args.get, route.module.get) || compareArgs(args.post, route.module.post)) {
+						route.module.get = args.get;
+						route.module.post = args.post;
+						(route.module.queryhanged || noop).apply(route.module, cache.getDependentPlugin(route.module.queryhanged || noop));
+					}
+				}
+
+				delete route.notUpdate;
+			} else {
+				toRender = true;
+			}
+
+			// 需更新模块与强制重新渲染模块进行渲染
+			if (toRender) {
+
+				// 如果结构中没有模块节点则查找DOM树获取节点
+				if (!route.moduleNode) {
+					const moduleNode = VNode.domToVNode(query(`[${iceAttr.module}=${route.name === "default" ? "''" : route.name}]`, route.parent && route.parent.moduleNode.node || undefined)),
+					      tmpl = new Tmpl();
+					tmpl.mount(moduleNode, true);
+
+					if (moduleNode) {
+						route.moduleNode = moduleNode;
+					} else {
+						throw moduleErr("moduleNode", `找不到加载路径为"${route.modulePath}"的模块node`);
+					}
+				}
+
+				// 给模块元素添加编号属性，此编号有两个作用：
+				// 1、用于模块加载时的模块识别
+				// 2、使用此属性作为子选择器限制样式范围
+				let moduleIdentifier = route.moduleNode.attr(Module.identifier);
+				if (!moduleIdentifier) {
+					moduleIdentifier = Module.getIdentifier();
+					route.moduleNode.attr(Module.identifier, moduleIdentifier);
+				}
+
+				// 加入等待加载队列
+				this.addWaiting(moduleIdentifier);
+
+				// 将基于当前相对路径的路径统一为相对于根目录的路径
+				// const pathAnchor = document.createElement ( "a" );
+				// pathAnchor.href = route.modulePath || "";
+
+				// 标记模块更新函数容器的层级
+				// 这样在actionLoad函数中调用saveModuleUpdateFuncs保存更新函数时可以保存到对应的位置
+				this.signModuleHierarchy(currentHierarchy);
+
+				// 无刷新跳转组件调用来完成无刷新跳转
+				ModuleLoader.actionLoad.call(this, route.modulePath, route.moduleNode, route, args.param[route.name], args.get, args.post);
+			}
+
+			// 此模块下还有子模块需更新
+			if (type$1(route.children) === "array") {
+
+				// 添加子模块容器并继续加载子模块
+				this.load(route.children, args, this.addChildrenContext());
+			}
+		});
+	},
+
+	/**
+ 	flush ()
+ 
+ 	Return Type:
+ 	void
+ 
+ 	Description:
+ 	调用已加载完成的模块更新函数执行更新操作
+ 
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	flush() {
+		if (this.moduleError) {
+
+			// 加载模块遇到错误，直接处理错误信息
+			const location = {
+				path: this.moduleError,
+				nextStructure: Router.matchRoutes(this.path, this.param),
+				param: {},
+				search: Router.matchSearch(getSearch()),
+				action: "PUSH" // 暂不确定是不是为"PUSH"???
+			};
+
+			// Router.matchRoutes()匹配当前路径需要更新的模块
+			// 更新currentPage结构体对象，如果为空表示页面刚刷新，将nextStructure直接赋值给currentPage
+			Structure$1.currentPage = Structure$1.currentPage ? Structure$1.currentPage.update(location.nextStructure) : location.nextStructure;
+
+			// 根据更新后的页面结构体渲染新视图
+			Structure$1.currentPage.render(location);
+		} else {
+
+			// 正常加载，将调用模块更新函数更新模块
+			const title = loopFlush(this.moduleUpdateContext);
+
+			// 更新页面title
+			if (title && document.title !== title) {
+				document.title = title;
+			}
+		}
+	}
+});
+
+extend(ModuleLoader, {
+
+	/**
+ 	actionLoad ( url: String|Object, moduleNode: DMOObject, currentStructure: Object, param?: Object, args?: Object, data?: Object, method?:String, timeout?: Number, before?: Function, success?: Function, error?: Function, abort?: Function )
+ 		Return Type:
+ 	void
+ 		Description:
+ 	根据path请求跳转模块数据并更新对应的moduleNode（moduleNode为模块节点）
+ 	param为路径匹配到的参数
+ 	args参数为get请求参数，会将此参数添加到path后
+ 	data为post参数，直接提交给http的data
+ 		URL doc:
+ 	http://icejs.org/######
+ */
+	actionLoad(path, moduleNode, currentStructure, param, args, data, method, timeout, before = noop, success = noop, error = noop, abort = noop) {
+
+		const moduleConfig = configuration.getConfigure("module");
+
+		//////////////////////////////////////////////////
+		//////////////////////////////////////////////////
+		//////////////////////////////////////////////////
+		path += configuration.getConfigure("moduleSuffix") + args;
+
+		const historyModule = cache.getModule(path);
+
+		// 并且请求不为post
+		// 并且已有缓存
+		// 并且缓存未过期
+		// cache已有当前模块的缓存时，才使用缓存
+		if ((!method || method.toUpperCase() !== "POST") && historyModule && (moduleConfig.expired === 0 || historyModule.time + moduleConfig.expired > timestamp())) {
+			this.saveModuleUpdateFn(() => {
+				Structure$1.currentPage.signCurrentRender(currentStructure, param, args, isPlainObject(data) ? data : serialize(data));
+
+				const title = historyModule.updateFn(ice, moduleNode, VNode, require);
+				moduleNode.emit(MODULE_UPDATE);
+
+				return title;
+			});
+
+			// 获取模块更新函数完成后在等待队列中移除
+			this.delWaiting(moduleNode.attr(Module.identifier));
+		} else {
+
+			// 触发请求事件回调
+			moduleNode.emit(MODULE_REQUEST);
+
+			// 请求模块跳转页面数据
+			http.request({
+
+				url: path,
+				method: /^(GET|POST)$/i.test(method) ? method.toUpperCase() : "GET",
+				data: data,
+				timeout: timeout || 0,
+				beforeSend: () => {
+					before(moduleNode);
+				},
+				abort: () => {
+					abort(moduleNode);
+				}
+			}).done(moduleString => {
+
+				/////////////////////////////////////////////////////////
+				// 编译module为可执行函数
+				// 将请求的html替换到module模块中
+				const updateFn = compileModule(moduleString, moduleNode.attr(Module.identifier));
+
+				// 满足缓存条件时缓存模块更新函数
+				if (moduleConfig.cache === true && moduleNode.cache !== false) {
+					cache.pushModule(path, { updateFn, time: timestamp() });
+				}
+
+				this.saveModuleUpdateFn(() => {
+					moduleNode.emit(MODULE_RESPONSE);
+
+					Structure$1.currentPage.signCurrentRender(currentStructure, param, args, isPlainObject(data) ? data : serialize(data));
+
+					const title = updateFn(ice, moduleNode, VNode, require);
+					moduleNode.emit(MODULE_UPDATE);
+
+					// 调用success回调
+					success(moduleNode);
+
+					return title;
+				});
+
+				// 获取模块更新函数完成后在等待队列中移除
+				this.delWaiting(moduleNode.attr(Module.identifier));
+			}).fail((iceXHR, errorCode) => {
+
+				// 保存错误信息并立即刷新
+				this.moduleError = Router.getError(errorCode);
+				this.flush();
+				error(moduleNode, error);
+			});
+		}
+	}
+});
+
+// 路由模式，启动路由时可进行模式配置
+// 自动选择路由模式(默认)
+// 在支持html5 history API时使用新特性，不支持的情况下自动回退到hash模式
+const AUTO = 0;
+
+// 强制使用hash模式
+const HASH_HISTORY = 1;
+
+// 强制使用html5 history API模式
+// 使用此模式时需注意：在不支持新特新的浏览器中是不能正常使用的
+const BROWSER_HISTORY = 2;
+
+var browserHistory = {
+
+	// window.history对象
+	entity: window.history,
+
+	init() {
+		event$1.on(window, "popstate", e => {
+			const locationGuide = this.getState();
+
+			// 更新currentPage结构体对象，如果为空表示页面刚刷新，将nextStructure直接赋值给currentPage
+			Structure$1.currentPage.update(locationGuide.structure);
+
+			// 根据更新后的页面结构体渲染新视图
+			Structure$1.currentPage.render({
+				param: locationGuide.param,
+				get: locationGuide.get,
+				post: locationGuide.post,
+				action: "POP"
+			});
+		});
+
+		return this;
+	},
+
+	/**
+ 	replace ( state: Any, url: String )
+ 	
+ 	Return Type:
+ 	void
+ 	
+ 	Description:
+ 	对history.replaceState方法的封装
+ 	
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	replace(state, url) {
+		if (this.entity.pushState) {
+			this.entity.replaceState(null, null, url);
+			this.saveState(window.location.pathname, state);
+		} else {
+			throw envErr("history API", "浏览器不支持history新特性，您可以选择AUTO模式或HASH_BROWSER模式");
+		}
+	},
+
+	/**
+ push ( state: Any, url: String )
+ 	Return Type:
+ void
+ 	Description:
+ 对history.pushState方法的封装
+ 	URL doc:
+ http://icejs.org/######
+ */
+	push(state, url) {
+		if (this.entity.pushState) {
+			this.entity.pushState(null, null, url);
+			this.saveState(window.location.pathname, state);
+		} else {
+			throw envErr("history API", "浏览器不支持history新特性，您可以选择AUTO模式或HASH_BROWSER模式");
+		}
+	},
+
+	////////////////////////////////////
+	/// 页面刷新前的状态记录，浏览器前进/后退时将在此记录中获取相关状态信息，根据这些信息刷新页面
+	/// 
+	states: {},
+
+	/**
+ 	setState ( pathname: String, state: Any )
+ 	
+ 	Return Type:
+ 	void
+ 	
+ 	Description:
+ 	保存状态记录
+ 	
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	saveState(pathname, state) {
+		this.states[pathname] = state;
+	},
+
+	/**
+ 	getState ( pathname?: String )
+ 	
+ 	Return Type:
+ 	Object
+ 	
+ 	Description:
+ 	获取对应记录
+ 	
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	getState(pathname) {
+		return this.states[pathname || window.location.pathname];
+	},
+
+	/**
+ 	buildURL ( path: String, mode: String )
+ 	
+ 	Return Type:
+ 	String
+    	构建完成后的新url
+ 	
+ 	Description:
+ 	使用path与当前pathname构建新的pathname
+        mode为true时不返回hash的开头“#”
+        
+    	构建规则与普通跳转的构建相同，当新path以“/”开头时则从原url的根目录开始替换，当新path不以“/”老头时，以原url最后一个“/”开始替换
+ 		URL doc:
+ 	http://icejs.org/######
+ */
+	buildURL(path) {
+		const pathAnchor = document.createElement("a");
+		pathAnchor.href = path;
+
+		return pathAnchor.pathname;
+	},
+
+	/**
+ getPathname ()
+ 	Return Type:
+ String
+ pathname
+ 	Description:
+ 获取pathname
+ 	URL doc:
+ http://icejs.org/######
+ */
+	getPathname() {
+		return window.location.pathname;
+	},
+
+	/**
+    	getQuery ( path?: String )
+     	Return Type:
+    	String
+    	get请求参数对象
+     	Description:
+ 	获取get请求参数
+     	URL doc:
+    	http://icejs.org/######
+    */
+	getQuery(path) {
+		return path && (path.match(/\?(.*)$/) || [""])[0] || window.location.search;
+	}
+};
+
+var hashHistory = {
+
+	init() {
+		event$1.on(window, "hashchange", e => {
+
+			// 如果this.pushOrRepalce为true表示为跳转触发
+			if (this.pushOrReplace === true) {
+				this, pushOrReplace = false;
+				return;
+			}
+
+			const locationGuide = this.getState();
+
+			// 更新currentPage结构体对象，如果为空表示页面刚刷新，将nextStructure直接赋值给currentPage
+			Structure.currentPage.update(locationGuide.structure);
+
+			// 根据更新后的页面结构体渲染新视图
+			Structure.currentPage.render({
+				param: locationGuide.param,
+				get: locationGuide.get,
+				post: locationGuide.post,
+				action: "POP"
+			});
+		});
+
+		return this;
+	},
+
+	/**
+ 	replace ( state: Any, url: String )
+ 	
+ 	Return Type:
+ 	void
+ 	
+ 	Description:
+ 	对history.replaceState方法的封装
+ 	
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	replace(state, url) {
+		this.pushOrReplace = true;
+
+		const hashPathname = this.buildURL(url);
+		window.location.replace(hashPathname);
+
+		this.saveState(this.getPathname(), state);
+	},
+
+	/**
+ 	push ( state: Any, url: String )
+ 	
+ 	Return Type:
+ 	void
+ 	
+ 	Description:
+ 	对history.pushState方法的封装
+ 	
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	push(state, title, url) {
+		this.pushOrReplace = true;
+
+		const hashPathname = this.buildURL(url);
+		window.location.hash = hashPathname;
+
+		this.saveState(this.getPathname(), state);
+	},
+
+	////////////////////////////////////
+	/// 页面刷新前的状态记录，浏览器前进/后退时将在此记录中获取相关状态信息，根据这些信息刷新页面
+	/// 
+	states: {},
+
+	/**
+ 	setState ( pathname: String, state: Any )
+ 	
+ 	Return Type:
+ 	void
+ 	
+ 	Description:
+ 	保存pathname下的状态
+ 	
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	saveState(pathname, state) {
+		this.states[pathname] = state;
+	},
+
+	/**
+ 	getState ( pathname?: String )
+ 	
+ 	Return Type:
+ 	Object
+ 	
+ 	Description:
+ 	获取对应记录
+ 	
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	getState(pathname) {
+		return this.states[pathname || this.getPathname()];
+	},
+
+	/**
+ 	buildURL ( path: String, mode: String )
+ 	
+ 	Return Type:
+ 	String
+    	构建完成后的新url
+ 	
+ 	Description:
+ 	使用path与hash pathname构建新的pathname
+        mode为true时不返回hash的开头“#”
+        
+    	构建规则与普通跳转的构建相同，当新path以“/”开头时则从原url的根目录开始替换，当新path不以“/”老头时，以原url最后一个“/”开始替换
+ 		URL doc:
+ 	http://icejs.org/######
+ */
+	buildURL(path, mode) {
+		let pathname = (window.location.hash || "#/").replace(path.substr(0, 1) === "/" ? /#(.*)$/ : /(?:\/)([^\/]*)?$/, (match, rep) => {
+			return match.replace(rep, "") + path;
+		});
+
+		return mode === true ? pathname.substr(0, 1) : pathname;
+	},
+
+	/**
+ 	getPathname ()
+ 		Return Type:
+ 	String
+ 	pathname
+ 		Description:
+ 	获取pathname
+ 		URL doc:
+ 	http://icejs.org/######
+ */
+	getPathname() {
+		return (window.location.hash.match(/#([^?]*)$/) || ["", ""])[1];
+	},
+
+	/**
+ 	getQuery ( path?: String )
+  	Return Type:
+ 	String
+ 	get请求参数
+  	Description:
+ 获取get请求参数
+  	URL doc:
+ 	http://icejs.org/######
+ */
+	getQuery(path) {
+		return ((path || window.location.hash).match(/\?(.*)$/) || [""])[0];
+	}
+};
+
+var iceHistory = {
+
+	history: null,
+
+	initHistory(historyMode) {
+		if (!this.history) {
+
+			this.history = (historyMode === HASH_HISTORY ? hashHistory : historyMode === BROWSER_HISTORY ? browserHistory : { init: noop }).init();
+		}
+	},
+
+	/**
+ supportNewApi ()
+ 	Return Type:
+ Boolean
+ 是否支持history新特性
+ 	Description:
+ 检查是否支持history新特性
+ 	URL doc:
+ http://icejs.org/######
+ */
+	supportNewApi() {
+		return !!window.history.pushState;
+	},
+
+	/**
+ 	replace ( state: Any, url: String )
+ 	
+ 	Return Type:
+ 	void
+ 	
+ 	Description:
+ 	对history.replaceState方法的封装
+ 	
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	replace(state, url) {
+		if (this.history) {
+			this.history.replace(state, url);
+		}
+	},
+
+	/**
+ 	push ( state: Any, url: String )
+ 	
+ 	Return Type:
+ 	void
+ 	
+ 	Description:
+ 	对history.pushState方法的封装
+ 	
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	push(state, url) {
+		if (this.history) {
+			this.history.push(state, url);
+		}
+	},
+
+	/**
+ 	setState ( pathname: String, state: Any )
+ 	
+ 	Return Type:
+ 	void
+ 	
+ 	Description:
+ 	保存pathname下的状态
+ 	
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	saveState(pathname, state) {
+		this.history.saveState(pathname, state);
+	},
+
+	/**
+ 	getState ( pathname?: String )
+ 	
+ 	Return Type:
+ 	Object
+ 	
+ 	Description:
+ 	获取对应记录
+ 	
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	getState(pathname) {
+		return this.history.getState(pathname);
+	}
+};
+
+// [
+//  { module: obj1, name: "default", moduleNode: node1, parent: null, children: [
+//    { module: obj2, name: "header", moduleNode: node2, parent: parentObj },
+//    { module: obj3, name: "main", moduleNode: node3, parent: parentObj },
+//    { module: obj4, name: "footer", moduleNode:node4, parent: parentObj }
+// ] }
+// ]
+
+
+function Structure$1(entity) {
+    this.entity = entity;
+}
+
+extend(Structure$1.prototype, {
+    update(structure) {
+        let x = this.entity,
+            y = structure.entity,
+            find;
+        const unmountModule = [];
+
+        if (x && !y || !x && y) {
+            foreach(x, xItem => {
+                unmountModule.push(xItem.module);
+            });
+            x = y;
+        } else if (x && y) {
+            foreach(y, (yItem, i) => {
+                foreach(x, (xItem, j) => {
+                    find = false;
+                    if (xItem.name === yItem.name) {
+                        find = true;
+                        if (xItem.modulePath !== yItem.modulePath) {
+
+                            unmountModule.push(xItem.module);
+
+                            // 模块名相同但模块内容不同的时候表示此模块需更新为新模块及子模块内容
+                            xItem.modulePath = yItem.modulePath;
+                            xItem.module = null;
+                        } else {
+
+                            // 模块名和模块内容都相同的时候只表示此模块不需更新，还需进一步比较子模块
+                            // 标记为不更新
+                            xItem.notUpdate = null;
+                            if (!(!xItem.children && !yItem.children)) {
+                                xItem.children = this.update.call({
+                                    entity: xItem.children,
+                                    update: this.update
+                                }, {
+                                    entity: yItem.children
+                                });
+                            }
+                        }
+
+                        return false;
+                    }
+                });
+
+                if (!find) {
+
+                    // 在原结构体中没有匹配到此更新模块，表示此模块为新模块，直接push进原结构体对应位置中
+                    x.push(yItem);
+                }
+            });
+        }
+
+        // call unmount
+        foreach(unmountModule, mod => {
+            foreach(mod.components, comp => {
+                comp.unmount();
+            });
+
+            mod.unmount();
+        });
+
+        if (!this instanceof Structure$1) {
+            return x;
+        }
+    },
+
+    /**
+        isEmptyStructure ()
+    
+        Return Type:
+        Boolean
+        是否为空结构
+    
+        Description:
+        判断此结构对象是否为空
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    isEmptyStructure() {
+        return isEmpty(this.entity);
+    },
+
+    /**
+        signCurrentRender ( structureItem: Object, param: Object, args: String, data: Object )
+        
+        Return Type:
+        void
+    
+        Description:
+        标记当前正在渲染的页面结构项并传递对应的参数到正在渲染的模块内
+        这样可以使创建Module对象时获取父级的vm，和保存扫描到的moduleNode
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    signCurrentRender(structureItem, param, args, data) {
+        structureItem.param = param;
+        structureItem.get = args;
+        structureItem.post = data;
+        this.currentRender = structureItem;
+    },
+
+    /**
+        getCurrentRender ()
+    
+        Return Type:
+        Object
+        当前结构项
+    
+        Description:
+        获取当前正在渲染的页面结构项
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    getCurrentRender() {
+        return this.currentRender;
+    },
+
+    /**
+        saveSubModuleNode ( node: DOMObject )
+    
+        Return Type:
+        void
+    
+        Description:
+        保存扫描到的模块节点对象以便下次使用时直接获取
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    saveSubModuleNode(node) {
+        foreach(this.currentRender.children, child => {
+            if (child.name === (node.attr(iceAttr.module) || "default") && !child.moduleNode) {
+                child.moduleNode = elem;
+
+                return false;
+            }
+        });
+    },
+
+    /**
+        copy ()
+    
+        Return Type:
+        Object
+    
+        Description:
+        拷贝一个Structure对象
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    copy(entity = this.entity, parent = null) {
+        const copyEntity = [];
+
+        foreach(entity, item => {
+            const copyItem = {};
+
+            foreach(item, (v, k) => {
+                if (k === "children") {
+                    copyItem.children = this.copy(v, copyItem);
+                } else if (k === "parent") {
+                    copyItem.parent = parent;
+                } else {
+                    copyItem[k] = v;
+                }
+            });
+
+            copyEntity.push(copyItem);
+        });
+
+        return parent ? copyEntity : new Structure$1(copyEntity);
+    },
+
+    /**
+           render ( location: Object )
+       
+           Return Type:
+           void
+       
+           Description:
+           根据location对象渲染出对应的模块
+       
+           URL doc:
+           http://icejs.org/######
+       */
+    render(location) {
+
+        const locationGuide = {
+            structure: location.nextStructure,
+            param: location.param,
+            get: location.get,
+            post: serialize(location.post)
+        },
+
+
+        // 使用模块加载器来加载更新模块
+        moduleLoader = new ModuleLoader();
+
+        moduleLoader.load(this, { param: location.param, get: location.get, post: location.post });
+
+        switch (location.action) {
+            case "PUSH":
+                iceHistory.push(locationGuide, location.path);
+
+                break;
+            case "REPLACE":
+                iceHistory.replace(locationGuide, location.path);
+
+                break;
+            case "NONE":
+                iceHistory.saveState(location.path, locationGuide);
+
+                break;
+            case "POP":
+            // do nothing
+        }
+    }
+});
+
+function Router(finger) {
+    this.finger = finger;
+}
+
+extend(Router.prototype, {
+    module(moduleName = "default") {
+        check(moduleName).type("string").notBe("").ifNot("Router.module", "模块名必须为不为空的字符串").do();
+
+        foreach(this.finger, routeItem => {
+            if (routeItem.name === moduleName) {
+                throw RouterErr("moduleName", "同级模块的名字不能重复");
+            }
+        });
+
+        this.routeItem = {
+            name: moduleName,
+            routes: []
+        };
+        this.finger.push(this.routeItem);
+
+        return this;
+    },
+
+    route(pathExpr, modulePath, childDefineFunc) {
+        check(pathExpr).type("string", "array").ifNot("Router.route", "pathExpr参数必须为字符串或数组");
+
+        if (!this.routeItem) {
+            throw RouterErr("Router.module", "调用route()前必须先调用module()定义模块路由");
+        }
+
+        let route = {
+            modulePath: modulePath,
+            path: Router.pathToRegexp(pathExpr)
+        };
+        this.routeItem.routes.push(route);
+
+        if (type$1(childDefineFunc) === "function") {
+            route.children = [];
+            childDefineFunc(new Router(route.children));
+        }
+
+        return this;
+    },
+
+    defaultRoute(modulePath) {
+        this.route("", modulePath);
+
+        return this;
+    },
+
+    redirect(from, to) {
+        let redirect;
+        foreach(this.finger, routeItem => {
+            if (routeItem.redirect) {
+                redirect = routeItem;
+                return false;
+            }
+        });
+
+        if (!redirect) {
+            redirect = {
+                redirect: []
+            };
+
+            this.finger.push(redirect);
+        }
+
+        redirect.redirect.push({ from: Router.pathToRegexp(from, "redirect"), to });
+
+        return this;
+    },
+
+    forcedRender() {
+        this.routeItem.forcedRender = null;
+        return this;
+    },
+
+    error404(path404) {
+        Router.errorPaths.error404 = path404;
+    },
+
+    error500(path500) {
+        Router.errorPaths.error500 = path500;
+    }
+});
+
+extend(Router, {
+    routeTree: [],
+    errorPaths: {},
+
+    getError(errorCode) {
+        return this.errorPaths["error" + errorCode];
+    },
+
+    pathToRegexp(pathExpr, from) {
+        let i = 1,
+            pathObj = { param: {} },
+
+
+        // 如果path为redirect中的from，则不需加结尾的“/”匹配式
+        endRegexp = from === "redirect" ? "" : "(?:\\/)?";
+
+        // 如果路径表达式为""时需在结尾增加"$"符号才能正常匹配到
+        endRegexp += pathExpr === "" || pathExpr === "/" ? "$" : "";
+
+        // 如果pathExpr为数组，则需预处理
+        if (type$1(pathExpr) === "array") {
+            pathExpr = "(" + pathExpr.join("|") + ")";
+            i++;
+        }
+
+        pathObj.regexp = new RegExp("^" + pathExpr.replace("/", "\\/").replace(/:([\w$]+)(?:(\(.*?\)))?/g, (match, rep1, rep2) => {
+            pathObj.param[rep1] = i++;
+
+            return rep2 || "([^\\/]+)";
+        }) + endRegexp, "i");
+
+        return pathObj;
+    },
+
+    // 路由路径嵌套模型
+    // /settings => /\/settings/、/settings/:page => /\/settings/([^\\/]+?)/、/settings/:page(\d+)
+    matchRoutes(path, param, routeTree = this.routeTree, parent = null, matchError404) {
+        // [ { module: "...", modulePath: "...", parent: ..., param: {}, children: [ {...}, {...} ] } ]
+        let routes = [],
+            entityItem;
+
+        foreach(routeTree, route => {
+            if (route.hasOwnProperty("redirect")) {
+                let isContinue = true;
+
+                foreach(route.redirect, redirect => {
+
+                    path = path.replace(redirect.from.regexp, (...match) => {
+                        isContinue = false;
+                        let to = redirect.to;
+
+                        foreach(redirect.from.param, (i, paramName) => {
+                            to = to.replace(`:${paramName}`, matchPath[i]);
+                        });
+
+                        return to;
+                    });
+
+                    return isContinue;
+                });
+
+                return false;
+            }
+        });
+
+        foreach(routeTree, route => {
+            foreach(route.routes, pathReg => {
+                let matchPath,
+                    isContinue = true;
+
+                entityItem = {
+                    name: route.name,
+                    modulePath: pathReg.modulePath,
+                    moduleNode: null,
+                    module: null,
+                    parent
+                };
+
+                if (route.hasOwnProperty("forcedRender")) {
+                    entityItem.forcedRender = route.forcedRender;
+                }
+
+                if (matchPath = path.match(pathReg.path.regexp)) {
+                    isContinue = false;
+
+                    param[route.name] = param[route.name] || {};
+                    foreach(pathReg.path.param, (i, paramName) => {
+                        param[route.name][paramName] = matchPath[i];
+                    });
+
+                    routes.push(entityItem);
+                }
+
+                if (type$1(pathReg.children) === "array") {
+                    let children = this.matchRoutes(matchPath ? path.replace(matchPath[0], "") : path, param, pathReg.children, entityItem);
+
+                    if (!isEmpty(children)) {
+                        entityItem.children = children;
+                        if (routes.indexOf(entityItem) <= -1) {
+                            routes.push(entityItem);
+                        }
+                    }
+                }
+
+                return isContinue;
+            });
+        });
+
+        // 最顶层时返回一个Structure对象
+        if (parent === null) {
+
+            // 如果没有匹配到任何更新模块则匹配404页面路径
+            if (isEmpty(routes) && Router.errorPaths.error404 && !matchError404) {
+                return this.matchRoutes(Router.errorPaths.error404, param, undefined, undefined, true);
+            } else {
+                return new Structure$1(routes);
+            }
+        } else {
+            return routes;
+        }
+    }
+});
+
+/**
+    requestEventBind ( e: Object )
+
+    Return Type:
+    void
+
+    Description:
+    为最外层模块对象绑定请求动作的事件代理
+
+    url doc:
+    http://icejs.org/######
+*/
+function requestEventHandler(path, method, post) {
+
+    if (method === "GET") {
+
+        const param = {},
+              nextStructure = Router.matchRoutes(path, param);
+
+        if (!nextStructure.isEmptyStructure()) {
+            const location = {
+                path,
+                nextStructure: nextStructure.copy(),
+                param,
+                get: iceHistory.history.getQuery(path),
+                post,
+                method,
+                action: "PUSH"
+            };
+
+            // 更新currentPage结构体对象
+            Structure$1.currentPage.update(location.nextStructure);
+
+            // 根据更新后的页面结构体渲染新视图
+            Structure$1.currentPage.render(location);
+        }
+    } else if (method === "POST") {
+        // post提交数据
+        http.post(path, post, redirectPath => {
+            if (redirectPath) {
+                redirectPath = iceHistory.history.buildURL(redirectPath);
+
+                requestEventHandler(redirectPath, "GET", {});
+            }
+        });
+    }
+}
+
+/////////////////////////////////
+var ice = {
+
+				// 路由模式，启动路由时可进行模式配置
+				// 自动选择路由模式(默认)
+				// 在支持html5 history API时使用新特性，不支持的情况下自动回退到hash模式
+				AUTO,
+
+				// 强制使用hash模式
+				HASH_HISTORY,
+
+				// 强制使用html5 history API模式
+				// 使用此模式时需注意：在不支持新特新的浏览器中是不能正常使用的
+				BROWSER_HISTORY,
+
+				// Module对象
+				Module,
+
+				// Component对象
+				Component,
+
+				// Class类构造器
+				// 用于创建组件类
+				Class,
+
+				/**
+    	start ( rootModuleName: String, routerConfig: Object )
+    	
+    	Return Type:
+    	void
+    	
+    	Description:
+    	以一个module作为起始点启动ice
+    	
+    	URL doc:
+    	http://icejs.org/######
+    */
+				startRouter(routerConfig = {}) {
+
+								// 纠正参数
+								// correctParam ( rootModuleName, routerConfig ).to ( "string", "object" ).done ( function () {
+								// 	this.$1 = rootModuleName;
+								// 	this.$2 = routerConfig;
+								// } );
+
+								// if ( rootModuleName !== undefined ) {
+								// 	check ( rootModuleName ).type ( "string" ).notBe ( "" ).ifNot ( "ice.startRouter", "当rootModuleName传入参数时，必须是不为空的字符串" ).do ();
+								// }
+
+								check(routerConfig).type("object").ifNot("ice.startRouter", "当routerConfig传入参数时，必须为object类型").do();
+
+								// 执行routes配置路由
+								(routerConfig.routes || noop)(new Router(Router.routeTree));
+								delete routerConfig.routes;
+
+								routerConfig.history = routerConfig.history || AUTO;
+								if (routerConfig.history === AUTO) {
+												if (iceHistory.supportNewApi()) {
+																routerConfig.history = BROWSER_HISTORY;
+												} else {
+																routerConfig.history = HASH_HISTORY;
+												}
+								}
+
+								iceHistory.initHistory(routerConfig.history);
+
+								// 当使用hash模式时纠正路径
+								const href = window.location.href,
+								      host = window.location.protocol + "//" + window.location.host + "/";
+
+								if (routerConfig.history === HASH_HISTORY && href !== host && href.indexOf(host + "#") === -1) {
+												if (window.location.hash) {
+																window.location.hash = "";
+												}
+
+												window.location.replace(href.replace(host, host + "#/"));
+								}
+
+								delete routerConfig.history;
+
+								// 将除routes、history外的配置信息进行保存
+								configuration(routerConfig);
+
+								// 绑定元素请求或提交表单的事件到body元素上
+								event$1.on(document.body, "click submit", e => {
+
+												const target = e.target,
+												      path = attr(target, e.type.toLowerCase() === "submit" ? iceAttr.action : iceAttr.href),
+												      method = e.type.toLowerCase() === "submit" ? attr(target, "method").toUpperCase() : "GET";
+
+												if (path) {
+																e.preventDefault();
+
+																requestEventHandler(iceHistory.history.buildURL(path), method, method.toLowerCase() === "post" ? target : {});
+												}
+								});
+
+								const param = {},
+								      path = iceHistory.history.getPathname(),
+								      location = {
+												path,
+												nextStructure: Router.matchRoutes(path, param),
+												param,
+												get: iceHistory.history.getQuery(),
+												post: {},
+												method: "GET",
+												action: "NONE"
+								};
+
+								// Router.matchRoutes()匹配当前路径需要更新的模块
+								// 因路由刚启动，故将nextStructure直接赋值给currentPage
+								Structure$1.currentPage = location.nextStructure.copy();
+
+								// 根据更新后的页面结构体渲染新视图
+								Structure$1.currentPage.render(location);
+				},
+
+				/**
+    install ( pluginDefinition: Object )
+    
+    Return Type:
+    void
+    
+    Description:
+    安装插件
+    插件定义对象必须拥有build方法
+    若插件安装后会返回一个对象，则可在模块或组件的生命周期钩子函数中直接使用插件名引入，框架会自动注入对应插件
+    
+    URL doc:
+    http://icejs.org/######
+    */
+				install(pluginDefiniton) {
+								check(pluginDefiniton.name).type("string").notBe("").check(cache.hasPlugin(pluginDefiniton.name)).be(false).ifNot("pluginDefiniton.name", "plugin安装对象必须定义name属性以表示此插件的名称，且不能与已有插件名称重复").do();
+
+								check(pluginDefiniton.build).type("function").ifNot("pluginDefiniton.build", "plugin安装对象必须包含build方法").do();
+
+								const deps = cache.getDependentPlugin(pluginDefiniton.build);
+
+								cache.pushPlugin(pluginDefiniton.name, pluginDefiniton.build.apply(this, deps));
+				}
 };
 
 return ice;

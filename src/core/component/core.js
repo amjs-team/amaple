@@ -1,5 +1,5 @@
 import { extend, foreach, noop, type } from "../../func/util";
-import { matchFnArgs, transformCompName } from "../../func/private";
+import { transformCompName } from "../../func/private";
 import { rcomponentName } from "../../var/const";
 import { componentErr } from "../../error";
 import slice from "../../var/slice";
@@ -12,7 +12,8 @@ import cache from "../../cache/core";
 export default function Component () {
 
 	// check
-	check ( this.init ).type ( "function" ).ifNot ( "component:" + this.constructor.name, "component derivative必须带有init方法" ).do ();
+	check ( this.init ).type ( "function" ).ifNot ( "component:" + this.constructor.name, "component derivative必须定义init方法" ).do ();
+    check ( this.render ).type ( "function" ).ifNot ( "component:" + this.constructor.name, "component derivative必须定义render方法，因为组件必须存在组件模板HTML" ).do ();
 }
 
 extend ( Component.prototype, {
@@ -54,61 +55,57 @@ extend ( Component.prototype, {
 
     	/////////////////////
     	// 转换组件代表元素为实际的组件元素节点
-    	if ( this.render ) {
-            let componentString, scopedStyle,
-                subElementNames = {};
+        let componentString, scopedStyle,
+            subElementNames = {};
 
-    		// 构造模板和样式的获取器获取模板和样式
-    		this.template = str => {
-    			componentString = str || "";
-            	return this;
-    		};
+		// 构造模板和样式的获取器获取模板和样式
+		this.template = str => {
+			componentString = str || "";
+        	return this;
+		};
 
-    		this.style = obj => {
-    			scopedStyle = obj || {};
-                return this;
-    		};
-            	
-            this.subElements = ( ...elemNames ) => {
-                foreach ( elemNames, nameObj => {
-                    if ( type ( nameObj ) === "string" ) {
-                        nameObj = { elem : nameObj, multiple: false };
-                    }
-
-                    if ( !rcomponentName.test ( nameObj.elem ) ) {
-						throw componentErr ( "subElements", "组件子元素名\"" + nameObj.elem + "\"定义错误，组件子元素名的定义规则与组件名相同，需遵循首字母大写的驼峰式" );
-                    }
-                    	
-                    subElementNames [ nameObj.elem ] = nameObj.multiple;
-                } );
-
-                return this;
-            };
-
-    		this.render.apply ( this, cache.getDependentPlugin ( this.render ) );
-
-    		delete this.template;
-        	delete this.style;
-        	delete this.subElements;
-
-    		// 处理模块并挂载数据
-    		const 
-            	vfragment = componentConstructor.initTemplate ( componentString, scopedStyle ),
-                subElements = componentConstructor.initSubElements ( componentVNode, subElementNames ),
-                tmpl = new Tmpl ( componentVm, this.components || [], this ),
-                vfragmentBackup = vfragment.clone ();
+		this.style = obj => {
+			scopedStyle = obj || {};
+            return this;
+		};
         	
-    		tmpl.mount ( vfragment, false, Tmpl.defineScoped ( subElements ) );
+        this.subElements = ( ...elemNames ) => {
+            foreach ( elemNames, nameObj => {
+                if ( type ( nameObj ) === "string" ) {
+                    nameObj = { elem : nameObj, multiple: false };
+                }
 
-            vfragment.diff ( vfragmentBackup ).patch ();
+                   if ( !rcomponentName.test ( nameObj.elem ) ) {
+					throw componentErr ( "subElements", "组件子元素名\"" + nameObj.elem + "\"定义错误，组件子元素名的定义规则与组件名相同，需遵循首字母大写的驼峰式" );
+                }
+                	
+                subElementNames [ nameObj.elem ] = nameObj.multiple;
+            } );
 
-    		// 保存组件对象和结构
-        	componentVNode.component = this;
-        	componentVNode.templateNodes = vfragment.children.concat ();
+            return this;
+        };
 
-    		// 调用mounted钩子函数
-    		( this.mounted || noop ).apply ( this, cache.getDependentPlugin ( this.mounted || noop ) );
-    	}
+		this.render.apply ( this, cache.getDependentPlugin ( this.render ) );
+
+		delete this.template;
+    	delete this.style;
+    	delete this.subElements;
+
+		// 处理模块并挂载数据
+		const 
+            vfragment = componentConstructor.initTemplate ( componentString, scopedStyle ),
+            subElements = componentConstructor.initSubElements ( componentVNode, subElementNames ),
+            tmpl = new Tmpl ( componentVm, this.components || [], this ),
+            vfragmentBackup = vfragment.clone ();
+    	
+		tmpl.mount ( vfragment, false, Tmpl.defineScoped ( subElements ) );
+
+		// 保存组件对象和结构
+    	componentVNode.component = this;
+    	componentVNode.templateNodes = vfragment.children.concat ();
+
+		// 调用mounted钩子函数
+		( this.mounted || noop ).apply ( this, cache.getDependentPlugin ( this.mounted || noop ) );
 
     	// 初始化action
     	if ( this.action ) {
@@ -124,6 +121,8 @@ extend ( Component.prototype, {
 
     	// 组件初始化完成，调用apply钩子函数
     	( this.apply || noop ).apply ( this, cache.getDependentPlugin ( this.apply || noop ) );
+
+        vfragment.diff ( vfragmentBackup ).patch ();
     },
 	
     /**

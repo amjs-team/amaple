@@ -1,6 +1,5 @@
 import iceAttr from "./iceAttr";
 import { attr, query } from "../func/node";
-import { buildURL } from "../func/private";
 import { type } from "../func/util";
 import Router from "../router/core";
 import http from "../http/core";

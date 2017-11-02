@@ -3,6 +3,7 @@ import { runtimeErr } from "../error";
 import slice from "../var/slice";
 import Subscriber from "./Subscriber";
 import Tmpl from "./tmpl/Tmpl";
+import NodeTransaction from "./vnode/NodeTransaction";
 
 
 /**
@@ -53,7 +54,7 @@ export default function ViewWatcher ( directive, node, expr, tmpl, scoped ) {
 
 	this.directive = directive;
 	this.node = node;
-	this.parentNode = node.parent;
+	this.parent = node.parent || node;
 	this.expr = expr;
 	this.tmpl = tmpl;
 	this.scoped = scoped;
@@ -105,10 +106,17 @@ extend ( ViewWatcher.prototype, {
 		http://icejs.org/######
 	*/
 	update () {
-		// const parentNodeBackup = this.parentNode.clone ();
+		const parentBackup = this.parent.clone ();
     	this.directive.update.call ( this, this.getter ( runtimeErr ) );
-    	// this.parentNode.render ();
-    	// this.parentNode.diff ( parentNodeBackup ).patch ();
+
+    	// 当已开启了一个事物时将收集新旧节点等待变更
+    	// 当没有开启事物时直接处理更新操作
+    	if ( NodeTransaction.acting instanceof NodeTransaction ) {
+    		NodeTransaction.acting.collect ( this.parent, parentBackup );
+    	}
+    	else {
+    		this.parent.diff ( parentBackup ).patch ();
+    	}
     },
 	
 	/**

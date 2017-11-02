@@ -184,34 +184,6 @@ export function extend ( ...args ) {
 }
 
 /**
-	replaceAll ( str: String, search: String, replaces: String )
-
-	Return Type:
-	String
-	替换后的字符串
-
-	Description:
-	将str中所有search替换为replace，特殊字符自动转义
-
-	URL doc:
-	http://icejs.org/######
-*/
-export function replaceAll ( str, search, replaces ) {
-	check ( arguments.length ).be ( 3 ).ifNot ( "function:replaceAll", "必须传入被替换字符串、查找替换的字符串和替换的字符串三个参数" ).do ();
-	check ( str, search, replaces ).type ( "string" ).ifNot ( "function:replaceAll", "函数所有参数类型都必须为string" ).do ();
-
-	// 转义字符串中所有特殊的符号
-	search = search.split( "" );
-	foreach ( search, ( char, i, search ) => {
-		search [ i ] = [ "$", "(", ")", "*", "+", ".", "[", "]", "?", "\\", "^", "{", "}", "|" ].indexOf ( char ) !== -1 ?
-					"\\" + char :
-					char;
-	});
-
-	return str.replace ( new RegExp ( search.join(""), "gm" ), replaces );
-}
-
-/**
 	isWindow ( object: Object )
 
 	Return Type:

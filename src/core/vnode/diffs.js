@@ -77,7 +77,7 @@ export function diffEvents ( newVNode, oldVNode, nodePatcher ) {
 
         // 绑定新vnode上的所有事件
         foreach ( newVNode.events, ( handlers, type ) => {
-            nodePatcher.addEvents ( oldVNode, type, handlers );
+            nodePatcher.addEvents ( newVNode, type, handlers );
         } );
     }
     else {
@@ -98,7 +98,7 @@ export function diffEvents ( newVNode, oldVNode, nodePatcher ) {
 
             // 存在没有绑定的时间方法时才绑定
             if ( addHandlers.length > 0 ) {
-                nodePatcher.addEvents ( oldVNode, type, addHandlers );
+                nodePatcher.addEvents ( newVNode, type, addHandlers );
             }
         } );
     }

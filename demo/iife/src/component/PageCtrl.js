@@ -1,4 +1,4 @@
-Class ( "PageCtrl" ).extends ( ice.Component ) ( {
+ice.Class ( "PageCtrl" ).extends ( ice.Component ) ( {
 	validateProps : function () {
     	this.propsType ( {
         	options : {

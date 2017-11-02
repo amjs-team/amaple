@@ -10,6 +10,8 @@ import event from "../event/core";
 import check from "../check";
 import correctParam from "../correctParam";
 import Module from "./Module";
+import Component from "./component/core";
+import Class from "../Class";
 import Router from "../router/core";
 import Structure from "./tmpl/Structure";
 
@@ -28,9 +30,16 @@ export default {
 	// 强制使用html5 history API模式
 	// 使用此模式时需注意：在不支持新特新的浏览器中是不能正常使用的
 	BROWSER_HISTORY,
-		
+	
 	// Module对象
 	Module,
+
+	// Component对象
+	Component,
+
+	// Class类构造器
+	// 用于创建组件类
+	Class,
 	
 	/**
 		start ( rootModuleName: String, routerConfig: Object )
@@ -149,7 +158,7 @@ export default {
 			.type ( "string" )
 			.notBe ( "" )
 			.check ( cache.hasPlugin ( pluginDefiniton.name ) )
-			.be ( true )
+			.be ( false )
 			.ifNot ( "pluginDefiniton.name", "plugin安装对象必须定义name属性以表示此插件的名称，且不能与已有插件名称重复" )
 			.do ();
 

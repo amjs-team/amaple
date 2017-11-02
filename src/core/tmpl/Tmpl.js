@@ -163,7 +163,7 @@ extend ( Tmpl.prototype, {
                                 // 事件绑定
                                 handler = Tmpl.directives.on;
                                 targetNode = vnode,
-                                expr = ` ${ directive.slice ( 2 ) }:${ attr }`;
+                                expr = `${ directive.slice ( 2 ) }:${ attr }`;
                             }
                             else if ( Tmpl.directives [ directive ] ) {
 

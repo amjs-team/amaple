@@ -344,31 +344,31 @@ export default {
 	*/
 	post : request ( "POST" ),
 	
-	onrequest ( target, callback ) {
+	// onrequest ( target, callback ) {
     	
-    },
+ //    },
 	
-	oncomplete ( target, callback ) {
+	// oncomplete ( target, callback ) {
     	
-    },
+ //    },
 	
-	onsuccess ( target, callback ) {
+	// onsuccess ( target, callback ) {
     	
-    },
+ //    },
 	
-	onerror ( target, callback ) {
+	// onerror ( target, callback ) {
     	
-    },
+ //    },
 	
-	onabort ( target, callback ) {
+	// onabort ( target, callback ) {
     	
-    },
+ //    },
 	
-	onprogress ( target, callback ) {
+	// onprogress ( target, callback ) {
     	
-    },
+ //    },
 	
-	onuploadprogress ( target, callback ) {
+	// onuploadprogress ( target, callback ) {
     	
-    },
+ //    },
 };

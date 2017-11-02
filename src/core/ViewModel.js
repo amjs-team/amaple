@@ -4,6 +4,7 @@ import { defineReactiveProperty } from "../func/private";
 import { VNODE_ADD, VNODE_REMOVE, VNODE_MOVE } from "../var/const";
 import Subscriber from "./Subscriber";
 import ValueWatcher from "./ValueWatcher";
+import NodeTransaction from "./vnode/NodeTransaction";
 
 
 function convertState ( value, subs, context ) {
@@ -17,7 +18,11 @@ function convertState ( value, subs, context ) {
 function initMethod ( methods, context ) {
 	foreach ( methods, ( method, key ) => {
 		context [ key ] = function ( ...args ) {
+			const nt = new NodeTransaction ().start ();
 			method.apply ( context, args );
+
+			// 提交节点更新事物，更新所有已更改的vnode进行对比
+			nt.commit ();
 		};
 	} );
 }
@@ -151,9 +156,9 @@ function initArray ( array, subs, context ) {
 	http://icejs.org/######
 */
 export default function ViewModel ( vmData, isRoot = true ) {
-	let state 		= {},
-		method 		= {},
-		computed 	= {};
+	let state = {},
+		method = {},
+		computed = {};
 
 	// 将vmData内的属性进行分类
 	foreach ( vmData, ( value, key ) => {

@@ -10,6 +10,7 @@ import Subscriber from "../Subscriber";
 import ValueWatcher from "../ValueWatcher";
 import VNode from "../vnode/VNode";
 import VFragment from "../vnode/VFragment";
+import NodeTransaction from "../vnode/NodeTransaction";
 
 const dataType = [ String, Number, Function, Boolean, Object ];
 
@@ -169,7 +170,9 @@ export default {
         foreach ( lifeCycleHook, ( hookFn, cycleName ) => {
             const cycleFunc = component [ cycleName ];
             component [ cycleName ] = () => {
+                const nt = new NodeTransaction ().start ();
                 ( cycleFunc || noop ).apply ( component, cache.getDependentPlugin ( cycleFunc || noop ) );
+                nt.commit ();
 
                 // 钩子函数调用
                 hookFn ();
@@ -289,7 +292,9 @@ export default {
             }
 
             component.action [ name ] = ( ...args ) => {
+                const nt = new NodeTransaction ().start ();
                 action.apply ( component, args );
+                nt.commit ();
             };
         } );
 

@@ -1,6 +1,6 @@
 import { noop, guid, extend, type, foreach } from "../func/util";
 import { query } from "../func/node";
-import { matchFnArgs, parseGetQuery } from "../func/private";
+import { parseGetQuery } from "../func/private";
 import slice from "../var/slice";
 import cache from "../cache/core";
 import { newClassCheck } from "../Class.js";
@@ -10,6 +10,7 @@ import iceAttr from "../single/iceAttr";
 import check from "../check";
 import Structure from "./tmpl/Structure";
 import VNode from "./vnode/VNode";
+import NodeTransaction from "./vnode/NodeTransaction";
 
 
 /**
@@ -42,7 +43,7 @@ function findParentVm ( elem ) {
 }
 
 /**
-    initModuleLifeCycle ( module: Object, lifeCycle: Array, vm: Object )
+    initModuleLifeCycle ( module: Object, lifeCycle: Array, vm: Object, moduleElem: Object )
     
     Return Type:
     void
@@ -53,7 +54,7 @@ function findParentVm ( elem ) {
     URL doc:
     http://icejs.org/######
 */
-function initModuleLifeCycle ( module, vm ) {
+function initModuleLifeCycle ( module, vm, moduleElem ) {
     const
     	// Module生命周期
 		lifeCycle = [ "queryChanged", "paramChanged", "unmount" ],
@@ -62,7 +63,13 @@ function initModuleLifeCycle ( module, vm ) {
     foreach ( lifeCycle, cycleItem => {
         lifeCycleContainer [ cycleItem ] = vm [ cycleItem ] || noop;
         module [ cycleItem ] = () => {
+
+        	const nt = new NodeTransaction ().start ();
             lifeCycleContainer [ cycleItem ].apply ( module, cache.getDependentPlugib ( lifeCycleContainer [ cycleItem ] ) );
+
+            // 提交节点更新事物，更新所有已更改的vnode进行对比
+            // 对比新旧vnode计算出差异并根据差异更新到实际dom中
+            nt.commit ();
         }
         
         delete vm [ cycleItem ];
@@ -90,7 +97,7 @@ export default function Module ( module, vmData = { init: function () { return {
 
 	newClassCheck ( this, Module );
 	
-	let moduleElem;
+	let moduleElem = {};
     if ( type ( module ) === "string" ) {
     	moduleElem = query ( `*[${ iceAttr.module }=${ module }]` );
     }
@@ -104,7 +111,6 @@ export default function Module ( module, vmData = { init: function () { return {
   	
   	/////////////////////////////////
   	/////////////////////////////////
-	initModuleLifeCycle ( this, vmData );
 
 	let parent;
 	if ( Structure.currentPage ) {
@@ -137,6 +143,8 @@ export default function Module ( module, vmData = { init: function () { return {
     this.parent = parent;
 	
 	moduleElem = VNode.domToVNode ( moduleElem );
+	initModuleLifeCycle ( this, vmData, moduleElem );
+
     const
     	moduleElemBackup = moduleElem.clone (),
     	components = ( () => {
@@ -175,12 +183,12 @@ export default function Module ( module, vmData = { init: function () { return {
 	// 普通模式下，如果parent为对象时表示此模块不是最上层模块，不需挂载
 	tmpl.mount ( moduleElem, Structure.currentPage ? false : !parent );
 	
+	// 调用apply方法
+	( vmData.apply || noop ).apply ( this, cache.getDependentPlugin ( vmData.apply || noop ) );
+
 	// 对比新旧vnode计算出差异
 	// 并根据差异更新到实际dom中
 	moduleElem.diff ( moduleElemBackup ).patch ();
-	
-	// 调用apply方法
-	( vmData.apply || noop ).apply ( this, cache.getDependentPlugin ( vmData.apply || noop ) );
 }
 
 extend ( Module.prototype, {

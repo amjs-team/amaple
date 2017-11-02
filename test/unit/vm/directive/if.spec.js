@@ -29,12 +29,10 @@ describe ( "directive if => ", () => {
         expect ( realDOM.childNodes.item ( 0 ).nodeType ).toBe ( 3 );
         expect ( realDOM.childNodes.item ( 0 ).nodeValue ).toBe ( "" );
 
-        dBackup = d.clone ();
         vm.show = 1;
         expect ( d.children [ 0 ].nodeType ).toBe ( 1 );
         expect ( d.children [ 0 ].children [ 0 ].nodeValue ).toBe ( "hello icejs" );
         // 比较最小更新步骤并渲染到实际dom
-        d.diff ( dBackup ).patch ();
         expect ( realDOM.childNodes.item ( 0 ).nodeType ).toBe ( 1 );
         expect ( realDOM.childNodes.item ( 0 ).childNodes.item ( 0 ).nodeValue ).toBe ( "hello icejs" );
     } );
@@ -64,15 +62,12 @@ describe ( "directive if => ", () => {
         expect ( realDOM.childNodes.item ( 1 ).nodeValue ).toBe ( "" );
         expect ( realDOM.childNodes.item ( 2 ).childNodes.item ( 0 ).nodeValue ).toBe ( "hello icejs3" );
 
-        dBackup = d.clone ();
         vm.show1 = 0;
         vm.show2 = 1;
         expect ( d.children [ 0 ].nodeType ).toBe ( 3 );
         expect ( d.children [ 0 ].nodeValue ).toBe ( "" );
         expect ( d.children [ 1 ].children [ 0 ].nodeValue ).toBe ( "hello icejs2" );
         expect ( d.children [ 2 ].children [ 0 ].nodeValue ).toBe ( "hello icejs3" );
-        // 比较最小更新步骤并渲染到实际dom
-        d.diff ( dBackup ).patch ();
         expect ( realDOM.childNodes.item ( 0 ).nodeType ).toBe ( 3 );
         expect ( realDOM.childNodes.item ( 0 ).nodeValue ).toBe ( "" );
         expect ( realDOM.childNodes.item ( 1 ).childNodes.item ( 0 ).nodeValue ).toBe ( "hello icejs2" );
@@ -95,11 +90,8 @@ describe ( "directive if => ", () => {
         d.diff ( dBackup ).patch ();
         expect ( realDOM.childNodes.item ( 0 ).childNodes.item ( 0 ).nodeValue ).toBe ( "hello icejs" );
 
-        dBackup = d.clone ();
         vm.show = "1";
         expect ( d.children [ 0 ].nodeValue ).toBe ( "" );
-        // 比较最小更新步骤并渲染到实际dom
-        d.diff ( dBackup ).patch ();
         expect ( realDOM.childNodes.item ( 0 ).nodeValue ).toBe ( "" );
     } );
 
@@ -127,47 +119,33 @@ describe ( "directive if => ", () => {
         expect ( realDOM.childNodes.item ( 0 ).childNodes.item ( 0 ).nodeValue ).toBe ( "hello icejs1" );
         expect ( realDOM.childNodes.item ( 1 ).childNodes.item ( 0 ).nodeValue ).toBe ( "hello icejs4" );
 
-        dBackup = d.clone ();
         vm.show = 1;
         expect ( d.children.length ).toBe ( 2 );
         expect ( d.children [ 0 ].children [ 0 ].nodeValue ).toBe ( "hello icejs2" );
-        // 比较最小更新步骤并渲染到实际dom
-        d.diff ( dBackup ).patch ();
         expect ( realDOM.childNodes.length ).toBe ( 2 );
         expect ( realDOM.childNodes.item ( 0 ).childNodes.item ( 0 ).nodeValue ).toBe ( "hello icejs2" );
 
-        dBackup = d.clone ();
         vm.show = 0;
         expect ( d.children.length ).toBe ( 2 );
         expect ( d.children [ 0 ].children [ 0 ].nodeValue ).toBe ( "hello icejs3" );
-        // 比较最小更新步骤并渲染到实际dom
-        d.diff ( dBackup ).patch ();
         expect ( realDOM.childNodes.length ).toBe ( 2 );
         expect ( realDOM.childNodes.item ( 0 ).childNodes.item ( 0 ).nodeValue ).toBe ( "hello icejs3" );
 
-        dBackup = d.clone ();
         vm.show2 = "bb";
         expect ( d.children.length ).toBe ( 2 );
         expect ( d.children [ 1 ].children [ 0 ].nodeValue ).toBe ( "hello icejs5" );
-        // 比较最小更新步骤并渲染到实际dom
-        d.diff ( dBackup ).patch ();
         expect ( realDOM.childNodes.length ).toBe ( 2 );
         expect ( realDOM.childNodes.item ( 1 ).childNodes.item ( 0 ).nodeValue ).toBe ( "hello icejs5" );
 
-        dBackup = d.clone ();
         vm.show2 = "cc";
         expect ( d.children [ 1 ].nodeType ).toBe ( 3 );
         expect ( d.children [ 1 ].nodeValue ).toBe ( "" );
-        // 比较最小更新步骤并渲染到实际dom
-        d.diff ( dBackup ).patch ();
         expect ( realDOM.childNodes.item ( 1 ).nodeType ).toBe ( 3 );
         expect ( realDOM.childNodes.item ( 1 ).nodeValue ).toBe ( "" );
 
-        dBackup = d.clone ();
         vm.show2 = "bb";
         expect ( d.children.length ).toBe ( 2 );
         expect ( d.children [ 1 ].children [ 0 ].nodeValue ).toBe ( "hello icejs5" );
-        d.diff ( dBackup ).patch ();
         expect ( realDOM.childNodes.length ).toBe ( 2 );
         expect ( realDOM.childNodes.item ( 1 ).childNodes.item ( 0 ).nodeValue ).toBe ( "hello icejs5" );
     } );
@@ -206,34 +184,27 @@ describe ( "directive if => ", () => {
         expect ( realDOM.childNodes.length ).toBe ( 1 );
         expect ( realDOM.childNodes.item ( 0 ).childNodes.item ( 0 ).childNodes.item ( 0 ).nodeValue ).toBe ( "hello icejs1" );
 
-        dBackup = d.clone ();
         vm.show2 = false;
         expect ( d.children [ 0 ].children [ 0 ].nodeValue ).toBe ( "" );
-        d.diff ( dBackup ).patch ();
         expect ( realDOM.childNodes.item ( 0 ).childNodes.item ( 0 ).nodeValue ).toBe ( "" );
 
-        dBackup = d.clone ();
         vm.show = 1;
         expect ( d.children [ 0 ].children [ 0 ].children [ 0 ].nodeValue ).toBe ( "hello icejs2" );
-        d.diff ( dBackup ).patch ();
         expect ( realDOM.childNodes.item ( 0 ).childNodes.item ( 0 ).childNodes.item ( 0 ).nodeValue ).toBe ( "hello icejs2" );
 
-        dBackup = d.clone ();
+
         vm.show3 = 'b'
         expect ( d.children [ 0 ].children [ 0 ].children [ 0 ].nodeValue ).toBe ( "hello icejs3" );
-        d.diff ( dBackup ).patch ();
         expect ( realDOM.childNodes.item ( 0 ).childNodes.item ( 0 ).childNodes.item ( 0 ).nodeValue ).toBe ( "hello icejs3" );
 
-        dBackup = d.clone ();
+
         vm.show3 = 'c';
         expect ( d.children [ 0 ].children [ 0 ].nodeValue ).toBe ( "" );
-        d.diff ( dBackup ).patch ();
         expect ( realDOM.childNodes.item ( 0 ).childNodes.item ( 0 ).nodeValue ).toBe ( "" );
 
-        dBackup = d.clone ();
+
         vm.show = 0
         expect ( d.children [ 0 ].children [ 0 ].nodeValue ).toBe ( "hello icejs4" );
-        d.diff ( dBackup ).patch ();
         expect ( realDOM.childNodes.item ( 0 ).childNodes.item ( 0 ).nodeValue ).toBe ( "hello icejs4" );
     } );
 
@@ -276,24 +247,22 @@ describe ( "directive if => ", () => {
         expect ( realDOM.childNodes.item ( 0 ).childNodes.item ( 0 ).nodeValue ).toBe ( "555" );
         expect ( realDOM.childNodes.item ( 0 ).childNodes.item ( 1 ).nodeValue ).toBe ( "666" );
 
-        dBackup = d.clone ();
+
         vm.show = 2;
         expect ( children.length ).toBe ( 1 );
         expect ( children [ 0 ].nodeName ).toBe ( "TEMPLATE" );
         expect ( children [ 0 ].templateNodes [ 0 ].nodeName ).toBe ( "SPAN" );
         expect ( children [ 0 ].templateNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( "555123" );
         expect ( children [ 0 ].templateNodes [ 0 ].children [ 1 ].nodeValue ).toBe ( "888" );
-        d.diff ( dBackup ).patch ();
         expect ( realDOM.childNodes.length ).toBe ( 1 );
         expect ( realDOM.childNodes.item ( 0 ).nodeName ).toBe ( "SPAN" );
         expect ( realDOM.childNodes.item ( 0 ).childNodes.item ( 0 ).nodeValue ).toBe ( "555123" );
         expect ( realDOM.childNodes.item ( 0 ).childNodes.item ( 1 ).nodeValue ).toBe ( "888" );
 
-        dBackup = d.clone ();
+
         vm.show = 3;
         expect ( children.length ).toBe ( 1 );
         expect ( children [ 0 ].children [ 0 ].nodeValue ).toBe ( "999" );
-        d.diff ( dBackup ).patch ();
         expect ( realDOM.childNodes.length ).toBe ( 1 );
         expect ( realDOM.childNodes.item ( 0 ).childNodes.item ( 0 ).nodeValue ).toBe ( "999" );
     } );
