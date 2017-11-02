@@ -1,7 +1,7 @@
 import slice from "../../var/slice";
-import { extend, foreach, type } from "../../func/util";
+import { extend, foreach, type, noop } from "../../func/util";
 import { attr } from "../../func/node";
-import { transformCompName } from "../../func/private";
+import { transformCompName, defineReactiveProperty } from "../../func/private";
 import { rexpr } from "../../var/const";
 import iceAttr from "../../single/iceAttr";
 import Subscriber from "../Subscriber";
@@ -10,6 +10,7 @@ import { runtimeErr } from "../../error";
 import Structure from "./Structure";
 import Component from "../component/core";
 import VNode from "../vnode/VNode";
+import ViewModel from "../ViewModel";
 
 /**
     preTreat ( vnode: Object )
@@ -246,7 +247,7 @@ extend ( Tmpl, {
     directivePrefix : ":",
 	
 	/**
-    	defineScoped ( scopedDefinition: Object )
+    	defineScoped ( scopedDefinition: Object, scopedVNode: Object, isStatic: Object )
     
     	Return Type:
     	Object
@@ -257,27 +258,64 @@ extend ( Tmpl, {
 		此方法将生成局部变量操作对象，内含替身变量前缀
     	此替身变量名不能为当前vm中已有的变量名，所以需取的生僻些
     	在挂载数据时如果有替身则会将局部变量名替换为替身变量名来达到不重复vm中已有变量名的目的
+        局部变量vm将保存在当前挂载的vnode上，可直接修改此局部变量修改模板内容
     
     	URL doc:
     	http://icejs.org/######
     */
-    defineScoped ( scopedDefinition ) {
-		const scoped = {
+    defineScoped ( scopedDefinition, scopedVNode, isStatic ) {
+
+		const
+            scopedVars = {},
+            scoped = {
             	prefix : "ICE_FOR_" + Date.now() + "_",
-        		vars : {}
+                scopedMounts : [],
+                scopedUnmounts : [],
             },
             availableItems = [];
 
     	foreach ( scopedDefinition, ( val, varName ) => {
     		if ( varName ) {
-    			scoped.vars [ scoped.prefix + varName ] = val;
+    			scopedVars [ scoped.prefix + varName ] = val;
 
                 // 两边添加”\b“表示边界，以防止有些单词中包含局部变量名而错误替换
             	availableItems.push ( "\\b" + varName + "\\b" );
     		}
     	} );
 
-    	scoped.regexp = new RegExp ( availableItems.join ( "|" ), "g" );
+        if ( isStatic !== false ) {
+            scopedVNode.scoped = new ViewModel ( scopedVars );
+            foreach ( scopedVars, ( scopedVar, name ) => {
+
+                // 构造局部变量代理变量
+                scoped.scopedMounts.push ( vm => {
+                    defineReactiveProperty ( name, () => {
+                        return scopedVNode.scoped [ name ];
+                    }, noop, vm );
+                } );
+
+                // 构造代理变量卸载函数
+                scoped.scopedUnmounts.push ( vm => {
+                    delete vm [ name ];
+                } );
+            } );
+        }
+        else {
+            foreach ( scopedVars, ( scopedVar, name ) => {
+
+                // 构造静态的局部变量
+                scoped.scopedMounts.push ( vm => {
+                    vm [ name ] = scopedVar;
+                } );
+
+                // 静态局部变量卸载函数
+                scoped.scopedUnmounts.push ( vm => {
+                    delete vm [ name ];
+                } );
+            } );
+        }
+
+        scoped.regexp = new RegExp ( availableItems.join ( "|" ), "g" );
 
     	return scoped;
     },

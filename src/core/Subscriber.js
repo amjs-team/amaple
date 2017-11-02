@@ -47,7 +47,7 @@ extend ( Subscriber.prototype, {
             }
 
         	this.watchers.push ( Subscriber.watcher );
-        	Subscriber.watcher = undefined;
+        	// Subscriber.watcher = false;
         }
     },
 

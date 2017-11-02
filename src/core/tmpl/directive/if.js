@@ -26,7 +26,7 @@ Tmpl.defineDirective ( {
 		
     	this.expr = "[" + elem.conditions.join ( "," ) + "]";
     	this.replacement = VTextNode ( "" );
-        this.replacement.conditionElems = elem.conditionElems;
+        this.replacement.mainVNode = elem;
 
         // 如果有key则为占位元素设置相同key
         if ( elem.key ) {

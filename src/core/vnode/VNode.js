@@ -409,7 +409,7 @@ extend ( VNode.prototype, {
         let vnode, 
             node = this.node;
 
-        if ( realNode && realNode.nodeType || realNode === null ) {
+        if ( realNode && ( realNode.nodeType || type ( realNode ) === "array" ) || realNode === null ) {
             node = realNode;
         }
 

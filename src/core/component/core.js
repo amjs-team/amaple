@@ -98,7 +98,7 @@ extend ( Component.prototype, {
             tmpl = new Tmpl ( componentVm, this.components || [], this ),
             vfragmentBackup = vfragment.clone ();
     	
-		tmpl.mount ( vfragment, false, Tmpl.defineScoped ( subElements ) );
+		tmpl.mount ( vfragment, false, Tmpl.defineScoped ( subElements, componentVNode, false ) );
 
 		// 保存组件对象和结构
     	componentVNode.component = this;

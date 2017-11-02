@@ -21,7 +21,7 @@ import NodeTransaction from "./vnode/NodeTransaction";
 */
 function makeFn ( code ) {
 	return new Function ( "runtimeErr", 
-	`let self = this,
+	`var self = this,
 		 ret;
 	self.addScoped ();
 	with ( self.tmpl.getViewModel () ) {
@@ -83,7 +83,7 @@ export default function ViewWatcher ( directive, node, expr, tmpl, scoped ) {
 		val = this.getter ( runtimeErr );
 
 		// 局部变量没有设置监听，所以不会调用Subscriber.subscriber()，需手动设置为undefined
-		Subscriber.watcher = undefined;
+		delete Subscriber.watcher;
     }
   
 	directive.update.call ( this, val );
@@ -106,16 +106,18 @@ extend ( ViewWatcher.prototype, {
 		http://icejs.org/######
 	*/
 	update () {
-		const parentBackup = this.parent.clone ();
+		const 
+			diffVNode = this.parent,
+			diffBackup = diffVNode.clone ();
     	this.directive.update.call ( this, this.getter ( runtimeErr ) );
 
     	// 当已开启了一个事物时将收集新旧节点等待变更
     	// 当没有开启事物时直接处理更新操作
     	if ( NodeTransaction.acting instanceof NodeTransaction ) {
-    		NodeTransaction.acting.collect ( this.parent, parentBackup );
+    		NodeTransaction.acting.collect ( diffVNode, diffBackup );
     	}
     	else {
-    		this.parent.diff ( parentBackup ).patch ();
+    		diffVNode.diff ( diffBackup ).patch ();
     	}
     },
 	
@@ -133,11 +135,10 @@ extend ( ViewWatcher.prototype, {
     	http://icejs.org/######
     */
 	addScoped () {
-    	const vm = this.tmpl.getViewModel ();
     	
     	// 增加局部变量
-		foreach ( this.scoped && this.scoped.vars || {}, ( val, varName ) => {
-			vm [ varName ] = val;
+		foreach ( this.scoped && this.scoped.scopedMounts || [], mountFunc => {
+			mountFunc ( this.tmpl.getViewModel () );
 		} );
     },
 	
@@ -155,11 +156,10 @@ extend ( ViewWatcher.prototype, {
     	http://icejs.org/######
     */
 	removeScoped () {
-    	const vm = this.tmpl.getViewModel ();
-    	foreach ( this.scoped && this.scoped.vars || {}, ( val, varName ) => {
-        	if ( vm.hasOwnProperty ( varName ) ) {
-                delete vm [ varName ]
-            }
+
+    	// 移除局部变量
+		foreach ( this.scoped && this.scoped.scopedUnmounts || [], unmountFunc => {
+			unmountFunc ( this.tmpl.getViewModel () );
 		} );
     },
 

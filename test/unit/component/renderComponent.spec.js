@@ -7,10 +7,11 @@ import VTextNode from "core/vnode/VTextNode";
 import VFragment from "core/vnode/VFragment";
 
 describe ( "render component => ", () => {
-	let TestComp, updateSpy;
+	let TestComp, updateSpy, mountedSpy;
 
 	beforeEach ( () => {
-		updateSpy = jasmine.createSpy ( "updateSpy" )
+		updateSpy = jasmine.createSpy ( "updateSpy" );
+		mountedSpy = jasmine.createSpy ( "mountedSpy" );
 
 		TestComp = Class ( "TestComp" ).extends ( Component ) ( {
 			init () {
@@ -29,6 +30,9 @@ describe ( "render component => ", () => {
 			        }
 			    } )
 			    .subElements ( "SubComp", { elem: "SubComp2", multiple: true } );
+			},
+			mounted () {
+				mountedSpy ();
 			},
 			update () {
 				updateSpy ();
@@ -153,7 +157,7 @@ describe ( "render component => ", () => {
 			moduleObj = {},
 			div = VElement ( "div" ),
 			vm = new ViewModel ( {
-				list: [ "a", "b","c" ]
+				list: [ "a", "b", "c" ]
 			} ),
 			tmpl = new Tmpl ( vm, [ TestComp ], moduleObj );
 
@@ -185,6 +189,7 @@ describe ( "render component => ", () => {
 		expect ( realDOM.children.length ).toBe ( 8 );
 		expect ( realDOM.children.item ( 3 ).firstChild.nodeValue ).toBe ( "b" );
 		expect ( realDOM.children.item ( 7 ).firstChild.nodeValue ).toBe ( "c" );
+		// expect ( mountedSpy.calls.count () ).toBe ( 3 );
 		
 
 		vm.list.unshift ( "aa" );
@@ -231,30 +236,24 @@ describe ( "render component => ", () => {
 		expect ( realDOM.children.length ).toBe ( 4 );
 		expect ( realDOM.children.item ( 3 ).firstChild.nodeValue ).toBe ( "b" );
 
-		dBackup = div.clone ();
 		vm.item = "a";
 		expect ( div.children.length ).toBe ( 5 );
 		expect ( div.children [ 1 ].templateNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "a" );
-		div.diff ( dBackup ).patch ();
 		expect ( realDOM.children.length ).toBe ( 4 );
 		expect ( realDOM.children.item ( 3 ).firstChild.nodeValue ).toBe ( "a" );
 
-		dBackup = div.clone ();
 		vm.item = "d";
 		expect ( div.children.length ).toBe ( 5 );
 		expect ( div.children [ 1 ].nodeType ).toBe ( 3 );
 		expect ( div.children [ 2 ].nodeType ).toBe ( 3 );
 		expect ( div.children [ 3 ].nodeType ).toBe ( 3 );
-		div.diff ( dBackup ).patch ();
 		expect ( realDOM.childNodes.item ( 1 ).nodeType ).toBe ( 3 );
 		expect ( realDOM.childNodes.item ( 2 ).nodeType ).toBe ( 3 );
 		expect ( realDOM.childNodes.item ( 3 ).nodeType ).toBe ( 3 );
 
-		dBackup = div.clone ();
 		vm.item = "c";
 		expect ( div.children.length ).toBe ( 5 );
 		expect ( div.children [ 3 ].templateNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "c" );
-		div.diff ( dBackup ).patch ();
 		expect ( realDOM.children.length ).toBe ( 4 );
 		expect ( realDOM.children.item ( 3 ).firstChild.nodeValue ).toBe ( "c" );
 	} );
