@@ -4,7 +4,7 @@ import cache from "./cache/core";
 import ComponentLoader from "./core/component/require/ComponentLoader";
 
 const 
-	rconstructor = /^(?:constructor\s*|function\s*)?\((.*?)\)\s*(?:=>\s*)?{([\s\S]*)}$/,
+	rconstructor = /^(?:constructor\s*|function\s*)?(?:constructor\s*)?\((.*?)\)\s*(?:=>\s*)?{([\s\S]*)}$/,
 	rscriptComment = /\/\/(.*?)\n|\/\*([\s\S]*?)\*\//g;
 
 /**

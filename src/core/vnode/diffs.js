@@ -272,7 +272,7 @@ export function diffChildren ( newChildren, oldChildren, nodePatcher ) {
                             moveItems.push ( {
                                 item : newChild,
                                 from : oldIndex,
-                                to : getInsertIndex ( j, newItem.children ),
+                                to : getInsertIndex ( j, oldChildrenCopy ),
                                 list : oldChildrenCopy.concat ()
                             } );
 
@@ -283,6 +283,8 @@ export function diffChildren ( newChildren, oldChildren, nodePatcher ) {
                 } );
                 
                 foreach ( optimizeSteps ( moveItems ), move => { 
+
+
                     nodePatcher.moveNode ( move.item, move.to + offset );
                 } );
             }

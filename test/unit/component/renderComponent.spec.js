@@ -356,10 +356,8 @@ describe ( "render component => ", () => {
 		expect ( realDOM.querySelector ( "#default" ).children.length ).toBe ( 2 );
 		expect ( realDOM.querySelector ( "#default" ).children.item ( 0 ).firstChild.nodeValue ).toBe ( "b" );
 		expect ( realDOM.querySelector ( "#default" ).children.item ( 1 ).firstChild.nodeValue ).toBe ( "c" );
-
-		dBackup = div.clone ();
+		
 		vm.list.reverse ();
-		div.diff ( dBackup ).patch ();
 	} );
 
 	it ( "render multiple components", () => {

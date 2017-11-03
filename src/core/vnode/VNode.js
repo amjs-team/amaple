@@ -377,14 +377,14 @@ extend ( VNode.prototype, {
                 break;
         }
     	
-        if ( type ( this.node ) === "array" ) {
-            f = document.createDocumentFragment ();
-            foreach ( this.node, node => {
-                f.appendChild ( node );
-            } );
+        // if ( type ( this.node ) === "array" ) {
+        //     f = document.createDocumentFragment ();
+        //     foreach ( this.node, node => {
+        //         f.appendChild ( node );
+        //     } );
 
-            return f;
-        }
+        //     return f;
+        // }
 
     	return this.node;
     },

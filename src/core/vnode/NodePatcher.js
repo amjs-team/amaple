@@ -198,6 +198,8 @@ extend ( NodePatcher.prototype, {
                         } );
                     	
                     	if ( patchItem.index < p.childNodes.length ) {
+
+                    		// 在template或组件元素移动的情况下是先将移动的元素取出到fragment中，再根据对应位置将fragment插入，不同于普通元素的移动，故不需要+1
             				p.insertBefore ( f, p.childNodes.item ( patchItem.index ) );
                     	}
                 		else {
@@ -211,7 +213,11 @@ extend ( NodePatcher.prototype, {
                     }
                 	else {
                 		if ( patchItem.index < p.childNodes.length ) {
-            				p.insertBefore ( patchItem.item.node, p.childNodes.item ( patchItem.index ) );
+            				p.insertBefore ( patchItem.item.node, p.childNodes.item ( patchItem.index + (
+ 								// 在移动操作时的index对应的操作为先移除元素再将此元素插入对应位置
+ 								// 但在此是直接调用insertBefore进行位置调换的，省去了移除原位置的动作，故在移动元素的情况下需+1
+ 								patchItem.isMove ? 1 : 0
+ 							) ) );
                     	}
                 		else {
                     		p.appendChild ( patchItem.item.node );
