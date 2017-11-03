@@ -189,7 +189,7 @@ describe ( "render component => ", () => {
 		expect ( realDOM.children.length ).toBe ( 8 );
 		expect ( realDOM.children.item ( 3 ).firstChild.nodeValue ).toBe ( "b" );
 		expect ( realDOM.children.item ( 7 ).firstChild.nodeValue ).toBe ( "c" );
-		// expect ( mountedSpy.calls.count () ).toBe ( 3 );
+		expect ( mountedSpy.calls.count () ).toBe ( 3 );
 		
 
 		vm.list.unshift ( "aa" );

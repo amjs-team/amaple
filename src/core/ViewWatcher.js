@@ -37,6 +37,33 @@ function makeFn ( code ) {
 }
 
 /**
+	getDiffNode ( watcher: Object )
+
+	Return Type:
+	Object
+	进行对比的vnode
+
+	Description:
+	获取节点更新后进行对比的节点，一般为更新node的父节点
+
+	URL doc:
+	http://icejs.org/######
+*/
+function getDiffNode ( watcher ) {
+
+	let diffVNode = watcher.parent;
+	if ( diffVNode && diffVNode.nodeType !== 1 && watcher.node.conditionElems ) {
+		foreach ( watcher.node.conditionElems.concat ( watcher.replacement ), conditionElem => {
+			if ( conditionElem.parent && conditionElem.parent.nodeType === 1 ) {
+				diffVNode = conditionElem.parent;
+			}
+		} );
+	}
+
+	return diffVNode;
+}
+
+/**
 	ViewWatcher ( directive: Object, node: DOMObject, expr: String, tmpl?: Object, scoped?: Object )
 
 	Return Type:
@@ -107,7 +134,7 @@ extend ( ViewWatcher.prototype, {
 	*/
 	update () {
 		const 
-			diffVNode = this.parent,
+			diffVNode = getDiffNode ( this ),
 			diffBackup = diffVNode.clone ();
     	this.directive.update.call ( this, this.getter ( runtimeErr ) );
 
@@ -171,7 +198,7 @@ extend ( ViewWatcher.prototype, {
     
     	Description:
     	卸载此watcher对象
-    	当被绑定元素在DOM树上移除后，那对应vm属性对此元素的订阅也需移除
+    	当被绑定元素在DOM树上移除后，对应vm属性对此元素的订阅也需移除
     
     	URL doc:
     	http://icejs.org/######

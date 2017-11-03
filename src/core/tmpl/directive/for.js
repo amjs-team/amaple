@@ -6,18 +6,18 @@ import Tmpl from "../Tmpl";
 import VTextNode from "../../vnode/VTextNode";
 import VFragment from "../../vnode/VFragment";
 
-function createVNode ( watcher, arg, index, originalVNode = {} ) {
+function createVNode ( watcher, arg, index ) {
     const 
         f = VFragment (),
         elem = watcher.node,
-        // 为itemNode指定key，如果没有传入key则生成一个新key
-        key = originalVNode.key !== undefined ? originalVNode.key : guid (),
+        // 为itemNode指定新的key值
+        key = guid (),
 
         // 定义范围变量
         scopedDefinition = {};
 
     // 原始元素没有引用实际dom时传入null，表示克隆vnode不引用任何实际dom
-    let itemNode = elem.clone ( originalVNode.node || null ),
+    let itemNode = elem.clone ( false ),
         nextSibClone;
 
     itemNode.key = key;
@@ -28,13 +28,14 @@ function createVNode ( watcher, arg, index, originalVNode = {} ) {
     scopedDefinition [ watcher.item ] = arg;
     
     if ( elem.conditionElems ) {
-        itemNode.conditionElems = [ itemNode ];
+        const conditionElems = [ itemNode ]
+        itemNode.conditionElems = conditionElems;
         foreach ( elem.conditionElems, ( nextSib, i ) => {
             if ( i > 0 ) {
-                nextSibClone = nextSib.clone ( originalVNode.node || null );
+                nextSibClone = nextSib.clone ( false );
                 nextSibClone.key = key;
-                itemNode.conditionElems.push ( nextSibClone );
-                nextSibClone.mainVNode = itemNode;
+                conditionElems.push ( nextSibClone );
+                nextSibClone.conditionElems = conditionElems;
             }
         } );
         itemNode.conditions = elem.conditions;

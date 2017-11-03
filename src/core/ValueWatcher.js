@@ -24,6 +24,7 @@ export default function ValueWatcher ( updateFn, getter ) {
     // 将获取表达式的真实值并将此watcher对象绑定到依赖监听属性中
 	Subscriber.watcher = this;
 	updateFn ( getter () );
+	delete Subscriber.watcher;
 }
 
 extend ( ValueWatcher.prototype, {

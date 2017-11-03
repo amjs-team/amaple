@@ -208,12 +208,10 @@ describe ( "directive for => ", () => {
         expect ( realDOM.childNodes.item ( 2 ).childNodes.item ( 0 ).nodeValue ).toBe ( "b" );
         expect ( realDOM.childNodes.item ( 3 ).nodeType ).toBe ( 3 );
 
-        dBackup = d.clone ();
         vm.next = "a";
         expect ( children [ 1 ].children [ 0 ].nodeValue ).toBe ( "a" );
         expect ( children [ 2 ].nodeType ).toBe ( 3 );
         expect ( children [ 3 ].nodeType ).toBe ( 3 );
-        d.diff ( dBackup ).patch ();
         expect ( realDOM.childNodes.item ( 1 ).childNodes.item ( 0 ).nodeValue ).toBe ( "a" );
         expect ( realDOM.childNodes.item ( 2 ).nodeType ).toBe ( 3 );
         expect ( realDOM.childNodes.item ( 3 ).nodeType ).toBe ( 3 );

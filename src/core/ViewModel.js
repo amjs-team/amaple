@@ -84,7 +84,7 @@ function initComputed ( computeds, context ) {
 
         // 创建ComputedWatcher对象供依赖数据监听
         new ValueWatcher ( ( newVal ) => {
-        		state = getter ();
+        		state = newVal;
 
         		// 更新视图
 				subs.notify ();

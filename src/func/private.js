@@ -81,8 +81,8 @@ export function unmountWatchers ( vnode, isWatchCond ) {
 		} );
 
 		// 被“:if”绑定的元素有些不在vdom树上，需通过此方法解除绑定
-		if ( ( vnode.conditionElems || vnode.mainVNode ) && isWatchCond !== false ) {
-			const conditionElems = vnode.conditionElems || vnode.mainVNode.conditionElems;
+		if ( vnode.conditionElems && isWatchCond !== false ) {
+			const conditionElems = vnode.conditionElems;
 			foreach ( conditionElems, conditionElem => {
 				if ( conditionElem !== vnode ) {
 					unmountWatchers ( conditionElem, false );

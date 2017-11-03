@@ -1,6 +1,6 @@
 export default {
-	module : ":module",
-	title : ":title",
+	module : "ice-module",
+	title : "ice-title",
 
 	href : "href",
 	action : "action"

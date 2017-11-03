@@ -390,7 +390,7 @@ extend ( VNode.prototype, {
     },
 
     /**
-        clone ( realNode: DOMObject )
+        clone ( isQuoteDOM: Boolean )
     
         Return Type:
         Object
@@ -399,19 +399,14 @@ extend ( VNode.prototype, {
         Description:
         克隆此vnode
         操作克隆的vnode不会影响此vnode
-        如果指定了参数realNode时，则会将此node按层级顺序被克隆的vnode引用
-        如果参数realNode为null时，则此vnode不会引用任何node
+        如果参数isQuoteDOM为false时，则此vnode不会引用任何node
     
         URL doc:
         http://icejs.org/######
     */
-    clone ( realNode ) {
+    clone ( isQuoteDOM ) {
         let vnode, 
-            node = this.node;
-
-        if ( realNode && ( realNode.nodeType || type ( realNode ) === "array" ) || realNode === null ) {
-            node = realNode;
-        }
+            node = isQuoteDOM === false ? null : this.node;
 
         switch ( this.nodeType ) {
         	case 1:
@@ -456,13 +451,7 @@ extend ( VNode.prototype, {
 
         if ( this.children ) {
             foreach ( this.children, ( child, i ) => {
-                if ( realNode && realNode.nodeType ) {
-                    node = realNode.childNodes.item ( i );
-                }
-                else if ( realNode === undefined || realNode === null ) {
-                    node = realNode;
-                }
-                vnode.appendChild ( child.clone ( node ) );
+                vnode.appendChild ( child.clone ( isQuoteDOM ) );
             } );
         }
     	

@@ -1,4 +1,4 @@
-let path = require ( 'path' );
+const path = require ( 'path' );
 
 // Karma configuration
 // Generated on Fri Jun 23 2017 23:26:20 GMT+0800 (CST)
@@ -89,7 +89,7 @@ module.exports = function(config) {
 
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    // browsers: ['Chrome', 'Firefox', 'Safari'],
+    // browsers: ['Firefox', 'Safari'],
     browsers: ['Chrome'],
 
 
@@ -101,6 +101,7 @@ module.exports = function(config) {
     // how many browser should be started simultaneous
     concurrency: Infinity,
 
+    // Proxy path
     proxies: {
     	'/plugin/' : '/base/loadModule/module-files/plugin/',
         '/module/' : '/base/loadModule/module-files/module/',

@@ -37,20 +37,21 @@ function preTreat ( vnode ) {
         condition = vnode.attr ( _if );
 
     if ( condition && !vnode.conditionElems ) {
+        const conditionElems = [ vnode ];
 
         vnode.conditions = [ condition ];
-        vnode.conditionElems = [ vnode ];
+        vnode.conditionElems = conditionElems;
         parent = vnode.parent;
         while ( nextSib = vnode.nextSibling () ) {
             if ( condition = nextSib.attr ( _elseif ) ) {
-                nextSib.mainVNode = vnode;
+                nextSib.conditionElems = conditionElems;
                 vnode.conditions.push ( condition );
                 vnode.conditionElems.push ( nextSib );
                 nextSib.attr ( _elseif, null );
                 parent.removeChild ( nextSib );
             }
             else if ( nextSib.attrs.hasOwnProperty ( _else ) ) {
-                nextSib.mainVNode = vnode;
+                nextSib.conditionElems = conditionElems;
                 vnode.conditions.push ( "true" );
                 vnode.conditionElems.push ( nextSib );
                 nextSib.attr ( _else, null );

@@ -1,10 +1,10 @@
-<Module :title="登录">
+<Module ice-title="登录">
 	<template>
 		<div>
 			<form name="login_form" method="post" ice-target="root">
 				<ul>
 					<li>
-						<input type="text" name="user_name" :model="userName" />
+						<input type="text" name="user_name" ice-model="userName" />
 					</li>
 					<li>
 						<input type="password" name="password" :model="password" />

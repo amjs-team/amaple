@@ -114,8 +114,8 @@ export default function Class ( clsName ) {
 	let _superClass;
 
 	function classDefiner ( proto ) {
+		let customConstructor = proto.constructor;
 		const 
-			customConstructor = proto.constructor,
 			constructor = function ( ...args ) {
         	try {
         		( customConstructor || noop ).apply ( this, args );
