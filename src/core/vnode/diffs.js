@@ -45,15 +45,15 @@ export function diffAttrs ( newVNode, oldVNode, nodePatcher ) {
 	foreach ( newVNode.attrs, ( attr, name ) => {
         if ( oldVNode.attrs [ name ] !== attr ) {
 
-            // 新旧节点的属性对比出来后的差异需在旧节点上修改，移除时同理
-            nodePatcher.reorderAttr ( oldVNode, name, attr );
+            // 新旧节点的属性对比出来后的差异需在新vnode上修改，移除时同理
+            nodePatcher.reorderAttr ( newVNode, name, attr );
         }
     } );
 
     //找出移除的属性
     foreach ( oldVNode.attrs, ( attr, name ) => {
         if ( !newVNode.attrs.hasOwnProperty ( name ) ) {
-            nodePatcher.removeAttr ( oldVNode, name );
+            nodePatcher.removeAttr ( newVNode, name );
         }
     } );
 }

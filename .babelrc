@@ -1,5 +1,12 @@
 {
-	"presets": ["es2015"], 
+	"presets": [
+		["env", {
+			"modules": false,
+			"targets": {
+				browsers: ["since 2011"]
+			}
+		}]
+	],
 	"ignore": [
 		"dist/*.js",
 		"packages/**/*.js"

@@ -58,7 +58,7 @@ function handler ( e ) {
 	URL doc:
 	http://icejs.org/######
 */
-export default event = {
+export default {
 
 	/**
 		support ( eventType: String, elem?: DOMObject )
@@ -262,7 +262,7 @@ export default event = {
 				
 			}
 			else {
-				handler.event = event;
+				handler.event = this;
 				handler.call ( elem, { type: t } );
 			}
 		} );

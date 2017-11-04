@@ -89,7 +89,7 @@ describe ( "directive expr => ", () => {
         expect ( realDOM.childNodes.item ( 0 ).childNodes.item ( 0 ).nodeValue ).toBe ( "hello text" );
     } );
 
-    it ( "Special treatment at attribute \"style\" and \"class\" with directive expression", () => {
+    it ( "Special treatment at attribute 'style' and 'class' with directive expression", () => {
         d.appendChild ( VElement ( "p", { class: "{{ clazz }}", style: "{{ color }}" }, null, [ VTextNode ( "hello icejs" ) ] ) );
         const realDOM = d.render ();
 
@@ -108,11 +108,11 @@ describe ( "directive expr => ", () => {
         expect ( d.children [ 0 ].attr ( "class" ) ).toBe ( "a b c" );
         expect ( d.children [ 0 ].attr ( "style" ) ).toBe ( "background:red;color:white;font-size:20px" );
         d.diff ( dBackup ).patch ();
-
-        expect ( realDOM.querySelector ( ".a" ) ).toEqual ( jasmine.any ( Object ) );
-        expect ( realDOM.querySelector ( ".b" ) ).toEqual ( jasmine.any ( Object ) );
-        expect ( realDOM.querySelector ( ".c" ) ).toEqual ( jasmine.any ( Object ) );
-        expect ( realDOM.firstChild.style.background ).toBe ( "red" );
+        
+        expect ( realDOM.querySelector ( ".a" ).nodeName ).toEqual ( "P" );
+        expect ( realDOM.querySelector ( ".b" ).nodeName ).toEqual ( "P" );
+        expect ( realDOM.querySelector ( ".c" ).nodeName ).toEqual ( "P" );
+        expect ( realDOM.firstChild.style.background ).toMatch ( /red/ );
         expect ( realDOM.firstChild.style.color ).toBe ( "white" );
         expect ( realDOM.firstChild.style.fontSize ).toBe ( "20px" );
     } );

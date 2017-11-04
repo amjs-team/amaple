@@ -1,6 +1,7 @@
-const babel = require ( "rollup-plugin-babel" );
-const version = require ( "../package.json" ).version;
-const path = require ( "path" );
+const 
+	babel = require ( "rollup-plugin-babel" ),
+	version = require ( "../package.json" ).version,
+	path = require ( "path" );
 
 const banner 	= `/**
  * iceJS v${version}
@@ -15,8 +16,8 @@ module.exports = {
 	moduleName: "ice",
 	plugins: [
 		babel ( {
-			exclude: "node_modules/**"
-		} )
+    		exclude: 'node_modules/**' // 仅仅转译我们的源码
+    	} )
 	],
 	banner
 	// sourceMap: true,

@@ -16,7 +16,9 @@ import check from "../check";
  	http://icejs.org/######
  */
 export function type ( arg ) {
-	return arg !== null ? ( arg instanceof Array ? "array" : typeof arg ) : "null";
+	return arg !== null 
+			? arg instanceof Array ? "array" : typeof arg 
+			: "null";
 }
 
 /**
