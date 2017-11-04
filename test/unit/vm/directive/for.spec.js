@@ -347,5 +347,19 @@ describe ( "directive for => ", () => {
         // 调用list方法时会重新克隆元素，然后再进行渲染，此时相关监听变量会再次监听克隆出来的新的元素，但旧的监听已经需要删除了
         vm.list.splice ( 0, 1 );
         vm.next = "b";
+        expect ( children.length ).toBe ( 4 );
+        expect ( children [ 1 ].templateNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( "b" );
+        expect ( children [ 2 ].templateNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( "c else" );
+        expect ( realDOM.childNodes.item ( 1 ).childNodes.item ( 0 ).nodeValue ).toBe ( "b" );
+        expect ( realDOM.childNodes.item ( 3 ).childNodes.item ( 0 ).nodeValue ).toBe ( "c else" );
+
+        vm.list.push ("e");
+        expect ( children.length ).toBe ( 5 );
+        expect ( children [ 1 ].templateNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( "b" );
+        expect ( children [ 2 ].templateNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( "c else" );
+        expect ( children [ 3 ].templateNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( "e else" );
+        expect ( realDOM.childNodes.item ( 1 ).childNodes.item ( 0 ).nodeValue ).toBe ( "b" );
+        expect ( realDOM.childNodes.item ( 3 ).childNodes.item ( 0 ).nodeValue ).toBe ( "c else" );
+        expect ( realDOM.childNodes.item ( 5 ).childNodes.item ( 0 ).nodeValue ).toBe ( "e else" );
     } );
 } );

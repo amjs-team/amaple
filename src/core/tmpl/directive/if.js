@@ -28,9 +28,12 @@ Tmpl.defineDirective ( {
     	this.replacement = VTextNode ( "" );
         this.replacement.conditionElems = elem.conditionElems;
 
-        // 如果有key则为占位元素设置相同key
-        if ( elem.key ) {
+        // 如果有key表示此元素为循环遍历元素，需为占位元素设置相同key
+        // 且循环遍历的元素一定有局部变量，也需将此赋予
+        if ( elem.key && elem.scoped ) {
             this.replacement.key = elem.key;
+            this.replacement.scoped = elem.scoped;
+            elem.replacement = this.replacement;
         }
 
         // 将elem在DOM结构中去掉，以便在下面循环扫描时不会扫描到elem的nextSibling元素

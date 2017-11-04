@@ -1,9 +1,9 @@
 import { noop, guid, extend, type, foreach } from "../func/util";
-import { query } from "../func/node";
-import { parseGetQuery } from "../func/private";
+import { parseGetQuery, queryModuleNode } from "../func/private";
 import slice from "../var/slice";
 import cache from "../cache/core";
 import { newClassCheck } from "../Class.js";
+import { argErr } from "../error.js";
 import ViewModel from "./ViewModel";
 import Tmpl from "./tmpl/Tmpl";
 import iceAttr from "../single/iceAttr";
@@ -99,15 +99,20 @@ export default function Module ( module, vmData = { init: function () { return {
 	
 	let moduleElem = {};
     if ( type ( module ) === "string" ) {
-    	moduleElem = query ( `*[${ iceAttr.module }=${ module }]` );
+    	moduleElem = queryModuleNode ( module );
     }
     else if ( module.nodeType === 1 || module.nodeType === 3 || module.nodeType === 11 ) {
         moduleElem = module;
     }
       	
 	// 检查参数
-	check ( moduleElem.nodeType ).be ( 1, 3, 11 ).ifNot ( "ice.Module", "module参数可传入模块元素的ice-module属性值或直接传入需挂在模块元素" ).do ();
-	check ( vmData ).type ( "object" ).check ( vmData.init ).type ( "function" ).ifNot ( "ice.Module", "vmData参数必须为带有init方法的的object" ).do ();
+	if ( moduleElem ) {
+		check ( moduleElem.nodeType ).be ( 1, 3, 11 ).ifNot ( "Module", "module参数可传入模块元素的ice-module属性值或直接传入需挂在模块元素" ).do ();
+		check ( vmData ).type ( "object" ).check ( vmData.init ).type ( "function" ).ifNot ( "Module", "vmData参数必须为带有init方法的的object" ).do ();
+	}
+	else {
+		throw argErr ( "Module", "module参数可传入模块元素的ice-module属性值或直接传入需挂在模块元素" )
+	}
   	
   	/////////////////////////////////
   	/////////////////////////////////

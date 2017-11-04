@@ -2,6 +2,7 @@ import { foreach, type } from "./util";
 import { attr } from "./node";
 import { componentErr } from "../error";
 import slice from "../var/slice";
+import iceAttr from "../single/iceAttr";
 
 
 // 转换存取器属性
@@ -62,36 +63,59 @@ export function transformCompName ( compName, mode ) {
 }
 
 /**
-	unmountWatchers ( vnode: Object, isWatchCond: Boolean )
+	walkDOM ( vdom: Object, callback: Function, ...extra: Any )
 
 	Return Type:
 	void
 
 	Description:
-	watcher卸载函数遍历调用
+	遍历虚拟节点及子节点
+	extra为额外的参数，传入的额外参数将会在第一个遍历项中传入，但不会传入之后遍历的子项中
 
 	URL doc:
 	http://icejs.org/######
 */
-export function unmountWatchers ( vnode, isWatchCond ) {
-
+export function walkVDOM ( vdom, callback, ...extra ) {
+	let vnode = vdom;
 	do {
-		foreach ( vnode.watcherUnmounts || [], watcherUnmount => {
-			watcherUnmount ();
-		} );
-
-		// 被“:if”绑定的元素有些不在vdom树上，需通过此方法解除绑定
-		if ( vnode.conditionElems && isWatchCond !== false ) {
-			const conditionElems = vnode.conditionElems;
-			foreach ( conditionElems, conditionElem => {
-				if ( conditionElem !== vnode ) {
-					unmountWatchers ( conditionElem, false );
-				}
-			} );
-		}
+		callback.apply ( null, [ vnode ].concat ( extra ) );
 
 		if ( vnode.children && vnode.children [ 0 ] ) {
-			unmountWatchers ( vnode.children [ 0 ] );
+			walkVDOM ( vnode.children [ 0 ], callback );
 		}
-	} while ( vnode = vnode.nextSibling () );
+
+	} while ( vnode = vnode.nextSibling () )
+}
+
+/**
+	queryModuleNode ( moduleAttr: String, moduleName: String, context?: DOMObject )
+
+	Return Type:
+	DOMObject
+
+	Description:
+	遍历节点及子节点查询对应名称的节点
+
+	URL doc:
+	http://icejs.org/######
+*/
+export function queryModuleNode ( moduleName, context ) {
+	let node = context || document.body,
+		targetNode;
+
+	do {
+		if ( node.nodeType === 1 && attr ( node, iceAttr.module ) === moduleName ) {
+			targetNode = node;
+
+			break;
+		}
+
+		if ( node.firstChild ) {
+			if ( targetNode = queryModuleNode ( moduleName, node.firstChild ) ) {
+				break;
+			}
+		}
+	} while ( node = node.nextSibling )
+
+	return targetNode
 }

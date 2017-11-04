@@ -1,5 +1,5 @@
 import { foreach, guid } from "../../../func/util";
-import { unmountWatchers } from "../../../func/private";
+import { walkVDOM } from "../../../func/private";
 import { directiveErr } from "../../../error";
 import { VNODE_ADD, VNODE_REMOVE, VNODE_MOVE } from "../../../var/const";
 import Tmpl from "../Tmpl";
@@ -16,16 +16,17 @@ function createVNode ( watcher, arg, index ) {
         // 定义范围变量
         scopedDefinition = {};
 
-    // 原始元素没有引用实际dom时传入null，表示克隆vnode不引用任何实际dom
-    let itemNode = elem.clone ( false ),
-        nextSibClone;
-
-    itemNode.key = key;
     if ( watcher.index ) {
         scopedDefinition [ watcher.index ] = index;
     }
-
     scopedDefinition [ watcher.item ] = arg;
+
+    // 原始元素没有引用实际dom时传入null，表示克隆vnode不引用任何实际dom
+    let itemNode = elem.clone ( false ),
+        scopedAuxiliary = Tmpl.defineScoped ( scopedDefinition, itemNode ),
+        nextSibClone;
+
+    itemNode.key = key;
     
     if ( elem.conditionElems ) {
         const conditionElems = [ itemNode ]
@@ -34,8 +35,10 @@ function createVNode ( watcher, arg, index ) {
             if ( i > 0 ) {
                 nextSibClone = nextSib.clone ( false );
                 nextSibClone.key = key;
-                conditionElems.push ( nextSibClone );
                 nextSibClone.conditionElems = conditionElems;
+                nextSibClone.scoped = itemNode.scoped;
+
+                conditionElems.push ( nextSibClone );
             }
         } );
         itemNode.conditions = elem.conditions;
@@ -45,10 +48,40 @@ function createVNode ( watcher, arg, index ) {
     f.appendChild ( itemNode );
 
     // 为遍历克隆的元素挂载数据
-    watcher.tmpl.mount ( f, true, Tmpl.defineScoped ( scopedDefinition, itemNode ) );
+    watcher.tmpl.mount ( f, true, scopedAuxiliary );
     itemNode = f.children [ 0 ];
 
     return itemNode;
+}
+
+/**
+    unmountWatchers ( vnode: Object, isWatchCond: Boolean )
+
+    Return Type:
+    void
+
+    Description:
+    卸载对应node的watcher
+
+    URL doc:
+    http://icejs.org/######
+*/
+function unmountWatchers ( vnode, isWatchCond ) {
+    foreach ( vnode.watcherUnmounts || [], unmountFunc => {
+        unmountFunc ();
+    } );
+
+    // 被“:if”绑定的元素有些不在vdom树上，需通过此方法解除绑定
+    if ( vnode.conditionElems && isWatchCond !== false ) {
+        const conditionElems = vnode.conditionElems;
+        foreach ( conditionElems, conditionElem => {
+            if ( conditionElem !== vnode ) {
+                walkVDOM ( conditionElem, ( condSubElem, isWatchCond ) => {
+                    unmountWatchers ( condSubElem, isWatchCond );
+                }, false );
+            }
+        } );
+    }
 }
 
 Tmpl.defineDirective ( {
@@ -141,6 +174,16 @@ Tmpl.defineDirective ( {
                 	if ( item.val === val ) {
                         itemNode = item.itemNode;
 
+                        // 当if和for指令同时使用在一个元素上，且在改变数组重新遍历前改变过if的条件时
+                        // nodeMap中的元素非显示的元素，需遍历conditionElems获取当前显示的元素
+                        if ( itemNode.conditionElems && !itemNode.parent ) {
+                            foreach ( itemNode.conditionElems.concat ( itemNode.conditionElems [ 0 ].replacement ), conditionElem => {
+                                if ( conditionElem.parent ) {
+                                    itemNode = conditionElem;
+                                }
+                            } );
+                        }
+
                         // 有index时更新index值
                         if ( this.index ) {
                             const rindex = new RegExp ( this.index + "$" );
@@ -164,12 +207,14 @@ Tmpl.defineDirective ( {
             } );
 			
         	let p = this.startNode.parent,
-         		el;
+         		el, isWatchCond;
         	while ( ( el = this.startNode.nextSibling () ) !== this.endNode ) {
         		p.removeChild ( el );
 
-                // 卸载node的watchers
-                unmountWatchers ( el.isComponent ? VFragment ( el.templateNodes ) : el );
+                // 遍历vdom并卸载node绑定的watchers
+                walkVDOM ( el.isComponent ? VFragment ( el.templateNodes ) : el, ( vnode, isWatchCond ) => {
+                    unmountWatchers ( vnode, isWatchCond );
+                } );
             }
         	
         	p.insertBefore ( fragment, this.endNode );

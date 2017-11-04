@@ -1,10 +1,10 @@
 import { type, extend, foreach, noop, isPlainObject, isEmpty, timestamp } from "../func/util";
 import { query, attr, serialize } from "../func/node";
+import { queryModuleNode } from "../func/private";
 import require from "../core/component/require/require";
 import { envErr, moduleErr } from "../error";
 import { MODULE_UPDATE, MODULE_REQUEST, MODULE_RESPONSE } from "../var/const";
 import compileModule from "./compileModule";
-import iceAttr from "./iceAttr";
 import configuration from "../core/configuration/core";
 import ice from "../core/core";
 import cache from "../cache/core";
@@ -191,7 +191,7 @@ extend ( ModuleLoader.prototype, {
 		        // 如果结构中没有模块节点则查找DOM树获取节点
 		        if ( !route.moduleNode ) {
 		            const 
-                    	moduleNode = VNode.domToVNode ( query ( `[${ iceAttr.module }=${ route.name === "default" ? "''" : route.name }]`, route.parent && route.parent.moduleNode.node || undefined ) ),
+                    	moduleNode = VNode.domToVNode ( queryModuleNode ( route.name === "default" ? "" : route.name, route.parent && route.parent.moduleNode.node || undefined ) ),
                     	tmpl = new Tmpl ();
                 	tmpl.mount ( moduleNode, true );
 

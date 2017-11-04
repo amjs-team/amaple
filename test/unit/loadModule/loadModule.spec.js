@@ -1,9 +1,9 @@
 import ice from "ice";
 
-xdescribe ( "ice test =>", () => {
+describe ( "ice test =>", () => {
 
 	it ( "load a simple ice module", () => {
-		document.body.innerHTML = `<div ice-module></div><a href="#">444</a><div class="abc">{{ title }} {{ content }}</div>`;
+		document.body.innerHTML = `<div :module></div><a href="#">444</a><div class="abc">{{ title }} {{ content }}</div>`;
 
 		ice.startRouter ( {
 			// history : ice.HASH_HISTORY,

@@ -7,7 +7,7 @@ describe ( "plugin define =>", () => {
 			div = document.createElement ( "div" ),
 			caller = jasmine.createSpy ( "caller" );
 
-		div.innerHTML = `<div ice-module="root">{{ count }}<button :onclick="addCount">{{ btnText }}</button></div>`;
+		div.innerHTML = `<div :module="root">{{ count }}<button :onclick="addCount">{{ btnText }}</button></div>`;
 
 		ice.install ( {
 			name : "counter",
