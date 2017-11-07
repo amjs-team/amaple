@@ -1,23 +1,23 @@
-<Module :title="表格" :belong="test">
+<Module :title="表格">
 	
 	<!-- 模块页面模板 -->
 	<template>
 		<!-- 表格组件渲染 -->
-		<!-- <EditTable t-th="{{ title }}" t-tr="{{ content }}"></EditTable> -->
+		<edit-table t-th="{{ title }}" t-tr="{{ content }}"></edit-table>
 		<div class="abc">{{ title }} {{ content }}</div>
 		<a href="login">{{ btn }}</a>
 		<ul id="a87">
 			<li :for="t in title">{{ t }}</li>
 		</ul>
 		<!-- 翻页组件渲染 -->
-		<!-- <PageCtrl options="{{ pageCtrl }}" setPage="{{ setPage }}"></PageCtrl> -->
+		<page-ctrl options="{{ pageCtrl }}" setPage="{{ setPage }}"></page-ctrl>
 	</template>
 	
 
 	<!-- 此模板对应的数据 -->
 	<script>
-		// var EditTable = import ( "../../component/EditTable" ), 
-			// PageCtrl = import ( "../../component/PageCtrl" );
+		var EditTable = import ( "component/EditTable" ), 
+			PageCtrl = import ( "component/PageCtrl" );
 
 		var table = new ice.Module ( {
 			init : function () {

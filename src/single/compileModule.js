@@ -187,6 +187,7 @@ function parseScript ( moduleString, scriptPaths, scriptNames, parses ) {
     	}
 
 		parses.script = parses.script.replace ( rmoduleDef, match => `${ match }moduleNode,` );
+		parses.script += "actingNt.collect(moduleNode,moduleNodeBackup);";
 	}
 
 	return moduleString;
@@ -257,8 +258,8 @@ export default function compileModule ( moduleString, identifier ) {
 			moduleString += `${ buildView }${ parses.script };`
 		}
 
-		moduleString += "moduleNode.diff(moduleNodeBackup).patch();return title;";
+		moduleString += "return title;";
 	}
   
-	return new Function ( "ice", "moduleNode", "VNode", "require", moduleString );
+	return new Function ( "ice", "moduleNode", "VNode", "actingNt", "require", moduleString );
 }

@@ -101,6 +101,7 @@ module.exports = function(config) {
     proxies: {
     	'/plugin/' : '/base/loadModule/module-files/plugin/',
         '/module/' : '/base/loadModule/module-files/module/',
+        '/component/' : '/base/loadModule/module-files/component/',
         '/post/' : '/base/loadModule/post/'
     }
   })

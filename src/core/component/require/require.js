@@ -17,6 +17,12 @@ import { appendScript, attr } from "../../../func/node";
 	http://icejs.org/######
 */
 export default function require ( deps, factory ) {
+	
+	const pathAnchor = document.createElement ( "a" );
+	// pathAnchor.href = deps [ 0 ];
+	pathAnchor.href = "aaa/bb/cc";
+
+	console.log(pathAnchor.href, location.href);
 
 	// 正在加载的依赖数
 	let	loadingCount = 0;

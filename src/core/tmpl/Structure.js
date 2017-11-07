@@ -5,6 +5,7 @@ import ModuleLoader from "../../single/ModuleLoader";
 import requestEventHandler from "../../single/requestEventHandler";
 import iceAttr from "../../single/iceAttr";
 import iceHistory from "../../single/history/iceHistory";
+import NodeTransaction from "../../core/vnode/NodeTransaction";
 
 // [
   //  { module: obj1, name: "default", moduleNode: node1, parent: null, children: [
@@ -227,7 +228,6 @@ extend ( Structure.prototype, {
             moduleLoader = new ModuleLoader ();
         
         moduleLoader.load ( this, { param : location.param, get : location.get, post : location.post } );
-        
         switch ( location.action ) {
             case "PUSH":
                 iceHistory.push ( locationGuide, location.path );
