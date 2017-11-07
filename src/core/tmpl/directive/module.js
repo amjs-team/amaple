@@ -21,9 +21,8 @@ Tmpl.defineDirective ( {
         http://icejs.org/######
     */
 	update ( moduleName ) {
-    	if ( Structure.currentPage && type ( moduleName ) === "string" ) {
-        	const currentStructure = Structure.currentPage.getCurrentRender ();
-            currentStructure.saveSubModuleNode ( this.node );
+    	if ( Structure.currentPage && Structure.currentRender && type ( moduleName ) === "string" ) {
+            Structure.currentPage.saveSubModuleNode ( this.node );
         }
     }
 } );

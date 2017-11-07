@@ -93,17 +93,23 @@ extend ( VNode.prototype, {
     */
 	appendChild ( childVNode ) {
     	supportCheck ( this.nodeType, "appendChild" );
-
-        changeParent ( childVNode, this );
     	
+        let children;
     	if ( childVNode.nodeType === 11 ) {
+            children = childVNode.children.concat ();
         	foreach ( childVNode.children, child => {
             	this.children.push ( child );
             } );
         }
     	else {
+            children = [ childVNode ];
     		this.children.push ( childVNode );
         }
+
+        // 更换父节点
+        foreach ( children, child => {
+            changeParent ( child, this );
+        } );
     },
 	
     /**
@@ -205,8 +211,8 @@ extend ( VNode.prototype, {
             child.parent = null;
         } )
 
-    	this.children = [ vnode ];
-        changeParent ( vnode, this );
+        this.children = [];
+        this.appendChild ( vnode );
     },
 	
 	/**

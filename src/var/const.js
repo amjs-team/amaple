@@ -1,12 +1,9 @@
+// 开发模式常量
+// 普通开发模式
+export const DEVELOP_COMMON = 0;
 
-// 表示ice.module()
-export const TYPE_MODULE = 0;
-
-// 表示plugin()
-export const TYPE_PLUGIN = 1;
-
-// 表示driver()
-export const TYPE_DRIVER = 2;
+// 单页开发模式
+export const DEVELOP_SINGLE = 1;
 
 // 连续字符正则表达式
 export const rword = /\S+/g;

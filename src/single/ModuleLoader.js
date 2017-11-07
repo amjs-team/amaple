@@ -190,12 +190,13 @@ extend ( ModuleLoader.prototype, {
 
 		        // 如果结构中没有模块节点则查找DOM树获取节点
 		        if ( !route.moduleNode ) {
-		            const 
-                    	moduleNode = VNode.domToVNode ( queryModuleNode ( route.name === "default" ? "" : route.name, route.parent && route.parent.moduleNode.node || undefined ) ),
-                    	tmpl = new Tmpl ();
-                	tmpl.mount ( moduleNode, true );
+		        	let moduleNode = queryModuleNode ( route.name === "default" ? "" : route.name, route.parent && route.parent.moduleNode.node || undefined );
 
 		            if ( moduleNode ) {
+		            	moduleNode = VNode.domToVNode ( moduleNode );
+		            	const tmpl = new Tmpl ( {}, [], {} );
+                		tmpl.mount ( moduleNode, true );
+
 		                route.moduleNode = moduleNode;
 		            }
 		            else {
@@ -210,6 +211,9 @@ extend ( ModuleLoader.prototype, {
 		        if ( !moduleIdentifier ) {
 		        	moduleIdentifier = Module.getIdentifier ();
 		        	route.moduleNode.attr ( Module.identifier, moduleIdentifier );
+
+		        	// 调用render将添加的ice-identifier同步到实际node上
+		        	route.moduleNode.render ();
 		        }
 
 		        // 加入等待加载队列
@@ -300,12 +304,15 @@ extend ( ModuleLoader, {
 	actionLoad ( path, moduleNode, currentStructure, param, args, data, method, timeout, before = noop, success = noop, error = noop, abort = noop ) {
 
 
-		const moduleConfig = configuration.getConfigure ( "module" );
+		const 
+			moduleConfig = configuration.getConfigure ( "module" ),
+			baseURL = configuration.getConfigure ( "baseURL" );
 
 
 		//////////////////////////////////////////////////
 		//////////////////////////////////////////////////
 		//////////////////////////////////////////////////
+		path = path.substr ( 0, 1 ) === "/" ? baseURL.substr ( 0, baseURL.length - 1 ) : baseURL + path;
 		path += configuration.getConfigure ( "moduleSuffix" ) + args;
 
 		const historyModule = cache.getModule ( path );

@@ -1,4 +1,4 @@
-import { foreach, guid } from "../../../func/util";
+import { foreach, guid, noop } from "../../../func/util";
 import { walkVDOM } from "../../../func/private";
 import { directiveErr } from "../../../error";
 import { VNODE_ADD, VNODE_REMOVE, VNODE_MOVE } from "../../../var/const";
@@ -67,9 +67,14 @@ function createVNode ( watcher, arg, index ) {
     http://icejs.org/######
 */
 function unmountWatchers ( vnode, isWatchCond ) {
+
+    // 移除vnode对应的watcher引用
     foreach ( vnode.watcherUnmounts || [], unmountFunc => {
         unmountFunc ();
     } );
+
+    // 移除vnode的引用
+    ( vnode.delRef || noop ) ();
 
     // 被“:if”绑定的元素有些不在vdom树上，需通过此方法解除绑定
     if ( vnode.conditionElems && isWatchCond !== false ) {

@@ -1,5 +1,6 @@
 import { noop, guid, extend, type, foreach } from "../func/util";
 import { parseGetQuery, queryModuleNode } from "../func/private";
+import { DEVELOP_COMMON, DEVELOP_SINGLE } from "../var/const";
 import slice from "../var/slice";
 import cache from "../cache/core";
 import { newClassCheck } from "../Class.js";
@@ -65,7 +66,7 @@ function initModuleLifeCycle ( module, vm, moduleElem ) {
         module [ cycleItem ] = () => {
 
         	const nt = new NodeTransaction ().start ();
-            lifeCycleContainer [ cycleItem ].apply ( module, cache.getDependentPlugib ( lifeCycleContainer [ cycleItem ] ) );
+            lifeCycleContainer [ cycleItem ].apply ( module, cache.getDependentPlugin ( lifeCycleContainer [ cycleItem ] ) );
 
             // 提交节点更新事物，更新所有已更改的vnode进行对比
             // 对比新旧vnode计算出差异并根据差异更新到实际dom中
@@ -89,6 +90,7 @@ function initModuleLifeCycle ( module, vm, moduleElem ) {
     module可传入：
 	1、module属性名，普通模式时的模块名，此方法将会根据模块名获取dom元素
 	2、实际dom和fragment，此方法将直接解析此元素
+	3、虚拟dom，只有单页模式时会传入此类参数
 
 	URL doc:
 	http://icejs.org/######
@@ -97,7 +99,11 @@ export default function Module ( module, vmData = { init: function () { return {
 
 	newClassCheck ( this, Module );
 	
-	let moduleElem = {};
+	const developMode = module instanceof VNode ? DEVELOP_SINGLE : DEVELOP_COMMON;
+	let moduleElem = {}, 
+		parent, moduleElemBackup;
+
+
     if ( type ( module ) === "string" ) {
     	moduleElem = queryModuleNode ( module );
     }
@@ -116,9 +122,7 @@ export default function Module ( module, vmData = { init: function () { return {
   	
   	/////////////////////////////////
   	/////////////////////////////////
-
-	let parent;
-	if ( Structure.currentPage ) {
+	if ( developMode === DEVELOP_SINGLE && Structure.currentPage ) {
 		
     	// 只有单页模式时Structure.currentPage会有值
 		// 单页模式时，使用Structure.currentPage.getCurrentParentVm()获取父级的vm
@@ -144,14 +148,16 @@ export default function Module ( module, vmData = { init: function () { return {
 		
 		// 将当前Module对象保存在对应的模块根节点下，以便子模块寻找父模块的Module对象
 		moduleElem.__module__ = this;
+
+		// 将module元素转换为vnode，并拷贝vnode
+		moduleElem = VNode.domToVNode ( moduleElem );
+		moduleElemBackup = moduleElem.clone ();
 	}
     this.parent = parent;
 	
-	moduleElem = VNode.domToVNode ( moduleElem );
 	initModuleLifeCycle ( this, vmData, moduleElem );
 
     const
-    	moduleElemBackup = moduleElem.clone (),
     	components = ( () => {
         	let compFn = vmData.depComponents,
                 deps = cache.getDependentPlugin ( compFn || noop );
@@ -191,9 +197,15 @@ export default function Module ( module, vmData = { init: function () { return {
 	// 调用apply方法
 	( vmData.apply || noop ).apply ( this, cache.getDependentPlugin ( vmData.apply || noop ) );
 
-	// 对比新旧vnode计算出差异
-	// 并根据差异更新到实际dom中
-	moduleElem.diff ( moduleElemBackup ).patch ();
+	/////////////////////////////////
+  	/////////////////////////////////
+	if ( developMode === DEVELOP_COMMON ) {
+
+		// 普通模式下才会在Module内对比新旧vnode计算出差异
+		// 并根据差异更新到实际dom中
+		// 单页模式将会在compileModule编译的函数中对比更新dom
+		moduleElem.diff ( moduleElemBackup ).patch ();
+	}
 }
 
 extend ( Module.prototype, {

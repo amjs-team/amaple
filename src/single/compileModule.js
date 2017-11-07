@@ -248,7 +248,7 @@ export default function compileModule ( moduleString, identifier ) {
 		////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////
 		/// 构造编译函数
-		moduleString = `var title="${ parses.attrs [ iceAttr.title ] || "" }",view="${ parses.view }${ parses.style }";`;
+		moduleString = `var title="${ parses.attrs [ iceAttr.title ] || "" }",view="${ parses.view }${ parses.style }",moduleNodeBackup=moduleNode.clone();`;
 
 		if ( !isEmpty ( scriptPaths ) ) {
 			moduleString += `require([${ scriptPaths.join ( "," ) }],function(${ scriptNames.join ( "," ) }){${ buildView }${ parses.script };});`;
@@ -257,7 +257,7 @@ export default function compileModule ( moduleString, identifier ) {
 			moduleString += `${ buildView }${ parses.script };`
 		}
 
-		moduleString += "return title;";
+		moduleString += "moduleNode.diff(moduleNodeBackup).patch();return title;";
 	}
   
 	return new Function ( "ice", "moduleNode", "VNode", "require", moduleString );
