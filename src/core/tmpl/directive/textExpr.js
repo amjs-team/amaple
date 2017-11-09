@@ -1,7 +1,6 @@
 import { type } from "../../../func/util";
-import Tmpl from "../Tmpl";
 
-Tmpl.defineDirective ( {
+export default {
 	
 	name : "textExpr",
 
@@ -57,4 +56,4 @@ Tmpl.defineDirective ( {
         	node.nodeValue = val;
         }
     }
-} );
+};

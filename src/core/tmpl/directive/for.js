@@ -89,7 +89,7 @@ function unmountWatchers ( vnode, isWatchCond ) {
     }
 }
 
-Tmpl.defineDirective ( {
+export default {
 	name : "for",
 
     /**
@@ -227,4 +227,4 @@ Tmpl.defineDirective ( {
         
         this.nodeMap = nodeMap;
     }
-} );
+};

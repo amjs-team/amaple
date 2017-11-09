@@ -113,11 +113,11 @@ export default function Module ( module, vmData = { init: function () { return {
       	
 	// 检查参数
 	if ( moduleElem ) {
-		check ( moduleElem.nodeType ).be ( 1, 3, 11 ).ifNot ( "Module", "module参数可传入模块元素的ice-module属性值或直接传入需挂在模块元素" ).do ();
+		check ( moduleElem.nodeType ).be ( 1, 3, 11 ).ifNot ( "Module", "module参数可传入模块元素的:module属性值或直接传入需挂在模块元素" ).do ();
 		check ( vmData ).type ( "object" ).check ( vmData.init ).type ( "function" ).ifNot ( "Module", "vmData参数必须为带有init方法的的object" ).do ();
 	}
 	else {
-		throw argErr ( "Module", "module参数可传入模块元素的ice-module属性值或直接传入需挂在模块元素" )
+		throw argErr ( "Module", "module参数可传入模块元素的:module属性值或直接传入需挂在模块元素" )
 	}
   	
   	/////////////////////////////////
@@ -158,34 +158,13 @@ export default function Module ( module, vmData = { init: function () { return {
 	initModuleLifeCycle ( this, vmData, moduleElem );
 
     const
-    	components = ( () => {
-        	let compFn = vmData.depComponents,
-                deps = cache.getDependentPlugin ( compFn || noop );
-        	
-        	try {
-        		return ( compFn || noop ).apply ( this, deps );
-            }
-        	catch ( e ) {
-            	const 
- 					depStrs = ( compFn.toString ().match ( /return\s+\[(.+?)\]/ ) || [ "", "" ] ) [ 1 ].split ( "," ).map ( item => item.trim () ),
-                    depComps = [];
-
-            	foreach ( depStrs, depObj => {
-                	depComps.push ( depObj );
-                } );
-            	
-            	return depComps;
-			}
-        } ) (),
-	
 		// 获取后初始化vm的init方法
 		// 对数据模型进行转换
 		vm = new ViewModel ( vmData.init.apply ( this, cache.getDependentPlugin ( vmData.init ) ) ),
 
 		// 使用vm解析模板
-		tmpl = new Tmpl ( vm, components, this );
+		tmpl = new Tmpl ( vm, vmData.depComponents || [], this );
 	
-	// this.view = slice.call ( moduleElem.childNodes ) || [];
 	this.state = vm;
 
 	// 解析模板，挂载数据

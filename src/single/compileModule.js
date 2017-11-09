@@ -182,7 +182,7 @@ function parseScript ( moduleString, scriptPaths, scriptNames, parses ) {
 
     		// 需要组件时才将组件添加到对应模块中
     		if ( !isEmpty ( scriptNames ) ) {
-    			parses.script = parses.script.replace ( raddComponents, match => match + `depComponents:function(){return [${ scriptNames.join( "," ) }];},` );
+    			parses.script = parses.script.replace ( raddComponents, match => match + `depComponents:[${ scriptNames.join( "," ) }],` );
     		}
     	}
 

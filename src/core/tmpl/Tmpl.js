@@ -11,6 +11,15 @@ import Structure from "./Structure";
 import Component from "../component/core";
 import VNode from "../vnode/VNode";
 import ViewModel from "../ViewModel";
+import attrExpr from "./directive/attrExpr";
+import cache from "./directive/cache";
+import _for from "./directive/for";
+import _if from "./directive/if";
+import model from "./directive/model";
+import module from "./directive/module";
+import on from "./directive/on";
+import ref from "./directive/ref";
+import textExpr from "./directive/textExpr";
 
 /**
     preTreat ( vnode: Object )
@@ -182,7 +191,7 @@ extend ( Tmpl.prototype, {
 
                             compileHandlers.watchers.push ( { handler, targetNode, expr } );
                         }
-                        else if ( rexpr.test ( attr ) ) {
+                        else if ( rexpr.test ( attr ) && !vnode.isComponent ) {
 
                             // 属性值表达式绑定
                             compileHandlers.watchers.push ( { handler: Tmpl.directives.attrExpr, targetNode : vnode, expr : `${ name }:${ attr }` } );
@@ -246,6 +255,19 @@ extend ( Tmpl, {
 	
 	// 指令前缀
     directivePrefix : ":",
+
+    // 指令集
+    directives : {
+        attrExpr,
+        cache,
+        for : _for,
+        if : _if,
+        model,
+        module,
+        on,
+        ref,
+        textExpr
+    },
 	
 	/**
     	defineScoped ( scopedDefinition: Object, scopedVNode: Object, isStatic: Object )
@@ -335,7 +357,6 @@ extend ( Tmpl, {
         http://icejs.org/######
     */
 	defineDirective ( directive ) {
-        this.directives = this.directives || {};
     	this.directives [ directive.name ] = directive;
     }
 } );

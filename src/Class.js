@@ -1,7 +1,7 @@
 import { foreach, isEmpty, type, noop } from "./func/util";
 import { classErr } from "./error";
-import cache from "./cache/core";
 import ComponentLoader from "./core/component/require/ComponentLoader";
+import Structure from "./core/tmpl/Structure";
 
 const 
 	rconstructor = /^(?:constructor\s*|function\s*)?(?:constructor\s*)?\((.*?)\)\s*(?:=>\s*)?{([\s\S]*)}$/,
@@ -194,8 +194,11 @@ export default function Class ( clsName ) {
 			defineMemberFunction ( classFn, proto );
 		}
     	
-    	// 将此组件类保存至缓存中
-    	cache.pushComponent ( ComponentLoader.getCurrentPath (), classFn );
+    	// 单页模式下将会临时保存到window下的components命名空间中以方面require内获取
+		if ( Structure.currentPage ) {
+			window.components = window.components || {};
+			window.components [ classFn.name ] = classFn;
+		}
 
 		return classFn;
 	}

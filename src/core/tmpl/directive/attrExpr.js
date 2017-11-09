@@ -1,8 +1,7 @@
 import { type, foreach } from "../../../func/util";
 import { noUnitHook } from "../../../var/const";
-import Tmpl from "../Tmpl";
 
-Tmpl.defineDirective ( {
+export default {
 	
 	name : "attrExpr",
 
@@ -89,4 +88,4 @@ Tmpl.defineDirective ( {
             node.attr ( this.attrName, ( val === undefined || val === null ? "" : val ).toString () );
         }
     }
-} );
+};

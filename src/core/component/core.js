@@ -174,7 +174,7 @@ extend ( Component, {
         http://icejs.org/######
     */
 	defineGlobal ( componentDerivative ) {
-		globalClass [ componentDerivative.name ] = componentDerivative;
+		this.globalClass [ componentDerivative.name ] = componentDerivative;
 	},
 
     /**

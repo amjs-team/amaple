@@ -1,8 +1,7 @@
 import event from "../../../event/core";
 import { attr } from "../../../func/node";
-import Tmpl from "../Tmpl";
 
-Tmpl.defineDirective ( {
+export default {
 	name : "on",
 
     /**
@@ -53,4 +52,4 @@ Tmpl.defineDirective ( {
 	update ( listener ) {
         this.node.bindEvent ( this.type, listener );
     }
-} );
+};

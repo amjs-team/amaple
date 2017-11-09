@@ -1,7 +1,6 @@
 import { type } from "../../../func/util";
-import Tmpl from "../Tmpl";
 
-Tmpl.defineDirective ( {
+export default {
 	name : "ref",
 	
   	// static为true时，模板将不会挂载watcher在对应vm下
@@ -50,4 +49,4 @@ Tmpl.defineDirective ( {
             }
         }
     }
-} );
+};

@@ -1,9 +1,8 @@
 import { attr } from "../../../func/node";
 import { type } from "../../../func/util";
 import event from "../../../event/core";
-import Tmpl from "../Tmpl";
 
-Tmpl.defineDirective ( {
+export default {
 	
 	name : "model",
 
@@ -117,4 +116,4 @@ Tmpl.defineDirective ( {
         	elem.attr ( "value", val );
         }
     }
-} );
+};

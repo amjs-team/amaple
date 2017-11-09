@@ -1,8 +1,7 @@
 import { type } from "../../../func/util";
 import Structure from "../Structure";
-import Tmpl from "../Tmpl";
 
-Tmpl.defineDirective ( {
+export default {
 	name : "module",
 	
 	// static为true时，模板将不会挂载watcher在对应vm下
@@ -25,4 +24,4 @@ Tmpl.defineDirective ( {
             Structure.currentPage.saveSubModuleNode ( this.node );
         }
     }
-} );
+};

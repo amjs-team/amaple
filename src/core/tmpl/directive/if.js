@@ -1,11 +1,10 @@
 import { attr } from "../../../func/node";
 import { foreach, type, guid } from "../../../func/util";
 import slice from "../../../var/slice";
-import Tmpl from "../Tmpl";
 import VTextNode from "../../vnode/VTextNode";
 import VFragment from "../../vnode/VFragment";
 
-Tmpl.defineDirective ( {
+export default {
 	name : "if",
 
     /**
@@ -92,4 +91,4 @@ Tmpl.defineDirective ( {
             this.currentNode = _cNode;
         }
     }
-} );
+};

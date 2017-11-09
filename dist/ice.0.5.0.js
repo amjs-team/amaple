@@ -36,24 +36,24 @@ function error(errorType) {
 	return function (errorCode, errorText) {
 
 		// 打印的错误信息
-		var errMsg = "[ice:" + (errorType ? errorType + "-" : "") + errorCode + "] " + errorText;
+		let errMsg = "[ice:" + (errorType ? errorType + "-" : "") + errorCode + "] " + errorText;
 		return new Error(errMsg);
 	};
 }
 
-var envErr = error("env"); // 环境错误
-var argErr = error("arg"); // 参数错误
-var checkErr = error("check"); // 参数检查错误
-var requestErr = error("request"); // 请求错误
+const envErr = error("env"); // 环境错误
+const argErr = error("arg"); // 参数错误
+const checkErr = error("check"); // 参数检查错误
+const requestErr = error("request"); // 请求错误
  // 配置错误
-var moduleErr = error("module"); // 模块错误
-var runtimeErr = error("runtime"); // 运行时错误
-var vmComputedErr = error("vm-computed"); // 模块错误
-var classErr = error("class"); // 类定义错误
-var RouterErr = error("router"); // 路由定义错误
- // 指令使用错误
-var componentErr = error("component"); // 组件错误
-var vnodeErr = error("vnode"); // 虚拟节点错误
+const moduleErr = error("module"); // 模块错误
+const runtimeErr = error("runtime"); // 运行时错误
+const vmComputedErr = error("vm-computed"); // 模块错误
+const classErr = error("class"); // 类定义错误
+const RouterErr = error("router"); // 路由定义错误
+const directiveErr = error("directive"); // 指令使用错误
+const componentErr = error("component"); // 组件错误
+const vnodeErr = error("vnode"); // 虚拟节点错误
 
 /**
     check ( variable: Any )
@@ -94,7 +94,7 @@ extend(check.prototype, {
         URL doc:
         http://icejs.org/######
     */
-    or: function or() {
+    or() {
         if (/^\|\|$/.test(this.condition[this.condition.length - 1])) {
             throw checkErr("condition", "不能连续调用“or()”");
         }
@@ -102,7 +102,6 @@ extend(check.prototype, {
 
         return this;
     },
-
 
     /**
            prior ( priorCb:Function )
@@ -116,8 +115,8 @@ extend(check.prototype, {
            URL doc:
            http://icejs.org/######
        */
-    prior: function prior(priorCb) {
-        var conditionBackup = this.condition;
+    prior(priorCb) {
+        let conditionBackup = this.condition;
         this.condition = [];
 
         priorCb(this);
@@ -127,7 +126,6 @@ extend(check.prototype, {
 
         return this;
     },
-
 
     /**
         ifNot ( code: String, text: String )
@@ -141,13 +139,12 @@ extend(check.prototype, {
         URL doc:
         http://icejs.org/######
     */
-    ifNot: function ifNot(code, text) {
+    ifNot(code, text) {
         this.code = code;
         this.text = text;
 
         return this;
     },
-
 
     /**
         check ( variable: any )
@@ -161,12 +158,11 @@ extend(check.prototype, {
         URL doc:
         http://icejs.org/######
     */
-    check: function check(variable) {
+    check(variable) {
         this.target = variable;
 
         return this;
     },
-
 
     /**
         do ()
@@ -181,14 +177,13 @@ extend(check.prototype, {
         URL doc:
         http://icejs.org/######
     */
-    do: function _do() {
+    do() {
 
         // 如果值为false则抛出错误
         if (!check.calculate(this.condition)) {
             throw argErr(this.code, this.text);
         }
     },
-
 
     /**
         be ( variable: any )
@@ -202,18 +197,13 @@ extend(check.prototype, {
         URL doc:
         http://icejs.org/######
     */
-    be: function be() {
-        for (var _len = arguments.length, vars = Array(_len), _key = 0; _key < _len; _key++) {
-            vars[_key] = arguments[_key];
-        }
-
-        check.compare.call(this, vars, function (target, _var) {
+    be(...vars) {
+        check.compare.call(this, vars, (target, _var) => {
             return target === _var;
         });
 
         return this;
     },
-
 
     /**
         notBe ( variable: any )
@@ -227,18 +217,13 @@ extend(check.prototype, {
         URL doc:
         http://icejs.org/######
     */
-    notBe: function notBe() {
-        for (var _len2 = arguments.length, vars = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-            vars[_key2] = arguments[_key2];
-        }
-
-        check.compare.call(this, vars, function (target, _var) {
+    notBe(...vars) {
+        check.compare.call(this, vars, (target, _var) => {
             return target !== _var;
         });
 
         return this;
     },
-
 
     /**
         type ( string: String )
@@ -252,18 +237,13 @@ extend(check.prototype, {
         URL doc:
         http://icejs.org/######
     */
-    type: function type() {
-        for (var _len3 = arguments.length, strs = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-            strs[_key3] = arguments[_key3];
-        }
-
-        check.compare.call(this, strs, function (target, str) {
+    type(...strs) {
+        check.compare.call(this, strs, (target, str) => {
             return type$1(target) === str;
         });
 
         return this;
     },
-
 
     /**
         notType ( string: String )
@@ -277,12 +257,8 @@ extend(check.prototype, {
         URL doc:
         http://icejs.org/######
     */
-    notType: function notType() {
-        for (var _len4 = arguments.length, strs = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-            strs[_key4] = arguments[_key4];
-        }
-
-        check.compare.call(this, strs, function (target, str) {
+    notType(...strs) {
+        check.compare.call(this, strs, (target, str) => {
             return type$1(target) !== str;
         });
 
@@ -291,28 +267,29 @@ extend(check.prototype, {
 });
 
 extend(check, {
-    compare: function compare(vars, compareFn) {
-        var target = this.target;
-        Array.prototype.push.apply(this.condition, (type$1(this.condition[this.condition.length - 1]) === "function" ? ["&&"] : []).concat(function () {
-            var res = void 0;
-            foreach(vars, function (_var) {
+    compare(vars, compareFn) {
+        let target = this.target;
+        Array.prototype.push.apply(this.condition, (type$1(this.condition[this.condition.length - 1]) === "function" ? ["&&"] : []).concat(() => {
+            let res;
+            foreach(vars, _var => {
                 res = res || compareFn(target, _var);
             });
 
             return res;
         }));
     },
-    calculate: function calculate(condition) {
+
+    calculate(condition) {
         if (condition.length === 0) {
             throw checkErr("condition", "没有设置检查条件");
         } else if (/^\|\|$/.test(condition[condition.length - 1])) {
             throw checkErr("condition", "\"or()\"应该需要紧跟条件，而不能作为最后的条件调用方法");
         } else if (condition.length % 2 === 1) {
-            var res = false,
-                symbol = void 0,
-                titem = void 0,
-                bool = void 0;
-            foreach(condition, function (item) {
+            let res = false,
+                symbol,
+                titem,
+                bool;
+            foreach(condition, item => {
                 titem = type$1(item);
 
                 if (titem !== "string") {
@@ -346,8 +323,6 @@ extend(check, {
     }
 });
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
 /**
  	type ( arg: any )
  
@@ -362,7 +337,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
  	http://icejs.org/######
  */
 function type$1(arg) {
-	return arg !== null ? arg instanceof Array ? "array" : typeof arg === "undefined" ? "undefined" : _typeof(arg) : "null";
+	return arg !== null ? arg instanceof Array ? "array" : typeof arg : "null";
 }
 
 /**
@@ -403,8 +378,8 @@ function foreach(target, callback) {
 		return;
 	}
 
-	var isContinue = void 0,
-	    i = void 0,
+	let isContinue,
+	    i,
 	    tTarget = type$1(target),
 	    tCallback = type$1(callback);
 
@@ -451,8 +426,8 @@ function isEmpty(object) {
 
 	check(object).type("array", "object").ifNot("object", "参数类型必须为array或object").do();
 
-	var result = true;
-	foreach(object, function () {
+	let result = true;
+	foreach(object, () => {
 		result = false;
 
 		// 跳出循环
@@ -490,14 +465,11 @@ function isEmpty(object) {
 	URL doc:
 	http://icejs.org/######
 */
-function extend() {
-	for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-		args[_key] = arguments[_key];
-	}
+function extend(...args) {
 
-	var target = args[0],
+	let target = args[0],
 	    ttarget = type$1(target),
-	    targ = void 0;
+	    targ;
 
 	args = args.slice(1);
 
@@ -617,10 +589,9 @@ var plugin = {
  	URL doc:
  	http://icejs.org/######
  */
-	has: function has(name) {
+	has(name) {
 		return !!this.plugins[name];
 	},
-
 
 	/**
  	push ( name: String, plugin: Object|Function )
@@ -634,10 +605,9 @@ var plugin = {
  	URL doc:
  	http://icejs.org/######
  */
-	push: function push(name, plugin) {
+	push(name, plugin) {
 		this.plugins[name] = plugin;
 	},
-
 
 	/**
  	get ( name: String )
@@ -652,7 +622,7 @@ var plugin = {
  	URL doc:
  	http://icejs.org/######
  */
-	get: function get(name) {
+	get(name) {
 		return this.plugins[name] || null;
 	}
 };
@@ -673,10 +643,9 @@ var module$1 = {
  	URL doc:
  	http://icejs.org/######
  */
-	push: function push(name, module) {
+	push(name, module) {
 		this.modules[name] = module;
 	},
-
 
 	/**
  	get ( name: String )
@@ -691,7 +660,7 @@ var module$1 = {
  	URL doc:
  	http://icejs.org/######
  */
-	get: function get(name) {
+	get(name) {
 		return this.modules[name] || null;
 	}
 };
@@ -712,10 +681,9 @@ var component = {
  	URL doc:
  	http://icejs.org/######
  */
-	push: function push(name, component) {
+	push(name, component) {
 		this.components[name] = component;
 	},
-
 
 	/**
  	get ( name: String )
@@ -730,7 +698,7 @@ var component = {
  	URL doc:
  	http://icejs.org/######
  */
-	get: function get(name) {
+	get(name) {
 		return this.components[name] || null;
 	}
 };
@@ -752,11 +720,10 @@ var event$1 = {
  	URL doc:
  	http://icejs.org/######
  */
-	push: function push(type, listener) {
+	push(type, listener) {
 		this.events[type] = this.events[type] || [];
 		this.events[type].push(listener);
 	},
-
 
 	/**
  	get ( name: String )
@@ -771,10 +738,9 @@ var event$1 = {
  	URL doc:
  	http://icejs.org/######
  */
-	get: function get(type) {
+	get(type) {
 		return this.events[type] || null;
 	},
-
 
 	/**
  	getAll ()
@@ -789,7 +755,7 @@ var event$1 = {
  	URL doc:
  	http://icejs.org/######
  */
-	getAll: function getAll() {
+	getAll() {
 		return this.events;
 	}
 };
@@ -808,97 +774,84 @@ var event$1 = {
 	http://icejs.org/######
 */
 var cache = {
-	getDependentPlugin: function getDependentPlugin(fn) {
-		var _this = this;
 
-		var fnStr = fn.toString();
-		return ((/^function(?:\s+\w+)?\s*\((.*)\)\s*/.exec(fnStr) || /^\(?(.*?)\)?\s*=>/.exec(fnStr) || /^\S+\s*\((.*?)\)/.exec(fnStr) || [])[1] || "").split(",").filter(function (item) {
-			return !!item;
-		}).map(function (item) {
-			return _this.getPlugin(item.trim());
-		});
+	getDependentPlugin(fn) {
+		const fnStr = fn.toString();
+		return ((/^function(?:\s+\w+)?\s*\((.*)\)\s*/.exec(fnStr) || /^\(?(.*?)\)?\s*=>/.exec(fnStr) || /^\S+\s*\((.*?)\)/.exec(fnStr) || [])[1] || "").split(",").filter(item => !!item).map(item => this.getPlugin(item.trim()));
 	},
 
-
 	// 查看是否存在指定插件
-	hasPlugin: function hasPlugin(name) {
+	hasPlugin(name) {
 		return plugin.has(name);
 	},
 
-
 	// 添加插件缓存
-	pushPlugin: function pushPlugin(name, p) {
+	pushPlugin(name, p) {
 		plugin.push(name, p);
 	},
 
-
 	// 获取已加载插件
-	getPlugin: function getPlugin(name) {
+	getPlugin(name) {
 		return plugin.get(name);
 	},
-	pushComponent: function pushComponent(name, comp) {
+
+	pushComponent(name, comp) {
 		component.push(name, comp);
 	},
-	getComponent: function getComponent(name) {
+
+	getComponent(name) {
 		return component.get(name);
 	},
 
-
 	// 添加页面模块缓存
-	pushModule: function pushModule(name, d) {
+	pushModule(name, d) {
 		module$1.push(name, d);
 	},
 
-
 	// 获取页面模块缓存
-	getModule: function getModule(name) {
+	getModule(name) {
 		return module$1.get(name);
 	},
 
-
 	// 添加非元素事件缓存
-	pushEvent: function pushEvent(type, listener) {
+	pushEvent(type, listener) {
 		event$1.push(type, listener);
 	},
 
-
 	// 获取非元素事件缓存
-	getEvent: function getEvent(type) {
+	getEvent(type) {
 		return event$1.get(type);
 	},
 
-
 	// 获取所有事件
-	getAllEvent: function getAllEvent() {
+	getAllEvent() {
 		return event$1.getAll();
 	}
 };
 
-// 表示ice.module()
+// 开发模式常量
+// 普通开发模式
+const DEVELOP_COMMON = 0;
 
-
-// 表示plugin()
-
-
-// 表示driver()
-
+// 单页开发模式
+const DEVELOP_SINGLE = 1;
 
 // 连续字符正则表达式
-var rword = /\S+/g;
+const rword = /\S+/g;
 
 // 变量正则表达式
-var rvar = /[^0-9][\w$]*/;
+const rvar = /[^0-9][\w$]*/;
 
 // 模板表达式匹配正则
-var rexpr = /{{\s*(.*?)\s*}}/;
+const rexpr = /{{\s*(.*?)\s*}}/;
 
 // 组件名正则表达式
-var rcomponentName = /^[A-Z][a-zA-Z0-9]*/;
+const rcomponentName = /^[A-Z][a-zA-Z0-9]*/;
 
 // 模块事件常量
-var MODULE_UPDATE = "update";
-var MODULE_REQUEST = "request";
-var MODULE_RESPONSE = "response";
+
+
+
 
 // viewModel更新数组时的虚拟DOM处理类型
 
@@ -907,18 +860,14 @@ var MODULE_RESPONSE = "response";
 
 // 重复利用的常量
 // 样式值为数字时不添加单位“px”的样式名
-var noUnitHook = ["z-index"];
+const noUnitHook = ["z-index"];
 
 // 直接赋值的元素属性，如果不在此的属性将会使用setAttribute设置属性
-var attrAssignmentHook = ["value", "checked"];
+const attrAssignmentHook = ["value", "checked"];
 
-var types = ["string", "number", "function", "boolean", "object", "null", "undefined", "array"];
+const types = ["string", "number", "function", "boolean", "object", "null", "undefined", "array"];
 
-function correctParam() {
-    for (var _len = arguments.length, params = Array(_len), _key = 0; _key < _len; _key++) {
-        params[_key] = arguments[_key];
-    }
-
+function correctParam(...params) {
     return {
 
         /**
@@ -935,17 +884,13 @@ function correctParam() {
             URL doc:
             http://icejs.org/######
         */
-        to: function to() {
-            for (var _len2 = arguments.length, condition = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-                condition[_key2] = arguments[_key2];
-            }
-
-            var offset = 0,
+        to(...condition) {
+            let offset = 0,
                 _params = [],
-                res = void 0,
-                item = void 0,
-                j = void 0;
-            foreach(params, function (param, i) {
+                res,
+                item,
+                j;
+            foreach(params, (param, i) => {
 
                 res = null;
                 for (j = i + offset; j < condition.length; j++) {
@@ -954,10 +899,10 @@ function correctParam() {
                     item = type$1(condition[j]) !== "array" ? [condition[j]] : condition[j];
 
                     res = false;
-                    foreach(item, function (s) {
-                        res = res || function () {
+                    foreach(item, s => {
+                        res = res || (() => {
                             return types.indexOf(s) !== -1 ? type$1(param) === s : s instanceof RegExp ? s.test(param) : param === s;
-                        }();
+                        })();
                     });
 
                     // 已匹配成功
@@ -983,7 +928,6 @@ function correctParam() {
             return this;
         },
 
-
         /**
             done ( callback: Function )
         
@@ -999,8 +943,8 @@ function correctParam() {
             URL doc:
             http://icejs.org/######
         */
-        done: function done(callback) {
-            var args = (/^function\s*\((.*?)\)/.exec(callback.toString()) || /^\(?(.*?)\)?\s*=>/.exec(callback.toString()))[1],
+        done(callback) {
+            let args = (/^function\s*\((.*?)\)/.exec(callback.toString()) || /^\(?(.*?)\)?\s*=>/.exec(callback.toString()))[1],
                 l = args ? args.split(",").length : 0,
                 _this = {};
 
@@ -1009,7 +953,7 @@ function correctParam() {
             } else if (l === 1) {
                 callback(this._params);
             } else {
-                foreach(this._params, function (p, i) {
+                foreach(this._params, (p, i) => {
                     _this["$" + (i + 1)] = p;
                 });
 
@@ -1019,12 +963,12 @@ function correctParam() {
     };
 }
 
-var eventMap = map;
-var expando = "eventExpando" + Date.now();
-var special = {
+let eventMap = map;
+let expando = "eventExpando" + Date.now();
+let special = {
 
 	// DOMContentLoaded事件的判断方式
-	DOMContentLoaded: function DOMContentLoaded() {
+	DOMContentLoaded: function () {
 		return !!document.addEventListener;
 	}
 };
@@ -1043,16 +987,14 @@ var special = {
 	http://icejs.org/######
 */
 function handler(e) {
-	var _this = this;
+	let _listeners = this ? this[expando] ? this[expando][e.type] : [] : cache.getEvent(e.type);
 
-	var _listeners = this ? this[expando] ? this[expando][e.type] : [] : cache.getEvent(e.type);
-
-	foreach(_listeners || [], function (listener) {
-		listener.call(_this, e);
+	foreach(_listeners || [], listener => {
+		listener.call(this, e);
 
 		// 如果该回调函数只执行一次则移除
 		if (listener.once === true) {
-			handler.event.remove(_this, e.type, listener, listener.useCapture);
+			handler.event.remove(this, e.type, listener, listener.useCapture);
 		}
 	});
 }
@@ -1083,10 +1025,8 @@ var event = {
  	URL doc:
  	http://icejs.org/######
  */
-	support: function support(eventType) {
-		var elem = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : document.createElement("div");
-
-		var support = void 0;
+	support(eventType, elem = document.createElement("div")) {
+		let support;
 
 		if (type$1(special[eventType]) === "function") {
 			support = special[eventType]();
@@ -1105,7 +1045,6 @@ var event = {
 		return support;
 	},
 
-
 	/**
  	on ( elem?: DOMObject, types: String, listener: Function, useCapture?: Boolean, once?: Boolean )
  
@@ -1120,8 +1059,7 @@ var event = {
  	URL doc:
  	http://icejs.org/######
  */
-	on: function on(elem, types, listener, useCapture, once) {
-		var _this2 = this;
+	on(elem, types, listener, useCapture, once) {
 
 		// 纠正参数
 		correctParam(elem, types, listener, useCapture).to("object", "string").done(function () {
@@ -1148,10 +1086,10 @@ var event = {
 			listener.useCapture = !!useCapture;
 		}
 
-		var events = void 0;
+		let events;
 
 		// 多个事件拆分绑定
-		(types || "").replace(rword, function (type) {
+		(types || "").replace(rword, type => {
 
 			if (elem) {
 				elem[expando] = elem[expando] || {};
@@ -1164,13 +1102,12 @@ var event = {
 			// 元素对象存在，且元素支持浏览器事件时绑定事件，以方便浏览器交互时触发事件
 			// 元素不支持时属于自定义事件，需手动调用event.emit()触发事件
 			// IE.version >= 9
-			if (elem && _this2.support(type, elem) && elem.addEventListener) {
-				handler.event = _this2;
+			if (elem && this.support(type, elem) && elem.addEventListener) {
+				handler.event = this;
 				elem.addEventListener(type, handler, !!useCapture);
 			}
 		});
 	},
-
 
 	/**
  	remove ( elem?: DOMObject, types: String, listener: Function, useCapture?: Boolean )
@@ -1184,11 +1121,10 @@ var event = {
  	URL doc:
  	http://icejs.org/######
  */
-	remove: function remove(elem, types, listener, useCapture) {
-		var _this3 = this;
+	remove(elem, types, listener, useCapture) {
 
 		// 纠正参数
-		correctParam(elem, types, listener, useCapture).to("object", "string").done(function (args) {
+		correctParam(elem, types, listener, useCapture).to("object", "string").done(args => {
 			elem = args[0];
 			types = args[1];
 			listener = args[2];
@@ -1201,9 +1137,8 @@ var event = {
 		check(types).type("string").ifNot("function event.on:types", "types参数类型必须为string").do();
 		check(listener).type("function").ifNot("function event.on:listener", "listener参数类型必须为function").do();
 
-		var i = void 0,
-		    events = void 0;
-		(types || "").replace(rword, function (type) {
+		let i, events;
+		(types || "").replace(rword, type => {
 			if (elem) {
 				events = elem[expando] && elem[expando][type] || [];
 			} else {
@@ -1225,14 +1160,13 @@ var event = {
 				if (events.length === 0) {
 					delete (elem ? elem[expando][type] : cache.getAllEvent()[type]);
 
-					if (elem && _this3.support(type, elem) && elem.removeEventListener) {
+					if (elem && this.support(type, elem) && elem.removeEventListener) {
 						elem.removeEventListener(type, handler, !!useCapture);
 					}
 				}
 			}
 		});
 	},
-
 
 	/**
  	emit ( elem?: DOMObject, types: String )
@@ -1246,11 +1180,10 @@ var event = {
  	URL doc:
  	http://icejs.org/######
  */
-	emit: function emit(elem, types) {
-		var _this4 = this;
+	emit(elem, types) {
 
 		// 纠正参数
-		var args = correctParam(elem, types).to("object", "string").done(function () {
+		let args = correctParam(elem, types).to("object", "string").done(function () {
 			elem = this.$1;
 			types = this.$2;
 		});
@@ -1260,13 +1193,12 @@ var event = {
 		}
 		check(types).type("string").ifNot("function event.emit:types", "types参数类型必须为string").do();
 
-		(types || "").replace(rword, function (t) {
-			if (elem && _this4.support(t, elem)) {
+		(types || "").replace(rword, t => {
+			if (elem && this.support(t, elem)) {
 
 				// 使用creaeEvent创建事件
-				var e = void 0,
-				    eventType = void 0;
-				foreach(eventMap, function (k, v) {
+				let e, eventType;
+				foreach(eventMap, (k, v) => {
 					if (v.indexOf(t) !== -1) {
 						eventType = k;
 					}
@@ -1276,7 +1208,7 @@ var event = {
 
 				elem.dispatchEvent(e);
 			} else {
-				handler.event = _this4;
+				handler.event = this;
 				handler.call(elem, { type: t });
 			}
 		});
@@ -1296,7 +1228,7 @@ var event = {
 	http://icejs.org/######
 */
 function query(selector, context, all) {
-	var elem = (context || document)[all ? "querySelectorAll" : "querySelector"](selector);
+	let elem = (context || document)[all ? "querySelectorAll" : "querySelector"](selector);
 	return all ? slice.call(elem) : elem;
 }
 
@@ -1312,15 +1244,12 @@ function query(selector, context, all) {
 	URL doc:
 	http://icejs.org/######
 */
-function appendScript(node) {
-	var success = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop;
-	var error = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : noop;
-
-	var script = document.createElement("script");
+function appendScript(node, success = noop, error = noop) {
+	let script = document.createElement("script");
 	script.type = "text/javascript";
 
 	// 将node的所有属性转移到将要解析的script节点上
-	foreach(node.attributes, function (attr) {
+	foreach(node.attributes, attr => {
 		if (attr.nodeType === 2) {
 			script.setAttribute(attr.nodeName, attr.nodeValue);
 		}
@@ -1338,7 +1267,7 @@ function appendScript(node) {
 			script.parentNode.removeChild(script);
 		});
 
-		event.on(script, "error", function () {
+		event.on(script, "error", () => {
 			error();
 			script.parentNode.removeChild(script);
 		});
@@ -1365,17 +1294,15 @@ function appendScript(node) {
 	URL doc:
 	http://icejs.org/######
 */
-function scriptEval(code) {
-	var callback = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop;
-
-	check(code).type("string", "array").or().prior(function (_this) {
+function scriptEval(code, callback = noop) {
+	check(code).type("string", "array").or().prior(_this => {
 		_this.type("object").check(code.nodeType).be(1).check(code.nodeName).be("SCRIPT");
 	}).ifNot("function scriptEval:code", "参数必须为javascript代码片段、script标签或script标签数组").do();
 
-	var tcode = type$1(code);
+	let tcode = type$1(code);
 	if (tcode === "string") {
 
-		var script = document.createElement("script");
+		let script = document.createElement("script");
 		script.type = "text/javascript";
 		script.text = code;
 
@@ -1383,11 +1310,11 @@ function scriptEval(code) {
 	} else if (tcode === "object" && code.nodeType === 1 && code.nodeName.toLowerCase() === "script") {
 		appendScript(code, callback);
 	} else if (tcode === "array") {
-		var scripts = code.concat(),
-		    _cb = void 0;
+		let scripts = code.concat(),
+		    _cb;
 
 		if (scripts.length > 0) {
-			foreach(code, function (_script) {
+			foreach(code, _script => {
 				// 删除数组中的当前值，以便于将剩下未执行的javascript通过回调函数传递
 				scripts.splice(0, 1);
 
@@ -1395,7 +1322,7 @@ function scriptEval(code) {
 					_cb = scripts.length === 0 ? callback : noop;
 					appendScript(_script, _cb, _cb);
 				} else {
-					_cb = scripts.length === 0 ? callback : function () {
+					_cb = scripts.length === 0 ? callback : () => {
 						scriptEval(scripts, callback);
 					};
 
@@ -1480,7 +1407,7 @@ function attr(context, name, val) {
 		case "undefined":
 			return context.getAttribute(name);
 		case "object":
-			foreach(val, function (v, k) {
+			foreach(val, (v, k) => {
 				context.setAttribute(k, v);
 			});
 			break;
@@ -1507,15 +1434,15 @@ function serialize(form) {
 		return form;
 	}
 
-	var rcheckableType = /^(?:checkbox|radio)$/i,
-	    rsubmitterTypes = /^(?:submit|button|image|reset|file)$/i,
-	    rsubmittable = /^(?:input|select|textarea|keygen)/i,
-	    rCRLF = /\r?\n/g,
-	    inputs = slice.call(form.elements),
-	    formObject = {};
+	const rcheckableType = /^(?:checkbox|radio)$/i,
+	      rsubmitterTypes = /^(?:submit|button|image|reset|file)$/i,
+	      rsubmittable = /^(?:input|select|textarea|keygen)/i,
+	      rCRLF = /\r?\n/g,
+	      inputs = slice.call(form.elements),
+	      formObject = {};
 
 	// 判断表单中是否含有上传文件
-	foreach(inputs, function (inputItem) {
+	foreach(inputs, inputItem => {
 		if (inputItem.name && !attr(inputItem, "disabled") && rsubmittable.test(inputItem.nodeName) && !rsubmitterTypes.test(inputItem.type) && (inputItem.checked || !rcheckableType.test(inputItem.type))) {
 
 			formObject[name] = inputItem.value.replace(rCRLF, "\r\n");
@@ -1548,7 +1475,7 @@ var defaultParams = {
 	moduleSuffix: ".ice"
 };
 
-var paramStore = defaultParams;
+let paramStore = defaultParams;
 
 /**
 	configuration ( params: Object )
@@ -1564,7 +1491,7 @@ var paramStore = defaultParams;
 */
 function configuration(params) {
 
-	var _type = type$1(params.baseURL);
+	const _type = type$1(params.baseURL);
 
 	params.baseURL = _type === "string" ? params.baseURL : _type === "function" ? params.baseURL() : "";
 	params.baseURL = params.baseURL.substr(-1, 1) === "/" ? params.baseURL : params.baseURL + "/";
@@ -1576,18 +1503,128 @@ function configuration(params) {
 }
 
 extend(configuration, {
-	getConfigure: function getConfigure(param) {
+	getConfigure(param) {
 		return paramStore[param];
 	}
 });
 
 var iceAttr = {
-	module: "ice-module",
-	title: "ice-title",
+	module: ":module",
+	title: ":title",
 
 	href: "href",
 	action: "action"
 };
+
+// 转换存取器属性
+function defineReactiveProperty(key, getter, setter, target) {
+	Object.defineProperty(target, key, {
+		enumerable: true,
+		configurable: true,
+		get: getter,
+		set: setter
+	});
+}
+
+/**
+	parseGetQuery ( getString: String )
+
+	Return Type:
+	Object
+	解析后的get参数对象
+
+	Description:
+	将形如“?a=1&b=2”的get参数解析为参数对象
+
+	URL doc:
+	http://icejs.org/######
+*/
+function parseGetQuery(getString) {
+	const getObject = {};
+	if (getString) {
+		let kv;
+		foreach((getString.substr(0, 1) === "?" ? getString.substr(1) : getString).split("&"), getObjectItem => {
+			kv = getObjectItem.split("=");
+			getObject[kv[0]] = kv[1] || "";
+		});
+	}
+
+	return getObject;
+}
+
+/**
+	transformCompName ( compName: String, mode?: Boolean )
+
+	Return Type:
+	驼峰式或中划线式的组件名
+
+	Description:
+	mode不为true时，将中划线风格的组件名转换为驼峰式的组件名
+	mode为true时，将驼峰式风格的组件名转换为中划线的组件名
+
+	URL doc:
+	http://icejs.org/######
+*/
+function transformCompName(compName, mode) {
+	return mode !== true ? compName.toLowerCase().replace(/^([a-z])|-(.)/g, (match, rep1, rep2) => (rep1 || rep2).toUpperCase()) : compName.replace(/([A-Z])/g, (match, rep, i) => (i > 0 ? "-" : "") + rep.toLowerCase());
+}
+
+/**
+	walkDOM ( vdom: Object, callback: Function, ...extra: Any )
+
+	Return Type:
+	void
+
+	Description:
+	遍历虚拟节点及子节点
+	extra为额外的参数，传入的额外参数将会在第一个遍历项中传入，但不会传入之后遍历的子项中
+
+	URL doc:
+	http://icejs.org/######
+*/
+function walkVDOM(vdom, callback, ...extra) {
+	let vnode = vdom;
+	do {
+		callback.apply(null, [vnode].concat(extra));
+
+		if (vnode.children && vnode.children[0]) {
+			walkVDOM(vnode.children[0], callback);
+		}
+	} while (vnode = vnode.nextSibling());
+}
+
+/**
+	queryModuleNode ( moduleAttr: String, moduleName: String, context?: DOMObject )
+
+	Return Type:
+	DOMObject
+
+	Description:
+	遍历节点及子节点查询对应名称的节点
+
+	URL doc:
+	http://icejs.org/######
+*/
+function queryModuleNode(moduleName, context) {
+	let node = context || document.body,
+	    targetNode;
+
+	do {
+		if (node.nodeType === 1 && attr(node, iceAttr.module) === moduleName) {
+			targetNode = node;
+
+			break;
+		}
+
+		if (node.firstChild) {
+			if (targetNode = queryModuleNode(moduleName, node.firstChild)) {
+				break;
+			}
+		}
+	} while (node = node.nextSibling);
+
+	return targetNode;
+}
 
 /**
 	ComponentLoader ( load: Object )
@@ -1626,10 +1663,9 @@ extend(ComponentLoader.prototype, {
  	URL doc:
  	http://icejs.org/######
  */
-	putWaiting: function putWaiting(name) {
+	putWaiting(name) {
 		this.waiting.push(name);
 	},
-
 
 	/**
  	dropWaiting ( name: String )
@@ -1643,15 +1679,14 @@ extend(ComponentLoader.prototype, {
  	URL doc:
  	http://icejs.org/######
  */
-	dropWaiting: function dropWaiting(name) {
-		var pointer = this.waiting.indexOf(name);
+	dropWaiting(name) {
+		const pointer = this.waiting.indexOf(name);
 		if (pointer !== -1) {
 			this.waiting.splice(pointer, 1);
 		}
 
 		return this.waiting.length;
 	},
-
 
 	/**
  	inject ( module: Object )
@@ -1665,23 +1700,22 @@ extend(ComponentLoader.prototype, {
  	URL doc:
  	http://icejs.org/######
  */
-	inject: function inject() {
-		var _this = this;
+	inject() {
 
-		var deps = [];
+		const deps = [];
 
-		foreach(this.load.deps, function (dep) {
+		foreach(this.load.deps, dep => {
 
 			// 查找插件
-			deps[dep] = cache.getComponent(dep);
+			deps[dep] = window.components[dep];
+			delete window.components[dep];
 		});
 
 		// 返回注入后工厂方法
-		this.factory = function () {
-			_this.load.factory.apply(null, deps);
+		this.factory = () => {
+			this.load.factory.apply(null, deps);
 		};
 	},
-
 
 	/**
  	fire ()
@@ -1695,7 +1729,7 @@ extend(ComponentLoader.prototype, {
  	URL doc:
  	http://icejs.org/######
  */
-	fire: function fire() {
+	fire() {
 		this.factory();
 	}
 });
@@ -1726,10 +1760,9 @@ extend(ComponentLoader, {
  	URL doc:
  	http://icejs.org/######
  */
-	create: function create(guid$$1, loadDep) {
+	create(guid$$1, loadDep) {
 		return ComponentLoader.loaderMap[guid$$1] = new ComponentLoader(loadDep);
 	},
-
 
 	/**
  	getCurrentPath ()
@@ -1744,7 +1777,7 @@ extend(ComponentLoader, {
  	URL doc:
  	http://icejs.org/######
  */
-	getCurrentPath: function getCurrentPath() {
+	getCurrentPath() {
 		if (document.currentScript) {
 
 			// Chrome, Firefox, Safari高版本
@@ -1755,14 +1788,14 @@ extend(ComponentLoader, {
 			try {
 				____a.____b();
 			} catch (e) {
-				var stack = e.stack || e.sourceURL || e.stacktrace;
+				const stack = e.stack || e.sourceURL || e.stacktrace;
 				if (stack) {
 					return (e.stack.match(/(?:http|https|file):\/\/.*?\/.+?\.js/) || [""])[0];
 				} else {
 
 					// IE9
-					var scripts = slice.call(document.querySelectorAll("script"));
-					for (var i = scripts.length - 1, script; script = script[i--];) {
+					const scripts = slice.call(document.querySelectorAll("script"));
+					for (let i = scripts.length - 1, script; script = script[i--];) {
 						if (script.readyState === "interative") {
 							return script.src;
 						}
@@ -1771,7 +1804,6 @@ extend(ComponentLoader, {
 			}
 		}
 	},
-
 
 	/**
  	onScriptLoaded ( event: Object, : , :  )
@@ -1786,10 +1818,10 @@ extend(ComponentLoader, {
  	URL doc:
  	http://icejs.org/######
  */
-	onScriptLoaded: function onScriptLoaded(e) {
+	onScriptLoaded(e) {
 
-		var loadID = e.target[ComponentLoader.loaderID],
-		    curLoader = ComponentLoader.loaderMap[loadID];
+		const loadID = e.target[ComponentLoader.loaderID],
+		      curLoader = ComponentLoader.loaderMap[loadID];
 
 		// 执行
 		if (curLoader.dropWaiting(e.target[ComponentLoader.depName]) === 0) {
@@ -1820,25 +1852,31 @@ extend(ComponentLoader, {
 */
 function require(deps, factory) {
 
-	// 正在加载的依赖数
-	var loadingCount = 0;
+	const pathAnchor = document.createElement("a");
+	// pathAnchor.href = deps [ 0 ];
+	pathAnchor.href = "aaa/bb/cc";
 
-	var nguid = guid(),
-	    module = {
+	console.log(pathAnchor.href, location.href);
+
+	// 正在加载的依赖数
+	let loadingCount = 0;
+
+	const nguid = guid(),
+	      module = {
 		deps: deps,
 		factory: factory
 	},
-	    loadObj = ComponentLoader.create(nguid, module);
+	      loadObj = ComponentLoader.create(nguid, module);
 
 	// 遍历依赖，如果依赖未被加载，则放入waiting中等待加载完成
-	foreach(deps, function (depStr) {
+	foreach(deps, depStr => {
 		if (!cache.getComponent(depStr)) {
 
 			// 放入待加载列表中等待加载
 			loadObj.putWaiting(depStr);
 
 			// 加载依赖
-			var script = document.createElement("script");
+			const script = document.createElement("script");
 
 			script.src = depStr + ComponentLoader.suffix;
 			script[ComponentLoader.depName] = depStr;
@@ -1857,78 +1895,8 @@ function require(deps, factory) {
 	}
 }
 
-// 转换存取器属性
-function defineReactiveProperty(key, getter, setter, target) {
-	Object.defineProperty(target, key, {
-		enumerable: true,
-		configurable: true,
-		get: getter,
-		set: setter
-	});
-}
-
-/**
-	parseGetQuery ( getString: String )
-
-	Return Type:
-	Object
-	解析后的get参数对象
-
-	Description:
-	将形如“?a=1&b=2”的get参数解析为参数对象
-
-	URL doc:
-	http://icejs.org/######
-*/
-function parseGetQuery(getString) {
-	var getObject = {};
-	if (getString) {
-		var kv = void 0;
-		foreach((getString.substr(0, 1) === "?" ? getString.substr(1) : getString).split("&"), function (getObjectItem) {
-			kv = getObjectItem.split("=");
-			getObject[kv[0]] = kv[1] || "";
-		});
-	}
-
-	return getObject;
-}
-
-/**
-	transformCompName ( compName: String, mode?: Boolean )
-
-	Return Type:
-	驼峰式或中划线式的组件名
-
-	Description:
-	mode不为true时，将中划线风格的组件名转换为驼峰式的组件名
-	mode为true时，将驼峰式风格的组件名转换为中划线的组件名
-
-	URL doc:
-	http://icejs.org/######
-*/
-function transformCompName(compName, mode) {
-	return mode !== true ? compName.toLowerCase().replace(/^([a-z])|-(.)/g, function (match, rep1, rep2) {
-		return (rep1 || rep2).toUpperCase();
-	}) : compName.replace(/([A-Z])/g, function (match, rep, i) {
-		return (i > 0 ? "-" : "") + rep.toLowerCase();
-	});
-}
-
-/**
-	unmountWatchers ( vnode: Object, isWatchCond: Boolean )
-
-	Return Type:
-	void
-
-	Description:
-	watcher卸载函数遍历调用
-
-	URL doc:
-	http://icejs.org/######
-*/
-
-var rconstructor = /^(?:constructor\s*|function\s*)?(?:constructor\s*)?\((.*?)\)\s*(?:=>\s*)?{([\s\S]*)}$/;
-var rscriptComment = /\/\/(.*?)\n|\/\*([\s\S]*?)\*\//g;
+const rconstructor = /^(?:constructor\s*|function\s*)?(?:constructor\s*)?\((.*?)\)\s*(?:=>\s*)?{([\s\S]*)}$/;
+const rscriptComment = /\/\/(.*?)\n|\/\*([\s\S]*?)\*\//g;
 
 /**
 	newClassCheck ( object: Object, constructor: Function )
@@ -1961,9 +1929,9 @@ function newClassCheck(object, constructor) {
 	http://icejs.org/######
 */
 function defineMemberFunction(constructor, proto) {
-	foreach(proto, function (prop, name) {
+	foreach(proto, (prop, name) => {
 		if (name === "statics") {
-			foreach(prop, function (staticProp, staticName) {
+			foreach(prop, (staticProp, staticName) => {
 				Object.defineProperty(constructor, staticName, {
 					value: staticProp,
 					enumerable: false,
@@ -2000,15 +1968,13 @@ function inherits(subClass, superClass) {
 }
 
 function getSuperConstructorReturn(subInstance, constructorReturn) {
-	var tcr = type$1(constructorReturn);
+	const tcr = type$1(constructorReturn);
 	return constructorReturn && (tcr === "function" || tcr === "object") ? constructorReturn : subInstance;
 }
 
 function defineSuper(subInstance, superConstructor, superReturn) {
-	var _arguments = arguments;
-
-	subInstance.__super = function () {
-		superReturn.value = superConstructor.apply(subInstance, _arguments);
+	subInstance.__super = () => {
+		superReturn.value = superConstructor.apply(subInstance, arguments);
 		delete subInstance.__super;
 	};
 }
@@ -2035,22 +2001,16 @@ function defineSuper(subInstance, superConstructor, superReturn) {
 	http://icejs.org/######
 */
 function Class(clsName) {
-	var _superClass = void 0;
+	let _superClass;
 
 	function classDefiner(proto) {
-		var customConstructor = proto.constructor;
-		var constructor = function constructor() {
-			for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-				args[_key] = arguments[_key];
-			}
-
+		let customConstructor = proto.constructor;
+		const constructor = function (...args) {
 			try {
 				(customConstructor || noop).apply(this, args);
 			} catch (e) {
-				customConstructor = new Function("return " + customConstructor.toString().replace(/this\.depComponents\s*\((.+?)\)/, function (match, rep) {
-					return match.replace(rep, rep.split(",").map(function (item) {
-						return "\"" + item.trim() + "\"";
-					}).join(","));
+				customConstructor = new Function("return " + customConstructor.toString().replace(/this\.depComponents\s*\((.+?)\)/, (match, rep) => {
+					return match.replace(rep, rep.split(",").map(item => "\"" + item.trim() + "\"").join(","));
 				}))();
 
 				customConstructor.apply(this, args);
@@ -2058,33 +2018,31 @@ function Class(clsName) {
 		};
 		// proto.constructor = proto.constructor || noop;
 
-		var fnBody = "return function " + clsName + " (",
-		    mustNew = "newClassCheck(this, " + clsName + ");",
+		let fnBody = `return function ${clsName} (`,
+		    mustNew = `newClassCheck(this, ${clsName});`,
 		    constructMatch = rconstructor.exec(proto.constructor.toString() || "") || [],
 		    args = constructMatch[1] || "",
-		    codeNoComment = (constructMatch[2] || "").replace(rscriptComment, function (match) {
-			return "";
-		}).trim(),
-		    classFn = void 0;
+		    codeNoComment = (constructMatch[2] || "").replace(rscriptComment, match => "").trim(),
+		    classFn;
 
-		fnBody += args + "){";
+		fnBody += `${args}){`;
 
 		// 此类有继承另一个类的时候
 		if (_superClass !== undefined) {
 
-			fnBody += mustNew + "var __superReturn = {};";
+			fnBody += `${mustNew}var __superReturn = {};`;
 
 			if (constructMatch[2]) {
-				var ruseThisBeforeCallSuper = /[\s{;]this\s*\.[\s\S]+this\.__super/,
-				    rsuperCount = /[\s{;]?this.__super\s*\(/,
-				    _rscriptComment = /\/\/(.*?)\n|\/\*(.*?)\*\//g;
+				const ruseThisBeforeCallSuper = /[\s{;]this\s*\.[\s\S]+this\.__super/,
+				      rsuperCount = /[\s{;]?this.__super\s*\(/,
+				      rscriptComment = /\/\/(.*?)\n|\/\*(.*?)\*\//g;
 
 				if (ruseThisBeforeCallSuper.test(codeNoComment)) {
 					throw classErr("constructor", "\"this\" is not allow before call this.__super()");
 				}
 
-				var superCallCount = 0;
-				codeNoComment = codeNoComment.replace(rsuperCount, function (match) {
+				let superCallCount = 0;
+				codeNoComment = codeNoComment.replace(rsuperCount, match => {
 					superCallCount++;
 					return match;
 				});
@@ -2095,18 +2053,18 @@ function Class(clsName) {
 					throw classErr("constructor", "\"this.__super()\" may only be called once");
 				}
 
-				fnBody += "defineSuper(this,(" + clsName + ".__proto__ || Object.getPrototypeOf(" + clsName + ")), __superReturn);";
+				fnBody += `defineSuper(this,(${clsName}.__proto__ || Object.getPrototypeOf(${clsName})), __superReturn);`;
 			} else {
-				fnBody += "__superReturn.value = (" + clsName + ".__proto__ || Object.getPrototypeOf(" + clsName + ")).call(this);";
+				fnBody += `__superReturn.value = (${clsName}.__proto__ || Object.getPrototypeOf(${clsName})).call(this);`;
 			}
 
-			fnBody += "constructor.call(this" + (args && "," + args) + ");return getSuperConstructorReturn(this,__superReturn.value);}";
+			fnBody += `constructor.call(this${args && "," + args});return getSuperConstructorReturn(this,__superReturn.value);}`;
 
 			classFn = new Function("constructor", "newClassCheck", "defineSuper", "getSuperConstructorReturn", fnBody)(constructor, newClassCheck, defineSuper, getSuperConstructorReturn);
 
 			inherits(classFn, _superClass);
 		} else {
-			fnBody += mustNew + "constructor.call(this" + (args && "," + args) + ");}";
+			fnBody += `${mustNew}constructor.call(this${args && "," + args});}`;
 			classFn = new Function("constructor", "newClassCheck", fnBody)(constructor, newClassCheck);
 		}
 
@@ -2117,14 +2075,17 @@ function Class(clsName) {
 			defineMemberFunction(classFn, proto);
 		}
 
-		// 将此组件类保存至缓存中
-		cache.pushComponent(ComponentLoader.getCurrentPath(), classFn);
+		// 单页模式下将会临时保存到window下的components命名空间中以方面require内获取
+		if (Structure$1.currentPage) {
+			window.components = window.components || {};
+			window.components[classFn.name] = classFn;
+		}
 
 		return classFn;
 	}
 
 	// 继承函数
-	classDefiner.extends = function (superClass) {
+	classDefiner.extends = superClass => {
 		// superClass需要为函数类型，否则会报错
 		if (type$1(superClass) !== 'function' && superClass !== null) {
 			throw classErr("extends", "Class extends value is not a constructor or null");
@@ -2176,9 +2137,10 @@ extend(ValueWatcher.prototype, {
  	URL doc:
  	http://icejs.org/######
  */
-	update: function update() {
+	update() {
 		this.updateFn(this.getter());
 	}
+
 });
 
 /**
@@ -2196,9 +2158,9 @@ extend(ValueWatcher.prototype, {
     http://icejs.org/######
 */
 function getInsertIndex(index, children) {
-    var insertIndex = 0;
+    let insertIndex = 0;
 
-    for (var i = 0; i < index; i++) {
+    for (let i = 0; i < index; i++) {
         if (children[i].templateNodes) {
             insertIndex += children[i].templateNodes.length;
         } else {
@@ -2222,7 +2184,7 @@ function getInsertIndex(index, children) {
     http://icejs.org/######
 */
 function diffAttrs(newVNode, oldVNode, nodePatcher) {
-    foreach(newVNode.attrs, function (attr, name) {
+    foreach(newVNode.attrs, (attr, name) => {
         if (oldVNode.attrs[name] !== attr) {
 
             // 新旧节点的属性对比出来后的差异需在新vnode上修改，移除时同理
@@ -2231,7 +2193,7 @@ function diffAttrs(newVNode, oldVNode, nodePatcher) {
     });
 
     //找出移除的属性
-    foreach(oldVNode.attrs, function (attr, name) {
+    foreach(oldVNode.attrs, (attr, name) => {
         if (!newVNode.attrs.hasOwnProperty(name)) {
             nodePatcher.removeAttr(newVNode, name);
         }
@@ -2256,16 +2218,16 @@ function diffEvents(newVNode, oldVNode, nodePatcher) {
     if (!oldVNode.events) {
 
         // 绑定新vnode上的所有事件
-        foreach(newVNode.events, function (handlers, type) {
+        foreach(newVNode.events, (handlers, type) => {
             nodePatcher.addEvents(newVNode, type, handlers);
         });
     } else {
-        var addHandlers = void 0;
-        foreach(newVNode.events, function (handlers, type) {
+        let addHandlers;
+        foreach(newVNode.events, (handlers, type) => {
 
             addHandlers = [];
             if (oldVNode.events.hasOwnProperty(type)) {
-                foreach(handlers, function (handler) {
+                foreach(handlers, handler => {
                     if (oldVNode.events[type].indexOf(handler) === -1) {
                         addHandlers.push(handler);
                     }
@@ -2296,8 +2258,8 @@ function diffEvents(newVNode, oldVNode, nodePatcher) {
     http://icejs.org/######
 */
 function indexOf(children, searchNode) {
-    var index = -1;
-    foreach(children, function (child, i) {
+    let index = -1;
+    foreach(children, (child, i) => {
         if (child.key === searchNode.key) {
             index = i;
             return false;
@@ -2322,21 +2284,21 @@ function indexOf(children, searchNode) {
 function diffChildren(newChildren, oldChildren, nodePatcher) {
 
     if (oldChildren && oldChildren.length > 0 && (!newChildren || newChildren.length <= 0)) {
-        foreach(oldChildren, function (oldChild) {
+        foreach(oldChildren, oldChild => {
             nodePatcher.removeNode(oldChild);
         });
     } else if (newChildren && newChildren.length > 0 && (!oldChildren || oldChildren.length <= 0)) {
-        foreach(newChildren, function (newChild, i) {
+        foreach(newChildren, (newChild, i) => {
             nodePatcher.addNode(newChild, i);
         });
     } else if (newChildren && newChildren.length > 0 && oldChildren && oldChildren.length > 0) {
 
-        var keyType = newChildren[0] && newChildren[0].key === undefined ? 0 : 1,
-            obj = { keyType: keyType, children: [] };
+        let keyType = newChildren[0] && newChildren[0].key === undefined ? 0 : 1,
+            obj = { keyType, children: [] };
 
-        var newNodeClassification = [obj],
-            oldNodeClassification = [];
-        foreach(newChildren, function (newChild) {
+        const newNodeClassification = [obj],
+              oldNodeClassification = [];
+        foreach(newChildren, newChild => {
 
             // key为undefined的分类
             if (keyType === 0) {
@@ -2344,7 +2306,7 @@ function diffChildren(newChildren, oldChildren, nodePatcher) {
                     obj.children.push(newChild);
                 } else {
                     keyType = 1;
-                    obj = { keyType: keyType, children: [newChild] };
+                    obj = { keyType, children: [newChild] };
                     newNodeClassification.push(obj);
                 }
             } else if (keyType === 1) {
@@ -2354,16 +2316,16 @@ function diffChildren(newChildren, oldChildren, nodePatcher) {
                     obj.children.push(newChild);
                 } else {
                     keyType = 0;
-                    obj = { keyType: keyType, children: [newChild] };
+                    obj = { keyType, children: [newChild] };
                     newNodeClassification.push(obj);
                 }
             }
         });
 
         keyType = oldChildren[0] && oldChildren[0].key === undefined ? 0 : 1;
-        obj = { keyType: keyType, children: [] };
+        obj = { keyType, children: [] };
         oldNodeClassification.push(obj);
-        foreach(oldChildren, function (oldChild) {
+        foreach(oldChildren, oldChild => {
 
             // key为undefined的分类
             if (keyType === 0) {
@@ -2371,7 +2333,7 @@ function diffChildren(newChildren, oldChildren, nodePatcher) {
                     obj.children.push(oldChild);
                 } else {
                     keyType = 1;
-                    obj = { keyType: keyType, children: [oldChild] };
+                    obj = { keyType, children: [oldChild] };
                     oldNodeClassification.push(obj);
                 }
             } else if (keyType === 1) {
@@ -2381,31 +2343,31 @@ function diffChildren(newChildren, oldChildren, nodePatcher) {
                     obj.children.push(oldChild);
                 } else {
                     keyType = 0;
-                    obj = { keyType: keyType, children: [oldChild] };
+                    obj = { keyType, children: [oldChild] };
                     oldNodeClassification.push(obj);
                 }
             }
         });
 
         // 对每个分类的新旧节点进行对比
-        var moveItems = void 0,
-            oldIndex = void 0,
-            oldChildrenCopy = void 0,
-            oldItem = void 0,
+        let moveItems,
+            oldIndex,
+            oldChildrenCopy,
+            oldItem,
             offset = 0;
-        foreach(newNodeClassification, function (newItem, i) {
+        foreach(newNodeClassification, (newItem, i) => {
             oldItem = oldNodeClassification[i] || { children: [] };
 
             if (newItem.keyType === 0) {
 
                 // key为undefined时直接对比同位置的两个节点
-                foreach(newItem.children, function (newChild, j) {
+                foreach(newItem.children, (newChild, j) => {
                     nodePatcher.concat(newChild.diff(oldItem.children[j]));
                 });
 
                 // 如果旧节点数量比新节点多，则移除旧节点中多出的节点
                 if (newItem.children.length < oldItem.children.length) {
-                    for (var j = newItem.children.length; j < oldItem.children.length; j++) {
+                    for (let j = newItem.children.length; j < oldItem.children.length; j++) {
                         nodePatcher.removeNode(oldItem.children[j]);
                     }
                 }
@@ -2413,7 +2375,7 @@ function diffChildren(newChildren, oldChildren, nodePatcher) {
 
                 // key不为undefined时需对比节点增加、移除及移动
                 oldChildrenCopy = oldItem.children;
-                foreach(newItem.children, function (newChild, j) {
+                foreach(newItem.children, (newChild, j) => {
                     if (indexOf(oldChildrenCopy, newChild) === -1) {
                         nodePatcher.addNode(newChild, getInsertIndex(j, newItem.children) + offset);
 
@@ -2421,7 +2383,7 @@ function diffChildren(newChildren, oldChildren, nodePatcher) {
                     }
                 });
 
-                var k = 0;
+                let k = 0;
                 while (oldChildrenCopy[k]) {
                     if (indexOf(newItem.children, oldChildrenCopy[k]) === -1) {
                         nodePatcher.removeNode(oldChildrenCopy[k]);
@@ -2433,7 +2395,7 @@ function diffChildren(newChildren, oldChildren, nodePatcher) {
 
                 moveItems = [];
                 oldIndex = 0;
-                foreach(newItem.children, function (newChild, j) {
+                foreach(newItem.children, (newChild, j) => {
                     oldIndex = indexOf(oldChildrenCopy, newChild);
                     if (oldIndex > -1) {
                         nodePatcher.concat(newChild.diff(oldChildrenCopy[oldIndex]));
@@ -2451,7 +2413,7 @@ function diffChildren(newChildren, oldChildren, nodePatcher) {
                     }
                 });
 
-                foreach(optimizeSteps(moveItems), function (move) {
+                foreach(optimizeSteps(moveItems), move => {
 
                     nodePatcher.moveNode(move.item, move.to + offset);
                 });
@@ -2476,46 +2438,45 @@ function diffChildren(newChildren, oldChildren, nodePatcher) {
     http://icejs.org/######
 */
 function optimizeSteps(patches) {
-    var i = 0;
-
-    var _loop = function _loop() {
-        var step = patches[i],
-            optimizeItems = [],
-            span = step.from - step.to,
-            nextStep = patches[i + 1],
+    let i = 0;
+    while (patches[i]) {
+        const step = patches[i],
+              optimizeItems = [],
+              span = step.from - step.to,
+              nextStep = patches[i + 1],
 
 
         // 合并的步骤
         mergeItems = { alternates: [], eliminates: [], previous: [] };
 
         if (step.to < step.from && (nextStep && nextStep.to === step.to + 1 && nextStep.from - nextStep.to >= span || !nextStep)) {
-            for (var _j = step.from - 1; _j >= step.to; _j--) {
+            for (let j = step.from - 1; j >= step.to; j--) {
 
-                var optimizeItem = {
+                const optimizeItem = {
                     type: step.type,
-                    item: step.list[_j],
-                    from: _j,
-                    to: _j + 1
+                    item: step.list[j],
+                    from: j,
+                    to: j + 1
                 };
 
                 //向前遍历查看是否有可合并的项
-                for (var _j2 = i - 1; _j2 >= 0; _j2--) {
-                    var _mergeStep = patches[_j2];
+                for (let j = i - 1; j >= 0; j--) {
+                    let mergeStep = patches[j];
 
                     // 只有一个跨度的项可以分解出来
-                    if (_mergeStep.from - _mergeStep.to === 1) {
-                        _mergeStep = {
-                            type: _mergeStep.type,
-                            item: _mergeStep.list[_mergeStep.to],
-                            from: _mergeStep.to,
-                            to: _mergeStep.from
+                    if (mergeStep.from - mergeStep.to === 1) {
+                        mergeStep = {
+                            type: mergeStep.type,
+                            item: mergeStep.list[mergeStep.to],
+                            from: mergeStep.to,
+                            to: mergeStep.from
                         };
                     }
 
-                    if (_mergeStep.item === optimizeItem.item && _mergeStep.to === optimizeItem.from) {
+                    if (mergeStep.item === optimizeItem.item && mergeStep.to === optimizeItem.from) {
                         mergeItems.previous.push({
-                            step: _mergeStep, optimizeItem: optimizeItem,
-                            exchangeItems: patches.slice(_j2 + 1, i).concat(optimizeItems)
+                            step: mergeStep, optimizeItem,
+                            exchangeItems: patches.slice(j + 1, i).concat(optimizeItems)
                         });
 
                         break;
@@ -2526,19 +2487,19 @@ function optimizeSteps(patches) {
             }
         } else {
             i++;
-            return "continue";
+            continue;
         }
 
-        var toOffset = 1,
+        let toOffset = 1,
             j = i + 1,
             lastStep = step,
-            mergeStep = void 0,
-            mergeSpan = void 0;
+            mergeStep,
+            mergeSpan;
 
         while (patches[j]) {
             mergeStep = patches[j], mergeSpan = mergeStep.from - mergeStep.to;
 
-            var merge = false;
+            let merge = false;
             if (step.to + toOffset === mergeStep.to) {
 
                 if (mergeSpan === span) {
@@ -2570,27 +2531,24 @@ function optimizeSteps(patches) {
             Array.prototype.splice.apply(patches, [patches.indexOf(lastStep) + 1, 0].concat(optimizeItems));
             patches.splice(i, 1);
 
-            var _mergeStep2 = void 0;
-            foreach(mergeItems.previous, function (prevItem) {
-                _mergeStep2 = prevItem.step;
+            let mergeStep;
+            foreach(mergeItems.previous, prevItem => {
+                mergeStep = prevItem.step;
 
                 // 如果两个合并项之间还有其他项，则需与合并项调换位置
                 // 调换位置时，合并项的from在调换项的from与to之间（包括from与to）则合并项的from-1；调换项的to在合并项的from与to之间（包括from与to）则调换项的to+1
-                var mergeFrom = void 0,
-                    mergeTo = void 0,
-                    exchangeFrom = void 0,
-                    exchangeTo = void 0;
-                foreach(prevItem.exchangeItems, function (exchangeItem) {
-                    mergeFrom = _mergeStep2.from;
-                    mergeTo = _mergeStep2.to;
+                let mergeFrom, mergeTo, exchangeFrom, exchangeTo;
+                foreach(prevItem.exchangeItems, exchangeItem => {
+                    mergeFrom = mergeStep.from;
+                    mergeTo = mergeStep.to;
                     exchangeFrom = exchangeItem.from;
                     exchangeTo = exchangeItem.to;
 
                     if (mergeFrom >= exchangeFrom && mergeFrom <= exchangeTo) {
-                        _mergeStep2.from--;
+                        mergeStep.from--;
                     }
                     if (mergeTo >= exchangeFrom && mergeTo <= exchangeTo) {
-                        _mergeStep2.to--;
+                        mergeStep.to--;
                     }
 
                     if (exchangeFrom >= mergeFrom && exchangeFrom <= mergeTo) {
@@ -2601,23 +2559,23 @@ function optimizeSteps(patches) {
                     }
                 });
 
-                prevItem.optimizeItem.from = _mergeStep2.from;
-                patches.splice(patches.indexOf(_mergeStep2), 1);
+                prevItem.optimizeItem.from = mergeStep.from;
+                patches.splice(patches.indexOf(mergeStep), 1);
 
                 // 向前合并了一个项，则i需-1，不然可能会漏掉可合并项
                 i--;
             });
 
-            foreach(mergeItems.eliminates, function (eliminateItem) {
-                foreach(optimizeItems, function (optimizeItem) {
+            foreach(mergeItems.eliminates, eliminateItem => {
+                foreach(optimizeItems, optimizeItem => {
                     optimizeItem.to++;
                 });
 
                 patches.splice(patches.indexOf(eliminateItem), 1);
             });
 
-            foreach(mergeItems.alternates, function (alternateItem) {
-                foreach(optimizeItems, function (optimizeItem) {
+            foreach(mergeItems.alternates, alternateItem => {
+                foreach(optimizeItems, optimizeItem => {
                     optimizeItem.to++;
                 });
 
@@ -2626,25 +2584,19 @@ function optimizeSteps(patches) {
         } else {
             i++;
         }
-    };
-
-    while (patches[i]) {
-        var _ret = _loop();
-
-        if (_ret === "continue") continue;
     }
 
     return patches;
 }
 
 function VElement(nodeName, attrs, parent, children, elem, isComponent) {
-	var vnode = new VNode(1, parent, elem);
+	const vnode = new VNode(1, parent, elem);
 	vnode.nodeName = nodeName.toUpperCase();
 
 	vnode.attrs = attrs || {};
 	vnode.children = children && children.concat() || [];
 
-	foreach(vnode.children, function (child) {
+	foreach(vnode.children, child => {
 		changeParent(child, vnode);
 	});
 
@@ -2656,17 +2608,17 @@ function VElement(nodeName, attrs, parent, children, elem, isComponent) {
 }
 
 function VTextNode(nodeValue, parent, node) {
-	var vnode = new VNode(3, parent, node);
+	const vnode = new VNode(3, parent, node);
 	vnode.nodeValue = nodeValue;
 
 	return vnode;
 }
 
 function VFragment(children, docFragment) {
-	var vnode = new VNode(11, null, docFragment);
+	const vnode = new VNode(11, null, docFragment);
 	vnode.children = children && children.concat() || [];
 
-	foreach(vnode.children, function (child) {
+	foreach(vnode.children, child => {
 		changeParent(child, vnode);
 	});
 
@@ -2691,10 +2643,9 @@ extend(NodePatcher.prototype, {
  	URL doc:
  	http://icejs.org/######
  */
-	addNode: function addNode(item, index) {
-		this.patches.push({ type: NodePatcher.NODE_REORDER, item: item, index: index });
+	addNode(item, index) {
+		this.patches.push({ type: NodePatcher.NODE_REORDER, item, index });
 	},
-
 
 	/**
  	moveNode ( item: Object, index: Number )
@@ -2708,10 +2659,9 @@ extend(NodePatcher.prototype, {
  	URL doc:
  	http://icejs.org/######
  */
-	moveNode: function moveNode(item, index) {
-		this.patches.push({ type: NodePatcher.NODE_REORDER, item: item, index: index, isMove: true });
+	moveNode(item, index) {
+		this.patches.push({ type: NodePatcher.NODE_REORDER, item, index, isMove: true });
 	},
-
 
 	/**
  	replaceNode ( item: Object, replaceNode: Object )
@@ -2725,10 +2675,9 @@ extend(NodePatcher.prototype, {
  	URL doc:
  	http://icejs.org/######
  */
-	replaceNode: function replaceNode(item, _replaceNode) {
-		this.patches.push({ type: NodePatcher.NODE_REPLACE, item: item, replaceNode: _replaceNode });
+	replaceNode(item, replaceNode) {
+		this.patches.push({ type: NodePatcher.NODE_REPLACE, item, replaceNode });
 	},
-
 
 	/**
  	removeNode ( item: Object )
@@ -2742,10 +2691,9 @@ extend(NodePatcher.prototype, {
  	URL doc:
  	http://icejs.org/######
  */
-	removeNode: function removeNode(item) {
-		this.patches.push({ type: NodePatcher.NODE_REMOVE, item: item });
+	removeNode(item) {
+		this.patches.push({ type: NodePatcher.NODE_REMOVE, item });
 	},
-
 
 	/**
  	replaceTextNode ( item: Object, val: String )
@@ -2759,10 +2707,9 @@ extend(NodePatcher.prototype, {
  	URL doc:
  	http://icejs.org/######
  */
-	replaceTextNode: function replaceTextNode(item, replaceNode) {
-		this.patches.push({ type: NodePatcher.TEXTNODE, item: item, replaceNode: replaceNode });
+	replaceTextNode(item, replaceNode) {
+		this.patches.push({ type: NodePatcher.TEXTNODE, item, replaceNode });
 	},
-
 
 	/**
  	reorderAttr ( item: Object, name: String, val: String )
@@ -2776,10 +2723,9 @@ extend(NodePatcher.prototype, {
  	URL doc:
  	http://icejs.org/######
  */
-	reorderAttr: function reorderAttr(item, name, val) {
-		this.patches.push({ type: NodePatcher.ATTR_REORDER, item: item, name: name, val: val });
+	reorderAttr(item, name, val) {
+		this.patches.push({ type: NodePatcher.ATTR_REORDER, item, name, val });
 	},
-
 
 	/**
  	removeAttr ( item: Object, name: String )
@@ -2793,10 +2739,9 @@ extend(NodePatcher.prototype, {
  	URL doc:
  	http://icejs.org/######
  */
-	removeAttr: function removeAttr(item, name) {
-		this.patches.push({ type: NodePatcher.ATTR_REMOVE, item: item, name: name });
+	removeAttr(item, name) {
+		this.patches.push({ type: NodePatcher.ATTR_REMOVE, item, name });
 	},
-
 
 	/**
  	addEvents ( item: Object, eventType: String, handlers: Array )
@@ -2810,10 +2755,9 @@ extend(NodePatcher.prototype, {
  	URL doc:
  	http://icejs.org/######
  */
-	addEvents: function addEvents(item, eventType, handlers) {
-		this.patches.push({ type: NodePatcher.EVENTS_ADD, item: item, eventType: eventType, handlers: handlers });
+	addEvents(item, eventType, handlers) {
+		this.patches.push({ type: NodePatcher.EVENTS_ADD, item, eventType, handlers });
 	},
-
 
 	/**
  	concat ()
@@ -2827,10 +2771,9 @@ extend(NodePatcher.prototype, {
  	URL doc:
  	http://icejs.org/######
  */
-	concat: function concat(nodePatcher) {
+	concat(nodePatcher) {
 		this.patches = this.patches.concat(nodePatcher.patches);
 	},
-
 
 	/**
  	patch ()
@@ -2844,9 +2787,9 @@ extend(NodePatcher.prototype, {
  	URL doc:
  	http://icejs.org/######
  */
-	patch: function patch() {
-		var p = void 0;
-		foreach(this.patches, function (patchItem) {
+	patch() {
+		let p;
+		foreach(this.patches, patchItem => {
 			patchItem.item.render();
 
 			switch (patchItem.type) {
@@ -2870,8 +2813,8 @@ extend(NodePatcher.prototype, {
 				case NodePatcher.NODE_REORDER:
 					p = patchItem.item.parent.node;
 					if (patchItem.item.templateNodes) {
-						var f = document.createDocumentFragment();
-						foreach(patchItem.item.templateNodes, function (vnode) {
+						const f = document.createDocumentFragment();
+						foreach(patchItem.item.templateNodes, vnode => {
 							f.appendChild(vnode.node);
 						});
 
@@ -2900,9 +2843,9 @@ extend(NodePatcher.prototype, {
 
 					break;
 				case NodePatcher.NODE_REMOVE:
-					var unmountNodes = void 0;
+					let unmountNodes;
 					if (patchItem.item.templateNodes) {
-						foreach(patchItem.item.templateNodes, function (vnode) {
+						foreach(patchItem.item.templateNodes, vnode => {
 							vnode.node.parentNode.removeChild(vnode.node);
 						});
 
@@ -2916,13 +2859,13 @@ extend(NodePatcher.prototype, {
 
 					break;
 				case NodePatcher.NODE_REPLACE:
-					var node = void 0;
+					let node;
 					if (patchItem.replaceNode.templateNodes) {
 						p = patchItem.replaceNode.templateNodes[0].node.parentNode;
 
 						if (patchItem.item.templateNodes) {
 							node = document.createDocumentFragment();
-							foreach(patchItem.item.templateNodes, function (vnode) {
+							foreach(patchItem.item.templateNodes, vnode => {
 								node.appendChild(vnode.node);
 							});
 						} else {
@@ -2930,7 +2873,7 @@ extend(NodePatcher.prototype, {
 						}
 
 						p.insertBefore(node, patchItem.replaceNode.templateNodes[0].node);
-						foreach(patchItem.replaceNode.templateNodes, function (vnode) {
+						foreach(patchItem.replaceNode.templateNodes, vnode => {
 							p.removeChild(vnode.node);
 						});
 					} else {
@@ -2938,7 +2881,7 @@ extend(NodePatcher.prototype, {
 						node = patchItem.item.node;
 						if (patchItem.item.templateNodes) {
 							node = document.createDocumentFragment();
-							foreach(patchItem.item.templateNodes, function (vnode) {
+							foreach(patchItem.item.templateNodes, vnode => {
 								node.appendChild(vnode.node);
 							});
 						}
@@ -2948,7 +2891,7 @@ extend(NodePatcher.prototype, {
 
 					break;
 				case NodePatcher.EVENTS_ADD:
-					foreach(patchItem.handlers, function (handler) {
+					foreach(patchItem.handlers, handler => {
 						event.on(patchItem.item.node, patchItem.eventType, handler);
 					});
 					break;
@@ -2995,7 +2938,7 @@ extend(NodePatcher, {
 */
 function supportCheck(nodeType, method) {
     if (nodeType !== 1 && nodeType !== 11) {
-        throw vnodeErr("NotSupport", "\u6B64\u7C7B\u578B\u7684\u865A\u62DF\u8282\u70B9\u4E0D\u652F\u6301" + method + "\u65B9\u6CD5");
+        throw vnodeErr("NotSupport", `此类型的虚拟节点不支持${method}方法`);
     }
 }
 
@@ -3058,22 +3001,25 @@ extend(VNode.prototype, {
         URL doc:
         http://icejs.org/######
     */
-    appendChild: function appendChild(childVNode) {
-        var _this = this;
-
+    appendChild(childVNode) {
         supportCheck(this.nodeType, "appendChild");
 
-        changeParent(childVNode, this);
-
+        let children;
         if (childVNode.nodeType === 11) {
-            foreach(childVNode.children, function (child) {
-                _this.children.push(child);
+            children = childVNode.children.concat();
+            foreach(childVNode.children, child => {
+                this.children.push(child);
             });
         } else {
+            children = [childVNode];
             this.children.push(childVNode);
         }
-    },
 
+        // 更换父节点
+        foreach(children, child => {
+            changeParent(child, this);
+        });
+    },
 
     /**
         removeChild ( childVNode: Object )
@@ -3087,7 +3033,7 @@ extend(VNode.prototype, {
         URL doc:
         http://icejs.org/######
     */
-    removeChild: function removeChild(childVNode) {
+    removeChild(childVNode) {
         supportCheck(this.nodeType, "removeChild");
 
         if (childVNode.parent === this) {
@@ -3095,14 +3041,13 @@ extend(VNode.prototype, {
             childVNode.parent = null;
         }
     },
-    replaceChild: function replaceChild(newVNode, oldVNode) {
-        var _this2 = this;
 
+    replaceChild(newVNode, oldVNode) {
         supportCheck(this.nodeType, "replaceChild");
 
-        var i = this.children.indexOf(oldVNode);
+        const i = this.children.indexOf(oldVNode);
         if (i >= 0) {
-            var children = void 0;
+            let children;
             if (newVNode.nodeType === 11) {
                 children = newVNode.children.concat();
 
@@ -3113,14 +3058,13 @@ extend(VNode.prototype, {
             }
 
             // 更换父节点
-            foreach(children, function (child) {
-                changeParent(child, _this2);
+            foreach(children, child => {
+                changeParent(child, this);
             });
 
             oldVNode.parent = null;
         }
     },
-
 
     /**
         insertBefore ( newVNode: Object, existingVNode: Object )
@@ -3134,14 +3078,12 @@ extend(VNode.prototype, {
         URL doc:
         http://icejs.org/######
     */
-    insertBefore: function insertBefore(newVNode, existingVNode) {
-        var _this3 = this;
-
+    insertBefore(newVNode, existingVNode) {
         supportCheck(this.nodeType, "insertBefore");
 
-        var i = this.children.indexOf(existingVNode);
+        const i = this.children.indexOf(existingVNode);
         if (i >= 0) {
-            var children = void 0;
+            let children;
             if (newVNode.nodeType === 11) {
                 children = newVNode.children.concat();
                 Array.prototype.splice.apply(this.children, [i, 0].concat(newVNode.children));
@@ -3151,12 +3093,11 @@ extend(VNode.prototype, {
             }
 
             // 更换父节点
-            foreach(children, function (child) {
-                changeParent(child, _this3);
+            foreach(children, child => {
+                changeParent(child, this);
             });
         }
     },
-
 
     /**
         html ( vnode: Object )
@@ -3170,17 +3111,16 @@ extend(VNode.prototype, {
         URL doc:
         http://icejs.org/######
     */
-    html: function html$$1(vnode) {
+    html(vnode) {
         supportCheck(this.nodeType, "html");
 
-        foreach(this.children, function (child) {
+        foreach(this.children, child => {
             child.parent = null;
         });
 
-        this.children = [vnode];
-        changeParent(vnode, this);
+        this.children = [];
+        this.appendChild(vnode);
     },
-
 
     /**
            nextSibling ()
@@ -3194,12 +3134,11 @@ extend(VNode.prototype, {
            URL doc:
            http://icejs.org/######
        */
-    nextSibling: function nextSibling() {
+    nextSibling() {
         if (this.parent) {
             return this.parent.children[this.parent.children.indexOf(this) + 1];
         }
     },
-
 
     /**
         prevSibling ()
@@ -3213,12 +3152,11 @@ extend(VNode.prototype, {
         URL doc:
         http://icejs.org/######
     */
-    prevSibling: function prevSibling() {
+    prevSibling() {
         if (this.parent) {
             return this.parent.children[this.parent.children.indexOf(this) - 1];
         }
     },
-
 
     /**
         attr ( name: String, val: Object|String|null )
@@ -3229,29 +3167,26 @@ extend(VNode.prototype, {
          URL doc:
         http://icejs.org/######
     */
-    attr: function attr$$1(name, val) {
-        var _this4 = this;
-
+    attr(name, val) {
         supportCheck(this.nodeType, "attr");
         correctParam(name, val).to("string", ["string", "object", null, "boolean"]).done(function () {
             name = this.$1;
             val = this.$2;
         });
 
-        var tval = type$1(val);
+        const tval = type$1(val);
         if (tval === "undefined") {
             return this.attrs[name];
         } else if (tval === "null") {
             delete this.attrs[name];
         } else if (tval === "object") {
-            foreach(val, function (v, k) {
-                _this4.attrs[k] = v;
+            foreach(val, (v, k) => {
+                this.attrs[k] = v;
             });
         } else {
             this.attrs[name] = val;
         }
     },
-
 
     /**
         render ()
@@ -3266,30 +3201,29 @@ extend(VNode.prototype, {
         URL doc:
         http://icejs.org/######
     */
-    render: function render() {
-        var _this5 = this;
+    render() {
 
-        var f = void 0;
+        let f;
         switch (this.nodeType) {
             case 1:
                 if (!this.node) {
                     if (this.templateNodes) {
                         this.node = [];
-                        foreach(this.templateNodes, function (vnode) {
-                            _this5.node.push(vnode.render());
+                        foreach(this.templateNodes, vnode => {
+                            this.node.push(vnode.render());
                         });
                     } else {
                         this.node = document.createElement(this.nodeName);
-                        foreach(this.attrs, function (attrVal, name) {
+                        foreach(this.attrs, (attrVal, name) => {
                             if (attrAssignmentHook.indexOf(name) === -1) {
-                                attr(_this5.node, name, attrVal);
+                                attr(this.node, name, attrVal);
                             } else {
-                                _this5.node[name] = attrVal;
+                                this.node[name] = attrVal;
                             }
                         });
-                        foreach(this.events, function (handlers, type) {
-                            foreach(handlers, function (handler) {
-                                event.on(_this5.node, type, handler);
+                        foreach(this.events, (handlers, type) => {
+                            foreach(handlers, handler => {
+                                event.on(this.node, type, handler);
                             });
                         });
                     }
@@ -3303,9 +3237,9 @@ extend(VNode.prototype, {
                         attr(this.node, this.attrs);
 
                         // 移除不存在的属性
-                        foreach(slice.call(this.node.attributes), function (attrNode) {
-                            if (!_this5.attrs.hasOwnProperty(attrNode.name)) {
-                                attr(_this5.node, attrNode.name, null);
+                        foreach(slice.call(this.node.attributes), attrNode => {
+                            if (!this.attrs.hasOwnProperty(attrNode.name)) {
+                                attr(this.node, attrNode.name, null);
                             }
                         });
                     }
@@ -3313,7 +3247,7 @@ extend(VNode.prototype, {
 
                 if (this.children.length > 0 && !this.templateNodes) {
                     f = document.createDocumentFragment();
-                    foreach(this.children, function (child) {
+                    foreach(this.children, child => {
                         f.appendChild(child.render());
                     });
 
@@ -3337,7 +3271,7 @@ extend(VNode.prototype, {
                 }
 
                 f = document.createDocumentFragment();
-                foreach(this.children, function (child) {
+                foreach(this.children, child => {
                     f.appendChild(child.render());
                 });
 
@@ -3358,7 +3292,6 @@ extend(VNode.prototype, {
         return this.node;
     },
 
-
     /**
         clone ( isQuoteDOM: Boolean )
     
@@ -3374,16 +3307,16 @@ extend(VNode.prototype, {
         URL doc:
         http://icejs.org/######
     */
-    clone: function clone(isQuoteDOM) {
-        var vnode = void 0,
+    clone(isQuoteDOM) {
+        let vnode,
             node = isQuoteDOM === false ? null : this.node;
 
         switch (this.nodeType) {
             case 1:
 
                 // 复制attrs
-                var attrs = {};
-                foreach(this.attrs, function (attr$$1, name) {
+                const attrs = {};
+                foreach(this.attrs, (attr$$1, name) => {
                     attrs[name] = attr$$1;
                 });
 
@@ -3391,8 +3324,8 @@ extend(VNode.prototype, {
                 vnode.key = this.key;
 
                 if (this.events) {
-                    foreach(this.events, function (handlers, type) {
-                        foreach(handlers, function (handler) {
+                    foreach(this.events, (handlers, type) => {
+                        foreach(handlers, handler => {
                             vnode.bindEvent(type, handler);
                         });
                     });
@@ -3404,7 +3337,7 @@ extend(VNode.prototype, {
                     }
 
                     vnode.templateNodes = [];
-                    foreach(this.templateNodes, function (templateNode, i) {
+                    foreach(this.templateNodes, (templateNode, i) => {
                         vnode.templateNodes.push(templateNode.clone());
                     });
                 }
@@ -3420,14 +3353,13 @@ extend(VNode.prototype, {
         }
 
         if (this.children) {
-            foreach(this.children, function (child, i) {
+            foreach(this.children, (child, i) => {
                 vnode.appendChild(child.clone(isQuoteDOM));
             });
         }
 
         return vnode;
     },
-
 
     /**
         bindEvent ( type: String, listener: Function )
@@ -3441,13 +3373,12 @@ extend(VNode.prototype, {
         URL doc:
         http://icejs.org/######
     */
-    bindEvent: function bindEvent(type, listener) {
+    bindEvent(type, listener) {
         this.events = this.events || {};
         this.events[type] = this.events[type] || [];
 
         this.events[type].push(listener);
     },
-
 
     /**
         diff ( oldVNode: Object )
@@ -3462,8 +3393,8 @@ extend(VNode.prototype, {
         URL doc:
         http://icejs.org/######
     */
-    diff: function diff(oldVNode) {
-        var nodePatcher = new NodePatcher();
+    diff(oldVNode) {
+        const nodePatcher = new NodePatcher();
 
         if (!oldVNode) {
             nodePatcher.addNode(this, getInsertIndex(this.parent.children.indexOf(this), this.parent.children));
@@ -3516,7 +3447,6 @@ extend(VNode.prototype, {
         return nodePatcher;
     },
 
-
     /**
         emit ( type: String )
     
@@ -3529,7 +3459,7 @@ extend(VNode.prototype, {
         URL doc:
         http://icejs.org/######
     */
-    emit: function emit(type) {
+    emit(type) {
         if (this.node) {
             event.emit(this.node, type);
         }
@@ -3551,24 +3481,24 @@ extend(VNode, {
         URL doc:
         http://icejs.org/######
     */
-    domToVNode: function domToVNode(dom) {
+    domToVNode(dom) {
         if (type$1(dom) === "string") {
-            var d = document.createElement("div"),
-                f = document.createDocumentFragment();
+            const d = document.createElement("div"),
+                  f = document.createDocumentFragment();
 
             d.innerHTML = dom;
-            foreach(slice.call(d.childNodes), function (childNode) {
+            foreach(slice.call(d.childNodes), childNode => {
                 f.appendChild(childNode);
             });
 
             dom = f;
         }
 
-        var vnode = void 0;
+        let vnode;
         switch (dom.nodeType) {
             case 1:
-                var attrs = {};
-                foreach(slice.call(dom.attributes), function (attr$$1) {
+                const attrs = {};
+                foreach(slice.call(dom.attributes), attr$$1 => {
                     attrs[attr$$1.name] = attr$$1.nodeValue;
                 });
 
@@ -3583,7 +3513,7 @@ extend(VNode, {
                 vnode = VFragment(null, dom);
         }
 
-        foreach(slice.call(dom.nodeName === "TEMPLATE" ? dom.content.childNodes || dom.childNodes : dom.childNodes), function (child) {
+        foreach(slice.call(dom.nodeName === "TEMPLATE" ? dom.content.childNodes || dom.childNodes : dom.childNodes), child => {
 
             child = VNode.domToVNode(child);
             if (child instanceof VNode) {
@@ -3614,11 +3544,10 @@ extend(NodeTransaction.prototype, {
  	URL doc:
  	http://icejs.org/######
  */
-	start: function start() {
+	start() {
 		NodeTransaction.acting = this;
 		return this;
 	},
-
 
 	/**
  	collect ( newVNode: Object, oldVNode: Object )
@@ -3632,13 +3561,12 @@ extend(NodeTransaction.prototype, {
  	URL doc:
  	http://icejs.org/######
  */
-	collect: function collect(newVNode, oldVNode) {
+	collect(newVNode, oldVNode) {
 		this.transactions.push({
 			backup: oldVNode,
 			update: newVNode
 		});
 	},
-
 
 	/**
  	commit ()
@@ -3652,8 +3580,8 @@ extend(NodeTransaction.prototype, {
  	URL doc:
  	http://icejs.org/######
  */
-	commit: function commit() {
-		foreach(this.transactions, function (comparedVNodes) {
+	commit() {
+		foreach(this.transactions, comparedVNodes => {
 			comparedVNodes.update.diff(comparedVNodes.backup).patch();
 		});
 
@@ -3661,7 +3589,7 @@ extend(NodeTransaction.prototype, {
 	}
 });
 
-var dataType$1 = [String, Number, Function, Boolean, Object];
+const dataType$1 = [String, Number, Function, Boolean, Object];
 
 /**
     validateProp ( prop: any, validate: Object )
@@ -3677,8 +3605,8 @@ var dataType$1 = [String, Number, Function, Boolean, Object];
     http://icejs.org/######
 */
 function validateProp(prop, validate) {
-    var isPass = false;
-    var tvalidate = type$1(validate);
+    let isPass = false;
+    const tvalidate = type$1(validate);
 
     // 类型验证
     if (dataType$1.indexOf(validate) >= 0) {
@@ -3694,7 +3622,7 @@ function validateProp(prop, validate) {
         else if (tvalidate === "array") {
 
                 // 如果验证参数为数组，则满足数组中任意一项即通过
-                foreach(validate, function (v) {
+                foreach(validate, v => {
                     isPass = isPass || !!validateProp(prop, v);
                     if (isPass) {
                         return false;
@@ -3725,24 +3653,24 @@ var componentConstructor = {
         URL doc:
         http://icejs.org/######
     */
-    initProps: function initProps(componentNode, moduleVm, propsValidator) {
-        var props = {},
-            match = void 0;
+    initProps(componentNode, moduleVm, propsValidator) {
+        let props = {},
+            match;
 
-        foreach(componentNode.attrs, function (attrVal, name) {
+        foreach(componentNode.attrs, (attrVal, name) => {
 
             // 属性名需符合变量的命名规则
             if (rvar.test(name)) {
                 if (match = attrVal.match(rexpr)) {
-                    var subs = new Subscriber(),
-                        propName = match[1],
-                        getter = function getter() {
+                    const subs = new Subscriber(),
+                          propName = match[1],
+                          getter = () => {
                         return moduleVm[propName];
                     };
 
-                    var propValue = void 0;
+                    let propValue;
 
-                    new ValueWatcher(function (newVal) {
+                    new ValueWatcher(newVal => {
                         propValue = newVal;
 
                         subs.notify();
@@ -3751,10 +3679,10 @@ var componentConstructor = {
                     //////////////////////////////
                     //////////////////////////////
                     //////////////////////////////
-                    defineReactiveProperty(name, function () {
+                    defineReactiveProperty(name, () => {
                         subs.subscribe();
                         return propValue;
-                    }, function (newVal) {
+                    }, newVal => {
                         if (newVal !== propValue) {
                             moduleVm[propName] = propValue = newVal;
 
@@ -3766,11 +3694,11 @@ var componentConstructor = {
                 }
 
                 // 验证属性值
-                var validateItem = propsValidator && propsValidator[name];
+                const validateItem = propsValidator && propsValidator[name];
                 if (validateItem) {
-                    var validate = isPlainObject(validateItem) ? validateItem.validate : validateItem;
+                    const validate = isPlainObject(validateItem) ? validateItem.validate : validateItem;
                     if (validate && !validateProp(props[name], validate)) {
-                        throw componentErr("prop: " + name, "\u7EC4\u4EF6\u4F20\u9012\u5C5E\u6027'" + name + "'\u7684\u503C\u672A\u901A\u8FC7\u9A8C\u8BC1\uFF0C\u8BF7\u68C0\u67E5\u8BE5\u503C\u7684\u6B63\u786E\u6027\u6216\u4FEE\u6539\u9A8C\u8BC1\u89C4\u5219");
+                        throw componentErr(`prop: ${name}`, `组件传递属性'${name}'的值未通过验证，请检查该值的正确性或修改验证规则`);
                     }
                 }
             }
@@ -3778,7 +3706,7 @@ var componentConstructor = {
 
         // 再次检查是否为必须属性值与默认值赋值
         // 默认值不会参与验证，即使不符合验证规则也会赋值给对应属性
-        foreach(propsValidator, function (validatorItem, propName) {
+        foreach(propsValidator, (validatorItem, propName) => {
             if (!props[propName]) {
                 if (validatorItem.require === true && validatorItem.default === undefined) {
                     throw componentErr("prop:" + propName, "组件传递属性" + propName + "为必须值");
@@ -3790,7 +3718,6 @@ var componentConstructor = {
 
         return props;
     },
-
 
     /**
         initLifeCycle ( component: Object )
@@ -3804,20 +3731,20 @@ var componentConstructor = {
         URL doc:
         http://icejs.org/######
     */
-    initLifeCycle: function initLifeCycle(component, moduleObj) {
-        var lifeCycleHook = {
+    initLifeCycle(component, moduleObj) {
+        const lifeCycleHook = {
             update: noop,
-            unmount: function unmount() {
+            unmount() {
 
                 // 在对应module.components中移除此组件
                 moduleObj.components.splice(moduleObj.components.indexOf(component), 1);
             }
         };
 
-        foreach(lifeCycleHook, function (hookFn, cycleName) {
-            var cycleFunc = component[cycleName];
-            component[cycleName] = function () {
-                var nt = new NodeTransaction().start();
+        foreach(lifeCycleHook, (hookFn, cycleName) => {
+            const cycleFunc = component[cycleName];
+            component[cycleName] = () => {
+                const nt = new NodeTransaction().start();
                 (cycleFunc || noop).apply(component, cache.getDependentPlugin(cycleFunc || noop));
                 nt.commit();
 
@@ -3826,7 +3753,6 @@ var componentConstructor = {
             };
         });
     },
-
 
     /**
         initTemplate ( template: String, scopedStyle: Object )
@@ -3842,30 +3768,29 @@ var componentConstructor = {
         URL doc:
         http://icejs.org/######
     */
-    initTemplate: function initTemplate(template, scopedStyle) {
-        var d = document.createElement("div"),
-            f = document.createDocumentFragment();
+    initTemplate(template, scopedStyle) {
+        const d = document.createElement("div"),
+              f = document.createDocumentFragment();
 
         d.innerHTML = template;
 
         // 为对应元素添加内嵌样式
-        var num = void 0;
-        foreach(scopedStyle, function (styles, selector) {
-            foreach(query(selector, d, true), function (elem) {
-                foreach(styles, function (val, styleName) {
+        let num;
+        foreach(scopedStyle, (styles, selector) => {
+            foreach(query(selector, d, true), elem => {
+                foreach(styles, (val, styleName) => {
                     num = parseInt(val);
                     elem.style[styleName] += val + (type$1(num) === "number" && (num >= 0 || num <= 0) && noUnitHook.indexOf(styleName) === -1 ? "px" : "");
                 });
             });
         });
 
-        foreach(slice.call(d.childNodes), function (child) {
+        foreach(slice.call(d.childNodes), child => {
             f.appendChild(child);
         });
 
         return VNode.domToVNode(f);
     },
-
 
     /**
         initSubElements ( componentVNode: Object, subElementNames: Object )
@@ -3880,26 +3805,24 @@ var componentConstructor = {
         URL doc:
         http://icejs.org/######
     */
-    initSubElements: function initSubElements(componentVNode, subElementNames) {
-        var _subElements = {
+    initSubElements(componentVNode, subElementNames) {
+        const _subElements = {
             default: ""
         };
 
-        foreach(subElementNames, function (multiple, subElemName) {
+        foreach(subElementNames, (multiple, subElemName) => {
             if (multiple === true) {
                 _subElements[subElemName] = [];
             }
         });
 
-        var componentName = void 0,
-            subElemName = void 0,
-            vf = void 0;
-        foreach(componentVNode.children.concat(), function (vnode) {
+        let componentName, subElemName, vf;
+        foreach(componentVNode.children.concat(), vnode => {
             componentName = transformCompName(vnode.nodeName || "");
 
             if (subElementNames.hasOwnProperty(componentName)) {
                 vf = VFragment();
-                foreach(vnode.children, function (subVNode) {
+                foreach(vnode.children, subVNode => {
                     vf.appendChild(subVNode);
                 });
 
@@ -3917,7 +3840,6 @@ var componentConstructor = {
         return { subElements: _subElements };
     },
 
-
     /**
         initAction ( component: Object, actions: Object )
     
@@ -3930,21 +3852,17 @@ var componentConstructor = {
         URL doc:
         http://icejs.org/######
     */
-    initAction: function initAction(component, actions) {
+    initAction(component, actions) {
         component.action = {};
-        foreach(actions, function (action, name) {
+        foreach(actions, (action, name) => {
             if (type$1(action) !== "function") {
-                throw componentErr("actionType", "action'" + name + "'\u4E0D\u662F\u65B9\u6CD5\uFF0C\u7EC4\u4EF6action\u8FD4\u56DE\u7684\u5BF9\u8C61\u5C5E\u6027\u5FC5\u987B\u4E3A\u65B9\u6CD5\uFF0C\u5B83\u8868\u793A\u6B64\u7EC4\u4EF6\u7684\u884C\u4E3A");
+                throw componentErr("actionType", `action'${name}'不是方法，组件action返回的对象属性必须为方法，它表示此组件的行为`);
             } else if (component[name]) {
-                throw componentErr("duplicate", "\u6B64\u7EC4\u4EF6\u5BF9\u8C61\u4E0A\u5DF2\u5B58\u5728\u540D\u4E3A'" + name + "'\u7684\u5C5E\u6027\u6216\u65B9\u6CD5");
+                throw componentErr("duplicate", `此组件对象上已存在名为'${name}'的属性或方法`);
             }
 
-            component.action[name] = function () {
-                for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-                    args[_key] = arguments[_key];
-                }
-
-                var nt = new NodeTransaction().start();
+            component.action[name] = (...args) => {
+                const nt = new NodeTransaction().start();
                 action.apply(component, args);
                 nt.commit();
             };
@@ -3975,19 +3893,17 @@ extend(Component.prototype, {
         URL doc:
         http://icejs.org/######
     */
-    __init__: function __init__(componentVNode, moduleObj) {
-        var _this = this;
-
-        var isCallPropsType = false;
+    __init__(componentVNode, moduleObj) {
+        let isCallPropsType = false;
 
         //////////////////////////////////////////
         // 获取init方法返回值并初始化vm数据
         // 构造属性验证获取器获取属性验证参数
-        this.propsType = function (validator) {
+        this.propsType = validator => {
             isCallPropsType = true;
 
             // 获取props，如果有需要则验证它们
-            _this.props = componentConstructor.initProps(componentVNode, moduleObj.state, validator || {});
+            this.props = componentConstructor.initProps(componentVNode, moduleObj.state, validator || {});
         };
 
         // 没有验证时手动调用初始化props
@@ -3995,34 +3911,30 @@ extend(Component.prototype, {
             this.propsType();
         }
 
-        var componentVm = new ViewModel(this.init.apply(this, cache.getDependentPlugin(this.init)));
+        const componentVm = new ViewModel(this.init.apply(this, cache.getDependentPlugin(this.init)));
         delete this.propsType;
 
         this.state = componentVm;
 
         /////////////////////
         // 转换组件代表元素为实际的组件元素节点
-        var componentString = void 0,
-            scopedStyle = void 0,
+        let componentString,
+            scopedStyle,
             subElementNames = {};
 
         // 构造模板和样式的获取器获取模板和样式
-        this.template = function (str) {
+        this.template = str => {
             componentString = str || "";
-            return _this;
+            return this;
         };
 
-        this.style = function (obj) {
+        this.style = obj => {
             scopedStyle = obj || {};
-            return _this;
+            return this;
         };
 
-        this.subElements = function () {
-            for (var _len = arguments.length, elemNames = Array(_len), _key = 0; _key < _len; _key++) {
-                elemNames[_key] = arguments[_key];
-            }
-
-            foreach(elemNames, function (nameObj) {
+        this.subElements = (...elemNames) => {
+            foreach(elemNames, nameObj => {
                 if (type$1(nameObj) === "string") {
                     nameObj = { elem: nameObj, multiple: false };
                 }
@@ -4034,7 +3946,7 @@ extend(Component.prototype, {
                 subElementNames[nameObj.elem] = nameObj.multiple;
             });
 
-            return _this;
+            return this;
         };
 
         this.render.apply(this, cache.getDependentPlugin(this.render));
@@ -4044,10 +3956,10 @@ extend(Component.prototype, {
         delete this.subElements;
 
         // 处理模块并挂载数据
-        var vfragment = componentConstructor.initTemplate(componentString, scopedStyle),
-            subElements = componentConstructor.initSubElements(componentVNode, subElementNames),
-            tmpl = new Tmpl(componentVm, this.components || [], this),
-            vfragmentBackup = vfragment.clone();
+        const vfragment = componentConstructor.initTemplate(componentString, scopedStyle),
+              subElements = componentConstructor.initSubElements(componentVNode, subElementNames),
+              tmpl = new Tmpl(componentVm, this.components || [], this),
+              vfragmentBackup = vfragment.clone();
 
         tmpl.mount(vfragment, false, Tmpl.defineScoped(subElements, componentVNode, false));
 
@@ -4060,7 +3972,7 @@ extend(Component.prototype, {
 
         // 初始化action
         if (this.action) {
-            var actions = this.action.apply(this, cache.getDependentPlugin(this.action));
+            const actions = this.action.apply(this, cache.getDependentPlugin(this.action));
             componentConstructor.initAction(this, actions);
         }
 
@@ -4076,7 +3988,6 @@ extend(Component.prototype, {
         vfragment.diff(vfragmentBackup).patch();
     },
 
-
     /**
         depComponents ( comps: Array )
     
@@ -4089,22 +4000,16 @@ extend(Component.prototype, {
         URL doc:
         http://icejs.org/######
     */
-    depComponents: function depComponents() {
-        var _this2 = this;
-
+    depComponents(...comps) {
         this.components = [];
 
-        for (var _len2 = arguments.length, comps = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-            comps[_key2] = arguments[_key2];
-        }
-
-        foreach(comps, function (comp) {
+        foreach(comps, comp => {
             if (comp && comp.__proto__.name === "Component") {
-                _this2.components.push(comp);
+                this.components.push(comp);
             } else if (type$1(comp) === "string") {
-                var compObj = cache.getComponent(comp);
+                const compObj = cache.getComponent(comp);
                 if (compObj && compObj.__proto__.name === "Component") {
-                    _this2.components.push(compObj);
+                    this.components.push(compObj);
                 }
             }
         });
@@ -4130,10 +4035,9 @@ extend(Component, {
         URL doc:
         http://icejs.org/######
     */
-    defineGlobal: function defineGlobal(componentDerivative) {
-        globalClass[componentDerivative.name] = componentDerivative;
+    defineGlobal(componentDerivative) {
+        this.globalClass[componentDerivative.name] = componentDerivative;
     },
-
 
     /**
         getGlobal ( name: String )
@@ -4148,10 +4052,722 @@ extend(Component, {
         URL doc:
         http://icejs.org/######
     */
-    getGlobal: function getGlobal(name) {
+    getGlobal(name) {
         return this.globalClass[name];
     }
 });
+
+var attrExpr = {
+
+    name: "attrExpr",
+
+    /**
+        before ()
+    
+        Return Type:
+        void
+    
+        Description:
+        更新视图前调用（即update方法调用前调用）
+        此方法只会在初始化挂载数据时调用一次
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    before() {
+        const exprMatch = this.expr.match(/^(.*?):(.*)$/);
+
+        this.attrName = exprMatch[1];
+        this.expr = exprMatch[2];
+
+        // 当表达式只有“{{ expr }}”时直接取出表达式的值
+        if (/^{{\s*(\S+)\s*}}$/.test(this.expr)) {
+            this.expr = this.expr.replace(/{{\s*(.*?)\s*}}/g, (match, rep) => rep);
+        }
+
+        // 当表达式为混合表达式时，将表达式转换为字符串拼接代码
+        else {
+                this.expr = this.expr.replace(/{{\s*(.*?)\s*}}/g, (match, rep) => "\" + " + rep + " + \"");
+                this.expr = "\"" + this.expr + "\"";
+            }
+    },
+
+    /**
+        update ( val: String )
+    
+        Return Type:
+        void
+    
+        Description:
+        “{{ express }}”表达式对应的视图更新方法
+        该表达式用于元素属性表达式的更新
+        初始化挂载数据时和对应数据更新时将会被调用
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    update(val) {
+        const node = this.node,
+              tval = type$1(val);
+
+        // 特殊处理
+        // 绑定style属性时可传入对象，键为样式名的驼峰式，值为样式值
+        if (this.attrName === "style") {
+            if (tval === "object") {
+                const styleArray = [];
+                let num;
+
+                foreach(val, (v, k) => {
+                    // 将驼峰式变量名转换为横杠式变量名
+                    k = k.replace(/[A-Z]/g, match => "-" + match.toLowerCase());
+
+                    // 如果值为数字并且不是NaN，并且属性名不在noUnitHook中的，需添加”px“
+                    num = parseInt(v);
+                    v += type$1(num) === "number" && (num >= 0 || num <= 0) && noUnitHook.indexOf(k) === -1 ? "px" : "";
+                    styleArray.push(k + ":" + v);
+                });
+
+                node.attr(this.attrName, styleArray.join(";"));
+            }
+        }
+        // 绑定元素的class时可传入数组，绑定渲染时会自动用空格隔开
+        else if (this.attrName === "class") {
+                if (tval === "array") {
+                    node.attr(this.attrName, val.join(" "));
+                } else {
+                    node.attr(this.attrName, (val === undefined || val === null ? "" : val).toString());
+                }
+            } else {
+                node.attr(this.attrName, (val === undefined || val === null ? "" : val).toString());
+            }
+    }
+};
+
+var cache$1 = {
+    name: "cache",
+
+    // static为true时，模板将不会挂载watcher在对应vm下
+    static: true,
+
+    before() {
+        if (!/^true|false$/.test(this.expr)) {
+            throw directiveErr("cache", "cache指令的值只能为'true'或'false'，表示是否缓存此模块内容");
+        }
+    },
+
+    /**
+        update ( isCache: String )
+    
+        Return Type:
+        void
+    
+        Description:
+        将:cache存入vnode中
+        此时的isCache参数将会在getter方法中转换为实际的boolean值
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    update(isCache) {
+        this.node.cache = isCache === "true" ? true : false;
+    }
+};
+
+function createVNode(watcher, arg, index) {
+    const f = VFragment(),
+          elem = watcher.node,
+
+    // 为itemNode指定新的key值
+    key = guid(),
+
+
+    // 定义范围变量
+    scopedDefinition = {};
+
+    if (watcher.index) {
+        scopedDefinition[watcher.index] = index;
+    }
+    scopedDefinition[watcher.item] = arg;
+
+    // 原始元素没有引用实际dom时传入null，表示克隆vnode不引用任何实际dom
+    let itemNode = elem.clone(false),
+        scopedAuxiliary = Tmpl.defineScoped(scopedDefinition, itemNode),
+        nextSibClone;
+
+    itemNode.key = key;
+
+    if (elem.conditionElems) {
+        const conditionElems = [itemNode];
+        itemNode.conditionElems = conditionElems;
+        foreach(elem.conditionElems, (nextSib, i) => {
+            if (i > 0) {
+                nextSibClone = nextSib.clone(false);
+                nextSibClone.key = key;
+                nextSibClone.conditionElems = conditionElems;
+                nextSibClone.scoped = itemNode.scoped;
+
+                conditionElems.push(nextSibClone);
+            }
+        });
+        itemNode.conditions = elem.conditions;
+    }
+
+    // 再外套一层fragment的原因是在if中处理时不会因为无法获取itemNode.parentNode而报错
+    f.appendChild(itemNode);
+
+    // 为遍历克隆的元素挂载数据
+    watcher.tmpl.mount(f, true, scopedAuxiliary);
+    itemNode = f.children[0];
+
+    return itemNode;
+}
+
+/**
+    unmountWatchers ( vnode: Object, isWatchCond: Boolean )
+
+    Return Type:
+    void
+
+    Description:
+    卸载对应node的watcher
+
+    URL doc:
+    http://icejs.org/######
+*/
+function unmountWatchers(vnode, isWatchCond) {
+
+    // 移除vnode对应的watcher引用
+    foreach(vnode.watcherUnmounts || [], unmountFunc => {
+        unmountFunc();
+    });
+
+    // 移除vnode的引用
+    (vnode.delRef || noop)();
+
+    // 被“:if”绑定的元素有些不在vdom树上，需通过此方法解除绑定
+    if (vnode.conditionElems && isWatchCond !== false) {
+        const conditionElems = vnode.conditionElems;
+        foreach(conditionElems, conditionElem => {
+            if (conditionElem !== vnode) {
+                walkVDOM(conditionElem, (condSubElem, isWatchCond) => {
+                    unmountWatchers(condSubElem, isWatchCond);
+                }, false);
+            }
+        });
+    }
+}
+
+var _for = {
+    name: "for",
+
+    /**
+        before ()
+    
+        Return Type:
+        void
+    
+        Description:
+        更新视图前调用（即update方法调用前调用）
+        此方法只会在初始化挂载数据时调用一次
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    before() {
+        const forExpr = /^\s*([$\w(),\s]+)\s+in\s+([$\w.]+)\s*$/,
+              keyExpr = /^\(\s*([$\w]+)\s*,\s*([$\w]+)\s*\)$/;
+
+        if (!forExpr.test(this.expr)) {
+            throw directiveErr("for", "for指令内的循环格式为'item in list'或'(item, index) in list'，请正确使用该指令");
+        }
+        const variable = this.expr.match(forExpr),
+              indexValMatch = variable[1].match(keyExpr);
+
+        if (indexValMatch) {
+            this.item = indexValMatch[1];
+            this.index = indexValMatch[2];
+        } else {
+            this.item = variable[1];
+        }
+
+        this.expr = variable[2];
+        this.startNode = VTextNode("");
+        this.endNode = VTextNode("");
+    },
+
+    /**
+        update ( iterator: Array )
+    
+        Return Type:
+        void
+    
+        Description:
+        “:for”属性对应的视图更新方法
+        初始化挂载数据时和对应数据更新时将会被调用
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    update(iterator) {
+        const elem = this.node,
+              fragment = VFragment(),
+              nodeMap = [];
+
+        let itemNode, f;
+
+        // 初始化视图时将模板元素替换为挂载后元素
+        if (elem.parent) {
+            fragment.appendChild(this.startNode);
+            foreach(iterator, (val, i) => {
+                itemNode = createVNode(this, val, i);
+                nodeMap.push({
+                    itemNode,
+                    val
+                });
+
+                fragment.appendChild(itemNode);
+            });
+            fragment.appendChild(this.endNode);
+
+            elem.parent.replaceChild(fragment, elem);
+        } else {
+
+            // 改变数据后更新视图
+            foreach(iterator, (val, index) => {
+                let itemNode;
+
+                // 在原数组中找到对应项时，使用该项的key创建vnode
+                foreach(this.nodeMap, item => {
+                    if (item.val === val) {
+                        itemNode = item.itemNode;
+
+                        // 当if和for指令同时使用在一个元素上，且在改变数组重新遍历前改变过if的条件时
+                        // nodeMap中的元素非显示的元素，需遍历conditionElems获取当前显示的元素
+                        if (itemNode.conditionElems && !itemNode.parent) {
+                            foreach(itemNode.conditionElems.concat(itemNode.conditionElems[0].replacement), conditionElem => {
+                                if (conditionElem.parent) {
+                                    itemNode = conditionElem;
+                                }
+                            });
+                        }
+
+                        // 有index时更新index值
+                        if (this.index) {
+                            const rindex = new RegExp(this.index + "$");
+                            foreach(itemNode.scoped, (val, key, scoped) => {
+                                if (rindex.test(key) && val !== index) {
+                                    scoped[key] = index;
+                                }
+                            });
+                        }
+
+                        return false;
+                    }
+                });
+
+                if (!itemNode) {
+                    itemNode = createVNode(this, val, index, {});
+                }
+                nodeMap.push({ itemNode, val });
+
+                fragment.appendChild(itemNode);
+            });
+
+            let p = this.startNode.parent,
+                el,
+                isWatchCond;
+            while ((el = this.startNode.nextSibling()) !== this.endNode) {
+                p.removeChild(el);
+
+                // 遍历vdom并卸载node绑定的watchers
+                walkVDOM(el.isComponent ? VFragment(el.templateNodes) : el, (vnode, isWatchCond) => {
+                    unmountWatchers(vnode, isWatchCond);
+                });
+            }
+
+            p.insertBefore(fragment, this.endNode);
+        }
+
+        this.nodeMap = nodeMap;
+    }
+};
+
+var _if = {
+    name: "if",
+
+    /**
+        before ()
+    
+        Return Type:
+        void
+    
+        Description:
+        更新视图前调用（即update方法调用前调用）
+        此方法只会在初始化挂载数据时调用一次
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    before() {
+        const elem = this.node;
+
+        this.expr = "[" + elem.conditions.join(",") + "]";
+        this.replacement = VTextNode("");
+        this.replacement.conditionElems = elem.conditionElems;
+
+        // 如果有key表示此元素为循环遍历元素，需为占位元素设置相同key
+        // 且循环遍历的元素一定有局部变量，也需将此赋予
+        if (elem.key && elem.scoped) {
+            this.replacement.key = elem.key;
+            this.replacement.scoped = elem.scoped;
+            elem.replacement = this.replacement;
+        }
+
+        // 将elem在DOM结构中去掉，以便在下面循环扫描时不会扫描到elem的nextSibling元素
+        elem.parent.replaceChild(this.replacement, elem);
+        this.currentNode = this.replacement;
+
+        foreach(elem.conditionElems, nextSib => {
+            if (nextSib !== elem) {
+                this.tmpl.mount(nextSib, true, this.scoped);
+            }
+        });
+    },
+
+    /**
+        update ( conditions: Array )
+    
+        Return Type:
+        void
+    
+        Description:
+        “:if”属性对应的视图更新方法
+        初始化挂载数据时和对应数据更新时将会被调用
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    update(conditions) {
+
+        const elem = this.node,
+              conditionElems = elem.conditionElems,
+              cNode = this.currentNode,
+              parent = cNode.parent;
+
+        let newNode, _cNode;
+
+        foreach(conditions, (cond, i) => {
+            if (cond) {
+                newNode = conditionElems[i];
+                return false;
+            }
+        });
+
+        // 当新节点为空时表示没有找到符合条件的节点，则不显示任何节点（即显示replacement空文本节点）
+        if (!newNode) {
+            newNode = this.replacement;
+            _cNode = newNode;
+        } else {
+            _cNode = newNode;
+        }
+
+        if (newNode && !newNode.parent) {
+            parent.replaceChild(newNode, cNode);
+
+            this.currentNode = _cNode;
+        }
+    }
+};
+
+var model = {
+
+    name: "model",
+
+    /**
+        before ()
+    
+        Return Type:
+        void
+    
+        Description:
+        更新视图前调用（即update方法调用前调用）
+        此方法只会在初始化挂载数据时调用一次
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    before() {
+        const support = {
+            input: {
+                nodeName: "TEXTAREA",
+                type: "text, password, color, search, week, date, datetime-local, month, time, email, range, tel, url"
+            },
+            change: {
+                nodeName: "SELECT",
+                inputType: "radio, checkbox"
+            }
+        },
+              elem = this.node,
+              expr = this.expr,
+              vm = this.tmpl.getViewModel(),
+              nodeName = elem.nodeName,
+              inputType = (elem.attr("type") || "").toLowerCase(),
+
+
+        // 如果是复选框则数据要以数组的形式表现
+        handler = nodeName === "INPUT" && inputType === "checkbox" ? function () {
+            if (this.checked) {
+                vm[expr].push(this.value);
+            } else {
+                vm[expr].splice(vm[expr].indexOf(this.value), 1);
+            }
+
+            // 同步虚拟dom的值
+            elem.attr("checked", this.checked);
+        } : function () {
+            vm[expr] = this.value;
+
+            // 同步虚拟dom的值
+            elem.attr("value", this.value);
+        };
+
+        // 判断支持input事件的元素名称或对应type的input元素
+        if (nodeName === "INPUT" && support.input.type.indexOf(inputType) !== -1 || support.input.nodeName.indexOf(nodeName) !== -1) {
+            elem.bindEvent("input", handler);
+        } else if (nodeName === "INPUT" && support.change.inputType.indexOf(inputType) !== -1 || support.change.nodeName.indexOf(nodeName) !== -1) {
+
+            // 将相同model的radio控件分为一组
+            if (inputType === "radio") {
+                elem.attr("name", expr);
+            }
+
+            elem.bindEvent("change", handler);
+        }
+    },
+
+    /**
+        update ( val: String )
+    
+        Return Type:
+        void
+    
+        Description:
+        表单元素双向绑定方法
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    update(val) {
+        const tval = type$1(val),
+              elem = this.node,
+              nodeName = elem.nodeName,
+              inputType = (elem.attr("type") || "").toLowerCase();
+
+        // 对radio的处理
+        if (tval === "string" && nodeName === "INPUT" && inputType === "radio") {
+            if (elem.attr("value") === val) {
+                elem.attr("checked", true);
+            } else {
+                elem.attr("checked", false);
+            }
+        }
+
+        // 对checkbox的处理
+        else if (tval === "array" && nodeName === "INPUT" && inputType === "checkbox") {
+                if (val.indexOf(elem.attr("value")) !== -1) {
+                    elem.attr("checked", true);
+                } else {
+                    elem.attr("checked", false);
+                }
+            }
+
+            // 其他控件的处理
+            else {
+                    elem.attr("value", val);
+                }
+    }
+};
+
+var module$2 = {
+    name: "module",
+
+    // static为true时，模板将不会挂载watcher在对应vm下
+    static: true,
+
+    /**
+        update ( moduleName: String )
+    
+        Return Type:
+        void
+    
+        Description:
+        将:module子模块元素存入Structure.currentPage对应的结构中, 以便下次直接获取使用
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    update(moduleName) {
+        if (Structure$1.currentPage && Structure$1.currentRender && type$1(moduleName) === "string") {
+            Structure$1.currentPage.saveSubModuleNode(this.node);
+        }
+    }
+};
+
+var on = {
+    name: "on",
+
+    /**
+        before ()
+    
+        Return Type:
+        void
+    
+        Description:
+        更新视图前调用（即update方法调用前调用）
+        此方法只会在初始化挂载数据时调用一次
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    before() {
+        const exprMatch = this.expr.match(/^(.*?):(.*)$/),
+              argMatch = exprMatch[2].match(/([$\w]+)\s*\((.*?)\)/),
+              listener = argMatch ? argMatch[1] : exprMatch[2],
+              arg = argMatch && argMatch[2] ? argMatch[2].split(",").map(item => item.trim()) : [],
+              event$$1 = "__$event__";
+
+        this.type = exprMatch[1];
+        this.attrExpr = "on" + this.type;
+        arg.unshift(event$$1);
+
+        this.expr = `function ( ${event$$1} ) {
+            self.addScoped ();
+			${listener}.call ( this, ${arg.join(",")} );
+            self.removeScoped ();
+		}`;
+    },
+
+    /**
+        update ( listener: Function )
+    
+        Return Type:
+        void
+    
+        Description:
+        事件绑定方法
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    update(listener) {
+        this.node.bindEvent(this.type, listener);
+    }
+};
+
+var ref$1 = {
+    name: "ref",
+
+    // static为true时，模板将不会挂载watcher在对应vm下
+    static: true,
+
+    /**
+        update ( refName: String )
+    
+        Return Type:
+        void
+    
+        Description:
+        将引用元素/组件保存到对应的模块中
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    update(refName) {
+        const refs = this.tmpl.module.refs,
+              tref = type$1(refs[refName]),
+              node = this.node;
+
+        switch (tref) {
+            case "undefined":
+                refs[refName] = node;
+
+                break;
+            case "object":
+                refs[refName] = [refs[ref]];
+                refs[refName].push(node);
+
+                break;
+            case "array":
+                refs[refName].push(node);
+        }
+
+        // 保存将引用元素/组件从对应的模块中移除的函数
+        node.delRef = () => {
+            if (type$1(refs[refName]) === "array") {
+                refs[refName].splice(refs[refName].indexOf(node), 1);
+            } else {
+                delete refs[refName];
+            }
+        };
+    }
+};
+
+var textExpr = {
+
+    name: "textExpr",
+
+    /**
+        before ()
+    
+        Return Type:
+        void
+    
+        Description:
+        更新视图前调用（即update方法调用前调用）
+        此方法只会在初始化挂载数据时调用一次
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    before() {
+
+        // 当表达式只有“{{ expr }}”时直接取出表达式的值
+        if (/^{{\s*(\S+)\s*}}$/.test(this.expr)) {
+            this.expr = this.expr.replace(/{{\s*(.*?)\s*}}/g, (match, rep) => rep);
+        }
+
+        // 当表达式为混合表达式时，将表达式转换为字符串拼接代码
+        else {
+                this.expr = this.expr.replace(/{{\s*(.*?)\s*}}/g, (match, rep) => "\" + " + rep + " + \"");
+                this.expr = "\"" + this.expr + "\"";
+            }
+    },
+
+    /**
+        update ( val: String )
+    
+        Return Type:
+        void
+    
+        Description:
+        “{{ express }}”表达式对应的视图更新方法
+        该表达式可用于标签属性与文本中
+        初始化挂载数据时和对应数据更新时将会被调用
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    update(val) {
+        const node = this.node;
+
+        // 定义了组件子元素时，需将组件表达式（nodeType为3）替换为实际传入的dom结构
+        if (val && val.nodeType > 0 && node.nodeType === 3) {
+            node.parent.replaceChild(val, node);
+        } else {
+            node.nodeValue = val;
+        }
+    }
+};
 
 /**
     preTreat ( vnode: Object )
@@ -4169,16 +4785,16 @@ extend(Component, {
 */
 function preTreat(vnode) {
 
-    var _if = Tmpl.directivePrefix + "if",
-        _elseif = Tmpl.directivePrefix + "else-if",
-        _else = Tmpl.directivePrefix + "else";
+    const _if$$1 = Tmpl.directivePrefix + "if",
+          _elseif = Tmpl.directivePrefix + "else-if",
+          _else = Tmpl.directivePrefix + "else";
 
-    var nextSib = void 0,
-        parent = void 0,
-        condition = vnode.attr(_if);
+    let nextSib,
+        parent,
+        condition = vnode.attr(_if$$1);
 
     if (condition && !vnode.conditionElems) {
-        var conditionElems = [vnode];
+        const conditionElems = [vnode];
 
         vnode.conditions = [condition];
         vnode.conditionElems = conditionElems;
@@ -4207,7 +4823,7 @@ function preTreat(vnode) {
 }
 
 function concatHandler(target, source) {
-    var concats = {};
+    const concats = {};
 
     concats.watchers = target.watchers.concat(source.watchers);
     concats.components = target.components.concat(source.components);
@@ -4227,14 +4843,12 @@ function concatHandler(target, source) {
     http://icejs.org/######
 */
 function Tmpl(vm, components, module) {
-    var _this = this;
-
     this.vm = vm;
     this.components = {};
     this.module = module;
 
-    foreach(components, function (comp) {
-        _this.components[comp.name] = comp;
+    foreach(components, comp => {
+        this.components[comp.name] = comp;
     });
 }
 
@@ -4252,18 +4866,16 @@ extend(Tmpl.prototype, {
         URL doc:
         http://icejs.org/######
     */
-    mount: function mount(vnode, mountModule, scoped) {
-        var _this2 = this;
+    mount(vnode, mountModule, scoped) {
+        const isRoot = !vnode.parent,
+              rattr = /^:([\$\w]+)$/;
 
-        var isRoot = !vnode.parent,
-            rattr = /^:([\$\w]+)$/;
-
-        var directive = void 0,
-            handler = void 0,
-            targetNode = void 0,
-            expr = void 0,
-            forAttrValue = void 0,
-            firstChild = void 0,
+        let directive,
+            handler,
+            targetNode,
+            expr,
+            forAttrValue,
+            firstChild,
             compileHandlers = {
             watchers: [],
             components: [],
@@ -4289,16 +4901,16 @@ extend(Tmpl.prototype, {
 
                         // 收集组件元素待渲染
                         // 局部没有找到组件则查找全局组件
-                        var componentName = transformCompName(vnode.nodeName),
-                            ComponentDerivative = this.getComponent(componentName) || Component.getGlobal(componentName);
+                        const componentName = transformCompName(vnode.nodeName),
+                              ComponentDerivative = this.getComponent(componentName) || Component.getGlobal(componentName);
                         if (ComponentDerivative && ComponentDerivative.__proto__.name === "Component") {
-                            compileHandlers.components.push({ vnode: vnode, Class: ComponentDerivative });
+                            compileHandlers.components.push({ vnode, Class: ComponentDerivative });
 
                             vnode.isComponent = true;
                         }
                     }
 
-                    foreach(vnode.attrs, function (attr$$1, name) {
+                    foreach(vnode.attrs, (attr$$1, name) => {
                         directive = rattr.exec(name);
                         if (directive) {
                             directive = directive[1];
@@ -4306,7 +4918,7 @@ extend(Tmpl.prototype, {
 
                                 // 事件绑定
                                 handler = Tmpl.directives.on;
-                                targetNode = vnode, expr = directive.slice(2) + ":" + attr$$1;
+                                targetNode = vnode, expr = `${directive.slice(2)}:${attr$$1}`;
                             } else if (Tmpl.directives[directive]) {
 
                                 // 模板属性绑定
@@ -4319,11 +4931,11 @@ extend(Tmpl.prototype, {
                                 throw runtimeErr("directive", "没有找到\"" + directive + "\"指令或表达式");
                             }
 
-                            compileHandlers.watchers.push({ handler: handler, targetNode: targetNode, expr: expr });
-                        } else if (rexpr.test(attr$$1)) {
+                            compileHandlers.watchers.push({ handler, targetNode, expr });
+                        } else if (rexpr.test(attr$$1) && !vnode.isComponent) {
 
                             // 属性值表达式绑定
-                            compileHandlers.watchers.push({ handler: Tmpl.directives.attrExpr, targetNode: vnode, expr: name + ":" + attr$$1 });
+                            compileHandlers.watchers.push({ handler: Tmpl.directives.attrExpr, targetNode: vnode, expr: `${name}:${attr$$1}` });
                         }
                     });
                 }
@@ -4348,29 +4960,31 @@ extend(Tmpl.prototype, {
             //////////////////////////////
             //////////////////////////////
             // 为相应模板元素挂载数据
-            foreach(compileHandlers.watchers, function (watcher) {
-                new ViewWatcher(watcher.handler, watcher.targetNode, watcher.expr, _this2, scoped);
+            foreach(compileHandlers.watchers, watcher => {
+                new ViewWatcher(watcher.handler, watcher.targetNode, watcher.expr, this, scoped);
             });
 
             // 处理template元素
-            foreach(compileHandlers.templates, function (vnode) {
+            foreach(compileHandlers.templates, vnode => {
                 vnode.templateNodes = vnode.children.concat();
             });
 
             // 渲染组件
             this.module.components = this.module.components || [];
-            foreach(compileHandlers.components, function (comp) {
-                var instance = new comp.Class();
-                _this2.module.components.push(instance);
+            foreach(compileHandlers.components, comp => {
+                const instance = new comp.Class();
+                this.module.components.push(instance);
 
-                instance.__init__(comp.vnode, _this2.module);
+                instance.__init__(comp.vnode, this.module);
             });
         }
     },
-    getViewModel: function getViewModel() {
+
+    getViewModel() {
         return this.vm;
     },
-    getComponent: function getComponent(name) {
+
+    getComponent(name) {
         return this.components[name];
     }
 });
@@ -4379,6 +4993,19 @@ extend(Tmpl, {
 
     // 指令前缀
     directivePrefix: ":",
+
+    // 指令集
+    directives: {
+        attrExpr,
+        cache: cache$1,
+        for: _for,
+        if: _if,
+        model,
+        module: module$2,
+        on,
+        ref: ref$1,
+        textExpr
+    },
 
     /**
        	defineScoped ( scopedDefinition: Object, scopedVNode: Object, isStatic: Object )
@@ -4397,17 +5024,17 @@ extend(Tmpl, {
        	URL doc:
        	http://icejs.org/######
        */
-    defineScoped: function defineScoped(scopedDefinition, scopedVNode, isStatic) {
+    defineScoped(scopedDefinition, scopedVNode, isStatic) {
 
-        var scopedVars = {},
-            scoped = {
+        const scopedVars = {},
+              scoped = {
             prefix: "ICE_FOR_" + Date.now() + "_",
             scopedMounts: [],
             scopedUnmounts: []
         },
-            availableItems = [];
+              availableItems = [];
 
-        foreach(scopedDefinition, function (val, varName) {
+        foreach(scopedDefinition, (val, varName) => {
             if (varName) {
                 scopedVars[scoped.prefix + varName] = val;
 
@@ -4418,30 +5045,30 @@ extend(Tmpl, {
 
         if (isStatic !== false) {
             scopedVNode.scoped = new ViewModel(scopedVars);
-            foreach(scopedVars, function (scopedVar, name) {
+            foreach(scopedVars, (scopedVar, name) => {
 
                 // 构造局部变量代理变量
-                scoped.scopedMounts.push(function (vm) {
-                    defineReactiveProperty(name, function () {
+                scoped.scopedMounts.push(vm => {
+                    defineReactiveProperty(name, () => {
                         return scopedVNode.scoped[name];
                     }, noop, vm);
                 });
 
                 // 构造代理变量卸载函数
-                scoped.scopedUnmounts.push(function (vm) {
+                scoped.scopedUnmounts.push(vm => {
                     delete vm[name];
                 });
             });
         } else {
-            foreach(scopedVars, function (scopedVar, name) {
+            foreach(scopedVars, (scopedVar, name) => {
 
                 // 构造静态的局部变量
-                scoped.scopedMounts.push(function (vm) {
+                scoped.scopedMounts.push(vm => {
                     vm[name] = scopedVar;
                 });
 
                 // 静态局部变量卸载函数
-                scoped.scopedUnmounts.push(function (vm) {
+                scoped.scopedUnmounts.push(vm => {
                     delete vm[name];
                 });
             });
@@ -4451,7 +5078,6 @@ extend(Tmpl, {
 
         return scoped;
     },
-
 
     /**
         defineDirective ( directive: Object )
@@ -4466,8 +5092,7 @@ extend(Tmpl, {
         URL doc:
         http://icejs.org/######
     */
-    defineDirective: function defineDirective(directive) {
-        this.directives = this.directives || {};
+    defineDirective(directive) {
         this.directives[directive.name] = directive;
     }
 });
@@ -4486,7 +5111,19 @@ extend(Tmpl, {
 	http://icejs.org/######
 */
 function makeFn(code) {
-	return new Function("runtimeErr", "var self = this,\n\t\t ret;\n\tself.addScoped ();\n\twith ( self.tmpl.getViewModel () ) {\n\t\ttry {\n\t\t\tret = " + code + ";\n\t\t}\n\t\tcatch ( e ) {\n\t\t\tthrow runtimeErr ( \"vm\", e );\n\t\t}\n\t}\n\tself.removeScoped ();\n\treturn ret;");
+	return new Function("runtimeErr", `var self = this,
+		 ret;
+	self.addScoped ();
+	with ( self.tmpl.getViewModel () ) {
+		try {
+			ret = ${code};
+		}
+		catch ( e ) {
+			throw runtimeErr ( "vm", e );
+		}
+	}
+	self.removeScoped ();
+	return ret;`);
 }
 
 /**
@@ -4504,9 +5141,9 @@ function makeFn(code) {
 */
 function getDiffNode(watcher) {
 
-	var diffVNode = watcher.parent;
+	let diffVNode = watcher.parent;
 	if (diffVNode && diffVNode.nodeType !== 1 && watcher.node.conditionElems) {
-		foreach(watcher.node.conditionElems.concat(watcher.replacement), function (conditionElem) {
+		foreach(watcher.node.conditionElems.concat(watcher.replacement), conditionElem => {
 			if (conditionElem.parent && conditionElem.parent.nodeType === 1) {
 				diffVNode = conditionElem.parent;
 			}
@@ -4543,9 +5180,7 @@ function ViewWatcher(directive, node, expr, tmpl, scoped) {
 
 	// 如果scoped为局部数据对象则将expr内的局部变量名替换为局部变量名
 	if (type$1(scoped) === "object" && scoped.regexp instanceof RegExp) {
-		this.expr = this.expr.replace(scoped.regexp, function (match) {
-			return scoped.prefix + match;
-		});
+		this.expr = this.expr.replace(scoped.regexp, match => scoped.prefix + match);
 	}
 
 	// 移除相关属性指令表达式
@@ -4554,7 +5189,7 @@ function ViewWatcher(directive, node, expr, tmpl, scoped) {
 		node.attr(Tmpl.directivePrefix + (this.attrExpr || directive.name), null);
 	}
 
-	var val = this.expr;
+	let val = this.expr;
 
 	// 当该指令为静态指令时，将不会去对应的vm中获取值，相应的也不会被监听
 	if (directive.static !== true) {
@@ -4587,9 +5222,9 @@ extend(ViewWatcher.prototype, {
  	URL doc:
  	http://icejs.org/######
  */
-	update: function update() {
-		var diffVNode = getDiffNode(this),
-		    diffBackup = diffVNode.clone();
+	update() {
+		const diffVNode = getDiffNode(this),
+		      diffBackup = diffVNode.clone();
 		this.directive.update.call(this, this.getter(runtimeErr));
 
 		// 当已开启了一个事物时将收集新旧节点等待变更
@@ -4600,7 +5235,6 @@ extend(ViewWatcher.prototype, {
 			diffVNode.diff(diffBackup).patch();
 		}
 	},
-
 
 	/**
     	addScoped ()
@@ -4615,15 +5249,13 @@ extend(ViewWatcher.prototype, {
     	URL doc:
     	http://icejs.org/######
     */
-	addScoped: function addScoped() {
-		var _this = this;
+	addScoped() {
 
 		// 增加局部变量
-		foreach(this.scoped && this.scoped.scopedMounts || [], function (mountFunc) {
-			mountFunc(_this.tmpl.getViewModel());
+		foreach(this.scoped && this.scoped.scopedMounts || [], mountFunc => {
+			mountFunc(this.tmpl.getViewModel());
 		});
 	},
-
 
 	/**
     	removeScoped ()
@@ -4638,15 +5270,13 @@ extend(ViewWatcher.prototype, {
     	URL doc:
     	http://icejs.org/######
     */
-	removeScoped: function removeScoped() {
-		var _this2 = this;
+	removeScoped() {
 
 		// 移除局部变量
-		foreach(this.scoped && this.scoped.scopedUnmounts || [], function (unmountFunc) {
-			unmountFunc(_this2.tmpl.getViewModel());
+		foreach(this.scoped && this.scoped.scopedUnmounts || [], unmountFunc => {
+			unmountFunc(this.tmpl.getViewModel());
 		});
 	},
-
 
 	/**
  	unmount ( subscribe: Object )
@@ -4661,8 +5291,8 @@ extend(ViewWatcher.prototype, {
  	URL doc:
  	http://icejs.org/######
  */
-	unmount: function unmount(subscribe) {
-		var index = subscribe.watchers.indexOf(this);
+	unmount(subscribe) {
+		const index = subscribe.watchers.indexOf(this);
 		if (index > -1) {
 			subscribe.watchers.splice(index, 1);
 		}
@@ -4700,19 +5330,17 @@ extend(Subscriber.prototype, {
         URL doc:
         http://icejs.org/######
     */
-    subscribe: function subscribe() {
-        var _this = this;
-
+    subscribe() {
         if (type$1(Subscriber.watcher) === "object") {
 
             if (Subscriber.watcher instanceof ViewWatcher) {
-                var watcher = Subscriber.watcher;
+                const watcher = Subscriber.watcher;
 
                 // 在被订阅的vnode中生成此watcher的卸载函数
                 // 用于在不再使用此watcher时在订阅它的订阅者对象中移除，以提高性能
                 watcher.node.watcherUnmounts = watcher.node.watcherUnmounts || [];
-                watcher.node.watcherUnmounts.push(function () {
-                    watcher.unmount(_this);
+                watcher.node.watcherUnmounts.push(() => {
+                    watcher.unmount(this);
                 });
             }
 
@@ -4720,7 +5348,6 @@ extend(Subscriber.prototype, {
             // Subscriber.watcher = false;
         }
     },
-
 
     /**
         notify ()
@@ -4734,8 +5361,8 @@ extend(Subscriber.prototype, {
         URL doc:
         http://icejs.org/######
     */
-    notify: function notify() {
-        foreach(this.watchers, function (watcher) {
+    notify() {
+        foreach(this.watchers, watcher => {
             watcher.update();
         });
     }
@@ -4747,14 +5374,9 @@ function convertState(value, subs, context) {
 
 // 初始化绑定事件
 function initMethod(methods, context) {
-	foreach(methods, function (method, key) {
-		context[key] = function () {
-			var nt = new NodeTransaction().start();
-
-			for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-				args[_key] = arguments[_key];
-			}
-
+	foreach(methods, (method, key) => {
+		context[key] = function (...args) {
+			const nt = new NodeTransaction().start();
 			method.apply(context, args);
 
 			// 提交节点更新事物，更新所有已更改的vnode进行对比
@@ -4765,11 +5387,11 @@ function initMethod(methods, context) {
 
 // 初始化监听属性
 function initState(states, context) {
-	foreach(states, function (state, key) {
-		var subs = new Subscriber();
+	foreach(states, (state, key) => {
+		const subs = new Subscriber();
 
-		var watch = noop,
-		    oldVal = void 0;
+		let watch = noop,
+		    oldVal;
 
 		// 如果属性带有watch方法
 		if (type$1(state) === "object" && Object.keys(state).length === 2 && state.hasOwnProperty("value") && state.hasOwnProperty("watch") && type$1(state.watch) === "function") {
@@ -4779,12 +5401,12 @@ function initState(states, context) {
 
 		state = convertState(state, subs, context);
 
-		defineReactiveProperty(key, function () {
+		defineReactiveProperty(key, () => {
 
 			// 绑定视图
 			subs.subscribe();
 			return state;
-		}, function (newVal) {
+		}, newVal => {
 			if (state !== newVal) {
 				oldVal = state;
 				state = newVal;
@@ -4806,18 +5428,18 @@ function initComputed(computeds, context) {
 			throw vmComputedErr(key, "计算属性必须包含get函数，可直接定义一个函数或对象内包含get函数");
 		}
 
-		var subs = new Subscriber(),
-		    getter = function () {
-			var computedGetter = type$1(computed) === "function" ? computed : computed.get;
+		const subs = new Subscriber(),
+		      getter = (() => {
+			let computedGetter = type$1(computed) === "function" ? computed : computed.get;
 			return function () {
 				return computedGetter.call(context);
 			};
-		}();
+		})();
 
-		var state = void 0;
+		let state;
 
 		// 创建ComputedWatcher对象供依赖数据监听
-		new ValueWatcher(function (newVal) {
+		new ValueWatcher(newVal => {
 			state = newVal;
 
 			// 更新视图
@@ -4825,13 +5447,13 @@ function initComputed(computeds, context) {
 		}, getter);
 
 		// 设置计算属性为监听数据
-		defineReactiveProperty(key, function () {
+		defineReactiveProperty(key, () => {
 
 			// 绑定视图
 			subs.subscribe();
 
 			return state;
-		}, type$1(computed.set) === "function" ? function (newVal) {
+		}, type$1(computed.set) === "function" ? newVal => {
 			if (state !== newVal) {
 				computed.set.call(context, newVal);
 
@@ -4846,34 +5468,25 @@ function initComputed(computeds, context) {
 function initArray(array, subs, context) {
 
 	// 监听数组转换
-	array = array.map(function (item) {
-		return convertState(item, subs, context);
-	});
+	array = array.map(item => convertState(item, subs, context));
 
-	foreach(["push", "pop", "shift", "unshift", "splice", "sort", "reverse"], function (method) {
-		var nativeMethod = Array.prototype[method];
+	foreach(["push", "pop", "shift", "unshift", "splice", "sort", "reverse"], method => {
+		const nativeMethod = Array.prototype[method];
 
 		Object.defineProperty(array, method, {
-			value: function value() {
-				for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-					args[_key2] = arguments[_key2];
-				}
-
+			value(...args) {
 				if (/push|unshift|splice/.test(method)) {
 
 					// 转换数组新加入的项
-					args = args.map(function (item) {
-						return convertState(item, subs, context);
-					});
+					args = args.map(item => convertState(item, subs, context));
 				}
-				var res = nativeMethod.apply(this, args);
+				const res = nativeMethod.apply(this, args);
 
 				// 更新视图
 				subs.notify();
 
 				return res;
 			},
-
 			writable: true,
 			configurable: true,
 			enumeratable: false
@@ -4896,15 +5509,13 @@ function initArray(array, subs, context) {
 	URL doc:
 	http://icejs.org/######
 */
-function ViewModel(vmData) {
-	var isRoot = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
-
-	var state = {},
+function ViewModel(vmData, isRoot = true) {
+	let state = {},
 	    method = {},
 	    computed = {};
 
 	// 将vmData内的属性进行分类
-	foreach(vmData, function (value, key) {
+	foreach(vmData, (value, key) => {
 
 		// 转换普通方法
 		if (type$1(value) === "function") {
@@ -4947,7 +5558,7 @@ function ViewModel(vmData) {
 */
 function findParentVm(elem) {
 
-	var parentVm = null;
+	let parentVm = null;
 	while (elem.parentNode) {
 		if (elem.__module__) {
 			parentVm = elem.__module__.vm;
@@ -4973,17 +5584,17 @@ function findParentVm(elem) {
     http://icejs.org/######
 */
 function initModuleLifeCycle(module, vm, moduleElem) {
-	var
+	const
 	// Module生命周期
 	lifeCycle = ["queryChanged", "paramChanged", "unmount"],
-	    lifeCycleContainer = {};
+	      lifeCycleContainer = {};
 
-	foreach(lifeCycle, function (cycleItem) {
+	foreach(lifeCycle, cycleItem => {
 		lifeCycleContainer[cycleItem] = vm[cycleItem] || noop;
-		module[cycleItem] = function () {
+		module[cycleItem] = () => {
 
-			var nt = new NodeTransaction().start();
-			lifeCycleContainer[cycleItem].apply(module, cache.getDependentPlugib(lifeCycleContainer[cycleItem]));
+			const nt = new NodeTransaction().start();
+			lifeCycleContainer[cycleItem].apply(module, cache.getDependentPlugin(lifeCycleContainer[cycleItem]));
 
 			// 提交节点更新事物，更新所有已更改的vnode进行对比
 			// 对比新旧vnode计算出差异并根据差异更新到实际dom中
@@ -5007,40 +5618,43 @@ function initModuleLifeCycle(module, vm, moduleElem) {
     module可传入：
 	1、module属性名，普通模式时的模块名，此方法将会根据模块名获取dom元素
 	2、实际dom和fragment，此方法将直接解析此元素
+	3、虚拟dom，只有单页模式时会传入此类参数
 
 	URL doc:
 	http://icejs.org/######
 */
-function Module(module) {
-	var _this = this;
-
-	var vmData = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : { init: function init() {
-			return {};
-		} };
-
+function Module(module, vmData = { init: function () {
+		return {};
+	} }) {
 
 	newClassCheck(this, Module);
 
-	var moduleElem = {};
+	const developMode = module instanceof VNode ? DEVELOP_SINGLE : DEVELOP_COMMON;
+	let moduleElem = {},
+	    parent,
+	    moduleElemBackup;
+
 	if (type$1(module) === "string") {
-		moduleElem = query("*[" + iceAttr.module + "=" + module + "]");
+		moduleElem = queryModuleNode(module);
 	} else if (module.nodeType === 1 || module.nodeType === 3 || module.nodeType === 11) {
 		moduleElem = module;
 	}
 
 	// 检查参数
-	check(moduleElem.nodeType).be(1, 3, 11).ifNot("ice.Module", "module参数可传入模块元素的ice-module属性值或直接传入需挂在模块元素").do();
-	check(vmData).type("object").check(vmData.init).type("function").ifNot("ice.Module", "vmData参数必须为带有init方法的的object").do();
+	if (moduleElem) {
+		check(moduleElem.nodeType).be(1, 3, 11).ifNot("Module", "module参数可传入模块元素的:module属性值或直接传入需挂在模块元素").do();
+		check(vmData).type("object").check(vmData.init).type("function").ifNot("Module", "vmData参数必须为带有init方法的的object").do();
+	} else {
+		throw argErr("Module", "module参数可传入模块元素的:module属性值或直接传入需挂在模块元素");
+	}
 
 	/////////////////////////////////
 	/////////////////////////////////
-
-	var parent = void 0;
-	if (Structure$1.currentPage) {
+	if (developMode === DEVELOP_SINGLE && Structure$1.currentPage) {
 
 		// 只有单页模式时Structure.currentPage会有值
 		// 单页模式时，使用Structure.currentPage.getCurrentParentVm()获取父级的vm
-		var currentRender = Structure$1.currentPage.getCurrentRender();
+		const currentRender = Structure$1.currentPage.getCurrentRender();
 		parent = currentRender.parent && currentRender.parent.module.vm;
 
 		this.params = currentRender.param;
@@ -5061,43 +5675,24 @@ function Module(module) {
 
 		// 将当前Module对象保存在对应的模块根节点下，以便子模块寻找父模块的Module对象
 		moduleElem.__module__ = this;
+
+		// 将module元素转换为vnode，并拷贝vnode
+		moduleElem = VNode.domToVNode(moduleElem);
+		moduleElemBackup = moduleElem.clone();
 	}
 	this.parent = parent;
 
-	moduleElem = VNode.domToVNode(moduleElem);
 	initModuleLifeCycle(this, vmData, moduleElem);
 
-	var moduleElemBackup = moduleElem.clone(),
-	    components = function () {
-		var compFn = vmData.depComponents,
-		    deps = cache.getDependentPlugin(compFn || noop);
-
-		try {
-			return (compFn || noop).apply(_this, deps);
-		} catch (e) {
-			var depStrs = (compFn.toString().match(/return\s+\[(.+?)\]/) || ["", ""])[1].split(",").map(function (item) {
-				return item.trim();
-			}),
-			    depComps = [];
-
-			foreach(depStrs, function (depObj) {
-				depComps.push(depObj);
-			});
-
-			return depComps;
-		}
-	}(),
-
-
+	const
 	// 获取后初始化vm的init方法
 	// 对数据模型进行转换
 	vm = new ViewModel(vmData.init.apply(this, cache.getDependentPlugin(vmData.init))),
 
 
 	// 使用vm解析模板
-	tmpl = new Tmpl(vm, components, this);
+	tmpl = new Tmpl(vm, vmData.depComponents || [], this);
 
-	// this.view = slice.call ( moduleElem.childNodes ) || [];
 	this.state = vm;
 
 	// 解析模板，挂载数据
@@ -5109,9 +5704,15 @@ function Module(module) {
 	// 调用apply方法
 	(vmData.apply || noop).apply(this, cache.getDependentPlugin(vmData.apply || noop));
 
-	// 对比新旧vnode计算出差异
-	// 并根据差异更新到实际dom中
-	moduleElem.diff(moduleElemBackup).patch();
+	/////////////////////////////////
+	/////////////////////////////////
+	if (developMode === DEVELOP_COMMON) {
+
+		// 普通模式下才会在Module内对比新旧vnode计算出差异
+		// 并根据差异更新到实际dom中
+		// 单页模式将会在compileModule编译的函数中对比更新dom
+		moduleElem.diff(moduleElemBackup).patch();
+	}
 }
 
 extend(Module.prototype, {
@@ -5130,8 +5731,8 @@ extend(Module.prototype, {
  	URL doc:
  	http://icejs.org/######
  */
-	refs: function refs(ref) {
-		var refObj = this.refs[ref];
+	refs(ref) {
+		let refObj = this.refs[ref];
 		if (refObj.parent) {
 			refObj = refObj.isComponent ? refObj.component.action : refObj.node;
 		} else {
@@ -5158,7 +5759,7 @@ extend(Module, {
  	URL doc:
  	http://icejs.org/######
  */
-	getIdentifier: function getIdentifier() {
+	getIdentifier() {
 		return "module" + guid();
 	}
 });
@@ -5177,10 +5778,10 @@ extend(Module, {
 	http://icejs.org/######
 */
 function parseModuleAttr(moduleString, parses) {
-	var rend = /^\s*>/,
-	    rmoduleAttr = /^\s*(<Module\s+)?(?:([^\s"'<>/=]+))?(?:\s*(?:=)\s*(?:"([^"]*)"|'([^']*)'))?/;
+	const rend = /^\s*>/,
+	      rmoduleAttr = /^\s*(<Module\s+)?(?:([^\s"'<>/=]+))?(?:\s*(?:=)\s*(?:"([^"]*)"|'([^']*)'))?/;
 
-	var attrMatch = void 0;
+	let attrMatch;
 
 	parses.attrs = {};
 
@@ -5212,21 +5813,17 @@ function parseModuleAttr(moduleString, parses) {
 	http://icejs.org/######
 */
 function parseTemplate(moduleString, parses) {
-	var rtemplate = /<template>([\s\S]+)<\/template>/,
-	    rblank = />(\s+)</g,
-	    rtext = /["'\/&]/g,
-	    viewMatch = rtemplate.exec(moduleString);
+	const rtemplate = /<template>([\s\S]+)<\/template>/,
+	      rblank = />(\s+)</g,
+	      rtext = /["'\/&]/g,
+	      viewMatch = rtemplate.exec(moduleString);
 
 	if (viewMatch) {
 		moduleString = moduleString.replace(viewMatch[0], "");
 		parses.view = (viewMatch[1] || "").trim();
 
 		// 去除所有标签间的空格，并转义"和'符号
-		parses.view = parses.view.replace(rblank, function (match, rep) {
-			return match.replace(rep, "");
-		}).replace(rtext, function (match) {
-			return "\\" + match;
-		});
+		parses.view = parses.view.replace(rblank, (match, rep) => match.replace(rep, "")).replace(rtext, match => "\\" + match);
 	}
 
 	return moduleString;
@@ -5247,26 +5844,24 @@ function parseTemplate(moduleString, parses) {
 */
 function parseStyle(moduleString, identifier, parses) {
 
-	var rstyle = /<style(?:.*?)>([\s\S]*)<\/style>/,
-	    risScoped = /^<style(?:.*?)scoped(?:.*?)/i,
-	    raddScoped = /\s*([^/@%{}]+)\s*{[^{}]+}/g,
-	    rnoscoped = /^(from|to)\s*$/i,
-	    rstyleblank = /(>\s*|\s*[{:;}]\s*|\s*<)/g,
-	    styleMatch = rstyle.exec(moduleString);
+	const rstyle = /<style(?:.*?)>([\s\S]*)<\/style>/,
+	      risScoped = /^<style(?:.*?)scoped(?:.*?)/i,
+	      raddScoped = /\s*([^/@%{}]+)\s*{[^{}]+}/g,
+	      rnoscoped = /^(from|to)\s*$/i,
+	      rstyleblank = /(>\s*|\s*[{:;}]\s*|\s*<)/g,
+	      styleMatch = rstyle.exec(moduleString);
 
 	if (styleMatch) {
 		moduleString = moduleString.replace(styleMatch[0], "");
 
 		if (risScoped.test(styleMatch[0])) {
-			var placeholder = "{{style}}";
+			const placeholder = "{{style}}";
 
 			parses.style = (styleMatch[1] || "").trim();
 			styleMatch[0] = styleMatch[0].replace(styleMatch[1], placeholder);
 
 			// 为每个样式添加模块前缀以达到控制范围的作用
-			parses.style = parses.style.replace(raddScoped, function (match, rep) {
-				return match.replace(rep, rnoscoped.test(rep) ? rep : "[" + Module.identifier + "=" + identifier + "] " + rep);
-			});
+			parses.style = parses.style.replace(raddScoped, (match, rep) => match.replace(rep, rnoscoped.test(rep) ? rep : `[${Module.identifier}=${identifier}] ` + rep));
 
 			parses.style = styleMatch[0].replace(placeholder, parses.style);
 		} else {
@@ -5274,9 +5869,7 @@ function parseStyle(moduleString, identifier, parses) {
 		}
 
 		// 去除所有标签间的空格
-		parses.style = parses.style.replace(rstyleblank, function (match) {
-			return match.replace(/\s+/g, "");
-		});
+		parses.style = parses.style.replace(rstyleblank, match => match.replace(/\s+/g, ""));
 	}
 
 	return moduleString;
@@ -5297,23 +5890,21 @@ function parseStyle(moduleString, identifier, parses) {
 */
 function parseScript(moduleString, scriptPaths, scriptNames, parses) {
 
-	var rscript = /<script(?:.*?)>([\s\S]+)<\/script>/,
-	    rscriptComment = /\/\/(.*?)\n|\/\*([\s\S]*?)\*\//g,
-	    rimport = /(?:(?:var|let|const)\s+)?([A-Za-z$_][\w$]+)\s*=\s*import\s*\(\s*"(.*?)"\s*\)\s*(?:,|;)/g,
-	    rhtmlComment = /<!--(.*?)-->/g,
-	    rmoduleDef = /new\s*ice\s*\.\s*Module\s*\(/,
-	    raddComponents = new RegExp(rmoduleDef.source + "\\s*\\{"),
-	    scriptMatch = rscript.exec(moduleString),
-	    scripts = {};
+	const rscript = /<script(?:.*?)>([\s\S]+)<\/script>/,
+	      rscriptComment = /\/\/(.*?)\n|\/\*([\s\S]*?)\*\//g,
+	      rimport = /(?:(?:var|let|const)\s+)?([A-Za-z$_][\w$]+)\s*=\s*import\s*\(\s*"(.*?)"\s*\)\s*(?:,|;)/g,
+	      rhtmlComment = /<!--(.*?)-->/g,
+	      rmoduleDef = /new\s*ice\s*\.\s*Module\s*\(/,
+	      raddComponents = new RegExp(rmoduleDef.source + "\\s*\\{"),
+	      scriptMatch = rscript.exec(moduleString),
+	      scripts = {};
 
 	if (scriptMatch) {
 
-		var matchScript = (scriptMatch[1] || "").replace(rscriptComment, function (match) {
-			return "";
-		});
+		const matchScript = (scriptMatch[1] || "").replace(rscriptComment, match => "");
 
 		// 获取import的script
-		parses.script = matchScript.replace(rimport, function (match, rep1, rep2) {
+		parses.script = matchScript.replace(rimport, (match, rep1, rep2) => {
 			scripts[rep1] = rep2;
 			return "";
 		}).trim();
@@ -5322,30 +5913,25 @@ function parseScript(moduleString, scriptPaths, scriptNames, parses) {
 		if (!isEmpty(scripts)) {
 
 			// 去掉注释的html的代码
-			var matchView = parses.view.replace(rhtmlComment, function (match) {
-				return "";
-			});
+			const matchView = parses.view.replace(rhtmlComment, match => "");
 
-			foreach(scripts, function (path, name) {
+			foreach(scripts, (path, name) => {
 
 				// 只有在view中有使用的component才会被使用
 				if (new RegExp("<\s*" + transformCompName(name, true)).test(matchView)) {
-					scriptPaths.push("\"" + path + "\"");
+					scriptPaths.push(`"${path}"`);
 					scriptNames.push(name);
 				}
 			});
 
 			// 需要组件时才将组件添加到对应模块中
 			if (!isEmpty(scriptNames)) {
-				parses.script = parses.script.replace(raddComponents, function (match) {
-					return match + ("depComponents:function(){return [" + scriptNames.join(",") + "];},");
-				});
+				parses.script = parses.script.replace(raddComponents, match => match + `depComponents:[${scriptNames.join(",")}],`);
 			}
 		}
 
-		parses.script = parses.script.replace(rmoduleDef, function (match) {
-			return match + "moduleNode,";
-		});
+		parses.script = parses.script.replace(rmoduleDef, match => `${match}moduleNode,`);
+		parses.script += "actingNt.collect(moduleNode,moduleNodeBackup);";
 	}
 
 	return moduleString;
@@ -5366,12 +5952,12 @@ function parseScript(moduleString, scriptPaths, scriptNames, parses) {
 function compileModule(moduleString, identifier) {
 
 	// 模块编译正则表达式
-	var rmodule = /^<Module[\s\S]+<\/Module>/;
+	const rmodule = /^<Module[\s\S]+<\/Module>/;
 	if (rmodule.test(moduleString)) {
 
-		var parses = {},
-		    scriptNames = [],
-		    scriptPaths = [];
+		const parses = {},
+		      scriptNames = [],
+		      scriptPaths = [];
 
 		// 解析出Module标签内的属性
 		moduleString = parseModuleAttr(moduleString, parses);
@@ -5392,23 +5978,23 @@ function compileModule(moduleString, identifier) {
 
 		check(parses.script).notBe("").ifNot("module:script", "<Module>内的<script>为必须子元素，它的内部js代码用于初始化模块的页面布局").do();
 
-		var buildView = "moduleNode.html(VNode.domToVNode(view));";
+		const buildView = `moduleNode.html(VNode.domToVNode(view));`;
 
 		////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////
 		/// 构造编译函数
-		moduleString = "var title=\"" + (parses.attrs[iceAttr.title] || "") + "\",view=\"" + parses.view + parses.style + "\";";
+		moduleString = `var title="${parses.attrs[iceAttr.title] || ""}",view="${parses.view}${parses.style}",moduleNodeBackup=moduleNode.clone();`;
 
 		if (!isEmpty(scriptPaths)) {
-			moduleString += "require([" + scriptPaths.join(",") + "],function(" + scriptNames.join(",") + "){" + buildView + parses.script + ";});";
+			moduleString += `require([${scriptPaths.join(",")}],function(${scriptNames.join(",")}){${buildView}${parses.script};});`;
 		} else {
-			moduleString += "" + buildView + parses.script + ";";
+			moduleString += `${buildView}${parses.script};`;
 		}
 
 		moduleString += "return title;";
 	}
 
-	return new Function("ice", "moduleNode", "VNode", "require", moduleString);
+	return new Function("ice", "moduleNode", "VNode", "actingNt", "require", moduleString);
 }
 
 /**
@@ -5482,8 +6068,8 @@ function Promise(resolver) {
 	check(resolver).type("function").ifNot("function Promise", "构造函数需传入一个函数参数").do();
 
 	// 预定义的Promise对象对应的处理函数体信息
-	var resolveArgs = void 0,
-	    rejectArgs = void 0,
+	let resolveArgs,
+	    rejectArgs,
 	    state = Promise.PENDING,
 	    handlers = [];
 
@@ -5501,16 +6087,12 @@ function Promise(resolver) {
  	URL doc:
  	http://icejs.org/######
  */
-	function resolve() {
-		for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-			args[_key] = arguments[_key];
-		}
-
+	function resolve(...args) {
 		if (state === Promise.PENDING) {
 			state = Promise.FULFILLED;
 			resolveArgs = args;
 
-			foreach(handlers, function (handler) {
+			foreach(handlers, handler => {
 				(handler.onFulfilled || noop).apply(null, args);
 			});
 		}
@@ -5530,16 +6112,13 @@ function Promise(resolver) {
  	URL doc:
  	http://icejs.org/######
  */
-	function reject() {
-		for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-			args[_key2] = arguments[_key2];
-		}
+	function reject(...args) {
 
 		if (state === Promise.PENDING) {
 			state = Promise.REJECTED;
 			rejectArgs = args;
 
-			foreach(handlers, function (handler) {
+			foreach(handlers, handler => {
 				(handler.onRejected || noop).apply(null, args);
 			});
 		}
@@ -5560,7 +6139,7 @@ function Promise(resolver) {
  	URL doc:
  	http://icejs.org/######
  */
-	this.handle = function (handler) {
+	this.handle = handler => {
 		if (state === Promise.PENDING) {
 			handlers.push(handler);
 		} else if (state === Promise.FULFILLED) {
@@ -5590,44 +6169,27 @@ extend(Promise.prototype, {
  	URL doc:
  	http://icejs.org/######
  */
-	then: function then(_onFulfilled, _onRejected) {
-		var _this = this;
+	then(onFulfilled, onRejected) {
 
-		return new Promise(function (resolve, reject) {
-			_this.handle({
-				onFulfilled: function onFulfilled() {
-					for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-						args[_key3] = arguments[_key3];
-					}
-
-					var result = type$1(_onFulfilled) === "function" && _onFulfilled.apply(null, args) || args;
+		return new Promise((resolve, reject) => {
+			this.handle({
+				onFulfilled(...args) {
+					const result = type$1(onFulfilled) === "function" && onFulfilled.apply(null, args) || args;
 					if (Promise.isThenable(result)) {
-						result.then(function () {
-							for (var _len4 = arguments.length, args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-								args[_key4] = arguments[_key4];
-							}
-
+						result.then((...args) => {
 							resolve.apply(null, args);
-						}, function () {
-							for (var _len5 = arguments.length, args = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
-								args[_key5] = arguments[_key5];
-							}
-
+						}, (...args) => {
 							reject.apply(null, args);
 						});
 					}
 				},
-				onRejected: function onRejected() {
-					for (var _len6 = arguments.length, args = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
-						args[_key6] = arguments[_key6];
-					}
 
-					(type$1(_onRejected) === "function" ? _onRejected : noop).apply(null, args);
+				onRejected(...args) {
+					(type$1(onRejected) === "function" ? onRejected : noop).apply(null, args);
 				}
 			});
 		});
 	},
-
 
 	/**
  	done ( onFulfilled: Function )
@@ -5642,11 +6204,10 @@ extend(Promise.prototype, {
  	URL doc:
  	http://icejs.org/######
  */
-	done: function done(onFulfilled) {
-		this.handle({ onFulfilled: onFulfilled });
+	done(onFulfilled) {
+		this.handle({ onFulfilled });
 		return this;
 	},
-
 
 	/**
  	fail ( onRejected: Function )
@@ -5661,11 +6222,10 @@ extend(Promise.prototype, {
  	URL doc:
  	http://icejs.org/######
  */
-	fail: function fail(onRejected) {
-		this.handle({ onRejected: onRejected });
+	fail(onRejected) {
+		this.handle({ onRejected });
 		return this;
 	},
-
 
 	/**
  	always ( callback: Function )
@@ -5680,7 +6240,7 @@ extend(Promise.prototype, {
  	URL doc:
  	http://icejs.org/######
  */
-	always: function always(callback) {
+	always(callback) {
 		this.handle({
 			onFulfilled: callback,
 			onRejected: callback
@@ -5688,6 +6248,7 @@ extend(Promise.prototype, {
 
 		return this;
 	}
+
 });
 
 extend(Promise, {
@@ -5711,8 +6272,7 @@ extend(Promise, {
  	URL doc:
  	http://icejs.org/######
  */
-	when: function when() {},
-
+	when() {},
 
 	/**
  	isThenable ( value: Object|Function )
@@ -5727,10 +6287,10 @@ extend(Promise, {
  	URL doc:
  	http://icejs.org/######
  */
-	isThenable: function isThenable(value) {
-		var t = type$1(value);
+	isThenable(value) {
+		const t = type$1(value);
 		if (value && (t === "object" || t === "function")) {
-			var then = value.then;
+			const then = value.then;
 			if (type$1(then) === "function") {
 				return true;
 			}
@@ -5740,7 +6300,7 @@ extend(Promise, {
 	}
 });
 
-var rheader = /^(.*?):[ \t]*([^\r\n]*)$/mg;
+const rheader = /^(.*?):[ \t]*([^\r\n]*)$/mg;
 
 function ICEXMLHttpRequest() {
 
@@ -5762,13 +6322,12 @@ extend(ICEXMLHttpRequest.prototype, {
  	URL doc:
  	http://icejs.org/######
  */
-	setRequestHeader: function setRequestHeader(header, value) {
+	setRequestHeader(header, value) {
 		if (!this.transport.completed) {
 			this.transport.headers = this.transport.headers || {};
 			this.transport.headers[header.toLowerCase()] = value;
 		}
 	},
-
 
 	/**
  	getRequestHeader ( header: String )
@@ -5783,9 +6342,9 @@ extend(ICEXMLHttpRequest.prototype, {
  	URL doc:
  	http://icejs.org/######
  */
-	getResponseHeader: function getResponseHeader(header) {
+	getResponseHeader(header) {
 
-		var match = void 0;
+		let match;
 
 		if (this.transport.completed) {
 			if (!this.transport.respohseHeader) {
@@ -5801,7 +6360,6 @@ extend(ICEXMLHttpRequest.prototype, {
 		return match || null;
 	},
 
-
 	/**
  	getAllResponseHeaders ()
  
@@ -5815,10 +6373,9 @@ extend(ICEXMLHttpRequest.prototype, {
  	URL doc:
  	http://icejs.org/######
  */
-	getAllResponseHeaders: function getAllResponseHeaders() {
+	getAllResponseHeaders() {
 		return this.transport.completed ? this.transport.responseHeadersString : null;
 	},
-
 
 	/**
  	overrideMimeType ( mimetype: String )
@@ -5832,12 +6389,11 @@ extend(ICEXMLHttpRequest.prototype, {
  	URL doc:
  	http://icejs.org/######
  */
-	overrideMimeType: function overrideMimeType(mimetype) {
+	overrideMimeType(mimetype) {
 		if (!this.transport.completed) {
 			options.mimetype = mimetype;
 		}
 	},
-
 
 	/**
  	abort ( statusText: String )
@@ -5851,13 +6407,12 @@ extend(ICEXMLHttpRequest.prototype, {
  	URL doc:
  	http://icejs.org/######
  */
-	abort: function abort(statusText) {
+	abort(statusText) {
 		if (this.transport) {
 			this.transport.abortText = statusText || "abort";
 			this.transport.abort();
 		}
 	},
-
 
 	/**
  	addEventListener ( type: String, callback: Function )
@@ -5871,7 +6426,7 @@ extend(ICEXMLHttpRequest.prototype, {
  	URL doc:
  	http://icejs.org/######
  */
-	addEventListener: function addEventListener(type, callback) {
+	addEventListener(type, callback) {
 		if (!this.transport.completed) {
 			this.transport.callbacks = this.transport.callbacks || {};
 			this.transport.callbacks[type] = callback || noop;
@@ -5892,7 +6447,7 @@ var script = function (text) {
 };
 
 // ajax返回数据转换器
-var ajaxConverters = { text: text, json: json, script: script };
+const ajaxConverters = { text, json, script };
 
 /**
     complete ( iceXHR: Object )
@@ -5908,7 +6463,7 @@ var ajaxConverters = { text: text, json: json, script: script };
 */
 function complete(iceXHR) {
 
-	var transport = iceXHR.transport;
+	let transport = iceXHR.transport;
 
 	if (transport.completed) {
 		return;
@@ -5961,18 +6516,18 @@ var xhr$1 = function () {
   	URL doc:
   	http://icejs.org/######
   */
-		send: function send(options, iceXHR) {
+		send(options, iceXHR) {
 
-			var i = void 0,
+			let i,
 			    self = this,
 
 
 			// 获取xhr对象
-			xhr = this.xhr = function () {
+			xhr = this.xhr = (() => {
 				try {
 					return new XMLHttpRequest();
 				} catch (e) {}
-			}();
+			})();
 
 			if (options.crossDomain && !"withCredentials" in xhr) {
 				throw requestErr("crossDomain", "该浏览器不支持跨域请求");
@@ -5986,7 +6541,7 @@ var xhr$1 = function () {
 			}
 
 			xhr.setRequestHeader("X-Requested-With", "XMLHTTPRequest");
-			foreach(this.headers, function (header, key) {
+			foreach(this.headers, (header, key) => {
 				xhr.setRequestHeader(key, header);
 			});
 
@@ -6024,7 +6579,6 @@ var xhr$1 = function () {
 			}
 		},
 
-
 		/**
   	done ( iceXHR: Object )
   
@@ -6037,7 +6591,7 @@ var xhr$1 = function () {
   	URL doc:
   	http://icejs.org/######
   */
-		done: function done(iceXHR) {
+		done(iceXHR) {
 
 			var xhr = this.xhr;
 
@@ -6053,7 +6607,6 @@ var xhr$1 = function () {
 			complete(iceXHR);
 		},
 
-
 		/**
   	abort ()
   
@@ -6066,7 +6619,7 @@ var xhr$1 = function () {
   	URL doc:
   	http://icejs.org/######
   */
-		abort: function abort() {
+		abort() {
 			this.status = 0;
 			this.statusText = this.abortText;
 
@@ -6078,7 +6631,7 @@ var xhr$1 = function () {
 // 动态执行script
 var script$1 = function (options) {
 
-	var script = void 0;
+	let script;
 
 	return {
 
@@ -6094,8 +6647,8 @@ var script$1 = function (options) {
   	URL doc:
   	http://icejs.org/######
   */
-		send: function send(options, iceXHR) {
-			var self = this;
+		send(options, iceXHR) {
+			let self = this;
 
 			script = document.createElement("script");
 			script.src = options.url;
@@ -6119,7 +6672,6 @@ var script$1 = function (options) {
 			document.head.appendChild(script);
 		},
 
-
 		/**
   	done ( iceXHR: Object )
   
@@ -6132,7 +6684,7 @@ var script$1 = function (options) {
   	URL doc:
   	http://icejs.org/######
   */
-		done: function done(iceXHR) {
+		done(iceXHR) {
 
 			if (options.dataType === "JSONP") {
 
@@ -6151,7 +6703,6 @@ var script$1 = function (options) {
 			complete(iceXHR);
 		},
 
-
 		/**
   	abort ()
   
@@ -6164,7 +6715,7 @@ var script$1 = function (options) {
   	URL doc:
   	http://icejs.org/######
   */
-		abort: function abort() {
+		abort() {
 			if (script.parentNode) {
 				script.parentNode.removeChild(script);
 			}
@@ -6180,23 +6731,25 @@ var script$1 = function (options) {
 // jsonp跨域请求
 var jsonp = function (options) {
 
-	var scriptExtend = script$1(options),
+	let scriptExtend = script$1(options),
 	    jsonpCallback = options.jsonpCallback = "jsonpCallback" + Date.now();
 
-	window[jsonpCallback] = function (result) {
+	window[jsonpCallback] = result => {
 		window[jsonpCallback] = result;
 	};
 
 	options.data += (options.data ? "&" : "") + "callback=" + jsonpCallback;
 
 	return {
-		send: function send(options, iceXHR) {
+		send(options, iceXHR) {
 			scriptExtend.send(options, iceXHR);
 		},
-		done: function done(iceXHR) {
+
+		done(iceXHR) {
 			scriptExtend.done(iceXHR);
 		},
-		abort: function abort() {
+
+		abort() {
 			scriptExtend.abort();
 		}
 	};
@@ -6205,11 +6758,11 @@ var jsonp = function (options) {
 // 文件异步上传传送器，在不支持FormData的旧版本浏览器中使用iframe刷新的方法模拟异步上传
 var upload = function () {
 
-	var uploadFrame = document.createElement("iframe"),
+	let uploadFrame = document.createElement("iframe"),
 	    id = "upload-iframe-unique-" + guid();
 
 	attr(uploadFrame, {
-		id: id,
+		id,
 		name: id
 	});
 	uploadFrame.style.position = "absolute";
@@ -6232,8 +6785,8 @@ var upload = function () {
   	URL doc:
   	http://icejs.org/######
   */
-		send: function send(options, iceXHR) {
-			var self = this,
+		send(options, iceXHR) {
+			let self = this,
 
 
 			// 备份上传form元素的原有属性，当form提交后再使用备份还原属性
@@ -6264,7 +6817,7 @@ var upload = function () {
 			options.data.submit();
 
 			// 还原form备份参数
-			foreach(backup, function (val, attribute) {
+			foreach(backup, (val, attribute) => {
 				if (val) {
 					attr(options.data, attribute, val);
 				} else {
@@ -6273,7 +6826,6 @@ var upload = function () {
 				}
 			});
 		},
-
 
 		/**
   	done ( iceXHR: Object )
@@ -6287,11 +6839,11 @@ var upload = function () {
   	URL doc:
   	http://icejs.org/######
   */
-		done: function done(iceXHR) {
+		done(iceXHR) {
 
 			// 获取返回数据
-			var child = void 0,
-			    entity = void 0,
+			let child,
+			    entity,
 			    doc = uploadFrame.contentWindow.document;
 			if (doc.body) {
 
@@ -6314,7 +6866,7 @@ var upload = function () {
 						amp: "&",
 						quot: "\""
 					};
-					this.response = this.response.replace(/&(lt|gt|nbsp|amp|quot);/ig, function (all, t) {
+					this.response = this.response.replace(/&(lt|gt|nbsp|amp|quot);/ig, (all, t) => {
 						return entity[t];
 					});
 				}
@@ -6325,7 +6877,6 @@ var upload = function () {
 			// 移除iframe
 			uploadFrame.parentNode.removeChild(uploadFrame);
 		},
-
 
 		/**
   	abort ()
@@ -6339,7 +6890,7 @@ var upload = function () {
   	URL doc:
   	http://icejs.org/######
   */
-		abort: function abort() {}
+		abort() {}
 	};
 };
 
@@ -6367,18 +6918,18 @@ var upload = function () {
 */
 function request(method) {
 
-	var
+	const
 	// 相关正则表达式
 	r20 = /%20/g,
-	    rhash = /#.*$/,
-	    rts = /([?&])_=[^&]*/,
-	    rquery = /\?/,
-	    rnoContent = /^(?:GET|HEAD)$/,
+	      rhash = /#.*$/,
+	      rts = /([?&])_=[^&]*/,
+	      rquery = /\?/,
+	      rnoContent = /^(?:GET|HEAD)$/,
 
 
 	// ajax支持的返回类型正则表达式
 	rtype = /^(?:TEXT|JSON|SCRIPT|JSONP)$/,
-	    accepts = {
+	      accepts = {
 		"*": ["*/"] + ["*"], // 避免被压缩
 		text: "text/plain",
 		html: "text/html",
@@ -6409,7 +6960,7 @@ function request(method) {
 			// request请求时，参数肯定是一个对象，直接返回
 			if (method) {
 
-				var _url = options[0];
+				let url = options[0];
 				args = options[1];
 				callback = options[2];
 				dataType = options[3];
@@ -6425,7 +6976,7 @@ function request(method) {
 
 				// get请求参数初始化
 				params = {
-					url: _url,
+					url: url,
 					args: args,
 					success: callback,
 					dataType: dataType,
@@ -6444,17 +6995,10 @@ function request(method) {
 	//////////////////////////////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////
 	// ajax传送器，根据数据类型
-	ajaxTransports = { xhr: xhr$1, script: script$1, jsonp: jsonp, upload: upload };
+	ajaxTransports = { xhr: xhr$1, script: script$1, jsonp, upload };
 
-	var // GET、POST时的默认参数
-	url = void 0,
-	    args = void 0,
-	    callback = void 0,
-	    dataType = void 0,
-	    transportName = void 0,
-	    params = void 0,
-	    nohashUrl = void 0,
-	    hash = void 0;
+	let // GET、POST时的默认参数
+	url, args, callback, dataType, transportName, params, nohashUrl, hash;
 
 	/**
  	[anonymous] ()
@@ -6469,12 +7013,9 @@ function request(method) {
  	URL doc:
  	http://icejs.org/######
  */
-	return function () {
-		for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-			args[_key] = arguments[_key];
-		}
+	return function (...args) {
 
-		var // 合并参数
+		let // 合并参数
 		options = extendOptions(args),
 		    data = options.data,
 
@@ -6501,10 +7042,10 @@ function request(method) {
 					options.data = new FormData(data);
 				} catch (e) {
 
-					var hasFile = void 0;
+					let hasFile;
 
 					// 判断表单中是否含有上传文件
-					foreach(data.elements.slice(), function (inputItem) {
+					foreach(data.elements.slice(), inputItem => {
 						if (inputItem.type === "file") {
 							hasFile = true;
 							return false;
@@ -6520,12 +7061,12 @@ function request(method) {
 			}
 
 			if (isPlainObject(options.data)) {
-				var _args = [];
-				foreach(options.data, function (_data, index) {
-					_args.push(index + "=" + _data);
+				let args = [];
+				foreach(options.data, (_data, index) => {
+					args.push(index + "=" + _data);
 				});
 
-				options.data = _args.join("&");
+				options.data = args.join("&");
 			}
 		}
 
@@ -6542,7 +7083,7 @@ function request(method) {
 
 		// 是否跨域
 		if (!options.crossDomain) {
-			var originAnchor = document.createElement("a"),
+			let originAnchor = document.createElement("a"),
 			    urlAnchor = document.createElement("a");
 
 			originAnchor.href = location.href;
@@ -6558,7 +7099,7 @@ function request(method) {
 		//////////////////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////////////////
 		//返回Promise对象
-		return new Promise(function (resolve, reject) {
+		return new Promise((resolve, reject) => {
 
 			// 获取传送器名
 			// 根据上面判断，上传文件时如果支持FormData则使用此来实现上传，所以当data为form对象时，表示不支持FormData上传，需使用upload传送器实现上传
@@ -6607,7 +7148,7 @@ function request(method) {
 			iceXHR.setRequestHeader("Accept", accepts[iceXHR.transport.dataType] ? accepts[iceXHR.transport.dataType] + ", */*; q=0.01" : accepts["*"]);
 
 			// haders里面的首部
-			foreach(options.headers, function (header, key) {
+			foreach(options.headers, (header, key) => {
 				iceXHR.setRequestHeader(key, header);
 			});
 
@@ -6617,7 +7158,7 @@ function request(method) {
 			}
 
 			// 将事件绑定在iceXHR中
-			foreach(["complete", "success", "error"], function (callbackName) {
+			foreach(["complete", "success", "error"], callbackName => {
 
 				// 如果是success或error回调，则使用resolve或reject代替
 				if (callbackName === "success") {
@@ -6631,7 +7172,7 @@ function request(method) {
 
 			// 处理超时
 			if (options.async && options.timeout > 0) {
-				iceXHR.transport.timeoutID = setTimeout(function () {
+				iceXHR.transport.timeoutID = setTimeout(() => {
 					iceXHR.abort("timeout");
 				}, options.timeout);
 			}
@@ -6707,9 +7248,9 @@ var http = {
 
 function loopFlush(moduleUpdateContext) {
 
-	var title = void 0,
-	    _title = void 0;
-	foreach(moduleUpdateContext, function (moduleUpdateItem) {
+	const nt = new NodeTransaction().start();
+	let title, _title;
+	foreach(moduleUpdateContext, moduleUpdateItem => {
 		_title = moduleUpdateItem.updateFn();
 		title = title || _title;
 
@@ -6719,18 +7260,20 @@ function loopFlush(moduleUpdateContext) {
 		}
 	});
 
+	nt.commit();
+
 	return title;
 }
 
 function compareArgs(newArgs, originalArgs) {
-	var len = Object.keys(newArgs).length;
+	const len = Object.keys(newArgs).length;
 
-	var isChanged = false;
+	let isChanged = false;
 	if (len !== Object.keys(originalArgs).length) {
 		isChanged = true;
 	} else {
 		if (len > 0) {
-			foreach(newArgs, function (newVal, key) {
+			foreach(newArgs, (newVal, key) => {
 				if (newVal !== originalArgs[key]) {
 					isChanged = true;
 
@@ -6781,10 +7324,9 @@ extend(ModuleLoader.prototype, {
  	URL doc:
  	http://icejs.org/######
  */
-	addWaiting: function addWaiting(name) {
+	addWaiting(name) {
 		this.waiting.push(name);
 	},
-
 
 	/**
  	delWaiting ( name: String )
@@ -6799,8 +7341,8 @@ extend(ModuleLoader.prototype, {
  	URL doc:
  	http://icejs.org/######
  */
-	delWaiting: function delWaiting(name) {
-		var pointer = this.waiting.indexOf(name);
+	delWaiting(name) {
+		const pointer = this.waiting.indexOf(name);
 		if (pointer !== -1) {
 			this.waiting.splice(pointer, 1);
 		}
@@ -6810,22 +7352,24 @@ extend(ModuleLoader.prototype, {
 			this.flush();
 		}
 	},
-	signModuleHierarchy: function signModuleHierarchy(currentHierarchy) {
+
+	signModuleHierarchy(currentHierarchy) {
 		this.currentHierarchy = currentHierarchy;
 	},
-	saveModuleUpdateFn: function saveModuleUpdateFn(updateFn) {
-		var moduleUpdateItem = { updateFn: updateFn };
+
+	saveModuleUpdateFn(updateFn) {
+		const moduleUpdateItem = { updateFn };
 
 		// 标记当前处理模块
 		this.moduleUpdateItem = moduleUpdateItem;
 		this.currentHierarchy.push(moduleUpdateItem);
 	},
-	addChildrenContext: function addChildrenContext() {
-		var children = [];
+
+	addChildrenContext() {
+		const children = [];
 		this.moduleUpdateItem.children = children;
 		return children;
 	},
-
 
 	/**
  	load ( structure: Object, args: Object, currentHierarchy?: Array )
@@ -6839,16 +7383,12 @@ extend(ModuleLoader.prototype, {
  	URL doc:
  	http://icejs.org/######
  */
-	load: function load(structure, args) {
-		var _this = this;
+	load(structure, args, currentHierarchy = this.moduleUpdateContext) {
 
-		var currentHierarchy = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : this.moduleUpdateContext;
+		let toRender = false,
+		    param;
 
-
-		var toRender = false,
-		    param = void 0;
-
-		foreach(structure.entity, function (route) {
+		foreach(structure.entity, route => {
 			if (route.hasOwnProperty("notUpdate")) {
 				if (route.hasOwnProperty("forcedRender")) {
 					toRender = true;
@@ -6875,31 +7415,45 @@ extend(ModuleLoader.prototype, {
 
 			// 需更新模块与强制重新渲染模块进行渲染
 			if (toRender) {
+				let moduleNode = route.moduleNode,
+				    moduleIdentifier;
 
 				// 如果结构中没有模块节点则查找DOM树获取节点
-				if (!route.moduleNode) {
-					var moduleNode = VNode.domToVNode(query("[" + iceAttr.module + "=" + (route.name === "default" ? "''" : route.name) + "]", route.parent && route.parent.moduleNode.node || undefined)),
-					    tmpl = new Tmpl();
-					tmpl.mount(moduleNode, true);
+				if (!moduleNode) {
+					moduleNode = queryModuleNode(route.name === "default" ? "" : route.name, route.parent && route.parent.moduleNode.node || undefined);
 
 					if (moduleNode) {
+
+						// 获取到moduleNode时去解析此moduleNode
+						moduleNode = VNode.domToVNode(moduleNode);
+						const tmpl = new Tmpl({}, [], {});
+						tmpl.mount(moduleNode, true);
+
 						route.moduleNode = moduleNode;
 					} else {
-						throw moduleErr("moduleNode", "\u627E\u4E0D\u5230\u52A0\u8F7D\u8DEF\u5F84\u4E3A\"" + route.modulePath + "\"\u7684\u6A21\u5757node");
+
+						// 没有获取到moduleNode时将moduleNode封装为一个获取函数
+						// 此函数将会在它的父模块解析后再调用，此时就能获取到route.moduleNode
+						moduleNode = () => {
+							if (route.moduleNode) {
+								return route.moduleNode;
+							} else {
+								throw moduleErr("moduleNode", `找不到加载路径为"${route.modulePath}"的模块node`);
+							}
+						};
 					}
 				}
 
 				// 给模块元素添加编号属性，此编号有两个作用：
 				// 1、用于模块加载时的模块识别
 				// 2、使用此属性作为子选择器限制样式范围
-				var moduleIdentifier = route.moduleNode.attr(Module.identifier);
+				moduleIdentifier = moduleNode && moduleNode.nodeType === 1 && moduleNode.attr(Module.identifier);
 				if (!moduleIdentifier) {
 					moduleIdentifier = Module.getIdentifier();
-					route.moduleNode.attr(Module.identifier, moduleIdentifier);
 				}
 
 				// 加入等待加载队列
-				_this.addWaiting(moduleIdentifier);
+				this.addWaiting(moduleIdentifier);
 
 				// 将基于当前相对路径的路径统一为相对于根目录的路径
 				// const pathAnchor = document.createElement ( "a" );
@@ -6907,21 +7461,20 @@ extend(ModuleLoader.prototype, {
 
 				// 标记模块更新函数容器的层级
 				// 这样在actionLoad函数中调用saveModuleUpdateFuncs保存更新函数时可以保存到对应的位置
-				_this.signModuleHierarchy(currentHierarchy);
+				this.signModuleHierarchy(currentHierarchy);
 
 				// 无刷新跳转组件调用来完成无刷新跳转
-				ModuleLoader.actionLoad.call(_this, route.modulePath, route.moduleNode, route, args.param[route.name], args.get, args.post);
+				ModuleLoader.actionLoad.call(this, route.modulePath, route.moduleNode, moduleIdentifier, route, args.param[route.name], args.get, args.post);
 			}
 
 			// 此模块下还有子模块需更新
 			if (type$1(route.children) === "array") {
 
 				// 添加子模块容器并继续加载子模块
-				_this.load(route.children, args, _this.addChildrenContext());
+				this.load(route.children, args, this.addChildrenContext());
 			}
 		});
 	},
-
 
 	/**
  	flush ()
@@ -6935,11 +7488,11 @@ extend(ModuleLoader.prototype, {
  	URL doc:
  	http://icejs.org/######
  */
-	flush: function flush() {
+	flush() {
 		if (this.moduleError) {
 
 			// 加载模块遇到错误，直接处理错误信息
-			var location = {
+			const location = {
 				path: this.moduleError,
 				nextStructure: Router.matchRoutes(this.path, this.param),
 				param: {},
@@ -6956,7 +7509,7 @@ extend(ModuleLoader.prototype, {
 		} else {
 
 			// 正常加载，将调用模块更新函数更新模块
-			var title = loopFlush(this.moduleUpdateContext);
+			const title = loopFlush(this.moduleUpdateContext);
 
 			// 更新页面title
 			if (title && document.title !== title) {
@@ -6969,7 +7522,7 @@ extend(ModuleLoader.prototype, {
 extend(ModuleLoader, {
 
 	/**
- 	actionLoad ( url: String|Object, moduleNode: DMOObject, currentStructure: Object, param?: Object, args?: Object, data?: Object, method?:String, timeout?: Number, before?: Function, success?: Function, error?: Function, abort?: Function )
+ 	actionLoad ( url: String|Object, moduleNode: DMOObject, moduleIdentifier: String, currentStructure: Object, param?: Object, args?: Object, data?: Object, method?:String, timeout?: Number, before?: Function, success?: Function, error?: Function, abort?: Function )
  		Return Type:
  	void
  		Description:
@@ -6980,45 +7533,34 @@ extend(ModuleLoader, {
  		URL doc:
  	http://icejs.org/######
  */
-	actionLoad: function actionLoad(path, moduleNode, currentStructure, param, args, data, method, timeout) {
-		var before = arguments.length > 8 && arguments[8] !== undefined ? arguments[8] : noop;
-		var success = arguments.length > 9 && arguments[9] !== undefined ? arguments[9] : noop;
+	actionLoad(path, moduleNode, moduleIdentifier, currentStructure, param, args, data, method, timeout, before = noop, success = noop, error = noop, abort = noop) {
 
-		var _this2 = this;
-
-		var error = arguments.length > 10 && arguments[10] !== undefined ? arguments[10] : noop;
-
-		var _abort = arguments.length > 11 && arguments[11] !== undefined ? arguments[11] : noop;
-
-		var moduleConfig = configuration.getConfigure("module");
+		const moduleConfig = configuration.getConfigure("module"),
+		      baseURL = configuration.getConfigure("baseURL");
 
 		//////////////////////////////////////////////////
 		//////////////////////////////////////////////////
 		//////////////////////////////////////////////////
+		path = path.substr(0, 1) === "/" ? baseURL.substr(0, baseURL.length - 1) : baseURL + path;
 		path += configuration.getConfigure("moduleSuffix") + args;
 
-		var historyModule = cache.getModule(path);
+		const historyModule = cache.getModule(path);
 
 		// 并且请求不为post
 		// 并且已有缓存
 		// 并且缓存未过期
 		// cache已有当前模块的缓存时，才使用缓存
 		if ((!method || method.toUpperCase() !== "POST") && historyModule && (moduleConfig.expired === 0 || historyModule.time + moduleConfig.expired > timestamp())) {
-			this.saveModuleUpdateFn(function () {
+			this.saveModuleUpdateFn(() => {
 				Structure$1.currentPage.signCurrentRender(currentStructure, param, args, isPlainObject(data) ? data : serialize(data));
-
-				var title = historyModule.updateFn(ice, moduleNode, VNode, require);
-				moduleNode.emit(MODULE_UPDATE);
+				const title = historyModule.updateFn(ice, moduleNode, VNode, NodeTransaction.acting, require);
 
 				return title;
 			});
 
 			// 获取模块更新函数完成后在等待队列中移除
-			this.delWaiting(moduleNode.attr(Module.identifier));
+			this.delWaiting(moduleIdentifier);
 		} else {
-
-			// 触发请求事件回调
-			moduleNode.emit(MODULE_REQUEST);
 
 			// 请求模块跳转页面数据
 			http.request({
@@ -7027,31 +7569,38 @@ extend(ModuleLoader, {
 				method: /^(GET|POST)$/i.test(method) ? method.toUpperCase() : "GET",
 				data: data,
 				timeout: timeout || 0,
-				beforeSend: function beforeSend() {
+				beforeSend: () => {
 					before(moduleNode);
 				},
-				abort: function abort() {
-					_abort(moduleNode);
+				abort: () => {
+					abort(moduleNode);
 				}
-			}).done(function (moduleString) {
+			}).done(moduleString => {
 
 				/////////////////////////////////////////////////////////
 				// 编译module为可执行函数
 				// 将请求的html替换到module模块中
-				var updateFn = compileModule(moduleString, moduleNode.attr(Module.identifier));
+				const updateFn = compileModule(moduleString, moduleIdentifier);
 
-				// 满足缓存条件时缓存模块更新函数
-				if (moduleConfig.cache === true && moduleNode.cache !== false) {
-					cache.pushModule(path, { updateFn: updateFn, time: timestamp() });
-				}
+				this.saveModuleUpdateFn(() => {
 
-				_this2.saveModuleUpdateFn(function () {
-					moduleNode.emit(MODULE_RESPONSE);
+					moduleNode = type$1(moduleNode) === "function" ? moduleNode() : moduleNode;
+
+					// 满足缓存条件时缓存模块更新函数
+					if (moduleConfig.cache === true && moduleNode.cache !== false) {
+						cache.pushModule(path, { updateFn, time: timestamp() });
+					}
+
+					if (!moduleNode.attr(Module.identifier)) {
+						moduleNode.attr(Module.identifier, moduleIdentifier);
+
+						// 调用render将添加的ice-identifier同步到实际node上
+						moduleNode.render();
+					}
 
 					Structure$1.currentPage.signCurrentRender(currentStructure, param, args, isPlainObject(data) ? data : serialize(data));
 
-					var title = updateFn(ice, moduleNode, VNode, require);
-					moduleNode.emit(MODULE_UPDATE);
+					const title = updateFn(ice, moduleNode, VNode, NodeTransaction.acting, require);
 
 					// 调用success回调
 					success(moduleNode);
@@ -7060,12 +7609,12 @@ extend(ModuleLoader, {
 				});
 
 				// 获取模块更新函数完成后在等待队列中移除
-				_this2.delWaiting(moduleNode.attr(Module.identifier));
-			}).fail(function (iceXHR, errorCode) {
+				this.delWaiting(moduleIdentifier);
+			}).fail((iceXHR, errorCode) => {
 
 				// 保存错误信息并立即刷新
-				_this2.moduleError = Router.getError(errorCode);
-				_this2.flush();
+				this.moduleError = Router.getError(errorCode);
+				this.flush();
 				error(moduleNode, error);
 			});
 		}
@@ -7075,25 +7624,23 @@ extend(ModuleLoader, {
 // 路由模式，启动路由时可进行模式配置
 // 自动选择路由模式(默认)
 // 在支持html5 history API时使用新特性，不支持的情况下自动回退到hash模式
-var AUTO = 0;
+const AUTO = 0;
 
 // 强制使用hash模式
-var HASH_HISTORY = 1;
+const HASH_HISTORY = 1;
 
 // 强制使用html5 history API模式
 // 使用此模式时需注意：在不支持新特新的浏览器中是不能正常使用的
-var BROWSER_HISTORY = 2;
+const BROWSER_HISTORY = 2;
 
 var browserHistory = {
 
 	// window.history对象
 	entity: window.history,
 
-	init: function init() {
-		var _this = this;
-
-		event.on(window, "popstate", function (e) {
-			var locationGuide = _this.getState();
+	init() {
+		event.on(window, "popstate", e => {
+			const locationGuide = this.getState();
 
 			// 更新currentPage结构体对象，如果为空表示页面刚刷新，将nextStructure直接赋值给currentPage
 			Structure$1.currentPage.update(locationGuide.structure);
@@ -7110,7 +7657,6 @@ var browserHistory = {
 		return this;
 	},
 
-
 	/**
  	replace ( state: Any, url: String )
  	
@@ -7123,7 +7669,7 @@ var browserHistory = {
  	URL doc:
  	http://icejs.org/######
  */
-	replace: function replace(state, url) {
+	replace(state, url) {
 		if (this.entity.pushState) {
 			this.entity.replaceState(null, null, url);
 			this.saveState(window.location.pathname, state);
@@ -7131,7 +7677,6 @@ var browserHistory = {
 			throw envErr("history API", "浏览器不支持history新特性，您可以选择AUTO模式或HASH_BROWSER模式");
 		}
 	},
-
 
 	/**
  push ( state: Any, url: String )
@@ -7142,7 +7687,7 @@ var browserHistory = {
  	URL doc:
  http://icejs.org/######
  */
-	push: function push(state, url) {
+	push(state, url) {
 		if (this.entity.pushState) {
 			this.entity.pushState(null, null, url);
 			this.saveState(window.location.pathname, state);
@@ -7150,7 +7695,6 @@ var browserHistory = {
 			throw envErr("history API", "浏览器不支持history新特性，您可以选择AUTO模式或HASH_BROWSER模式");
 		}
 	},
-
 
 	////////////////////////////////////
 	/// 页面刷新前的状态记录，浏览器前进/后退时将在此记录中获取相关状态信息，根据这些信息刷新页面
@@ -7169,10 +7713,9 @@ var browserHistory = {
  	URL doc:
  	http://icejs.org/######
  */
-	saveState: function saveState(pathname, state) {
+	saveState(pathname, state) {
 		this.states[pathname] = state;
 	},
-
 
 	/**
  	getState ( pathname?: String )
@@ -7186,10 +7729,9 @@ var browserHistory = {
  	URL doc:
  	http://icejs.org/######
  */
-	getState: function getState(pathname) {
+	getState(pathname) {
 		return this.states[pathname || window.location.pathname];
 	},
-
 
 	/**
  	buildURL ( path: String, mode: String )
@@ -7206,13 +7748,12 @@ var browserHistory = {
  		URL doc:
  	http://icejs.org/######
  */
-	buildURL: function buildURL(path) {
-		var pathAnchor = document.createElement("a");
+	buildURL(path) {
+		const pathAnchor = document.createElement("a");
 		pathAnchor.href = path;
 
 		return pathAnchor.pathname;
 	},
-
 
 	/**
  getPathname ()
@@ -7224,10 +7765,9 @@ var browserHistory = {
  	URL doc:
  http://icejs.org/######
  */
-	getPathname: function getPathname() {
+	getPathname() {
 		return window.location.pathname;
 	},
-
 
 	/**
     	getQuery ( path?: String )
@@ -7239,24 +7779,23 @@ var browserHistory = {
      	URL doc:
     	http://icejs.org/######
     */
-	getQuery: function getQuery(path) {
+	getQuery(path) {
 		return path && (path.match(/\?(.*)$/) || [""])[0] || window.location.search;
 	}
 };
 
 var hashHistory = {
-	init: function init() {
-		var _this = this;
 
-		event.on(window, "hashchange", function (e) {
+	init() {
+		event.on(window, "hashchange", e => {
 
 			// 如果this.pushOrRepalce为true表示为跳转触发
-			if (_this.pushOrReplace === true) {
-				_this, pushOrReplace = false;
+			if (this.pushOrReplace === true) {
+				this, pushOrReplace = false;
 				return;
 			}
 
-			var locationGuide = _this.getState();
+			const locationGuide = this.getState();
 
 			// 更新currentPage结构体对象，如果为空表示页面刚刷新，将nextStructure直接赋值给currentPage
 			Structure.currentPage.update(locationGuide.structure);
@@ -7273,7 +7812,6 @@ var hashHistory = {
 		return this;
 	},
 
-
 	/**
  	replace ( state: Any, url: String )
  	
@@ -7286,15 +7824,14 @@ var hashHistory = {
  	URL doc:
  	http://icejs.org/######
  */
-	replace: function replace(state, url) {
+	replace(state, url) {
 		this.pushOrReplace = true;
 
-		var hashPathname = this.buildURL(url);
+		const hashPathname = this.buildURL(url);
 		window.location.replace(hashPathname);
 
 		this.saveState(this.getPathname(), state);
 	},
-
 
 	/**
  	push ( state: Any, url: String )
@@ -7308,15 +7845,14 @@ var hashHistory = {
  	URL doc:
  	http://icejs.org/######
  */
-	push: function push(state, title, url) {
+	push(state, title, url) {
 		this.pushOrReplace = true;
 
-		var hashPathname = this.buildURL(url);
+		const hashPathname = this.buildURL(url);
 		window.location.hash = hashPathname;
 
 		this.saveState(this.getPathname(), state);
 	},
-
 
 	////////////////////////////////////
 	/// 页面刷新前的状态记录，浏览器前进/后退时将在此记录中获取相关状态信息，根据这些信息刷新页面
@@ -7335,10 +7871,9 @@ var hashHistory = {
  	URL doc:
  	http://icejs.org/######
  */
-	saveState: function saveState(pathname, state) {
+	saveState(pathname, state) {
 		this.states[pathname] = state;
 	},
-
 
 	/**
  	getState ( pathname?: String )
@@ -7352,10 +7887,9 @@ var hashHistory = {
  	URL doc:
  	http://icejs.org/######
  */
-	getState: function getState(pathname) {
+	getState(pathname) {
 		return this.states[pathname || this.getPathname()];
 	},
-
 
 	/**
  	buildURL ( path: String, mode: String )
@@ -7372,14 +7906,13 @@ var hashHistory = {
  		URL doc:
  	http://icejs.org/######
  */
-	buildURL: function buildURL(path, mode) {
-		var pathname = (window.location.hash || "#/").replace(path.substr(0, 1) === "/" ? /#(.*)$/ : /(?:\/)([^\/]*)?$/, function (match, rep) {
+	buildURL(path, mode) {
+		let pathname = (window.location.hash || "#/").replace(path.substr(0, 1) === "/" ? /#(.*)$/ : /(?:\/)([^\/]*)?$/, (match, rep) => {
 			return match.replace(rep, "") + path;
 		});
 
 		return mode === true ? pathname.substr(0, 1) : pathname;
 	},
-
 
 	/**
  	getPathname ()
@@ -7391,10 +7924,9 @@ var hashHistory = {
  		URL doc:
  	http://icejs.org/######
  */
-	getPathname: function getPathname() {
+	getPathname() {
 		return (window.location.hash.match(/#([^?]*)$/) || ["", ""])[1];
 	},
-
 
 	/**
  	getQuery ( path?: String )
@@ -7406,7 +7938,7 @@ var hashHistory = {
   	URL doc:
  	http://icejs.org/######
  */
-	getQuery: function getQuery(path) {
+	getQuery(path) {
 		return ((path || window.location.hash).match(/\?(.*)$/) || [""])[0];
 	}
 };
@@ -7415,13 +7947,12 @@ var iceHistory = {
 
 	history: null,
 
-	initHistory: function initHistory(historyMode) {
+	initHistory(historyMode) {
 		if (!this.history) {
 
 			this.history = (historyMode === HASH_HISTORY ? hashHistory : historyMode === BROWSER_HISTORY ? browserHistory : { init: noop }).init();
 		}
 	},
-
 
 	/**
  supportNewApi ()
@@ -7433,10 +7964,9 @@ var iceHistory = {
  	URL doc:
  http://icejs.org/######
  */
-	supportNewApi: function supportNewApi() {
+	supportNewApi() {
 		return !!window.history.pushState;
 	},
-
 
 	/**
  	replace ( state: Any, url: String )
@@ -7450,12 +7980,11 @@ var iceHistory = {
  	URL doc:
  	http://icejs.org/######
  */
-	replace: function replace(state, url) {
+	replace(state, url) {
 		if (this.history) {
 			this.history.replace(state, url);
 		}
 	},
-
 
 	/**
  	push ( state: Any, url: String )
@@ -7469,12 +7998,11 @@ var iceHistory = {
  	URL doc:
  	http://icejs.org/######
  */
-	push: function push(state, url) {
+	push(state, url) {
 		if (this.history) {
 			this.history.push(state, url);
 		}
 	},
-
 
 	/**
  	setState ( pathname: String, state: Any )
@@ -7488,10 +8016,9 @@ var iceHistory = {
  	URL doc:
  	http://icejs.org/######
  */
-	saveState: function saveState(pathname, state) {
+	saveState(pathname, state) {
 		this.history.saveState(pathname, state);
 	},
-
 
 	/**
  	getState ( pathname?: String )
@@ -7505,7 +8032,7 @@ var iceHistory = {
  	URL doc:
  	http://icejs.org/######
  */
-	getState: function getState(pathname) {
+	getState(pathname) {
 		return this.history.getState(pathname);
 	}
 };
@@ -7524,22 +8051,20 @@ function Structure$1(entity) {
 }
 
 extend(Structure$1.prototype, {
-    update: function update(structure) {
-        var _this = this;
-
-        var x = this.entity,
+    update(structure) {
+        let x = this.entity,
             y = structure.entity,
-            find = void 0;
-        var unmountModule = [];
+            find;
+        const unmountModule = [];
 
         if (x && !y || !x && y) {
-            foreach(x, function (xItem) {
+            foreach(x, xItem => {
                 unmountModule.push(xItem.module);
             });
             x = y;
         } else if (x && y) {
-            foreach(y, function (yItem, i) {
-                foreach(x, function (xItem, j) {
+            foreach(y, (yItem, i) => {
+                foreach(x, (xItem, j) => {
                     find = false;
                     if (xItem.name === yItem.name) {
                         find = true;
@@ -7556,9 +8081,9 @@ extend(Structure$1.prototype, {
                             // 标记为不更新
                             xItem.notUpdate = null;
                             if (!(!xItem.children && !yItem.children)) {
-                                xItem.children = _this.update.call({
+                                xItem.children = this.update.call({
                                     entity: xItem.children,
-                                    update: _this.update
+                                    update: this.update
                                 }, {
                                     entity: yItem.children
                                 });
@@ -7578,8 +8103,8 @@ extend(Structure$1.prototype, {
         }
 
         // call unmount
-        foreach(unmountModule, function (mod) {
-            foreach(mod.components, function (comp) {
+        foreach(unmountModule, mod => {
+            foreach(mod.components, comp => {
                 comp.unmount();
             });
 
@@ -7590,7 +8115,6 @@ extend(Structure$1.prototype, {
             return x;
         }
     },
-
 
     /**
         isEmptyStructure ()
@@ -7605,10 +8129,9 @@ extend(Structure$1.prototype, {
         URL doc:
         http://icejs.org/######
     */
-    isEmptyStructure: function isEmptyStructure() {
+    isEmptyStructure() {
         return isEmpty(this.entity);
     },
-
 
     /**
         signCurrentRender ( structureItem: Object, param: Object, args: String, data: Object )
@@ -7623,13 +8146,12 @@ extend(Structure$1.prototype, {
         URL doc:
         http://icejs.org/######
     */
-    signCurrentRender: function signCurrentRender(structureItem, param, args, data) {
+    signCurrentRender(structureItem, param, args, data) {
         structureItem.param = param;
         structureItem.get = args;
         structureItem.post = data;
         this.currentRender = structureItem;
     },
-
 
     /**
         getCurrentRender ()
@@ -7644,10 +8166,9 @@ extend(Structure$1.prototype, {
         URL doc:
         http://icejs.org/######
     */
-    getCurrentRender: function getCurrentRender() {
+    getCurrentRender() {
         return this.currentRender;
     },
-
 
     /**
         saveSubModuleNode ( node: DOMObject )
@@ -7661,8 +8182,8 @@ extend(Structure$1.prototype, {
         URL doc:
         http://icejs.org/######
     */
-    saveSubModuleNode: function saveSubModuleNode(node) {
-        foreach(this.currentRender.children, function (child) {
+    saveSubModuleNode(node) {
+        foreach(this.currentRender.children, child => {
             if (child.name === (node.attr(iceAttr.module) || "default") && !child.moduleNode) {
                 child.moduleNode = elem;
 
@@ -7670,7 +8191,6 @@ extend(Structure$1.prototype, {
             }
         });
     },
-
 
     /**
         copy ()
@@ -7684,20 +8204,15 @@ extend(Structure$1.prototype, {
         URL doc:
         http://icejs.org/######
     */
-    copy: function copy() {
-        var _this2 = this;
+    copy(entity = this.entity, parent = null) {
+        const copyEntity = [];
 
-        var entity = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.entity;
-        var parent = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+        foreach(entity, item => {
+            const copyItem = {};
 
-        var copyEntity = [];
-
-        foreach(entity, function (item) {
-            var copyItem = {};
-
-            foreach(item, function (v, k) {
+            foreach(item, (v, k) => {
                 if (k === "children") {
-                    copyItem.children = _this2.copy(v, copyItem);
+                    copyItem.children = this.copy(v, copyItem);
                 } else if (k === "parent") {
                     copyItem.parent = parent;
                 } else {
@@ -7711,7 +8226,6 @@ extend(Structure$1.prototype, {
         return parent ? copyEntity : new Structure$1(copyEntity);
     },
 
-
     /**
            render ( location: Object )
        
@@ -7724,9 +8238,9 @@ extend(Structure$1.prototype, {
            URL doc:
            http://icejs.org/######
        */
-    render: function render(location) {
+    render(location) {
 
-        var locationGuide = {
+        const locationGuide = {
             structure: location.nextStructure,
             param: location.param,
             get: location.get,
@@ -7738,7 +8252,6 @@ extend(Structure$1.prototype, {
         moduleLoader = new ModuleLoader();
 
         moduleLoader.load(this, { param: location.param, get: location.get, post: location.post });
-
         switch (location.action) {
             case "PUSH":
                 iceHistory.push(locationGuide, location.path);
@@ -7763,12 +8276,10 @@ function Router(finger) {
 }
 
 extend(Router.prototype, {
-    module: function module() {
-        var moduleName = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "default";
-
+    module(moduleName = "default") {
         check(moduleName).type("string").notBe("").ifNot("Router.module", "模块名必须为不为空的字符串").do();
 
-        foreach(this.finger, function (routeItem) {
+        foreach(this.finger, routeItem => {
             if (routeItem.name === moduleName) {
                 throw RouterErr("moduleName", "同级模块的名字不能重复");
             }
@@ -7782,14 +8293,15 @@ extend(Router.prototype, {
 
         return this;
     },
-    route: function route(pathExpr, modulePath, childDefineFunc) {
+
+    route(pathExpr, modulePath, childDefineFunc) {
         check(pathExpr).type("string", "array").ifNot("Router.route", "pathExpr参数必须为字符串或数组");
 
         if (!this.routeItem) {
             throw RouterErr("Router.module", "调用route()前必须先调用module()定义模块路由");
         }
 
-        var route = {
+        let route = {
             modulePath: modulePath,
             path: Router.pathToRegexp(pathExpr)
         };
@@ -7802,14 +8314,16 @@ extend(Router.prototype, {
 
         return this;
     },
-    defaultRoute: function defaultRoute(modulePath) {
+
+    defaultRoute(modulePath) {
         this.route("", modulePath);
 
         return this;
     },
-    redirect: function redirect(from, to) {
-        var redirect = void 0;
-        foreach(this.finger, function (routeItem) {
+
+    redirect(from, to) {
+        let redirect;
+        foreach(this.finger, routeItem => {
             if (routeItem.redirect) {
                 redirect = routeItem;
                 return false;
@@ -7824,18 +8338,21 @@ extend(Router.prototype, {
             this.finger.push(redirect);
         }
 
-        redirect.redirect.push({ from: Router.pathToRegexp(from, "redirect"), to: to });
+        redirect.redirect.push({ from: Router.pathToRegexp(from, "redirect"), to });
 
         return this;
     },
-    forcedRender: function forcedRender() {
+
+    forcedRender() {
         this.routeItem.forcedRender = null;
         return this;
     },
-    error404: function error404(path404) {
+
+    error404(path404) {
         Router.errorPaths.error404 = path404;
     },
-    error500: function error500(path500) {
+
+    error500(path500) {
         Router.errorPaths.error500 = path500;
     }
 });
@@ -7844,11 +8361,12 @@ extend(Router, {
     routeTree: [],
     errorPaths: {},
 
-    getError: function getError(errorCode) {
+    getError(errorCode) {
         return this.errorPaths["error" + errorCode];
     },
-    pathToRegexp: function pathToRegexp(pathExpr, from) {
-        var i = 1,
+
+    pathToRegexp(pathExpr, from) {
+        let i = 1,
             pathObj = { param: {} },
 
 
@@ -7864,7 +8382,7 @@ extend(Router, {
             i++;
         }
 
-        pathObj.regexp = new RegExp("^" + pathExpr.replace("/", "\\/").replace(/:([\w$]+)(?:(\(.*?\)))?/g, function (match, rep1, rep2) {
+        pathObj.regexp = new RegExp("^" + pathExpr.replace("/", "\\/").replace(/:([\w$]+)(?:(\(.*?\)))?/g, (match, rep1, rep2) => {
             pathObj.param[rep1] = i++;
 
             return rep2 || "([^\\/]+)";
@@ -7873,33 +8391,25 @@ extend(Router, {
         return pathObj;
     },
 
-
     // 路由路径嵌套模型
     // /settings => /\/settings/、/settings/:page => /\/settings/([^\\/]+?)/、/settings/:page(\d+)
-    matchRoutes: function matchRoutes(path, param) {
-        var routeTree = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : this.routeTree;
-
-        var _this = this;
-
-        var parent = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
-        var matchError404 = arguments[4];
-
+    matchRoutes(path, param, routeTree = this.routeTree, parent = null, matchError404) {
         // [ { module: "...", modulePath: "...", parent: ..., param: {}, children: [ {...}, {...} ] } ]
-        var routes = [],
-            entityItem = void 0;
+        let routes = [],
+            entityItem;
 
-        foreach(routeTree, function (route) {
+        foreach(routeTree, route => {
             if (route.hasOwnProperty("redirect")) {
-                var isContinue = true;
+                let isContinue = true;
 
-                foreach(route.redirect, function (redirect) {
+                foreach(route.redirect, redirect => {
 
-                    path = path.replace(redirect.from.regexp, function () {
+                    path = path.replace(redirect.from.regexp, (...match) => {
                         isContinue = false;
-                        var to = redirect.to;
+                        let to = redirect.to;
 
-                        foreach(redirect.from.param, function (i, paramName) {
-                            to = to.replace(":" + paramName, matchPath[i]);
+                        foreach(redirect.from.param, (i, paramName) => {
+                            to = to.replace(`:${paramName}`, matchPath[i]);
                         });
 
                         return to;
@@ -7912,9 +8422,9 @@ extend(Router, {
             }
         });
 
-        foreach(routeTree, function (route) {
-            foreach(route.routes, function (pathReg) {
-                var matchPath = void 0,
+        foreach(routeTree, route => {
+            foreach(route.routes, pathReg => {
+                let matchPath,
                     isContinue = true;
 
                 entityItem = {
@@ -7922,7 +8432,7 @@ extend(Router, {
                     modulePath: pathReg.modulePath,
                     moduleNode: null,
                     module: null,
-                    parent: parent
+                    parent
                 };
 
                 if (route.hasOwnProperty("forcedRender")) {
@@ -7933,7 +8443,7 @@ extend(Router, {
                     isContinue = false;
 
                     param[route.name] = param[route.name] || {};
-                    foreach(pathReg.path.param, function (i, paramName) {
+                    foreach(pathReg.path.param, (i, paramName) => {
                         param[route.name][paramName] = matchPath[i];
                     });
 
@@ -7941,7 +8451,7 @@ extend(Router, {
                 }
 
                 if (type$1(pathReg.children) === "array") {
-                    var children = _this.matchRoutes(matchPath ? path.replace(matchPath[0], "") : path, param, pathReg.children, entityItem);
+                    let children = this.matchRoutes(matchPath ? path.replace(matchPath[0], "") : path, param, pathReg.children, entityItem);
 
                     if (!isEmpty(children)) {
                         entityItem.children = children;
@@ -7986,17 +8496,17 @@ function requestEventHandler(path, method, post) {
 
     if (method === "GET") {
 
-        var param = {},
-            nextStructure = Router.matchRoutes(path, param);
+        const param = {},
+              nextStructure = Router.matchRoutes(path, param);
 
         if (!nextStructure.isEmptyStructure()) {
-            var location = {
-                path: path,
+            const location = {
+                path,
                 nextStructure: nextStructure.copy(),
-                param: param,
+                param,
                 get: iceHistory.history.getQuery(path),
-                post: post,
-                method: method,
+                post,
+                method,
                 action: "PUSH"
             };
 
@@ -8008,7 +8518,7 @@ function requestEventHandler(path, method, post) {
         }
     } else if (method === "POST") {
         // post提交数据
-        http.post(path, post, function (redirectPath) {
+        http.post(path, post, redirectPath => {
             if (redirectPath) {
                 redirectPath = iceHistory.history.buildURL(redirectPath);
 
@@ -8024,24 +8534,24 @@ var ice = {
 				// 路由模式，启动路由时可进行模式配置
 				// 自动选择路由模式(默认)
 				// 在支持html5 history API时使用新特性，不支持的情况下自动回退到hash模式
-				AUTO: AUTO,
+				AUTO,
 
 				// 强制使用hash模式
-				HASH_HISTORY: HASH_HISTORY,
+				HASH_HISTORY,
 
 				// 强制使用html5 history API模式
 				// 使用此模式时需注意：在不支持新特新的浏览器中是不能正常使用的
-				BROWSER_HISTORY: BROWSER_HISTORY,
+				BROWSER_HISTORY,
 
 				// Module对象
-				Module: Module,
+				Module,
 
 				// Component对象
-				Component: Component,
+				Component,
 
 				// Class类构造器
 				// 用于创建组件类
-				Class: Class,
+				Class,
 
 				/**
     	start ( rootModuleName: String, routerConfig: Object )
@@ -8055,9 +8565,7 @@ var ice = {
     	URL doc:
     	http://icejs.org/######
     */
-				startRouter: function startRouter() {
-								var routerConfig = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
+				startRouter(routerConfig = {}) {
 
 								// 纠正参数
 								// correctParam ( rootModuleName, routerConfig ).to ( "string", "object" ).done ( function () {
@@ -8087,8 +8595,8 @@ var ice = {
 								iceHistory.initHistory(routerConfig.history);
 
 								// 当使用hash模式时纠正路径
-								var href = window.location.href,
-								    host = window.location.protocol + "//" + window.location.host + "/";
+								const href = window.location.href,
+								      host = window.location.protocol + "//" + window.location.host + "/";
 
 								if (routerConfig.history === HASH_HISTORY && href !== host && href.indexOf(host + "#") === -1) {
 												if (window.location.hash) {
@@ -8104,11 +8612,11 @@ var ice = {
 								configuration(routerConfig);
 
 								// 绑定元素请求或提交表单的事件到body元素上
-								event.on(document.body, "click submit", function (e) {
+								event.on(document.body, "click submit", e => {
 
-												var target = e.target,
-												    path = attr(target, e.type.toLowerCase() === "submit" ? iceAttr.action : iceAttr.href),
-												    method = e.type.toLowerCase() === "submit" ? attr(target, "method").toUpperCase() : "GET";
+												const target = e.target,
+												      path = attr(target, e.type.toLowerCase() === "submit" ? iceAttr.action : iceAttr.href),
+												      method = e.type.toLowerCase() === "submit" ? attr(target, "method").toUpperCase() : "GET";
 
 												if (path) {
 																e.preventDefault();
@@ -8117,12 +8625,12 @@ var ice = {
 												}
 								});
 
-								var param = {},
-								    path = iceHistory.history.getPathname(),
-								    location = {
-												path: path,
+								const param = {},
+								      path = iceHistory.history.getPathname(),
+								      location = {
+												path,
 												nextStructure: Router.matchRoutes(path, param),
-												param: param,
+												param,
 												get: iceHistory.history.getQuery(),
 												post: {},
 												method: "GET",
@@ -8136,7 +8644,6 @@ var ice = {
 								// 根据更新后的页面结构体渲染新视图
 								Structure$1.currentPage.render(location);
 				},
-
 
 				/**
     install ( pluginDefinition: Object )
@@ -8152,12 +8659,12 @@ var ice = {
     URL doc:
     http://icejs.org/######
     */
-				install: function install(pluginDefiniton) {
+				install(pluginDefiniton) {
 								check(pluginDefiniton.name).type("string").notBe("").check(cache.hasPlugin(pluginDefiniton.name)).be(false).ifNot("pluginDefiniton.name", "plugin安装对象必须定义name属性以表示此插件的名称，且不能与已有插件名称重复").do();
 
 								check(pluginDefiniton.build).type("function").ifNot("pluginDefiniton.build", "plugin安装对象必须包含build方法").do();
 
-								var deps = cache.getDependentPlugin(pluginDefiniton.build);
+								const deps = cache.getDependentPlugin(pluginDefiniton.build);
 
 								cache.pushPlugin(pluginDefiniton.name, pluginDefiniton.build.apply(this, deps));
 				}

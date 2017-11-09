@@ -87,7 +87,8 @@ extend ( ComponentLoader.prototype, {
 		foreach ( this.load.deps, dep => {
 
 			// 查找插件
-			deps [ dep ] = cache.getComponent ( dep );
+			deps [ dep ] = window.components [ dep ];
+			delete window.components [ dep ];
 		} );
 
 		// 返回注入后工厂方法
