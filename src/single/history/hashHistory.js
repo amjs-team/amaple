@@ -1,9 +1,6 @@
-import { foreach, type, noop } from "../../func/util";
-import { query } from "../../func/node";
-import configuration from "../../core/configuration/core";
 import event from "../../event/core";
-import { HASH_HISTORY, BROWSER_HISTORY } from "./historyMode";
-import browserHistory from "./browserHistory";
+import Router from "../../router/core";
+
 
 export default {
 	
@@ -12,17 +9,30 @@ export default {
         	
         	// 如果this.pushOrRepalce为true表示为跳转触发
         	if ( this.pushOrReplace === true ) {
-            	this,pushOrReplace = false;
+            	this.pushOrReplace = false;
             	return;
             }
         	
-    	    const locationGuide = this.getState ();
-        	
-    	   	// 更新currentPage结构体对象，如果为空表示页面刚刷新，将nextStructure直接赋值给currentPage
-    		Structure.currentPage.update ( locationGuide.structure );
+    	    let locationGuide = this.getState ();
+    	    if ( !locationGuide ) {
+	    	    const 
+	    	    	path = window.location.pathname,
+	    	    	param = {},
+	    			structure = Router.matchRoutes ( path, param );
+
+	    		locationGuide = {
+	    			structure,
+	    			param,
+	    			get : this.getQuery ( path ),
+	    			post : {}
+	    		};
+
+	    		this.saveState ( locationGuide, path );
+    	    }
     	   	
     	   	// 根据更新后的页面结构体渲染新视图
     	   	Structure.currentPage.render ( {
+    			nextStructure : locationGuide.structure.copy (),
             	param : locationGuide.param,
             	get : locationGuide.get,
     	       	post : locationGuide.post,
@@ -51,7 +61,7 @@ export default {
 		const hashPathname = this.buildURL ( url );
 		window.location.replace ( hashPathname );
 
-		this.saveState ( this.getPathname (), state );
+		this.saveState ( state, this.getPathname () );
 	},
 
 	/**
@@ -72,7 +82,7 @@ export default {
 		const hashPathname = this.buildURL ( url );
 		window.location.hash = hashPathname;
 
-		this.saveState ( this.getPathname (), state );
+		this.saveState ( state, this.getPathname () );
 	},
 
 	////////////////////////////////////
@@ -81,7 +91,7 @@ export default {
 	states : {},
 
 	/**
-		setState ( pathname: String, state: Any )
+		setState ( state: Any, pathname: String )
 		
 		Return Type:
 		void
@@ -92,7 +102,7 @@ export default {
 		URL doc:
 		http://icejs.org/######
 	*/
-	saveState ( pathname, state ) {
+	saveState ( state, pathname ) {
 		this.states [ pathname ] = state;
 	},
 

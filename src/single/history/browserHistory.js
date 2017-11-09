@@ -1,6 +1,7 @@
 import { envErr } from "../../error";
 import event from "../../event/core";
 import Structure from "../../core/tmpl/Structure";
+import Router from "../../router/core";
 
 export default {
 	
@@ -9,13 +10,27 @@ export default {
 	
 	init () {
     	event.on ( window, "popstate", e => {
-    	    const locationGuide = this.getState ();
-        	
-    		// 更新currentPage结构体对象，如果为空表示页面刚刷新，将nextStructure直接赋值给currentPage
-    		Structure.currentPage.update ( locationGuide.structure );
+    	    let locationGuide = this.getState ();
+
+    	    if ( !locationGuide ) {
+	    	    const 
+	    	    	path = window.location.pathname,
+	    	    	param = {},
+	    			structure = Router.matchRoutes ( path, param );
+
+	    		locationGuide = {
+	    			structure,
+	    			param,
+	    			get : this.getQuery ( path ),
+	    			post : {}
+	    		};
+
+	    		this.saveState ( locationGuide, path );
+    	    }
     	   	
     	   	// 根据更新后的页面结构体渲染新视图
     	   	Structure.currentPage.render ( {
+    			nextStructure : locationGuide.structure.copy (),
             	param : locationGuide.param,
     	       	get : locationGuide.get,
     	       	post : locationGuide.post,
@@ -41,7 +56,7 @@ export default {
 	replace ( state, url ) {
 		if ( this.entity.pushState ) {
 			this.entity.replaceState ( null, null, url );
-			this.saveState ( window.location.pathname, state );
+			this.saveState ( state, window.location.pathname );
         }
     	else {
         	throw envErr ( "history API", "浏览器不支持history新特性，您可以选择AUTO模式或HASH_BROWSER模式" );
@@ -63,7 +78,7 @@ export default {
 	push ( state, url ) {
     	if ( this.entity.pushState ) {
 			this.entity.pushState ( null, null, url );
-			this.saveState ( window.location.pathname, state );
+			this.saveState ( state, window.location.pathname );
         }
     	else {
         	throw envErr ( "history API", "浏览器不支持history新特性，您可以选择AUTO模式或HASH_BROWSER模式" );
@@ -76,7 +91,7 @@ export default {
 	states : {},
 
 	/**
-		setState ( pathname: String, state: Any )
+		setState ( state: Any, pathname: String )
 		
 		Return Type:
 		void
@@ -87,7 +102,7 @@ export default {
 		URL doc:
 		http://icejs.org/######
 	*/
-	saveState ( pathname, state ) {
+	saveState ( state, pathname ) {
 		this.states [ pathname ] = state;
 	},
 

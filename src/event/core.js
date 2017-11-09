@@ -135,26 +135,28 @@ export default {
 			listener.useCapture = !!useCapture;
 		}
 
-		let events;
-
 		// 多个事件拆分绑定
 		( types || "" ).replace ( rword, type => {
 
 			if ( elem ) {
 				elem [ expando ] = elem [ expando ] || {};
-				events = elem [ expando ] [ type ] = elem [ expando ] [ type ] || [];
-				events.push ( listener );
+				const events = elem [ expando ] [ type ] = elem [ expando ] [ type ] || [];
+
+				// 元素对象存在，且元素支持浏览器事件时绑定事件，以方便浏览器交互时触发事件
+				// 元素不支持时属于自定义事件，需手动调用event.emit()触发事件
+				// IE.version >= 9
+				if ( elem && this.support ( type, elem ) && elem.addEventListener && events.length <= 0 ) {
+					handler.event = this;
+					elem.addEventListener ( type, handler, !!useCapture );
+				}
+
+				// 避免绑定相同的事件函数
+				if ( events.indexOf ( listener ) === -1 ) {
+					events.push ( listener );
+				}
 			}
 			else {
 				cache.pushEvent ( type, listener );
-			}
-
-			// 元素对象存在，且元素支持浏览器事件时绑定事件，以方便浏览器交互时触发事件
-			// 元素不支持时属于自定义事件，需手动调用event.emit()触发事件
-			// IE.version >= 9
-			if ( elem && this.support ( type, elem ) && elem.addEventListener ) {
-				handler.event = this;
-				elem.addEventListener ( type, handler, !!useCapture );
 			}
 		} );
 	},

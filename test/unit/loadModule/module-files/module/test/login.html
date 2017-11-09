@@ -1,22 +1,22 @@
-<Module :title="登录" :belong="test">
+<Module :title="登录">
 	<template>
 		<div>
 		<form action="post/login" name="login_form" method="post">
-				<ul>
-					<li>
-						<label>{{ luserName }}</label><input type="text" name="user_name" :model="userName" />
-						<span>{{ userName }}</span>
-					</li>
-					<li>
-						<label>{{ lpwd }}</label><input type="password" name="password" :model="password" />
-						<span>{{ password }}</span>
-					</li>
-					<li>
-						<submit-button text="{{ btnOpts.btnText }}"></submit-button>
-						<input type="submit" value="{{ btnOpts.btnText }}">
-					</li>
-				</ul>
-			</form>
+			<ul>
+				<li>
+					<label>{{ luserName }}</label><input type="text" name="user_name" :model="userName" />
+					<span>{{ userName }}</span>
+				</li>
+				<li>
+					<label>{{ lpwd }}</label><input type="password" name="password" :model="password" />
+					<span>{{ password }}</span>
+				</li>
+				<li>
+					<submit-button text="{{ btnOpts.btnText }}"></submit-button>
+					<input type="submit" value="{{ btnOpts.btnText }}">
+				</li>
+			</ul>
+		</form>
 		</div>
 	</template>
 
@@ -69,6 +69,10 @@
 						animate.Linear ( this.state.style.opacity, 1, 1000 );
 					},
 				};
+			},
+
+			unmount () {
+				console.log( "login unmount" );
 			},
 
 			// 要操作模块内的dom，可调用该函数，参数this.moduleElem为module对应的元素封装，可链式调用

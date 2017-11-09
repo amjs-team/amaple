@@ -41,8 +41,8 @@ extend ( Structure.prototype, {
             		find = false;
             		if ( xItem.name === yItem.name ) {
                 		find = true;
+                        y [ i ] = xItem;
                 		if ( xItem.modulePath !== yItem.modulePath ) {
-                        	
                         	unmountModule.push ( xItem.module );
                     	
                     		// 模块名相同但模块内容不同的时候表示此模块需更新为新模块及子模块内容
@@ -50,10 +50,10 @@ extend ( Structure.prototype, {
                             xItem.module = null;
                     	}
                 		else {
-                    	
-                    		// 模块名和模块内容都相同的时候只表示此模块不需更新，还需进一步比较子模块
-                        	// 标记为不更新
-                        	xItem.notUpdate = null;
+                            // 模块名和模块内容都不同的时候只表示此模块需更新，还需进一步比较子模块
+                            // 标记为更新
+                            xItem.notUpdate = null;
+
                     		if ( !( !xItem.children && !yItem.children ) ) {
                     			xItem.children = this.update.call ( {  
                         			entity : xItem.children,
@@ -217,17 +217,24 @@ extend ( Structure.prototype, {
 	render ( location ) {
 
         const 
-            locationGuide = {
-            structure : location.nextStructure, 
-                param : location.param,
-                get : location.get,
-                post : serialize ( location.post )
-            },
+            locationGuide = {},
 
             // 使用模块加载器来加载更新模块
             moduleLoader = new ModuleLoader ();
-        
-        moduleLoader.load ( this, { param : location.param, get : location.get, post : location.post } );
+
+        if ( location.action !== "POP" ) {
+            locationGuide.structure = location.nextStructure.copy ();
+            locationGuide.param = location.param;
+            locationGuide.get = location.get;
+            locationGuide.post = serialize ( location.post );
+        }
+
+        if ( Structure.currentPage !== location.nextStructure ) {
+            
+            // 更新currentPage结构体对象
+            Structure.currentPage.update ( location.nextStructure );
+        }
+        moduleLoader.load ( location.nextStructure, { param : location.param, get : location.get, post : location.post } );
         switch ( location.action ) {
             case "PUSH":
                 iceHistory.push ( locationGuide, location.path );
@@ -238,7 +245,7 @@ extend ( Structure.prototype, {
                 
                 break;
             case "NONE":
-                iceHistory.saveState ( location.path, locationGuide );
+                iceHistory.saveState ( locationGuide, location.path );
 
                 break;
             case "POP":

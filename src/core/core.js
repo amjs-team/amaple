@@ -39,7 +39,7 @@ export default {
 
 	// Class类构造器
 	// 用于创建组件类
-	Class,
+	class : Class,
 	
 	/**
 		start ( rootModuleName: String, routerConfig: Object )
@@ -109,10 +109,10 @@ export default {
 	       		path = attr ( target, e.type.toLowerCase () === "submit" ? iceAttr.action : iceAttr.href ),
 	        	method = e.type.toLowerCase () === "submit" ? attr ( target, "method" ).toUpperCase () : "GET";
 
-	        if ( path ) {
-	        	e.preventDefault ();
-
-	        	requestEventHandler ( iceHistory.history.buildURL ( path ), method, method.toLowerCase () === "post" ? target : {} );
+	        if ( path && !/#/.test ( path ) ) {
+	        	if ( requestEventHandler ( iceHistory.history.buildURL ( path ), method, method.toLowerCase () === "post" ? target : {} ) !== false ) {
+	        		e.preventDefault ();
+	        	}
 	        }
         } );
     	
@@ -133,7 +133,7 @@ export default {
 
     	// Router.matchRoutes()匹配当前路径需要更新的模块
 		// 因路由刚启动，故将nextStructure直接赋值给currentPage
-    	Structure.currentPage = location.nextStructure.copy ();
+    	Structure.currentPage = location.nextStructure;
 
     	// 根据更新后的页面结构体渲染新视图
     	Structure.currentPage.render ( location );

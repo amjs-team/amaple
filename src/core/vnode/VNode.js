@@ -344,6 +344,12 @@ extend ( VNode.prototype, {
                                 attr ( this.node, attrNode.name, null );
                             }
                         } );
+
+                        foreach ( this.events, ( handlers, type ) => {
+                            foreach ( handlers, handler => {
+                                event.on ( this.node, type, handler );
+                            } );
+                        } );
                     }
                 }
             	

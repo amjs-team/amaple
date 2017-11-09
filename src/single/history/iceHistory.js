@@ -75,7 +75,7 @@ export default {
 	},
 
 	/**
-		setState ( pathname: String, state: Any )
+		setState ( state: Any, pathname: String )
 		
 		Return Type:
 		void
@@ -86,8 +86,8 @@ export default {
 		URL doc:
 		http://icejs.org/######
 	*/
-	saveState ( pathname, state ) {
-		this.history.saveState ( pathname, state );
+	saveState ( state, pathname ) {
+		this.history.saveState ( state, pathname );
 	},
 
 	/**

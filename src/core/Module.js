@@ -58,7 +58,7 @@ function findParentVm ( elem ) {
 function initModuleLifeCycle ( module, vm, moduleElem ) {
     const
     	// Module生命周期
-		lifeCycle = [ "queryChanged", "paramChanged", "unmount" ],
+		lifeCycle = [ "queryUpdated", "paramUpdated", "unmount" ],
         lifeCycleContainer = {};
             
     foreach ( lifeCycle, cycleItem => {
@@ -88,28 +88,18 @@ function initModuleLifeCycle ( module, vm, moduleElem ) {
 	创建模块对象初始化模块
     初始化包括转换监听对象，动态绑定数据到视图层
     module可传入：
-	1、module属性名，普通模式时的模块名，此方法将会根据模块名获取dom元素
-	2、实际dom和fragment，此方法将直接解析此元素
-	3、虚拟dom，只有单页模式时会传入此类参数
+	1、实际dom和fragment，此方法将直接解析此元素
+	2、虚拟dom，只有单页模式时会传入此类参数
 
 	URL doc:
 	http://icejs.org/######
 */
-export default function Module ( module, vmData = { init: function () { return {}; } } ) {
+export default function Module ( moduleElem, vmData = { init: function () { return {}; } } ) {
 
 	newClassCheck ( this, Module );
 	
-	const developMode = module instanceof VNode ? DEVELOP_SINGLE : DEVELOP_COMMON;
-	let moduleElem = {}, 
-		parent, moduleElemBackup;
-
-
-    if ( type ( module ) === "string" ) {
-    	moduleElem = queryModuleNode ( module );
-    }
-    else if ( module.nodeType === 1 || module.nodeType === 3 || module.nodeType === 11 ) {
-        moduleElem = module;
-    }
+	const developMode = moduleElem instanceof VNode ? DEVELOP_SINGLE : DEVELOP_COMMON;
+	let parent, moduleElemBackup;
       	
 	// 检查参数
 	if ( moduleElem ) {
@@ -127,9 +117,9 @@ export default function Module ( module, vmData = { init: function () { return {
     	// 只有单页模式时Structure.currentPage会有值
 		// 单页模式时，使用Structure.currentPage.getCurrentParentVm()获取父级的vm
 		const currentRender = Structure.currentPage.getCurrentRender ();
-    	parent = currentRender.parent && currentRender.parent.module.vm;
+    	parent = currentRender.parent && currentRender.parent.module.state;
 		
-        this.params = currentRender.param;
+        this.param = currentRender.param;
         this.get = parseGetQuery ( currentRender.get );
         this.post = currentRender.post;
     	

@@ -3,21 +3,21 @@
 	<!-- 模块页面模板 -->
 	<template>
 		<!-- 表格组件渲染 -->
-		<edit-table t-th="{{ title }}" t-tr="{{ content }}"></edit-table>
+		<!-- <edit-table t-th="{{ title }}" t-tr="{{ content }}"></edit-table> -->
 		<div class="abc">{{ title }} {{ content }}</div>
 		<a href="login">{{ btn }}</a>
 		<ul id="a87">
 			<li :for="t in title">{{ t }}</li>
 		</ul>
 		<!-- 翻页组件渲染 -->
-		<page-ctrl options="{{ pageCtrl }}" setPage="{{ setPage }}"></page-ctrl>
+		<!-- <page-ctrl options="{{ pageCtrl }}" setPage="{{ setPage }}"></page-ctrl> -->
 	</template>
 	
 
 	<!-- 此模板对应的数据 -->
 	<script>
-		var EditTable = import ( "component/EditTable" ), 
-			PageCtrl = import ( "component/PageCtrl" );
+		// var EditTable = import ( "component/EditTable" ), 
+			// PageCtrl = import ( "component/PageCtrl" );
 
 		var table = new ice.Module ( {
 			init : function () {
@@ -44,6 +44,10 @@
 	                	this.content.push ( ["Sex"] );
 	                }
 				};
+			},
+
+			unmount () {
+				console.log( "table unmount" );
 			}
 		} );
 	</script>
