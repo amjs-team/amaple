@@ -208,7 +208,7 @@ extend ( NodePatcher.prototype, {
                     	
                     	// 移动操作的组件需调用组件的update生命周期函数
                     	if ( patchItem.isMove && patchItem.item.isComponent ) {
-                        	patchItem.item.component.update ();
+                        	patchItem.item.component.__update__ ();
                         }
                     }
                 	else {
@@ -234,7 +234,7 @@ extend ( NodePatcher.prototype, {
                     	
                     	// 移除的组件需调用unmount生命周期函数
                     	if ( patchItem.item.isComponent ) {
-                    		patchItem.item.component.unmount ();
+                    		patchItem.item.component.__unmount__ ();
                     	}
                     }
                 	else {

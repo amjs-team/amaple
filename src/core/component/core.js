@@ -8,6 +8,7 @@ import ViewModel from "../ViewModel";
 import componentConstructor from "./componentConstructor";
 import Tmpl from "../tmpl/Tmpl";
 import cache from "../../cache/core";
+import NodeTransaction from "../vnode/NodeTransaction";
 
 export default function Component () {
 
@@ -74,11 +75,9 @@ extend ( Component.prototype, {
                 if ( type ( nameObj ) === "string" ) {
                     nameObj = { elem : nameObj, multiple: false };
                 }
-
-                   if ( !rcomponentName.test ( nameObj.elem ) ) {
-					throw componentErr ( "subElements", "组件子元素名\"" + nameObj.elem + "\"定义错误，组件子元素名的定义规则与组件名相同，需遵循首字母大写的驼峰式" );
+                if ( !rcomponentName.test ( nameObj.elem ) ) {
+                    throw componentErr ( "subElements", "组件子元素名\"" + nameObj.elem + "\"定义错误，组件子元素名的定义规则与组件名相同，需遵循首字母大写的驼峰式" );
                 }
-                	
                 subElementNames [ nameObj.elem ] = nameObj.multiple;
             } );
 
@@ -124,7 +123,23 @@ extend ( Component.prototype, {
 
         vfragment.diff ( vfragmentBackup ).patch ();
     },
-	
+
+    __update__ () {
+        const nt = new NodeTransaction ().start ();
+        this.lifeCycle.update ();
+        nt.commit ();
+    },
+
+    __unmount__ () {
+        if ( this.components.length > 0 ) {
+            foreach ( this.components, comp => {
+                comp.__unmount__ ();
+            } );
+        }
+
+        this.lifeCycle.unmount ();
+    },
+
     /**
         depComponents ( comps: Array )
     
@@ -137,17 +152,17 @@ extend ( Component.prototype, {
         URL doc:
         http://icejs.org/######
     */
-	depComponents ( ...comps ) {
-    	this.components = [];
-    	
-    	foreach ( comps, comp => {
-        	if ( comp && comp.__proto__.name === "Component" ) {
-            	this.components.push ( comp );
+    depComponents ( ...comps ) {
+        this.components = [];
+        
+        foreach ( comps, comp => {
+            if ( comp && comp.__proto__.name === "Component" ) {
+                this.components.push ( comp );
             }
-        	else if ( type ( comp ) === "string" ) {
-            	const compObj = cache.getComponent ( comp );
-            	if ( compObj && compObj.__proto__.name === "Component" ) {
-           			this.components.push ( compObj );
+            else if ( type ( comp ) === "string" ) {
+                const compObj = cache.getComponent ( comp );
+                if ( compObj && compObj.__proto__.name === "Component" ) {
+                    this.components.push ( compObj );
                 }
             }
         } );

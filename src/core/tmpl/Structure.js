@@ -16,6 +16,15 @@ import NodeTransaction from "../../core/vnode/NodeTransaction";
 // ]
 
 
+function unmountStructure ( structure ) {
+    foreach ( structure, structureItem => {
+        if ( structureItem.children && structureItem.children.length > 0 ) {
+            unmountStructure ( structureItem.children );
+        }
+
+        structureItem.module.unmount ();
+    } );
+}
 
 
 export default function Structure ( entity ) {
@@ -27,11 +36,11 @@ extend ( Structure.prototype, {
     	let x = this.entity,
 			y = structure.entity,
             find;
-    	const unmountModule = [];
+    	const readToUnmount = [];
     	
     	if ( ( x && !y ) || ( !x && y ) ) {
         	foreach ( x, xItem => {
-            	unmountModule.push ( xItem.module );
+            	readToUnmount.push ( xItem );
             } );
 			x = y;
         }
@@ -42,7 +51,7 @@ extend ( Structure.prototype, {
             		if ( xItem.name === yItem.name ) {
                 		find = true;
                 		if ( xItem.modulePath !== yItem.modulePath ) {
-                        	unmountModule.push ( xItem.module );
+                        	readToUnmount.push ( xItem );
 
                             // 模块名相同但模块内容不同的时候表示此模块需更新为新模块及子模块内容
                             yItem.moduleNode = xItem.moduleNode;
@@ -77,14 +86,8 @@ extend ( Structure.prototype, {
         	} );
         }
     	
-    	// call unmount
-    	foreach ( unmountModule, mod => {
-        	foreach ( mod.components, comp => {
-            	comp.unmount ();
-            } );
-        	
-        	mod.unmount ();
-        } );
+        // 调用结构卸载函数
+    	unmountStructure ( readToUnmount );
     	
     	if ( !this instanceof Structure ) {
         	return x;
@@ -106,65 +109,6 @@ extend ( Structure.prototype, {
     */
     isEmptyStructure () {
         return isEmpty ( this.entity );
-    },
-
-    /**
-        signCurrentRender ( structureItem: Object, param: Object, args: String, data: Object )
-        
-        Return Type:
-        void
-    
-        Description:
-        标记当前正在渲染的页面结构项并传递对应的参数到正在渲染的模块内
-        这样可以使创建Module对象时获取父级的vm，和保存扫描到的moduleNode
-    
-        URL doc:
-        http://icejs.org/######
-    */
-    signCurrentRender ( structureItem, param, args, data ) {
-    	structureItem.param = param;
-    	structureItem.get = args;
-        structureItem.post = data;
-        this.currentRender = structureItem;
-    },
-	
-    /**
-        getCurrentRender ()
-    
-        Return Type:
-        Object
-        当前结构项
-    
-        Description:
-        获取当前正在渲染的页面结构项
-    
-        URL doc:
-        http://icejs.org/######
-    */
-	getCurrentRender () {
-    	return this.currentRender;
-    },
-
-    /**
-        saveSubModuleNode ( node: DOMObject )
-    
-        Return Type:
-        void
-    
-        Description:
-        保存扫描到的模块节点对象以便下次使用时直接获取
-    
-        URL doc:
-        http://icejs.org/######
-    */
-    saveSubModuleNode ( node ) {
-    	foreach ( this.currentRender.children, child => {
-        	if ( child.name === ( node.attr ( iceAttr.module ) || "default" ) && !child.moduleNode ) {
-            	child.moduleNode = elem;
-            	
-                return false;
-            }
-        } );
     },
 
     /**
@@ -217,12 +161,7 @@ extend ( Structure.prototype, {
     */
 	render ( location ) {
 
-        const 
-            locationGuide = {},
-
-            // 使用模块加载器来加载更新模块
-            moduleLoader = new ModuleLoader ();
-
+        const locationGuide = {};
         if ( location.action !== "POP" ) {
             locationGuide.structure = location.nextStructure.copy ();
             locationGuide.param = location.param;
@@ -235,7 +174,15 @@ extend ( Structure.prototype, {
             // 更新currentPage结构体对象
             Structure.currentPage.update ( location.nextStructure );
         }
-        moduleLoader.load ( location.nextStructure, { param : location.param, get : location.get, post : location.post } );
+
+        // 使用模块加载器来加载更新模块
+        new ModuleLoader ( 
+            location.nextStructure, 
+            location.param, 
+            location.get,
+            location.post
+        ).load ();
+
         switch ( location.action ) {
             case "PUSH":
                 iceHistory.push ( locationGuide, location.path );
@@ -252,5 +199,66 @@ extend ( Structure.prototype, {
             case "POP":
                 // do nothing
         }
+    },
+} );
+
+extend ( Structure, {
+
+    /**
+        signCurrentRender ( structureItem: Object, param: Object, args: String, data: Object )
+        
+        Return Type:
+        void
+    
+        Description:
+        标记当前正在渲染的页面结构项并传递对应的参数到正在渲染的模块内
+        这样可以使创建Module对象时获取父级的vm，和保存扫描到的moduleNode
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    signCurrentRender ( structureItem, param, args, data ) {
+        structureItem.param = param;
+        structureItem.get = args;
+        structureItem.post = data;
+        Structure.currentRender = structureItem;
+    },
+    
+    /**
+        getCurrentRender ()
+    
+        Return Type:
+        Object
+        当前结构项
+    
+        Description:
+        获取当前正在渲染的页面结构项
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    getCurrentRender () {
+        return Structure.currentRender;
+    },
+
+    /**
+        saveSubModuleNode ( vnode: Object )
+    
+        Return Type:
+        void
+    
+        Description:
+        保存扫描到的模块节点对象以便下次使用时直接获取
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    saveSubModuleNode ( vnode ) {
+        foreach ( Structure.currentRender.children, child => {
+            if ( child.name === ( vnode.attr ( iceAttr.module ) || "default" ) && !child.moduleNode ) {
+                child.moduleNode = vnode;
+                return false;
+            }
+        } );
     },
 } );

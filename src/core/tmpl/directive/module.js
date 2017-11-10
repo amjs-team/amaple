@@ -20,8 +20,8 @@ export default {
         http://icejs.org/######
     */
 	update ( moduleName ) {
-    	if ( Structure.currentPage && Structure.currentRender && type ( moduleName ) === "string" ) {
-            Structure.currentPage.saveSubModuleNode ( this.node );
+    	if ( Structure.currentRender && type ( moduleName ) === "string" ) {
+            Structure.saveSubModuleNode ( this.node );
         }
     }
 };

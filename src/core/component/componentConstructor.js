@@ -167,12 +167,11 @@ export default {
             }
         };
         
+        component.lifeCycle = {};
         foreach ( lifeCycleHook, ( hookFn, cycleName ) => {
-            const cycleFunc = component [ cycleName ];
-            component [ cycleName ] = () => {
-                const nt = new NodeTransaction ().start ();
-                ( cycleFunc || noop ).apply ( component, cache.getDependentPlugin ( cycleFunc || noop ) );
-                nt.commit ();
+            const cycleFunc = component [ cycleName ] || noop;
+            component.lifeCycle [ cycleName ] = () => {
+                cycleFunc.apply ( component, cache.getDependentPlugin ( cycleFunc ) );
 
                 // 钩子函数调用
                 hookFn ();

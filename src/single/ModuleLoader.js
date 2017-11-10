@@ -18,21 +18,22 @@ import VNode from "../core/vnode/VNode";
 import NodeTransaction from "../core/vnode/NodeTransaction";
 
 
-function loopFlush ( moduleUpdateContext ) {
+function loopFlush ( structure ) {
 
-	const nt = new NodeTransaction ().start ();
 	let title, _title;
-	foreach ( moduleUpdateContext, moduleUpdateItem => {
-		_title = moduleUpdateItem.updateFn ();
-		title = title || _title;
+	foreach ( structure, route => {
+		if ( route.updateFn ) {
+			_title = route.updateFn ();
+			title = title || _title;
 
-		if ( type ( moduleUpdateItem.children ) === "array" ) {
-			_title = loopFlush ( moduleUpdateItem.children );
+			delete route.updateFn;
+		}
+
+		if ( type ( route.children ) === "array" ) {
+			_title = loopFlush ( route.children );
 			title = title || _title;
 		}
 	} );
-
-	nt.commit ();
 
 	return title;
 }
@@ -71,9 +72,14 @@ function compareArgs ( newArgs, originalArgs ) {
 	URL doc:
 	http://icejs.org/######
 */
-export default function ModuleLoader () {
+export default function ModuleLoader ( nextStructure, param, get, post ) {
 
-	 // 等待加载完成的页面模块，每加载完成一个页面模块都会将此页面模块在waiting对象上移除，当waiting为空时则表示相关页面模块已全部加载完成
+	this.nextStructure = nextStructure;
+	this.param = param;
+	this.get = get;
+	this.post = post;
+
+	// 等待加载完成的页面模块，每加载完成一个页面模块都会将此页面模块在waiting对象上移除，当waiting为空时则表示相关页面模块已全部加载完成
 	this.waiting = [];
 
 	// 模块更新函数上下文
@@ -127,26 +133,8 @@ extend ( ModuleLoader.prototype, {
 		}
 	},
 
-	signModuleHierarchy ( currentHierarchy ) {
-		this.currentHierarchy = currentHierarchy;
-	},
-
-	saveModuleUpdateFn ( updateFn ) {
-		const moduleUpdateItem = { updateFn };
-
-		// 标记当前处理模块
-		this.moduleUpdateItem = moduleUpdateItem;
-		this.currentHierarchy.push ( moduleUpdateItem );
-	},
-
-	addChildrenContext () {
-		const children = [];
-		this.moduleUpdateItem.children = children;
-		return children;
-	},
-
 	/**
-		load ( structure: Object, args: Object, currentHierarchy?: Array )
+		load ( structure: Object )
 	
 		Return Type:
 		Object
@@ -157,18 +145,18 @@ extend ( ModuleLoader.prototype, {
 		URL doc:
 		http://icejs.org/######
 	*/
-	load ( structure, args, currentHierarchy = this.moduleUpdateContext ) {
+	load ( structure = this.nextStructure.entity ) {
 
 		let toRender = false,
 			param;
 
-		foreach ( structure.entity, route => {
+		foreach ( structure, route => {
 		    if ( route.hasOwnProperty ( "notUpdate" ) ) {
 		        if ( route.hasOwnProperty ( "forcedRender" ) ) {
 		            toRender = true;
 		        }
 		        else {
-                	param = args.param [ route.name ];
+                	param = this.param [ route.name ];
 
 		            // 比较新旧param和get,post对象中的值，如果有改变则调用paramUpdated和queryUpdated
                     if ( compareArgs ( param, route.module.param ) ) {
@@ -176,9 +164,9 @@ extend ( ModuleLoader.prototype, {
                     	route.module.paramUpdated ();
                     }
                 	
-                	if ( compareArgs ( args.get, route.module.get ) || compareArgs ( args.post, route.module.post ) ) {
-                    	route.module.get = args.get;
-                    	route.module.post = args.post;
+                	if ( compareArgs ( this.get, route.module.get ) || compareArgs ( this.post, route.module.post ) ) {
+                    	route.module.get = this.get;
+                    	route.module.post = this.post;
                 		route.module.queryUpdated ();
                     }
 		        }
@@ -191,8 +179,7 @@ extend ( ModuleLoader.prototype, {
 
 		    // 需更新模块与强制重新渲染模块进行渲染
 		    if ( toRender ) {
-		    	let moduleNode = route.moduleNode,
-		    		moduleIdentifier;
+		    	let moduleNode = route.moduleNode;
 
 		        // 如果结构中没有模块节点则查找DOM树获取节点
 		        if ( !moduleNode ) {
@@ -222,34 +209,15 @@ extend ( ModuleLoader.prototype, {
 		            }
 		        }
 
-		        // 给模块元素添加编号属性，此编号有两个作用：
-		        // 1、用于模块加载时的模块识别
-		        // 2、使用此属性作为子选择器限制样式范围
-		        moduleIdentifier = moduleNode && moduleNode.nodeType === 1 && moduleNode.attr ( Module.identifier );
-		        if ( !moduleIdentifier ) {
-		        	moduleIdentifier = Module.getIdentifier ();
-		        }
-
-		        // 加入等待加载队列
-		        this.addWaiting ( moduleIdentifier );
-
-		        // 将基于当前相对路径的路径统一为相对于根目录的路径
-				// const pathAnchor = document.createElement ( "a" );
-				// pathAnchor.href = route.modulePath || "";
-
-				// 标记模块更新函数容器的层级
-				// 这样在actionLoad函数中调用saveModuleUpdateFn保存更新函数时可以保存到对应的位置
-				this.signModuleHierarchy ( currentHierarchy );
-
 		        // 无刷新跳转组件调用来完成无刷新跳转
-		        ModuleLoader.actionLoad.call ( this, route.modulePath, route.moduleNode, moduleIdentifier, route, args.param [ route.name ], args.get, args.post );
+		        ModuleLoader.actionLoad.call ( this, route, moduleNode, this.param [ route.name ], this.get, this.post );
 		    }
 
 		    // 此模块下还有子模块需更新
 		    if ( type ( route.children ) === "array" ) {
 
 		    	// 添加子模块容器并继续加载子模块
-		        this.load ( route.children, args, this.addChildrenContext () );
+		        this.load ( route.children );
 		    }
 		} );
 	},
@@ -286,14 +254,18 @@ extend ( ModuleLoader.prototype, {
 		   	Structure.currentPage.render ( location );
 		}
 		else {
+			const 
+				nt = new NodeTransaction ().start (),
 
-			// 正常加载，将调用模块更新函数更新模块
-			const title = loopFlush ( this.moduleUpdateContext );
+				// 正常加载，将调用模块更新函数更新模块
+				title = loopFlush ( this.nextStructure.entity );
+
+			nt.commit ();
 
 			// 更新页面title
 			if ( title && document.title !== title ) {
-    		document.title = title;
-    	}
+    			document.title = title;
+    		}
 		}
 	}
 } );
@@ -315,21 +287,32 @@ extend ( ModuleLoader, {
 		URL doc:
 		http://icejs.org/######
 	*/
-	actionLoad ( path, moduleNode, moduleIdentifier, currentStructure, param, args, data, method, timeout, before = noop, success = noop, error = noop, abort = noop ) {
-
+	actionLoad ( currentStructure, moduleNode, param, args, data, method, timeout, before = noop, success = noop, error = noop, abort = noop ) {
 
 		const 
 			moduleConfig = configuration.getConfigure ( "module" ),
 			baseURL = configuration.getConfigure ( "baseURL" );
 
-
 		//////////////////////////////////////////////////
 		//////////////////////////////////////////////////
 		//////////////////////////////////////////////////
+		let path = currentStructure.modulePath;
 		path = path.substr ( 0, 1 ) === "/" ? baseURL.substr ( 0, baseURL.length - 1 ) : baseURL + path;
 		path += configuration.getConfigure ( "moduleSuffix" ) + args;
 
 		const historyModule = cache.getModule ( path );
+
+		// 给模块元素添加编号属性，此编号有两个作用：
+		// 1、用于模块加载时的模块识别
+		// 2、使用此属性作为子选择器限制样式范围
+		let moduleIdentifier = ( historyModule && historyModule.moduleIdentifier ) || 
+							( moduleNode && moduleNode.nodeType === 1 && moduleNode.attr ( Module.identifier ) );
+		if ( !moduleIdentifier ) {
+			moduleIdentifier = Module.getIdentifier ();
+		}
+
+		// 加入等待加载队列
+		this.addWaiting ( moduleIdentifier );
 
 		// 并且请求不为post
 		// 并且已有缓存
@@ -340,15 +323,26 @@ extend ( ModuleLoader, {
 			&& historyModule
 			&& ( moduleConfig.expired === 0 || historyModule.time + moduleConfig.expired > timestamp () )
 		) {
-	        this.saveModuleUpdateFn ( () => {
-            	Structure.currentPage.signCurrentRender ( currentStructure, param, args, isPlainObject ( data ) ? data : serialize ( data ) );
+	        currentStructure.updateFn = () => {
+        		moduleNode = type ( moduleNode ) === "function" ? moduleNode () : moduleNode;
+                if ( !moduleNode.attr ( Module.identifier ) ) {
+                	moduleNode.attr ( Module.identifier, moduleIdentifier );
+
+                	// 调用render将添加的ice-identifier同步到实际node上
+                	moduleNode.render ();
+                }
+
+            	Structure.signCurrentRender ( currentStructure, param, args, isPlainObject ( data ) ? data : serialize ( data ) );
 	        	const title = historyModule.updateFn ( ice, moduleNode, VNode, NodeTransaction.acting, require );
 
 				return title;
-	        } );
+	        };
 
-	    	// 获取模块更新函数完成后在等待队列中移除
-	    	this.delWaiting ( moduleIdentifier );
+	        // 获取模块更新函数完成后在等待队列中移除
+	        // 此操作需异步，否则将会实时更新模块
+	    	setTimeout ( () => {
+	    		this.delWaiting ( moduleIdentifier );
+	    	} );
 		}
 		else {
 							  
@@ -372,13 +366,16 @@ extend ( ModuleLoader, {
 				// 将请求的html替换到module模块中
 	            const updateFn = compileModule ( moduleString, moduleIdentifier );
 	        	
-	        	this.saveModuleUpdateFn ( () => {
-
+	        	currentStructure.updateFn = () => {
 	        		moduleNode = type ( moduleNode ) === "function" ? moduleNode () : moduleNode;
 
 		            // 满足缓存条件时缓存模块更新函数
 	            	if ( moduleConfig.cache === true && moduleNode.cache !== false ) {
-		            	cache.pushModule ( path, { updateFn, time : timestamp () } );
+		            	cache.pushModule ( path, {
+		            		updateFn, 
+		            		time : timestamp (),
+		            		moduleIdentifier
+		            	} );
 	                }
 
 	                if ( !moduleNode.attr ( Module.identifier ) ) {
@@ -388,7 +385,7 @@ extend ( ModuleLoader, {
 	                	moduleNode.render ();
 	                }
                 	
-                	Structure.currentPage.signCurrentRender ( currentStructure, param, args, isPlainObject ( data ) ? data : serialize ( data ) );
+                	Structure.signCurrentRender ( currentStructure, param, args, isPlainObject ( data ) ? data : serialize ( data ) );
 
 	        		const title = updateFn ( ice, moduleNode, VNode, NodeTransaction.acting, require );
 
@@ -396,7 +393,7 @@ extend ( ModuleLoader, {
 					success ( moduleNode );
 
 					return title;
-	            } );
+	            };
 
 	            // 获取模块更新函数完成后在等待队列中移除
 	    		this.delWaiting ( moduleIdentifier );

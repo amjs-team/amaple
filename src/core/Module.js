@@ -44,7 +44,7 @@ function findParentVm ( elem ) {
 }
 
 /**
-    initModuleLifeCycle ( module: Object, lifeCycle: Array, vm: Object, moduleElem: Object )
+    initModuleLifeCycle ( module: Object, vmData: Object )
     
     Return Type:
     void
@@ -55,25 +55,15 @@ function findParentVm ( elem ) {
     URL doc:
     http://icejs.org/######
 */
-function initModuleLifeCycle ( module, vm, moduleElem ) {
-    const
-    	// Module生命周期
-		lifeCycle = [ "queryUpdated", "paramUpdated", "unmount" ],
-        lifeCycleContainer = {};
-            
+function initModuleLifeCycle ( module, vmData ) {
+
+	// Module生命周期
+    const lifeCycle = [ "queryUpdated", "paramUpdated", "unmount" ];
+
+    module.lifeCycle = {};
     foreach ( lifeCycle, cycleItem => {
-        lifeCycleContainer [ cycleItem ] = vm [ cycleItem ] || noop;
-        module [ cycleItem ] = () => {
-
-        	const nt = new NodeTransaction ().start ();
-            lifeCycleContainer [ cycleItem ].apply ( module, cache.getDependentPlugin ( lifeCycleContainer [ cycleItem ] ) );
-
-            // 提交节点更新事物，更新所有已更改的vnode进行对比
-            // 对比新旧vnode计算出差异并根据差异更新到实际dom中
-            nt.commit ();
-        }
-        
-        delete vm [ cycleItem ];
+        module.lifeCycle [ cycleItem ] = vmData [ cycleItem ] || noop;
+        delete vmData [ cycleItem ];
     } );
 }
 
@@ -115,8 +105,8 @@ export default function Module ( moduleElem, vmData = { init: function () { retu
 	if ( developMode === DEVELOP_SINGLE && Structure.currentPage ) {
 		
     	// 只有单页模式时Structure.currentPage会有值
-		// 单页模式时，使用Structure.currentPage.getCurrentParentVm()获取父级的vm
-		const currentRender = Structure.currentPage.getCurrentRender ();
+		// 单页模式时，使用Structure.getCurrentRender().parent.module.state获取父级的vm
+		const currentRender = Structure.getCurrentRender ();
     	parent = currentRender.parent && currentRender.parent.module.state;
 		
         this.param = currentRender.param;
@@ -145,7 +135,7 @@ export default function Module ( moduleElem, vmData = { init: function () { retu
 	}
     this.parent = parent;
 	
-	initModuleLifeCycle ( this, vmData, moduleElem );
+	initModuleLifeCycle ( this, vmData );
 
     const
 		// 获取后初始化vm的init方法
@@ -202,6 +192,70 @@ extend ( Module.prototype, {
 			refObj = undefined;
 		}
     	return refObj;
+    },
+
+    /**
+		queryUpdated ()
+	
+		Return Type:
+		void
+	
+		Description:
+		模块生命周期hook
+		当url更新时该模块未重新渲染且query参数更改时调用
+	
+		URL doc:
+		http://icejs.org/######
+	*/
+    queryUpdated () {            
+		const nt = new NodeTransaction ().start ();
+	    this.lifeCycle.queryUpdated.apply ( this, cache.getDependentPlugin ( this.lifeCycle.queryUpdated ) );
+
+	    // 提交节点更新事物，更新所有已更改的vnode进行对比
+	    // 对比新旧vnode计算出差异并根据差异更新到实际dom中
+	    nt.commit ();
+    },
+
+    /**
+		paramUpdated ()
+	
+		Return Type:
+		void
+	
+		Description:
+		模块生命周期hook
+		当url更新时该模块未重新渲染且param参数更改时调用
+	
+		URL doc:
+		http://icejs.org/######
+	*/
+    paramUpdated () {
+    	const nt = new NodeTransaction ().start ();
+	    this.lifeCycle.paramUpdated.apply ( this, cache.getDependentPlugin ( this.lifeCycle.paramUpdated ) );
+	    nt.commit ();
+    },
+
+    /**
+		unmount ()
+	
+		Return Type:
+		void
+	
+		Description:
+		模块生命周期hook
+		当该模块卸载时调用
+	
+		URL doc:
+		http://icejs.org/######
+	*/
+    unmount () {
+    	if ( this.components.length > 0 ) {
+    		foreach ( this.components, comp => {
+    			comp.__unmount__ ();
+    		} );
+    	}
+
+	    this.lifeCycle.unmount.apply ( this, cache.getDependentPlugin ( this.lifeCycle.unmount ) );
     }
 } );
 

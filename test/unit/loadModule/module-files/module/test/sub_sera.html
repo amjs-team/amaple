@@ -1,0 +1,27 @@
+<Module :title="提示">
+	<template>
+		<span>{{ sera }}</span>
+	</template>
+
+	<script>
+		var sera = new ice.Module ( {
+
+			// 该函数返回的对象为该模块内的数据绑定，包括变量和方法
+			init : function () {
+				return {
+					sera : "sub_sera tips"
+				};
+			},
+
+			unmount () {
+				console.log( "sub_sera unmount" );
+			}
+		} );
+	</script>
+
+	<style scoped>
+		span {
+			background: #00aae6;
+		}
+	</style>
+</Module>
