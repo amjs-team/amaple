@@ -3,7 +3,7 @@ import ice from "ice";
 describe ( "ice test =>", () => {
 
 	it ( "load a simple ice module", () => {
-		document.body.innerHTML = `<div :module></div><div :module="tips"><div :module></div></div>`;
+		document.body.innerHTML = `<div :module></div><div :module="tips"></div>`;
 
 		ice.startRouter ( {
 			// history : ice.HASH_HISTORY,
@@ -14,10 +14,14 @@ describe ( "ice test =>", () => {
 			moduleSuffix: ".html",
 			baseURL : "module",
 			routes : function ( Router ) {
-				Router.module ().route ( [ "/debug", "/table" ], "test/table" ).route( "/login", "test/login" );
-				Router.module ( "tips" ).route ( "/debug", "test/sera", childRouter => {
+				Router.module ()
+				.route ( [ "/debug", "/table" ], "test/table" )
+				.route( "/login", "test/login", childRouter => {
 					childRouter.module ().defaultRoute ( "test/sub_sera" );
 				} );
+
+				
+				Router.module ( "tips" ).route ( "/debug", "test/sera" );
 			}
 		} )
 	} );

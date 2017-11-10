@@ -238,7 +238,7 @@ extend ( ModuleLoader.prototype, {
 				// pathAnchor.href = route.modulePath || "";
 
 				// 标记模块更新函数容器的层级
-				// 这样在actionLoad函数中调用saveModuleUpdateFuncs保存更新函数时可以保存到对应的位置
+				// 这样在actionLoad函数中调用saveModuleUpdateFn保存更新函数时可以保存到对应的位置
 				this.signModuleHierarchy ( currentHierarchy );
 
 		        // 无刷新跳转组件调用来完成无刷新跳转

@@ -41,21 +41,22 @@ extend ( Structure.prototype, {
             		find = false;
             		if ( xItem.name === yItem.name ) {
                 		find = true;
-                        y [ i ] = xItem;
                 		if ( xItem.modulePath !== yItem.modulePath ) {
                         	unmountModule.push ( xItem.module );
-                    	
-                    		// 模块名相同但模块内容不同的时候表示此模块需更新为新模块及子模块内容
-                    		xItem.modulePath = yItem.modulePath;
-                            xItem.module = null;
+
+                            // 模块名相同但模块内容不同的时候表示此模块需更新为新模块及子模块内容
+                            yItem.moduleNode = xItem.moduleNode;
+                            x [ j ] = yItem
                     	}
                 		else {
+                            y [ i ] = xItem;
+
                             // 模块名和模块内容都不同的时候只表示此模块需更新，还需进一步比较子模块
                             // 标记为更新
                             xItem.notUpdate = null;
 
-                    		if ( !( !xItem.children && !yItem.children ) ) {
-                    			xItem.children = this.update.call ( {  
+                    		if ( xItem.children || yItem.children ) {
+                    			xItem.children = this.update.call ( {
                         			entity : xItem.children,
                         			update : this.update
                         		}, {
