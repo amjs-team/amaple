@@ -10,8 +10,7 @@ export default function Router ( finger ) {
 
 extend ( Router.prototype, {
 	module ( moduleName = "default" ) {
-    	check ( moduleName ).type ( "string" ).notBe ( "" ).ifNot ( "Router.module", "模块名必须为不为空的字符串" ).do ();
-    	
+    	check ( moduleName ).type ( "string" ).notBe ( "" ).ifNot ( "Router.module", "模块名必须为不为空的字符串，不传入模块名默认为'default'" ).do ();
     	
     	foreach ( this.finger, routeItem => {
         	if ( routeItem.name === moduleName ) {
@@ -128,8 +127,7 @@ extend ( Router, {
     // /settings => /\/settings/、/settings/:page => /\/settings/([^\\/]+?)/、/settings/:page(\d+)
 	matchRoutes ( path, param, routeTree = this.routeTree, parent = null, matchError404 ) {
         // [ { module: "...", modulePath: "...", parent: ..., param: {}, children: [ {...}, {...} ] } ]
-        let routes = [],
-            entityItem;
+        let routes = [];
     	
     	foreach ( routeTree, route => {
         	if ( route.hasOwnProperty ( "redirect" ) ) {
@@ -156,17 +154,24 @@ extend ( Router, {
         } );
 
         foreach ( routeTree, route => {
+
+            // 过滤重定向的项
+            if ( !route.name ) {
+                return;
+            }
+
+            const entityItem = {
+                name : route.name,
+                modulePath : null,
+                moduleNode : null,
+                module : null,
+                parent
+            };
+            let isMatch = false;
+
             foreach ( route.routes, pathReg => {
             	let matchPath,
                     isContinue = true;
-            	
-            	entityItem = {
-                	name : route.name,
-                	modulePath : pathReg.modulePath,
-                	moduleNode : null,
-                	module : null,
-                	parent
-                };
             	
             	if ( route.hasOwnProperty ( "forcedRender" ) ) {
                 	entityItem.forcedRender = route.forcedRender;
@@ -174,28 +179,45 @@ extend ( Router, {
 
                 if ( matchPath = path.match ( pathReg.path.regexp ) ) {
                 	isContinue = false;
+                    isMatch = true;
+                    entityItem.modulePath = pathReg.modulePath;
 
-                    param [ route.name ] = param [ route.name ] || {};
+                    param [ route.name ] = { data : {} };
                     foreach ( pathReg.path.param, ( i, paramName ) => {
-                        param [ route.name ] [ paramName ] = matchPath [ i ];
+                        param [ route.name ].data [ paramName ] = matchPath [ i ];
                     } );
 
                     routes.push ( entityItem );
                 }
             	
             	if ( type ( pathReg.children ) === "array" ) {
-                	let children = this.matchRoutes ( matchPath ? path.replace ( matchPath [ 0 ], "" ) : path, param, pathReg.children, entityItem );
+                    const 
+                        _param = {},
+                        children = this.matchRoutes ( matchPath ? path.replace ( matchPath [ 0 ], "" ) : path, _param, pathReg.children, entityItem );
                 	
+                    // 如果父路由没有匹配到，但子路由有匹配到也需将父路由添加到匹配项中
                 	if ( !isEmpty ( children ) ) {
-                    	entityItem.children = children;
-                    	if ( routes.indexOf ( entityItem ) <= -1 ) {
+                    	if ( entityItem.modulePath === null ) {
+                            isMatch = true;
+                            
+                            entityItem.modulePath = pathReg.modulePath;
                     		routes.push ( entityItem );
+                            param [ route.name ] = { data: {} };
                         }
+
+                        entityItem.children = children;
+                        param [ route.name ].children = _param;
                     }
                 }
             	
             	return isContinue;
             } );
+
+            // 如果没有匹配到任何路由但父模块有匹配到则需添加一个空模块信息到匹配路由中
+            if ( !isMatch && ( parent === null || parent.modulePath !== null ) ) {
+                routes.push ( entityItem );
+            }
+
         } );
     
 		// 最顶层时返回一个Structure对象

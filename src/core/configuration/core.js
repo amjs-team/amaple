@@ -22,6 +22,7 @@ export default function configuration ( params ) {
 
 	params.baseURL = _type === "string" ? params.baseURL : 
 				   _type === "function" ? params.baseURL () : "";
+	params.baseURL = params.baseURL.substr ( 0, 1 ) === "/" ? params.baseURL : "/" + params.baseURL;
 	params.baseURL = params.baseURL.substr ( -1, 1 ) === "/" ? params.baseURL : params.baseURL + "/";
 
 

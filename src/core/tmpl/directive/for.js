@@ -73,9 +73,6 @@ function unmountWatchers ( vnode, isWatchCond ) {
         unmountFunc ();
     } );
 
-    // 移除vnode的引用
-    ( vnode.delRef || noop ) ();
-
     // 被“:if”绑定的元素有些不在vdom树上，需通过此方法解除绑定
     if ( vnode.conditionElems && isWatchCond !== false ) {
         const conditionElems = vnode.conditionElems;

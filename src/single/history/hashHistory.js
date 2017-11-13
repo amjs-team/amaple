@@ -23,16 +23,20 @@ export default {
 	    		locationGuide = {
 	    			structure,
 	    			param,
-	    			get : this.getQuery ( path ),
+	    			get : window.location.search,
 	    			post : {}
 	    		};
 
 	    		this.saveState ( locationGuide, path );
     	    }
-    	   	
-    	   	// 根据更新后的页面结构体渲染新视图
-    	   	Structure.currentPage.render ( {
-    			nextStructure : locationGuide.structure.copy (),
+    	    const nextStructure = locationGuide.structure.copy ();
+
+    	    // 更新currentPage结构体对象
+    	    // 并根据更新后的页面结构体渲染新视图
+    	    Structure.currentPage
+    	    .update ( nextStructure )
+			.render ( {
+    			nextStructure,
             	param : locationGuide.param,
             	get : locationGuide.get,
     	       	post : locationGuide.post,

@@ -157,13 +157,14 @@ export default {
         URL doc:
         http://icejs.org/######
     */
-    initLifeCycle ( component, moduleObj ) {
+    initLifeCycle ( component, componentVNode, moduleObj ) {
         const lifeCycleHook = {
             update : noop,
             unmount () {
 
                 // 在对应module.components中移除此组件
                 moduleObj.components.splice ( moduleObj.components.indexOf ( component ), 1 );
+                ( componentVNode.delRef || noop ) ();
             }
         };
         

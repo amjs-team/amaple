@@ -21,16 +21,23 @@ export default {
 	    		locationGuide = {
 	    			structure,
 	    			param,
-	    			get : this.getQuery ( path ),
+	    			get : window.location.search,
 	    			post : {}
 	    		};
 
 	    		this.saveState ( locationGuide, path );
     	    }
-    	   	
-    	   	// 根据更新后的页面结构体渲染新视图
-    	   	Structure.currentPage.render ( {
-    			nextStructure : locationGuide.structure.copy (),
+
+    	    // 复制一份结构对象用于更新当前结构
+    	    // 因为更新当前结构时会改变用于更新的结构对象
+    	    const nextStructure = locationGuide.structure.copy ();
+
+    	    // 更新currentPage结构体对象
+    	    // 并根据更新后的页面结构体渲染新视图
+    		Structure.currentPage
+    		.update ( nextStructure )
+			.render ( {
+    			nextStructure,
             	param : locationGuide.param,
     	       	get : locationGuide.get,
     	       	post : locationGuide.post,
@@ -142,7 +149,10 @@ export default {
     	const pathAnchor = document.createElement ( "a" );
 		pathAnchor.href = path;
 		
-		return pathAnchor.pathname;
+		return {
+			pathname : pathAnchor.pathname,
+			search : pathAnchor.search 
+		};
 	},
   
 	/**

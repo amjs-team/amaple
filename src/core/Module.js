@@ -1,4 +1,4 @@
-import { noop, guid, extend, type, foreach } from "../func/util";
+import { noop, guid, extend, type, foreach, isEmpty } from "../func/util";
 import { parseGetQuery, queryModuleNode } from "../func/private";
 import { DEVELOP_COMMON, DEVELOP_SINGLE } from "../var/const";
 import slice from "../var/slice";
@@ -107,7 +107,7 @@ export default function Module ( moduleElem, vmData = { init: function () { retu
     	// 只有单页模式时Structure.currentPage会有值
 		// 单页模式时，使用Structure.getCurrentRender().parent.module.state获取父级的vm
 		const currentRender = Structure.getCurrentRender ();
-    	parent = currentRender.parent && currentRender.parent.module.state;
+    	parent = currentRender.parent && currentRender.parent.module;
 		
         this.param = currentRender.param;
         this.get = parseGetQuery ( currentRender.get );
@@ -146,6 +146,7 @@ export default function Module ( moduleElem, vmData = { init: function () { retu
 		tmpl = new Tmpl ( vm, vmData.depComponents || [], this );
 	
 	this.state = vm;
+	this.references = {};
 
 	// 解析模板，挂载数据
 	// 如果forceMount为true则强制挂载moduleElem
@@ -184,14 +185,24 @@ extend ( Module.prototype, {
 		http://icejs.org/######
 	*/
 	refs ( ref ) {
-		let refObj = this.refs [ ref ];
-		if ( refObj.parent ) {
-			refObj = refObj.isComponent ? refObj.component.action : refObj.node;
+		let reference = this.references [ ref ];
+		if ( type ( reference ) === "array" ) {
+			const _ref = [];
+			foreach ( reference, refItem => {
+				if ( refItem.parent ) {
+					_ref.push ( refItem.isComponent ? refItem.component.action : refItem.node );
+				}
+			} );
+			reference = isEmpty ( _ref ) 
+						? undefined 
+						: _ref.length === 1 ? _ref [ 0 ] : _ref;
 		}
 		else {
-			refObj = undefined;
+			reference = reference.parent
+				? reference.isComponent ? reference.component.action : reference.node
+				: undefined;
 		}
-    	return refObj;
+    	return reference;
     },
 
     /**
@@ -249,7 +260,7 @@ extend ( Module.prototype, {
 		http://icejs.org/######
 	*/
     unmount () {
-    	if ( this.components.length > 0 ) {
+    	if ( !isEmpty ( this.components ) ) {
     		foreach ( this.components, comp => {
     			comp.__unmount__ ();
     		} );

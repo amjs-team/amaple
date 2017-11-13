@@ -1,7 +1,7 @@
 <Module :title="登录">
 	<template>
 		<div>
-		<form action="post/login" name="login_form" method="post">
+		<form action="/post/login" name="login_form" method="post">
 			<ul>
 				<li>
 					<label>{{ luserName }}</label><input type="text" name="user_name" :model="userName" />
@@ -15,8 +15,10 @@
 					<submit-button text="{{ btnOpts.btnText }}"></submit-button>
 					<input type="submit" value="{{ btnOpts.btnText }}">
 				</li>
+				<li>{{ query }}</li>
 			</ul>
 		</form>
+		<a href="/login/bb?g=1&c=2">btn</a>
 		<div :module></div>
 		</div>
 	</template>
@@ -41,7 +43,7 @@
 					btnOpts 	: {
 						btnText : "提交"
 					},
-
+					query 		: JSON.stringify (  this.get ),
 					style 		: {
 						opacity : 1
 					},
@@ -70,6 +72,10 @@
 						animate.Linear ( this.state.style.opacity, 1, 1000 );
 					},
 				};
+			},
+			queryUpdated () {
+				this.state.query = JSON.stringify ( this.get );
+				console.log( "login queryUpdated" );
 			},
 
 			unmount () {

@@ -5,7 +5,7 @@
 		<!-- 表格组件渲染 -->
 		<!-- <edit-table t-th="{{ title }}" t-tr="{{ content }}"></edit-table> -->
 		<div class="abc">{{ title }} {{ content }}</div>
-		<a href="login">{{ btn }}</a>
+		<a href="/login/aa">{{ btn }}{{ postData }}</a>
 		<ul id="a87">
 			<li :for="t in title">{{ t }}</li>
 		</ul>
@@ -21,6 +21,7 @@
 
 		var table = new ice.Module ( {
 			init : function () {
+
 				return {
 					// 绑定变量与绑定函数直接写返回对象内
 					title: ["NO.", "UserName", "Avatar", "Age", "Address"],
@@ -38,6 +39,7 @@
 						current 	: "current"
 					},
 					btn: "Button",
+					postData: "",
 	            
 	            	setPage : function ( event, btn ) {
 	            		console.log(event.currentTarget, btn);
@@ -48,6 +50,10 @@
 
 			unmount () {
 				console.log( "table unmount" );
+			},
+
+			apply () {
+				this.state.postData = JSON.stringify ( this.post );
 			}
 		} );
 	</script>

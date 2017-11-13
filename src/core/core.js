@@ -110,7 +110,11 @@ export default {
 	        	method = e.type.toLowerCase () === "submit" ? attr ( target, "method" ).toUpperCase () : "GET";
 
 	        if ( path && !/#/.test ( path ) ) {
-	        	if ( requestEventHandler ( iceHistory.history.buildURL ( path ), method, method.toLowerCase () === "post" ? target : {} ) !== false ) {
+	        	if ( requestEventHandler ( 
+	        			iceHistory.history.buildURL ( path ), 
+	        			method, 
+	        			method.toLowerCase () === "post" ? target : {} 
+	        		) !== false ) {
 	        		e.preventDefault ();
 	        	}
 	        }
@@ -136,7 +140,7 @@ export default {
     	Structure.currentPage = location.nextStructure;
 
     	// 根据更新后的页面结构体渲染新视图
-    	Structure.currentPage.render ( location );
+    	Structure.currentPage.render ( location, location.nextStructure.copy () );
     },
 
  	/**

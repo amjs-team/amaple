@@ -207,12 +207,28 @@ extend ( VNode.prototype, {
     html ( vnode ) {
     	supportCheck ( this.nodeType, "html" );
 
+        this.clear ();
+        this.appendChild ( vnode );
+    },
+
+    /**
+        clear ()
+    
+        Return Type:
+        void
+    
+        Description:
+        清空子元素
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    clear () {
         foreach ( this.children, child => {
             child.parent = null;
-        } )
+        } );
 
         this.children = [];
-        this.appendChild ( vnode );
     },
 	
 	/**

@@ -1,7 +1,5 @@
 import { extend, foreach } from "../../func/util";
-import { attr } from "../../func/node";
-import { attrAssignmentHook } from "../../var/const";
-import event from "../../event/core";
+import { walkVDOM } from "../../func/private";
 
 export default function NodeTransaction () {
 	this.transactions = [];
@@ -40,10 +38,51 @@ extend ( NodeTransaction.prototype, {
 		http://icejs.org/######
 	*/
 	collect ( newVNode, oldVNode ) {
-		this.transactions.push ( {
-			backup : oldVNode,
-			update : newVNode
-		} );
+		if ( this.transactions.length === 0 ) {
+			this.transactions.push ( {
+				backup : oldVNode,
+				update : newVNode
+			} );
+		}
+		else {
+			let comparedVNode = newVNode,
+				isFind = false;
+
+			// 为了避免重复对比节点，需对将要保存的节点向上寻找
+			// 如果在已保存数组中找到相同节点或祖先节点则不保存此对比节点
+			do {
+				foreach ( this.transactions, item => {
+					if ( item.update === comparedVNode ) {
+						isFind = true;
+						return false;
+					}
+				} );
+				
+				if ( !isFind ) {
+					comparedVNode = comparedVNode.parent;
+				}
+				else {
+					break;
+				}
+			} while ( comparedVNode )
+
+			// 如果在以保存数组中没有找到相同节点或祖先节点则需要保存此对比节点
+			// 此时需再向下寻找子孙节点，如果有子孙节点需移除此子孙节点的对比项
+			if ( !isFind ) {
+				walkVDOM ( newVNode, vnode => {
+					foreach ( this.transactions, ( item, i ) => {
+						if ( item.update === vnode ) {
+							this.transactions.splice ( i, 1 );
+						}
+					} );
+				} );
+
+				this.transactions.push ( {
+					backup : oldVNode, 
+					update : newVNode
+				} );
+			}
+		}
 	},
 
 	/**

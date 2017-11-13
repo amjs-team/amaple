@@ -20,7 +20,7 @@ export default {
     */
 	update ( refName ) {
     	const 
-            refs = this.tmpl.module.refs,
+            refs = this.tmpl.module.references,
             tref = type ( refs [ refName ] ),
             node = this.node;
 
@@ -30,7 +30,7 @@ export default {
                 
                 break;
             case "object" :
-                refs [ refName ] = [ refs [ ref ] ];
+                refs [ refName ] = [ refs [ refName ] ];
                 refs [ refName ].push ( node );
                    
                break;

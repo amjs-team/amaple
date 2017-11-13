@@ -1,6 +1,6 @@
 import { type, extend, foreach, noop, isPlainObject, isEmpty, timestamp } from "../func/util";
 import { query, attr, serialize } from "../func/node";
-import { queryModuleNode } from "../func/private";
+import { queryModuleNode, parseGetQuery } from "../func/private";
 import require from "../core/component/require/require";
 import { envErr, moduleErr } from "../error";
 import { MODULE_UPDATE, MODULE_REQUEST, MODULE_RESPONSE } from "../var/const";
@@ -145,40 +145,37 @@ extend ( ModuleLoader.prototype, {
 		URL doc:
 		http://icejs.org/######
 	*/
-	load ( structure = this.nextStructure.entity ) {
-
-		let toRender = false,
-			param;
+	load ( structure, param ) {
+		structure = structure || this.nextStructure.entity;
+		param = param || this.param;
 
 		foreach ( structure, route => {
 		    if ( route.hasOwnProperty ( "notUpdate" ) ) {
-		        if ( route.hasOwnProperty ( "forcedRender" ) ) {
-		            toRender = true;
-		        }
-		        else {
-                	param = this.param [ route.name ];
+
+		    	// 需过滤匹配到的空模块
+		    	// 空模块没有modle对象，也没有param等参数
+		    	if ( route.module && param [ route.name ] ) {
+                	const paramData = param [ route.name ].data;
 
 		            // 比较新旧param和get,post对象中的值，如果有改变则调用paramUpdated和queryUpdated
-                    if ( compareArgs ( param, route.module.param ) ) {
-                    	route.module.param = param;
+                    if ( compareArgs ( paramData, route.module.param ) ) {
+                    	route.module.param = paramData;
                     	route.module.paramUpdated ();
                     }
                 	
-                	if ( compareArgs ( this.get, route.module.get ) || compareArgs ( this.post, route.module.post ) ) {
-                    	route.module.get = this.get;
+                    const getData = parseGetQuery ( this.get );
+                	if ( compareArgs ( getData, route.module.get ) || compareArgs ( this.post, route.module.post ) ) {
+                    	route.module.get = getData;
                     	route.module.post = this.post;
                 		route.module.queryUpdated ();
                     }
-		        }
+		    	}
 		        
 		        delete route.notUpdate;
 		    }
 		    else {
-		        toRender = true;
-		    }
 
-		    // 需更新模块与强制重新渲染模块进行渲染
-		    if ( toRender ) {
+			    // 需更新模块与强制重新渲染模块进行渲染
 		    	let moduleNode = route.moduleNode;
 
 		        // 如果结构中没有模块节点则查找DOM树获取节点
@@ -210,14 +207,14 @@ extend ( ModuleLoader.prototype, {
 		        }
 
 		        // 无刷新跳转组件调用来完成无刷新跳转
-		        ModuleLoader.actionLoad.call ( this, route, moduleNode, this.param [ route.name ], this.get, this.post );
+		        ModuleLoader.actionLoad.call ( this, route, moduleNode, param [ route.name ] && param [ route.name ].data, this.get, this.post );
 		    }
 
 		    // 此模块下还有子模块需更新
 		    if ( type ( route.children ) === "array" ) {
 
 		    	// 添加子模块容器并继续加载子模块
-		        this.load ( route.children );
+		        this.load ( route.children, param [ route.name ].children );
 		    }
 		} );
 	},
@@ -289,18 +286,32 @@ extend ( ModuleLoader, {
 	*/
 	actionLoad ( currentStructure, moduleNode, param, args, data, method, timeout, before = noop, success = noop, error = noop, abort = noop ) {
 
-		const 
-			moduleConfig = configuration.getConfigure ( "module" ),
-			baseURL = configuration.getConfigure ( "baseURL" );
+		let path = currentStructure.modulePath;
+
+		// path为null时表示此模块为空
+		// 此时只需删除模块内元素
+		if ( path === null ) {
+			currentStructure.updateFn = () => {
+				moduleNode = type ( moduleNode ) === "function" ? moduleNode () : moduleNode;
+
+				const diffBackup = moduleNode.clone ();
+				moduleNode.clear ();
+				NodeTransaction.acting.collect ( moduleNode, diffBackup );
+			};
+
+			return;
+		}
 
 		//////////////////////////////////////////////////
 		//////////////////////////////////////////////////
 		//////////////////////////////////////////////////
-		let path = currentStructure.modulePath;
+		const baseURL = configuration.getConfigure ( "baseURL" );
 		path = path.substr ( 0, 1 ) === "/" ? baseURL.substr ( 0, baseURL.length - 1 ) : baseURL + path;
 		path += configuration.getConfigure ( "moduleSuffix" ) + args;
 
-		const historyModule = cache.getModule ( path );
+		const 
+			moduleConfig = configuration.getConfigure ( "module" ),
+			historyModule = cache.getModule ( path );
 
 		// 给模块元素添加编号属性，此编号有两个作用：
 		// 1、用于模块加载时的模块识别

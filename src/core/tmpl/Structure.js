@@ -7,6 +7,71 @@ import iceAttr from "../../single/iceAttr";
 import iceHistory from "../../single/history/iceHistory";
 import NodeTransaction from "../../core/vnode/NodeTransaction";
 
+/**
+    unmountStructure ( structure: Object )
+
+    Return Type:
+    void
+
+    Description:
+    卸载结构
+    当更新页面时，相应的结构也将会变化
+    需将不显示的解雇卸载
+
+    URL doc:
+    http://icejs.org/######
+*/
+function unmountStructure ( structure ) {
+    foreach ( structure, unmountItem => {
+        if ( unmountItem.children && unmountItem.children.length > 0 ) {
+            unmountStructure ( unmountItem.children );
+        }
+
+        if ( unmountItem.module ) {
+            unmountItem.module.unmount ();
+        }
+    } );
+}
+
+/**
+    diffStructure ( newEntity: Object, oldEntity: Object, readyToUnmount: Array )
+
+    Return Type:
+    void
+
+    Description:
+    对比新旧结构实体的差异
+    如果结构未改变则将旧结构的module、moduleNode赋值给对应新结构上
+    如果结构改变则记录到readyToUnmountz数组中即将卸载
+
+    URL doc:
+    http://icejs.org/######
+*/  
+function diffStructure ( newEntity, oldEntity, readyToUnmount ) {
+    let oldItem;
+    foreach ( newEntity, ( newItem, i ) => {
+        oldItem = oldEntity [ i ];
+        if ( oldItem && oldItem.name === newItem.name ) {
+
+            newItem.moduleNode = oldItem.moduleNode;
+            if ( oldItem.modulePath === newItem.modulePath && !newItem.hasOwnProperty ( "forcedRender" ) ) {
+                
+                newItem.notUpdate = null;
+                newItem.module = oldItem.module;
+
+                // 相同时才去对比更新子结构
+                if ( type ( newItem.children ) === "array" && type ( oldItem.children ) === "array" ) {
+                    diffStructure ( newItem.children, oldItem.children, readyToUnmount );
+                }
+            }
+            else {
+                readyToUnmount.push ( oldItem );
+            }
+        }
+    } );
+}
+
+
 // [
   //  { module: obj1, name: "default", moduleNode: node1, parent: null, children: [
     //    { module: obj2, name: "header", moduleNode: node2, parent: parentObj },
@@ -15,83 +80,25 @@ import NodeTransaction from "../../core/vnode/NodeTransaction";
    // ] }
 // ]
 
-
-function unmountStructure ( structure ) {
-    foreach ( structure, structureItem => {
-        if ( structureItem.children && structureItem.children.length > 0 ) {
-            unmountStructure ( structureItem.children );
-        }
-
-        structureItem.module.unmount ();
-    } );
-}
-
-
 export default function Structure ( entity ) {
     this.entity = entity;
 }
 
 extend ( Structure.prototype, {
-	update ( structure ) {
-    	let x = this.entity,
-			y = structure.entity,
-            find;
-    	const readToUnmount = [];
+	update ( newStructure ) {
+    	const 
+            newEntity = newStructure.entity,
+            oldEntity = this.entity,
+            readyToUnmount = [];
     	
-    	if ( ( x && !y ) || ( !x && y ) ) {
-        	foreach ( x, xItem => {
-            	readToUnmount.push ( xItem );
-            } );
-			x = y;
-        }
-        else if ( x && y ) {
-    		foreach ( y, ( yItem, i ) => {
-        		foreach ( x, ( xItem, j ) => {
-            		find = false;
-            		if ( xItem.name === yItem.name ) {
-                		find = true;
-                		if ( xItem.modulePath !== yItem.modulePath ) {
-                        	readToUnmount.push ( xItem );
-
-                            // 模块名相同但模块内容不同的时候表示此模块需更新为新模块及子模块内容
-                            yItem.moduleNode = xItem.moduleNode;
-                            x [ j ] = yItem
-                    	}
-                		else {
-                            y [ i ] = xItem;
-
-                            // 模块名和模块内容都不同的时候只表示此模块需更新，还需进一步比较子模块
-                            // 标记为更新
-                            xItem.notUpdate = null;
-
-                    		if ( xItem.children || yItem.children ) {
-                    			xItem.children = this.update.call ( {
-                        			entity : xItem.children,
-                        			update : this.update
-                        		}, {
-                        			entity : yItem.children
-                        		} );
-                        	}
-                    	}
-                	
-                		return false;
-                	}
-            	} );
-        	
-        		if ( !find ) {
-            	
-            		// 在原结构体中没有匹配到此更新模块，表示此模块为新模块，直接push进原结构体对应位置中
-            		x.push ( yItem );
-            	}
-        	} );
-        }
+        // 对比新旧结构实体的差异，并在相同结构上继承旧结构的module和moduleNode
+        diffStructure ( newEntity, oldEntity, readyToUnmount );
+        this.entity = newEntity;
     	
         // 调用结构卸载函数
-    	unmountStructure ( readToUnmount );
-    	
-    	if ( !this instanceof Structure ) {
-        	return x;
-        }
+    	unmountStructure ( readyToUnmount );
+
+        return this;
 	},
 
     /**
@@ -159,26 +166,20 @@ extend ( Structure.prototype, {
         URL doc:
         http://icejs.org/######
     */
-	render ( location ) {
+	render ( location, nextStructureBackup ) {
 
         const locationGuide = {};
         if ( location.action !== "POP" ) {
-            locationGuide.structure = location.nextStructure.copy ();
+            locationGuide.structure = nextStructureBackup;
             locationGuide.param = location.param;
             locationGuide.get = location.get;
             locationGuide.post = serialize ( location.post );
         }
 
-        if ( Structure.currentPage !== location.nextStructure ) {
-            
-            // 更新currentPage结构体对象
-            Structure.currentPage.update ( location.nextStructure );
-        }
-
         // 使用模块加载器来加载更新模块
         new ModuleLoader ( 
             location.nextStructure, 
-            location.param, 
+            location.param,
             location.get,
             location.post
         ).load ();

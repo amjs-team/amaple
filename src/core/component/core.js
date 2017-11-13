@@ -1,4 +1,4 @@
-import { extend, foreach, noop, type } from "../../func/util";
+import { extend, foreach, noop, type, isEmpty } from "../../func/util";
 import { transformCompName } from "../../func/private";
 import { rcomponentName } from "../../var/const";
 import { componentErr } from "../../error";
@@ -111,12 +111,9 @@ extend ( Component.prototype, {
     		const actions = this.action.apply ( this, cache.getDependentPlugin ( this.action ) );
     		componentConstructor.initAction ( this, actions );
     	}
-    	
-    	// 如果有saveRef方法则表示此组件需被引用
-        ( componentVNode.saveRef || noop ) ( this.action ) || noop;
 
         // 初始化生命周期
-        componentConstructor.initLifeCycle ( this, moduleObj );
+        componentConstructor.initLifeCycle ( this, componentVNode, moduleObj );
 
     	// 组件初始化完成，调用apply钩子函数
     	( this.apply || noop ).apply ( this, cache.getDependentPlugin ( this.apply || noop ) );
@@ -124,14 +121,40 @@ extend ( Component.prototype, {
         vfragment.diff ( vfragmentBackup ).patch ();
     },
 
+    /**
+        __update__ ()
+    
+        Return Type:
+        void
+    
+        Description:
+        组件生命周期hook
+        当该模块位置更新时时调用
+    
+        URL doc:
+        http://icejs.org/######
+    */
     __update__ () {
         const nt = new NodeTransaction ().start ();
         this.lifeCycle.update ();
         nt.commit ();
     },
 
+    /**
+        __unmount__ ()
+    
+        Return Type:
+        void
+    
+        Description:
+        组件生命周期hook
+        当该模块卸载时时调用
+    
+        URL doc:
+        http://icejs.org/######
+    */
     __unmount__ () {
-        if ( this.components.length > 0 ) {
+        if ( !isEmpty ( this.components ) ) {
             foreach ( this.components, comp => {
                 comp.__unmount__ ();
             } );

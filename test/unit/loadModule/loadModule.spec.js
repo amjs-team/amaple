@@ -17,11 +17,12 @@ describe ( "ice test =>", () => {
 				Router.module ()
 				.route ( [ "/debug", "/table" ], "test/table" )
 				.route( "/login", "test/login", childRouter => {
-					childRouter.module ().defaultRoute ( "test/sub_sera" );
+					childRouter.module ().route ( ":sub_sera", "test/sub_sera" );
 				} );
 
-				
-				Router.module ( "tips" ).route ( "/debug", "test/sera" );
+
+				Router.module ( "tips" )
+				.route ( [ "/debug", "/table" ], "test/sera" );
 			}
 		} )
 	} );
