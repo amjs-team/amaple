@@ -42,6 +42,24 @@ export function parseGetQuery ( getString ) {
 }
 
 /**
+	getFunctionName ( fn: Function )
+
+	Return Type:
+	String
+	方法名称
+
+	Description:
+	es5兼容模式获取方法名称
+	es6下可通过name属性获取类名
+
+	URL doc:
+	http://icejs.org/######
+*/
+export function getFunctionName ( fn ) {
+	return fn.name || ( ( fn.toString ().match ( /^function\s+([\w_]+)/ ) || [] ) [ 1 ] );
+}
+
+/**
 	transformCompName ( compName: String, mode?: Boolean )
 
 	Return Type:

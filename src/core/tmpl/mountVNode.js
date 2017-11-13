@@ -1,5 +1,5 @@
 import { foreach } from "../../func/util";
-import { transformCompName } from "../../func/private";
+import { transformCompName, getFunctionName } from "../../func/private";
 import { rexpr } from "../../var/const";
 import { runtimeErr } from "../../error";
 import Tmpl from "./Tmpl";
@@ -130,7 +130,7 @@ export default function mountVNode ( vnode, tmpl, mountModule, isRoot = true ) {
 					const 
 				   		componentName = transformCompName ( vnode.nodeName ),
 				   		ComponentDerivative = tmpl.getComponent ( componentName ) || Component.getGlobal ( componentName );
-					if ( ComponentDerivative && ComponentDerivative.__proto__.name === "Component" ) {
+					if ( ComponentDerivative && getFunctionName ( ComponentDerivative.__proto__ ) === "Component" ) {
 						compileHandlers.components.push ( { vnode, Class : ComponentDerivative } );
 				   		vnode.isComponent = true;
 					}

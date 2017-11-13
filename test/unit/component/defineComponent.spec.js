@@ -153,11 +153,11 @@ describe ( "define component =>", () => {
 		//////////////////////////////////////////
 		//////////////////////////////////////////
 		//////////////////////////////////////////
-		div.attr ( "link", "./a/b/c" );
+		div.attr ( "link", "/a/b/c" );
 		tc.__init__ ( div, {} );
 
 		expect ( fragment.children [ 0 ].templateNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( "external button.ice" );
-		expect ( fragment.children [ 0 ].templateNodes [ 0 ].attr ( "href" ) ).toBe ( "./a/b/c" );
+		expect ( fragment.children [ 0 ].templateNodes [ 0 ].attr ( "href" ) ).toBe ( "/a/b/c" );
 		fragment.diff ( fBackup ).patch ();
 		expect ( realDOM.firstChild.firstChild.nodeValue ).toBe ( "external button.ice" );
 		expect ( realDOM.firstChild.pathname ).toBe ( "/a/b/c" );
@@ -231,7 +231,7 @@ describe ( "define component =>", () => {
 		let tc = new TestComp (),
 			fragment = VFragment (),
 			div = VElement ( "div" ),
-			vm = new ViewModel ( { text : "button", link : "./b" } );
+			vm = new ViewModel ( { text : "button", link : "/b" } );
 
 		fragment.appendChild ( div );
 		let realDOM = fragment.render (),
@@ -245,7 +245,7 @@ describe ( "define component =>", () => {
 		tc.__init__ ( div, { state : vm } );
 
 		expect ( fragment.children [ 0 ].templateNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( "button" );
-		expect ( fragment.children [ 0 ].templateNodes [ 0 ].attr ( "href" ) ).toBe ( "./b" );
+		expect ( fragment.children [ 0 ].templateNodes [ 0 ].attr ( "href" ) ).toBe ( "/b" );
 		fragment.diff ( fBackup ).patch ();
 		expect ( realDOM.firstChild.firstChild.nodeValue ).toBe ( "button" );
 		expect ( realDOM.firstChild.pathname ).toBe ( "/b" );
@@ -262,15 +262,15 @@ describe ( "define component =>", () => {
 
 		//使用计算属性做props代理后，vm的属性改变会影响组件内使用该组件的绑定
 		fBackup = fragment.clone ();
-		vm.link = "./c";
-		expect ( fragment.children [ 0 ].templateNodes [ 0 ].attr ( "href" ) ).toBe ( "./c" );
+		vm.link = "/c";
+		expect ( fragment.children [ 0 ].templateNodes [ 0 ].attr ( "href" ) ).toBe ( "/c" );
 		fragment.diff ( fBackup ).patch ();
 		expect ( realDOM.firstChild.pathname ).toBe ( "/c" );
 
 		fBackup = fragment.clone ();
-		tc.action.changeLink ( "./d" );
-		expect ( vm.link ).toBe ( "./d" );
-		expect ( fragment.children [ 0 ].templateNodes [ 0 ].attr ( "href" ) ).toBe ( "./d" );
+		tc.action.changeLink ( "/d" );
+		expect ( vm.link ).toBe ( "/d" );
+		expect ( fragment.children [ 0 ].templateNodes [ 0 ].attr ( "href" ) ).toBe ( "/d" );
 		fragment.diff ( fBackup ).patch ();
 		expect ( realDOM.firstChild.pathname ).toBe ( "/d" );
 	} );

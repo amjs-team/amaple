@@ -1,5 +1,5 @@
 import { extend, foreach, noop } from "../../func/util";
-import { defineReactiveProperty } from "../../func/private";
+import { defineReactiveProperty, getFunctionName } from "../../func/private";
 import ViewWatcher from "../ViewWatcher";
 import mountVNode from "./mountVNode";
 import ViewModel from "../ViewModel";
@@ -29,7 +29,7 @@ export default function Tmpl ( vm, components, module ) {
     this.module = module;
     
     foreach ( components, comp => {
-        this.components [ comp.name ] = comp;
+        this.components [ getFunctionName ( comp ) ] = comp;
     } );
 }
 
