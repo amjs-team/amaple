@@ -13,16 +13,20 @@ describe ( "ice test =>", () => {
 			},
 			moduleSuffix: ".html",
 			baseURL : "module",
-			routes : function ( Router ) {
-				Router.module ()
+			routes : function ( router ) {
+				router.module ()
 				.route ( [ "/debug", "/table" ], "test/table" )
-				.route( "/login", "test/login", childRouter => {
+				.route ( "/login", "test/login", childRouter => {
 					childRouter.module ().route ( ":sub_sera", "test/sub_sera" );
-				} );
+				} )
+				.route ( "/forget_pwd", "test/forget_pwd" )
+				.route ( "/error404", "error/404" );
 
-
-				Router.module ( "tips" )
+				router.module ( "tips" )
 				.route ( [ "/debug", "/table" ], "test/sera" );
+
+				// 设置404页面路径
+				router.error404 ( "/error404" );
 			}
 		} )
 	} );

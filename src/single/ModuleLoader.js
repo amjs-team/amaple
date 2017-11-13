@@ -3,7 +3,7 @@ import { query, attr, serialize } from "../func/node";
 import { queryModuleNode, parseGetQuery } from "../func/private";
 import require from "../core/component/require/require";
 import { envErr, moduleErr } from "../error";
-import { MODULE_UPDATE, MODULE_REQUEST, MODULE_RESPONSE } from "../var/const";
+import iceHistory from "../single/history/iceHistory";
 import compileModule from "./compileModule";
 import configuration from "../core/configuration/core";
 import ice from "../core/core";
@@ -150,7 +150,7 @@ extend ( ModuleLoader.prototype, {
 		param = param || this.param;
 
 		foreach ( structure, route => {
-		    if ( route.hasOwnProperty ( "notUpdate" ) ) {
+		    if ( route.hasOwnProperty ( "notUpdate" ) && route.modulePath !== null ) {
 
 		    	// 需过滤匹配到的空模块
 		    	// 空模块没有modle对象，也没有param等参数
@@ -235,20 +235,25 @@ extend ( ModuleLoader.prototype, {
 		if ( this.moduleError ) {
 
 			// 加载模块遇到错误，直接处理错误信息
-		   	const location = {
-		       	path : this.moduleError,
-		       	nextStructure : Router.matchRoutes ( this.path, this.param ),
-		       	param : {},
-		       	search : Router.matchSearch ( getSearch () ),
-		       	action : "PUSH" // 暂不确定是不是为"PUSH"???
-		       };
+		   	const 
+		   		pathResolver = iceHistory.history.buildURL ( this.moduleError ),
+		   		param = {},
+		   		nextStructure = Router.matchRoutes ( pathResolver.pathname, param ),
+		   		nextStructureBackup = nextStructure.copy (),
 
-		   	// Router.matchRoutes()匹配当前路径需要更新的模块
-		   	// 更新currentPage结构体对象，如果为空表示页面刚刷新，将nextStructure直接赋值给currentPage
-		   	Structure.currentPage = Structure.currentPage ? Structure.currentPage.update ( location.nextStructure ) : location.nextStructure;
-		   	
+		   		location = {
+			       	path : this.moduleError,
+			       	nextStructure,
+			       	param,
+			       	get : pathResolver.search,
+			       	post : {},
+			       	action : "REPLACE" // 暂不确定是不是为"PUSH"???
+			    };
+
 		   	// 根据更新后的页面结构体渲染新视图
-		   	Structure.currentPage.render ( location );
+		   	Structure.currentPage
+		   	.update ( location.nextStructure )
+		   	.render ( location, nextStructureBackup );
 		}
 		else {
 			const 

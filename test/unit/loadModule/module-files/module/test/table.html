@@ -6,6 +6,7 @@
 		<!-- <edit-table t-th="{{ title }}" t-tr="{{ content }}"></edit-table> -->
 		<div class="abc">{{ title }} {{ content }}</div>
 		<a href="/login/aa">{{ btn }}{{ postData }}</a>
+		<a href="/forget_pwd">{{ btn }}_404</a>
 		<ul id="a87">
 			<li :for="t in title">{{ t }}</li>
 		</ul>
@@ -64,6 +65,7 @@
 		a {
 			color: gray;
 			font-size: 20px;
+			margin: 0 20px;
 		}
 		.abc {
 			background: red;

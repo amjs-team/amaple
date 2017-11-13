@@ -76,15 +76,55 @@ extend ( Router.prototype, {
     	return this;
 	},
 	
+    /**
+        forcedRender ()
+    
+        Return Type:
+        Object
+        当前Router对象
+    
+        Description:
+        强制渲染模块
+        调用此函数后，部分匹配相同路由的模块也会强制重新渲染
+    
+        URL doc:
+        http://icejs.org/######
+    */
 	forcedRender () {
     	this.routeItem.forcedRender = null;
     	return this;
     },
 
+    /**
+        error404 ( path404: String )
+    
+        Return Type:
+        void
+    
+        Description:
+        设置404页面路径
+        页面跳转时如果有任何一个模块未找到对应文件则会匹配404路径进行跳转
+    
+        URL doc:
+        http://icejs.org/######
+    */
     error404 ( path404 ) {
         Router.errorPaths.error404 = path404;
     },
 
+    /**
+        error500 ( path500: String )
+    
+        Return Type:
+        void
+    
+        Description:
+        设置错误500页面路径
+        页面跳转时如果有任何一个模块处理出现500错误，则会匹配500路径进行跳转
+    
+        URL doc:
+        http://icejs.org/######
+    */
     error500 ( path500 ) {
         Router.errorPaths.error500 = path500;
     }

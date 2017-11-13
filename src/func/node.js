@@ -299,7 +299,8 @@ export function serialize ( form ) {
 
 	// 判断表单中是否含有上传文件
 	foreach ( inputs, inputItem => {
-		if ( inputItem.name && !attr ( inputItem, "disabled" ) && rsubmittable.test( inputItem.nodeName ) && !rsubmitterTypes.test( inputItem.type ) && ( inputItem.checked || !rcheckableType.test( inputItem.type ) ) ) {
+		const name = attr ( inputItem, "name" );
+		if ( name && !attr ( inputItem, "disabled" ) && rsubmittable.test( inputItem.nodeName ) && !rsubmitterTypes.test( inputItem.type ) && ( inputItem.checked || !rcheckableType.test( inputItem.type ) ) ) {
 
 			formObject [ name ] = inputItem.value.replace ( rCRLF, "\r\n" );
 		}
