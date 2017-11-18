@@ -1,7 +1,6 @@
 import { foreach, isEmpty, type, noop } from "./func/util";
 import { classErr } from "./error";
 import ComponentLoader from "./core/component/require/ComponentLoader";
-import Structure from "./core/tmpl/Structure";
 
 const 
 	rconstructor = /^(?:constructor\s*|function\s*)?(?:constructor\s*)?\((.*?)\)\s*(?:=>\s*)?{([\s\S]*)}$/,
@@ -194,10 +193,9 @@ export default function Class ( clsName ) {
 			defineMemberFunction ( classFn, proto );
 		}
     	
-    	// 单页模式下将会临时保存到window下的components命名空间中以方面require内获取
-		if ( Structure.currentPage ) {
-			window.components = window.components || {};
-			window.components [ classFn.name ] = classFn;
+    	// 单页模式下将会临时保存ComponentLoader
+		if ( ComponentLoader.isRequiring ) {
+			ComponentLoader.currentLoaded = classFn;
 		}
 
 		return classFn;
@@ -205,6 +203,7 @@ export default function Class ( clsName ) {
 
 	// 继承函数
 	classDefiner.extends = ( superClass ) => {
+
     	// superClass需要为函数类型，否则会报错
     	if ( type ( superClass ) !== 'function' && superClass !== null ) {
         	throw classErr ( "extends", "Class extends value is not a constructor or null" );

@@ -1,5 +1,5 @@
 import { extend, foreach, noop, type, isEmpty } from "../../func/util";
-import { transformCompName } from "../../func/private";
+import { transformCompName, getFunctionName } from "../../func/private";
 import { rcomponentName } from "../../var/const";
 import { componentErr } from "../../error";
 import slice from "../../var/slice";
@@ -13,8 +13,8 @@ import NodeTransaction from "../vnode/NodeTransaction";
 export default function Component () {
 
 	// check
-	check ( this.init ).type ( "function" ).ifNot ( "component:" + this.constructor.name, "component derivative必须定义init方法" ).do ();
-    check ( this.render ).type ( "function" ).ifNot ( "component:" + this.constructor.name, "component derivative必须定义render方法，因为组件必须存在组件模板HTML" ).do ();
+	check ( this.init ).type ( "function" ).ifNot ( "component:" + getFunctionName ( this.constructor ), "component derivative必须定义init方法" ).do ();
+    check ( this.render ).type ( "function" ).ifNot ( "component:" + getFunctionName ( this.constructor ), "component derivative必须定义render方法，因为组件必须存在组件模板HTML" ).do ();
 }
 
 extend ( Component.prototype, {
@@ -90,11 +90,19 @@ extend ( Component.prototype, {
     	delete this.style;
     	delete this.subElements;
 
+        // 验证组件类
+        this.depComponents = this.depComponents || [];
+        foreach ( this.depComponents, comp => {
+            if ( comp && getFunctionName ( comp.__proto__ ) !== "Component" ) {
+                throw componentErr ( "depComponents", `组件"${ getFunctionName ( this.constructor ) }"内错误的依赖组件对象，请确保依赖组件为一个组件衍生类` );
+            }
+        } );
+
 		// 处理模块并挂载数据
 		const 
             vfragment = componentConstructor.initTemplate ( componentString, scopedStyle ),
             subElements = componentConstructor.initSubElements ( componentVNode, subElementNames ),
-            tmpl = new Tmpl ( componentVm, this.components || [], this ),
+            tmpl = new Tmpl ( componentVm, this.depComponents, this ),
             vfragmentBackup = vfragment.clone ();
     	
 		tmpl.mount ( vfragment, false, Tmpl.defineScoped ( subElements, componentVNode, false ) );
@@ -161,34 +169,6 @@ extend ( Component.prototype, {
         }
 
         this.lifeCycle.unmount ();
-    },
-
-    /**
-        depComponents ( comps: Array )
-    
-        Return Type:
-        void
-    
-        Description:
-        指定此组件模板内的依赖组件类
-    
-        URL doc:
-        http://icejs.org/######
-    */
-    depComponents ( ...comps ) {
-        this.components = [];
-        
-        foreach ( comps, comp => {
-            if ( comp && comp.__proto__.name === "Component" ) {
-                this.components.push ( comp );
-            }
-            else if ( type ( comp ) === "string" ) {
-                const compObj = cache.getComponent ( comp );
-                if ( compObj && compObj.__proto__.name === "Component" ) {
-                    this.components.push ( compObj );
-                }
-            }
-        } );
     }
 } );
 
@@ -212,7 +192,8 @@ extend ( Component, {
         http://icejs.org/######
     */
 	defineGlobal ( componentDerivative ) {
-		this.globalClass [ componentDerivative.name ] = componentDerivative;
+        check ( getFunctionName ( componentDerivative.__proto__ ) ).be ( "Component" ).ifNot ( "Component.defineGlobal", "参数componentDerivative必须为继承ice.Component的组件衍生类" );
+		this.globalClass [ getFunctionName ( componentDerivative ) ] = componentDerivative;
 	},
 
     /**

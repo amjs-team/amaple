@@ -38,7 +38,7 @@ extend ( ICEXMLHttpRequest.prototype, {
 		对应返回头信息
 	
 		Description:
-		获取返回头
+		获取返回头信息
 	
 		URL doc:
 		http://icejs.org/######

@@ -1,6 +1,6 @@
 import allowState from "./allowState";
 import defaultParams from "./defaultParams";
-import { type, isEmpty, extend } from "../../func/util";
+import { type, extend } from "../../func/util";
 
 let paramStore = defaultParams;
 
@@ -25,9 +25,8 @@ export default function configuration ( params ) {
 	params.baseURL = params.baseURL.substr ( 0, 1 ) === "/" ? params.baseURL : "/" + params.baseURL;
 	params.baseURL = params.baseURL.substr ( -1, 1 ) === "/" ? params.baseURL : params.baseURL + "/";
 
-
-	params.stateSymbol = allowState.indexOf ( params.stateSymbol ) === -1 ? allowState [ 0 ] : params.stateSymbol;
-	params.redirectCache = params.redirectCache !== false ? true : false;
+	// params.stateSymbol = allowState.indexOf ( params.stateSymbol ) === -1 ? allowState [ 0 ] : params.stateSymbol;
+	params.moduleSuffix = params.moduleSuffix.substr ( 0, 1 ) === "." ? params.moduleSuffix : "." + params.moduleSuffix;
 
 	paramStore = extend ( paramStore, params );
 }

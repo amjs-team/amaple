@@ -27,7 +27,7 @@ extend ( Router.prototype, {
     	return this;
     },
 	
-	route ( pathExpr, modulePath, childDefineFunc ) {
+	route ( pathExpr, modulePath, childDefineFn ) {
         check ( pathExpr ).type ( "string", "array" ).ifNot ( "Router.route", "pathExpr参数必须为字符串或数组" );
 
     	if ( !this.routeItem ) {
@@ -40,16 +40,16 @@ extend ( Router.prototype, {
         };
     	this.routeItem.routes.push ( route );
         
-        if ( type ( childDefineFunc ) === "function" ) {
+        if ( type ( childDefineFn ) === "function" ) {
         	route.children = [];
-    		childDefineFunc ( new Router ( route.children ) );
+    		childDefineFn ( new Router ( route.children ) );
         }
     	
     	return this;
     },
 	
-	defaultRoute ( modulePath ) {
-    	this.route ( "", modulePath );
+	defaultRoute ( modulePath, childDefineFn ) {
+    	this.route ( "", modulePath, childDefineFn );
     	
     	return this;
     },
@@ -103,7 +103,7 @@ extend ( Router.prototype, {
     
         Description:
         设置404页面路径
-        页面跳转时如果有任何一个模块未找到对应文件则会匹配404路径进行跳转
+        页面跳转时如果有任何一个模块未找到对应模块文件则会重定向到404路径并重新匹配路由来更新模块。
     
         URL doc:
         http://icejs.org/######
@@ -139,8 +139,8 @@ extend ( Router, {
     },
 
     pathToRegexp ( pathExpr, from ) {
+        const pathObj = { param : {} };
         let i = 1,
-            pathObj = { param : {} },
 			
             // 如果path为redirect中的from，则不需加结尾的“/”匹配式
             endRegexp = from === "redirect" ? "" : "(?:\\/)?";

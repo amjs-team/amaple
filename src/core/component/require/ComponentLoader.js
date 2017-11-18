@@ -10,7 +10,7 @@ import cache from "../../../cache/core";
 	void
 
 	Description:
-	依赖加载器
+	组件依赖加载器
 
 	URL doc:
 	http://icejs.org/######
@@ -23,8 +23,6 @@ export default function ComponentLoader ( load ) {
 
 	 // 等待加载完成的依赖，每加载完成一个依赖都会将此依赖在waiting对象上移除，当waiting为空时则表示相关依赖已全部加载完成
 	this.waiting = [];
-
-	this.factory;
 }
 
 
@@ -32,7 +30,7 @@ extend ( ComponentLoader.prototype, {
 
 	/**
 		putWaiting ( name: String )
-	
+		
 		Return Type:
 		void
 	
@@ -87,11 +85,11 @@ extend ( ComponentLoader.prototype, {
 		foreach ( this.load.deps, dep => {
 
 			// 查找插件
-			deps [ dep ] = window.components [ dep ];
+			deps [ dep ] = ComponentLoader.loaded [ dep ];
 			delete window.components [ dep ];
 		} );
 
-		// 返回注入后工厂方法
+		返回注入后工厂方法
 		this.factory = () => {
 			this.load.factory.apply ( null, deps );
 		}
@@ -110,7 +108,8 @@ extend ( ComponentLoader.prototype, {
 		http://icejs.org/######
 	*/
 	fire () {
-		this.factory ();
+		this.load.factory ();
+		ComponentLoader.isRequiring = false;
 	},
 } );
 
@@ -118,10 +117,13 @@ extend ( ComponentLoader.prototype, {
 
 extend ( ComponentLoader, {
 
+	// 是否正在加载依赖组件
+	isRequiring : false,
+
 	// 文件后缀
 	suffix : ".js",
 
-	// js插件的依赖名称属性，通过此属性可以得到加载完成的依赖名
+	// js组件的依赖名称属性，通过此属性可以得到加载完成的依赖名
 	depName : "data-depName",
 
 	// script加载依赖时用于标识依赖
@@ -160,10 +162,11 @@ extend ( ComponentLoader, {
 		http://icejs.org/######
 	*/
 	getCurrentPath () {
+		const anchor = document.createElement ( "a" );
     	if ( document.currentScript ) {
 
     		// Chrome, Firefox, Safari高版本
-        	return document.currentScript.src;
+        	anchor.href = document.currentScript.src;
         }
     	else {
 
@@ -173,7 +176,7 @@ extend ( ComponentLoader, {
 			} catch ( e ) {
 				const stack = e.stack || e.sourceURL || e.stacktrace;
             	if ( stack ) {
-					return ( e.stack.match ( /(?:http|https|file):\/\/.*?\/.+?\.js/ ) || [ "" ] ) [ 0 ];
+					anchor.href = ( e.stack.match ( /(?:http|https|file):\/\/.*?\/.+?\.js/ ) || [ "" ] ) [ 0 ];
                 }
             	else {
 
@@ -181,12 +184,15 @@ extend ( ComponentLoader, {
                 	const scripts = slice.call ( document.querySelectorAll ( "script" ) );
                 	for ( let i = scripts.length - 1, script; script = script [ i-- ]; ) {
                     	if ( script.readyState === "interative" ) {
-                        	return script.src;
+                        	anchor.href = script.src;
+                        	break;
                         }
                     }
                 }
 			}
         }
+
+        return anchor.pathname;
 	},
 
 	/**
@@ -207,7 +213,7 @@ extend ( ComponentLoader, {
 		const
         	loadID = e.target [ ComponentLoader.loaderID ],
 			curLoader = ComponentLoader.loaderMap [ loadID ];
-
+			
 		// 执行
 		if ( curLoader.dropWaiting ( e.target [ ComponentLoader.depName ] ) === 0 ) {
 

@@ -1,7 +1,9 @@
+import check from "../../../check";
+import { foreach, guid } from "../../../func/util";
+import { appendScript } from "../../../func/node";
 import ComponentLoader from "./ComponentLoader";
 import cache from "../../../cache/core";
-import { foreach, guid } from "../../../func/util";
-import { appendScript, attr } from "../../../func/node";
+
 
 /**
 	require ( deps: Object, factory: Function )
@@ -17,12 +19,7 @@ import { appendScript, attr } from "../../../func/node";
 	http://icejs.org/######
 */
 export default function require ( deps, factory ) {
-	
-	const pathAnchor = document.createElement ( "a" );
-	// pathAnchor.href = deps [ 0 ];
-	pathAnchor.href = "aaa/bb/cc";
-
-	console.log(pathAnchor.href, location.href);
+	ComponentLoader.isRequiring = true;
 
 	// 正在加载的依赖数
 	let	loadingCount = 0;
@@ -33,11 +30,11 @@ export default function require ( deps, factory ) {
 			deps 	: deps,
 			factory : factory,
 		},
-	
 		loadObj = ComponentLoader.create ( nguid, module );
 
 	// 遍历依赖，如果依赖未被加载，则放入waiting中等待加载完成
 	foreach ( deps, depStr => {
+		check ( depStr.substr ( 0, 1 ).be ( "/" ) ).ifNot ( "import", `"${depStr}"错误，组件加载路径必须为以”/“开头的绝对路径` );
 		if ( !cache.getComponent ( depStr ) ) {
 
 			// 放入待加载列表中等待加载

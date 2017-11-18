@@ -1,4 +1,9 @@
 ice.Class ( "PageCtrl" ).extends ( ice.Component ) ( {
+	cosntructor : function () {
+		this.__super ();
+		this.depComponents = [];
+	},
+
 	validateProps : function () {
     	this.propsType ( {
         	options : {

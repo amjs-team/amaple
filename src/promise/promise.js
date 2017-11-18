@@ -178,7 +178,6 @@ extend ( Promise.prototype, {
 		http://icejs.org/######
 	*/
 	then ( onFulfilled, onRejected ) {
-
 		return new Promise ( ( resolve, reject ) => {
 			this.handle ( {
 				onFulfilled ( ...args ) {

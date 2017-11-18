@@ -127,7 +127,7 @@ export function isEmpty ( object ) {
 	合并后的array、object或function
 
 	Description:
-	此函数用于继承参数属性，可以传入不定个数被继承参数，以第一个参数作为继承参数，继承对象类型必须为array、object、function，被继承参数可以是任意类型的参数。
+	此函数用于继承参数属性，可以传入不定个数被继承参数，以第一个参数作为继承目标对象，继承对象类型必须为array、object、function，被继承参数可以是任意类型的参数。
 	
 	#Warning: 此函数会改变继承参数
 	
@@ -147,10 +147,9 @@ export function isEmpty ( object ) {
 	URL doc:
 	http://icejs.org/######
 */
-export function extend ( ...args ) {
+export function extend ( target, ...args ) {
 
-	let target = args [ 0 ],
-		ttarget = type ( target ),
+	let ttarget = type ( target ),
 		targ;
 
 	args = args.slice ( 1 );
@@ -183,30 +182,6 @@ export function extend ( ...args ) {
 	});
 	
 	return target;
-}
-
-/**
-	isWindow ( object: Object )
-
-	Return Type:
-	Boolean
-	是返回true，否返回false
-
-	Description:
-	判断一个对象是否为window对象
-	使用window的特有函数，及自引用特性进行判断
-	如果object.window的undefined，则此对象肯定不是window对象
-
-	URL doc:
-	http://icejs.org/######
-*/
-export function isWindow ( object ) {
-	try {
-		return type ( object ) === "object" && !!object.eval && !!object.setInterval && object.window === object.window.window;
-	}
-	catch( e ) {
-		return false;
-	}
 }
 
 /**

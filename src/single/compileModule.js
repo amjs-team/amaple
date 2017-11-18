@@ -71,7 +71,10 @@ function parseTemplate ( moduleString, parses ) {
 		parses.view = ( viewMatch [ 1 ] || "" ).trim ();
 
 		// 去除所有标签间的空格，并转义"和'符号
-		parses.view = parses.view.replace ( rblank, ( match, rep ) => match.replace ( rep, "" ) ).replace ( rtext, match => "\\" + match );
+		parses.view = parses.view
+		.replace ( rblank, ( match, rep ) => match
+			.replace ( rep, "" ) )
+		.replace ( rtext, match => "\\" + match );
 	}
 
 	return moduleString;

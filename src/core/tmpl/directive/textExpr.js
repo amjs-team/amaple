@@ -23,10 +23,11 @@ export default {
         if ( /^{{\s*(\S+)\s*}}$/.test ( this.expr ) ) {
             this.expr = this.expr.replace ( /{{\s*(.*?)\s*}}/g, ( match, rep ) => rep );
         }
-
-        // 当表达式为混合表达式时，将表达式转换为字符串拼接代码
         else {
-            this.expr = this.expr.replace ( /{{\s*(.*?)\s*}}/g, ( match, rep ) => "\" + " + rep + " + \"" );
+
+            // 当表达式为混合表达式时，将表达式转换为字符串拼接代码
+            // 拼接前先过滤换行符为空格，防止解析出错
+            this.expr = this.expr.replace ( /[\r\n]/g, " " ).replace ( /{{\s*(.*?)\s*}}/g, ( match, rep ) => "\" + " + rep + " + \"" );
             this.expr = "\"" + this.expr + "\"";
         }
     },

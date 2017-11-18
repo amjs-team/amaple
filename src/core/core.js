@@ -5,7 +5,7 @@ import cache from "../cache/core";
 import requestEventHandler from "../single/requestEventHandler";
 import iceAttr from "../single/iceAttr";
 import iceHistory from "../single/history/iceHistory";
-import { AUTO, HASH_HISTORY, BROWSER_HISTORY } from "../single/history/historyMode";
+import { AUTO, HASH, BROWSER } from "../single/history/historyMode";
 import event from "../event/core";
 import check from "../check";
 import correctParam from "../correctParam";
@@ -20,16 +20,15 @@ import Structure from "./tmpl/Structure";
 export default {
 
 	// 路由模式，启动路由时可进行模式配置
-	// 自动选择路由模式(默认)
-	// 在支持html5 history API时使用新特性，不支持的情况下自动回退到hash模式
+	// 默认为自动选择路由模式，即在支持html5 history API时使用新特性，不支持的情况下自动回退到hash模式
 	AUTO,
 
 	// 强制使用hash模式
-	HASH_HISTORY,
+	HASH,
 
 	// 强制使用html5 history API模式
 	// 使用此模式时需注意：在不支持新特新的浏览器中是不能正常使用的
-	BROWSER_HISTORY,
+	BROWSER,
 	
 	// Module对象
 	Module,
@@ -53,7 +52,7 @@ export default {
 		URL doc:
 		http://icejs.org/######
 	*/
-	startRouter ( routerConfig = {} ) {
+	startRouter ( routerConfig ) {
 
 		// 纠正参数
 		// correctParam ( rootModuleName, routerConfig ).to ( "string", "object" ).done ( function () {
@@ -74,10 +73,10 @@ export default {
     	routerConfig.history = routerConfig.history || AUTO;
     	if ( routerConfig.history === AUTO ) {
         	if ( iceHistory.supportNewApi () ) {
-                routerConfig.history = BROWSER_HISTORY;
+                routerConfig.history = BROWSER;
             }
             else {
-                routerConfig.history = HASH_HISTORY;
+                routerConfig.history = HASH;
             }
         }
     	
@@ -88,7 +87,7 @@ export default {
         	href = window.location.href,
 			host = window.location.protocol + "//" + window.location.host + "/";
 		
-    	if ( routerConfig.history === HASH_HISTORY && href !== host && href.indexOf ( host + "#" ) === -1 ) {
+    	if ( routerConfig.history === HASH && href !== host && href.indexOf ( host + "#" ) === -1 ) {
         	if ( window.location.hash ) {
         		window.location.hash = "";
             }
@@ -157,23 +156,22 @@ export default {
 		URL doc:
 		http://icejs.org/######
 	*/
-	install ( pluginDefiniton ) {
-		check ( pluginDefiniton.name )
+	install ( pluginDefinition ) {
+		check ( pluginDefinition.name )
 			.type ( "string" )
 			.notBe ( "" )
-			.check ( cache.hasPlugin ( pluginDefiniton.name ) )
+			.check ( cache.hasPlugin ( pluginDefinition.name ) )
 			.be ( false )
-			.ifNot ( "pluginDefiniton.name", "plugin安装对象必须定义name属性以表示此插件的名称，且不能与已有插件名称重复" )
+			.ifNot ( "pluginDefinition.name", "plugin安装对象必须定义name属性以表示此插件的名称，且不能与已有插件名称重复" )
 			.do ();
 
-    	check ( pluginDefiniton.build )
+    	check ( pluginDefinition.build )
     		.type ( "function" )
-    		.ifNot ( "pluginDefiniton.build", "plugin安装对象必须包含build方法" )
+    		.ifNot ( "pluginDefinition.build", "plugin安装对象必须包含build方法" )
     		.do ();
     	
     	
-    	const deps = cache.getDependentPlugin ( pluginDefiniton.build );
-    	
-        cache.pushPlugin ( pluginDefiniton.name, pluginDefiniton.build.apply ( this, deps ) );
+    	const deps = cache.getDependentPlugin ( pluginDefinition.build );
+        cache.pushPlugin ( pluginDefinition.name, pluginDefinition.build.apply ( this, deps ) );
 	}
 };
