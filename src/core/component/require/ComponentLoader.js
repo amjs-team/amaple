@@ -1,5 +1,6 @@
 import { extend, foreach } from "../../../func/util";
 import { attr } from "../../../func/node";
+import { getFunctionName } from "../../../func/private";
 import slice from "../../../var/slice";
 import cache from "../../../cache/core";
 
@@ -23,6 +24,7 @@ export default function ComponentLoader ( load ) {
 
 	 // 等待加载完成的依赖，每加载完成一个依赖都会将此依赖在waiting对象上移除，当waiting为空时则表示相关依赖已全部加载完成
 	this.waiting = [];
+	this.loadedComponent = {};
 }
 
 
@@ -66,10 +68,10 @@ extend ( ComponentLoader.prototype, {
 	},
 
 	/**
-		inject ( module: Object )
+		inject ()
 	
 		Return Type:
-		Object
+		Function
 	
 		Description:
 		依赖注入方法实现
@@ -78,25 +80,29 @@ extend ( ComponentLoader.prototype, {
 		http://icejs.org/######
 	*/
 	inject () {
+		let depComponent, componentName;
+		const componentNames = [];
+		foreach ( this.load.deps, depStr => {
+			depComponent = this.loadedComponent [ depStr ];
+			componentName = getFunctionName ( depComponent );
+			componentNames.push ( componentName );
 
-		const
-			deps = [];
-
-		foreach ( this.load.deps, dep => {
-
-			// 查找插件
-			deps [ dep ] = ComponentLoader.loaded [ dep ];
-			delete window.components [ dep ];
+			window [ componentName ] = depComponent;
 		} );
 
-		返回注入后工厂方法
-		this.factory = () => {
-			this.load.factory.apply ( null, deps );
+		// 返回注入后工厂方法
+		return () => {
+			this.load.factory ();
+
+			// 在window上移除对依赖组件
+			foreach ( componentNames, name => {
+				delete window [ name ];
+			} );
 		}
 	},
 
 	/**
-		fire ()
+		fire ( factory: Function )
 	
 		Return Type:
 		void
@@ -107,8 +113,8 @@ extend ( ComponentLoader.prototype, {
 		URL doc:
 		http://icejs.org/######
 	*/
-	fire () {
-		this.load.factory ();
+	fire ( factory ) {
+		factory ();
 		ComponentLoader.isRequiring = false;
 	},
 } );
@@ -161,42 +167,42 @@ extend ( ComponentLoader, {
 		URL doc:
 		http://icejs.org/######
 	*/
-	getCurrentPath () {
-		const anchor = document.createElement ( "a" );
-    	if ( document.currentScript ) {
+	// getCurrentPath () {
+	// 	const anchor = document.createElement ( "a" );
+ //    	if ( document.currentScript ) {
 
-    		// Chrome, Firefox, Safari高版本
-        	anchor.href = document.currentScript.src;
-        }
-    	else {
+ //    		// Chrome, Firefox, Safari高版本
+ //        	anchor.href = document.currentScript.src;
+ //        }
+ //    	else {
 
-        	// IE10+, Safari低版本, Opera9
-        	try {
-				____a.____b();
-			} catch ( e ) {
-				const stack = e.stack || e.sourceURL || e.stacktrace;
-            	if ( stack ) {
-					anchor.href = ( e.stack.match ( /(?:http|https|file):\/\/.*?\/.+?\.js/ ) || [ "" ] ) [ 0 ];
-                }
-            	else {
+ //        	// IE10+, Safari低版本, Opera9
+ //        	try {
+	// 			____a.____b();
+	// 		} catch ( e ) {
+	// 			const stack = e.stack || e.sourceURL || e.stacktrace;
+ //            	if ( stack ) {
+	// 				anchor.href = ( e.stack.match ( /(?:http|https|file):\/\/.*?\/.+?\.js/ ) || [ "" ] ) [ 0 ];
+ //                }
+ //            	else {
 
-                	// IE9
-                	const scripts = slice.call ( document.querySelectorAll ( "script" ) );
-                	for ( let i = scripts.length - 1, script; script = script [ i-- ]; ) {
-                    	if ( script.readyState === "interative" ) {
-                        	anchor.href = script.src;
-                        	break;
-                        }
-                    }
-                }
-			}
-        }
+ //                	// IE9
+ //                	const scripts = slice.call ( document.querySelectorAll ( "script" ) );
+ //                	for ( let i = scripts.length - 1, script; script = script [ i-- ]; ) {
+ //                    	if ( script.readyState === "interative" ) {
+ //                        	anchor.href = script.src;
+ //                        	break;
+ //                        }
+ //                    }
+ //                }
+	// 		}
+ //        }
 
-        return anchor.pathname;
-	},
+ //        return anchor.pathname;
+	// },
 
 	/**
-		onScriptLoaded ( event: Object, : , :  )
+		onScriptLoaded ( event: Object )
 	
 		Return Type:
 		void
@@ -212,17 +218,17 @@ extend ( ComponentLoader, {
 
 		const
         	loadID = e.target [ ComponentLoader.loaderID ],
+        	depName = e.target [ ComponentLoader.depName ],
 			curLoader = ComponentLoader.loaderMap [ loadID ];
-			
-		// 执行
-		if ( curLoader.dropWaiting ( e.target [ ComponentLoader.depName ] ) === 0 ) {
+		
+		curLoader.loadedComponent [ depName ] = ComponentLoader.currentLoaded;
+		cache.pushModule ( depName, ComponentLoader.currentLoaded );
+		delete ComponentLoader.currentLoaded;
 
-			// 依赖注入后的工厂方法
-			curLoader.inject ();
+		if ( curLoader.dropWaiting ( depName ) === 0 ) {
 
 			// 调用工厂方法
-			curLoader.fire ( factory );
-			
+			curLoader.fire ( curLoader.inject () );
 			delete ComponentLoader.loaderMap [ loadID ];
 		}
 	}
