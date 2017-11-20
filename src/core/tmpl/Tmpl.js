@@ -48,6 +48,9 @@ extend ( Tmpl.prototype, {
         http://icejs.org/######
     */
 	mount ( vnode, mountModule, scoped ) {
+        if ( !this.moduleNode ) {
+            this.moduleNode = vnode;
+        }
         const compileHandlers = mountVNode ( vnode, this, mountModule );
             
         //////////////////////////////

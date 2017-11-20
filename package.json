@@ -28,7 +28,7 @@
   "scripts": {
     "build": "rollup -c build/build.js",
     "dev": "rollup -w -c build/dev.js",
-    "test:unit": "karma start test/unit/karma.conf.js"
+    "test:unit": "karma start test/unit/karma.unit.conf.js"
   },
   "keywords": [
     "ice",

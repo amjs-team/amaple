@@ -124,7 +124,10 @@ export default {
 
         this.expr      = variable [ 2 ];
         this.startNode = VTextNode ( "" );
+        this.startNode.key = guid ();
+
         this.endNode   = VTextNode ( "" );
+        this.endNode.key = guid ();
     },
 
     /**

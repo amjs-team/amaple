@@ -2,25 +2,18 @@
 	
 	<!-- 模块页面模板 -->
 	<template>
-		<!-- 表格组件渲染 -->
-		<!-- <edit-table t-th="{{ title }}" t-tr="{{ content }}"></edit-table> -->
 		<div class="abc">{{ title }} {{ content }}</div>
 		<a href="/login/aa">{{ btn }}{{ postData }}</a>
-		<a :onclick="changeData">change</a>
-		<a href="/forget_pwd" :if="postData">{{ btn }}_404</a>
+		<button :onclick="changeData">Change</button>
+		<a href="/forget_pwd">{{ btn }}_404</a>
 		<ul id="a87">
 			<li :for="t in title">{{ t }}</li>
 		</ul>
-		<!-- 翻页组件渲染 -->
-		<!-- <page-ctrl options="{{ pageCtrl }}" setPage="{{ setPage }}"></page-ctrl> -->
 	</template>
 	
 
 	<!-- 此模板对应的数据 -->
 	<script>
-		// var EditTable = import ( "component/EditTable" ), 
-			// PageCtrl = import ( "component/PageCtrl" );
-
 		var table = new ice.Module ( {
 			init : function () {
 
@@ -42,13 +35,13 @@
 					},
 					btn: "Button",
 					postData: "",
-	            
-	            	setPage : function ( event, btn ) {
-	            		console.log(event.currentTarget, btn);
-	                	this.content.push ( ["Sex"] );
-	                },
+					show: 1,
+
 	                changeData : function () {
-	                	this.postData = JSON.stringify ( {} );
+	                	// this.title.shift ();
+	                	// this.title.push ( "666" );
+	                	// this.show ++;
+	                	this.title.reverse ();
 	                }
 				};
 			},
@@ -58,7 +51,7 @@
 			},
 
 			apply () {
-				// this.state.postData = JSON.stringify ( this.post );
+				this.state.postData = JSON.stringify ( this.post );
 			}
 		} );
 	</script>

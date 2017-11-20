@@ -128,7 +128,7 @@ extend ( Component.prototype, {
             subElements = componentConstructor.initSubElements ( componentVNode, subElementNames ),
             tmpl = new Tmpl ( componentVm, this.depComponents, this ),
             vfragmentBackup = vfragment.clone ();
-    	
+    	tmpl.moduleNode = componentVNode;
 		tmpl.mount ( vfragment, false, Tmpl.defineScoped ( subElements, componentVNode, false ) );
 
 		// 保存组件对象和结构

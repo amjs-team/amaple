@@ -2,7 +2,7 @@ import { extend, foreach } from "../../func/util";
 import { walkVDOM } from "../../func/private";
 
 export default function NodeTransaction () {
-	this.transactions = [];
+	this.transactions = null;
 }
 
 extend ( NodeTransaction.prototype, {
@@ -26,7 +26,7 @@ extend ( NodeTransaction.prototype, {
 	},
 
 	/**
-		collect ( newVNode: Object, oldVNode: Object )
+		collect ( moduleNode: Object )
 	
 		Return Type:
 		void
@@ -37,51 +37,9 @@ extend ( NodeTransaction.prototype, {
 		URL doc:
 		http://icejs.org/######
 	*/
-	collect ( newVNode, oldVNode ) {
-		if ( this.transactions.length === 0 ) {
-			this.transactions.push ( {
-				backup : oldVNode,
-				update : newVNode
-			} );
-		}
-		else {
-			let comparedVNode = newVNode,
-				isFind = false;
-
-			// 为了避免重复对比节点，需对将要保存的节点向上寻找
-			// 如果在已保存数组中找到相同节点或祖先节点则不保存此对比节点
-			do {
-				foreach ( this.transactions, item => {
-					if ( item.update === comparedVNode ) {
-						isFind = true;
-						return false;
-					}
-				} );
-				
-				if ( !isFind ) {
-					comparedVNode = comparedVNode.parent;
-				}
-				else {
-					break;
-				}
-			} while ( comparedVNode )
-
-			// 如果在以保存数组中没有找到相同节点或祖先节点则需要保存此对比节点
-			// 此时需再向下寻找子孙节点，如果有子孙节点需移除此子孙节点的对比项
-			if ( !isFind ) {
-				walkVDOM ( newVNode, vnode => {
-					foreach ( this.transactions, ( item, i ) => {
-						if ( item.update === vnode ) {
-							this.transactions.splice ( i, 1 );
-						}
-					} );
-				} );
-
-				this.transactions.push ( {
-					backup : oldVNode, 
-					update : newVNode
-				} );
-			}
+	collect ( moduleNode ) {
+		if ( !this.transactions ) {
+			this.transactions = [ moduleNode, moduleNode.clone () ];
 		}
 	},
 
@@ -98,10 +56,9 @@ extend ( NodeTransaction.prototype, {
 		http://icejs.org/######
 	*/
 	commit () {
-		foreach ( this.transactions, comparedVNodes => {
-			comparedVNodes.update.diff ( comparedVNodes.backup ).patch ();
-		} );
-
+		if ( this.transactions ) {
+			this.transactions [ 0 ].diff ( this.transactions [ 1 ] ).patch ();
+		}
 		NodeTransaction.acting = undefined;
 	}
 } );

@@ -23,7 +23,10 @@ function loopFlush ( structure ) {
 	let title, _title;
 	foreach ( structure, route => {
 		if ( route.updateFn ) {
+			const nt = new NodeTransaction ().start ()
 			_title = route.updateFn ();
+			nt.commit ();
+
 			title = title || _title;
 
 			delete route.updateFn;
@@ -257,12 +260,9 @@ extend ( ModuleLoader.prototype, {
 		}
 		else {
 			const 
-				nt = new NodeTransaction ().start (),
 
 				// 正常加载，将调用模块更新函数更新模块
 				title = loopFlush ( this.nextStructure.entity );
-
-			nt.commit ();
 
 			// 更新页面title
 			if ( title && document.title !== title ) {

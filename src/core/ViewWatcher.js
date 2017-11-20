@@ -37,33 +37,6 @@ function makeFn ( code ) {
 }
 
 /**
-	getDiffNode ( watcher: Object )
-
-	Return Type:
-	Object
-	进行对比的vnode
-
-	Description:
-	获取节点更新后进行对比的节点，一般为更新node的父节点
-
-	URL doc:
-	http://icejs.org/######
-*/
-function getDiffNode ( watcher ) {
-
-	let diffVNode = watcher.parent;
-	if ( diffVNode && diffVNode.nodeType !== 1 && watcher.node.conditionElems ) {
-		foreach ( watcher.node.conditionElems.concat ( watcher.replacement ), conditionElem => {
-			if ( conditionElem.parent && conditionElem.parent.nodeType === 1 ) {
-				diffVNode = conditionElem.parent;
-			}
-		} );
-	}
-
-	return diffVNode;
-}
-
-/**
 	ViewWatcher ( directive: Object, node: DOMObject, expr: String, tmpl?: Object, scoped?: Object )
 
 	Return Type:
@@ -132,18 +105,17 @@ extend ( ViewWatcher.prototype, {
 		http://icejs.org/######
 	*/
 	update () {
-		const 
-			diffVNode = getDiffNode ( this ),
-			diffBackup = diffVNode.clone ();
-    	this.directive.update.call ( this, this.getter ( runtimeErr ) );
 
     	// 当已开启了一个事物时将收集新旧节点等待变更
     	// 当没有开启事物时直接处理更新操作
     	if ( NodeTransaction.acting instanceof NodeTransaction ) {
-    		NodeTransaction.acting.collect ( diffVNode, diffBackup );
+    		NodeTransaction.acting.collect ( this.tmpl.moduleNode );
+    		this.directive.update.call ( this, this.getter ( runtimeErr ) );
     	}
     	else {
-    		diffVNode.diff ( diffBackup ).patch ();
+    		const diffBackup = this.tmpl.moduleNode.clone ();
+    		this.directive.update.call ( this, this.getter ( runtimeErr ) );
+    		this.tmpl.moduleNode.diff ( diffBackup ).patch ();
     	}
     },
 	

@@ -190,7 +190,6 @@ function parseScript ( moduleString, scriptPaths, scriptNames, parses ) {
     	}
 
 		parses.script = parses.script.replace ( rmoduleDef, match => `${ match }moduleNode,` );
-		parses.script += "actingNt.collect(moduleNode);";
 	}
 
 	return moduleString;
@@ -247,7 +246,7 @@ export default function compileModule ( moduleString, identifier ) {
 			.ifNot ( "module:script", "<Module>内的<script>为必须子元素，它的内部js代码用于初始化模块的页面布局" )
 			.do ();
 
-		const buildView = `moduleNode.html(VNode.domToVNode(view));`;
+		const buildView = `actingNt.collect(moduleNode);moduleNode.html(VNode.domToVNode(view));`;
 
 		////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////

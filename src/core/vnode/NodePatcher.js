@@ -168,8 +168,6 @@ extend ( NodePatcher.prototype, {
 	patch () {
 		let p;
 		foreach ( this.patches, patchItem => {
-			patchItem.item.render ();
-
         	switch ( patchItem.type ) {
               	case NodePatcher.ATTR_REORDER :
               		if ( attrAssignmentHook.indexOf ( patchItem.name ) === -1 ) {
@@ -190,6 +188,8 @@ extend ( NodePatcher.prototype, {
             	
                 	break;
                 case NodePatcher.NODE_REORDER :
+                	patchItem.item.render ();
+
                 	p = patchItem.item.parent.node;
               		if ( patchItem.item.templateNodes ) {
                     	const f = document.createDocumentFragment ();
@@ -213,11 +213,10 @@ extend ( NodePatcher.prototype, {
                     }
                 	else {
                 		if ( patchItem.index < p.childNodes.length ) {
-            				p.insertBefore ( patchItem.item.node, p.childNodes.item ( patchItem.index + (
- 								// 在移动操作时的index对应的操作为先移除元素再将此元素插入对应位置
- 								// 但在此是直接调用insertBefore进行位置调换的，省去了移除原位置的动作，故在移动元素的情况下需+1
- 								patchItem.isMove ? 1 : 0
- 							) ) );
+ 							if ( patchItem.isMove ) {
+ 								p.removeChild ( patchItem.item.node );
+ 							}
+            				p.insertBefore ( patchItem.item.node, p.childNodes.item ( patchItem.index ) );
                     	}
                 		else {
                     		p.appendChild ( patchItem.item.node );
@@ -243,6 +242,8 @@ extend ( NodePatcher.prototype, {
                 	
                 	break;
                 case NodePatcher.NODE_REPLACE :
+                	patchItem.item.render ();
+
                 	let node;
                 	if ( patchItem.replaceNode.templateNodes ) {
                 		p = patchItem.replaceNode.templateNodes [ 0 ].node.parentNode;

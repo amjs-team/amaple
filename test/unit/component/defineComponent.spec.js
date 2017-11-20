@@ -53,11 +53,9 @@ describe ( "define component =>", () => {
 		expect ( realDOM.firstChild.nodeName ).toBe ( "BUTTON" );
 		expect ( realDOM.firstChild.firstChild.nodeValue ).toBe ( "test-btn" );
 
-		fBackup = fragment.clone ();
 		tc.action.print ( "hello icejs" );
 		expect ( fragment.children [ 0 ].templateNodes [ 1 ].children [ 0 ].nodeValue ).toBe ( "hello icejs" );
 		expect ( fragment.children [ 0 ].templateNodes [ 1 ].attr ( "style" ) ).toEqual ( "color: rgb(0, 170, 230);" );
-		fragment.diff ( fBackup ).patch ();
 		expect ( realDOM.firstChild.nextElementSibling.firstChild.nodeValue ).toBe ( "hello icejs" );
 		expect ( realDOM.firstChild.nextElementSibling.style.color ).toBe ( "rgb(0, 170, 230)" );
 	} );
@@ -253,25 +251,19 @@ describe ( "define component =>", () => {
 		////////////////////////////////////////
 		////////////////////////////////////////
 		//模块ViewModel传入props的值是双向绑定的
-		fBackup = fragment.clone ();
 		vm.text = "button2";
 		//未使用计算属性做props代理的时候，vm的属性改变不会影响组件内使用该组件的绑定
 		expect ( fragment.children [ 0 ].templateNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( "button" );
-		fragment.diff ( fBackup ).patch ();
 		expect ( realDOM.firstChild.firstChild.nodeValue ).toBe ( "button" );
 
 		//使用计算属性做props代理后，vm的属性改变会影响组件内使用该组件的绑定
-		fBackup = fragment.clone ();
 		vm.link = "/c";
 		expect ( fragment.children [ 0 ].templateNodes [ 0 ].attr ( "href" ) ).toBe ( "/c" );
-		fragment.diff ( fBackup ).patch ();
 		expect ( realDOM.firstChild.pathname ).toBe ( "/c" );
 
-		fBackup = fragment.clone ();
 		tc.action.changeLink ( "/d" );
 		expect ( vm.link ).toBe ( "/d" );
 		expect ( fragment.children [ 0 ].templateNodes [ 0 ].attr ( "href" ) ).toBe ( "/d" );
-		fragment.diff ( fBackup ).patch ();
 		expect ( realDOM.firstChild.pathname ).toBe ( "/d" );
 	} );
 } );
