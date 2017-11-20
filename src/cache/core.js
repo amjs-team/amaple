@@ -2,6 +2,7 @@ import plugin from "./plugin";
 import module from "./module";
 import component from "./component";
 import event from "./event";
+import { pluginErr } from "../error";
 
 /**
 	Plugin cache
@@ -18,13 +19,38 @@ import event from "./event";
 */
 export default {
 
+	/**
+		getDependentPlugin ( fn: Function )
+	
+		Return Type:
+		Array
+		函数依赖的插件对象数组
+	
+		Description:
+		获取函数依赖的插件对象数组
+	
+		URL doc:
+		http://icejs.org/######
+	*/
 	getDependentPlugin ( fn ) {
-		const 
-			fnStr = fn.toString ();
-		return ( ( 
-					/^function(?:\s+\w+)?\s*\((.*)\)\s*/.exec ( fnStr ) || /^\(?(.*?)\)?\s*=>/.exec ( fnStr ) || /^\S+\s*\((.*?)\)/.exec ( fnStr ) || [] ) [ 1 ]
-					|| "" )
-				.split ( "," ).filter ( item => !!item ).map ( item => this.getPlugin ( item.trim () ) );
+		const fnString = fn.toString ();
+		let plugin;
+
+		return ( ( /^function(?:\s+\w+)?\s*\((.*)\)\s*/.exec ( fnString ) 
+				|| /^\(?(.*?)\)?\s*=>/.exec ( fnString ) 
+				|| /^\S+\s*\((.*?)\)/.exec ( fnString ) 
+				|| [] ) [ 1 ] || "" )
+		.split ( "," )
+		.filter ( item => !!item )
+		.map ( pluginName => {
+			pluginName = pluginName.trim ();
+			plugin = this.getPlugin ( pluginName );
+			if ( !plugin ) {
+				throw pluginErr ( "inject", `没有找到名为'${ pluginName }'的插件` );
+			}
+
+			return plugin;
+		} );
 	},
 	
 	// 查看是否存在指定插件

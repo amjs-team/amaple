@@ -370,6 +370,12 @@ extend ( VNode.prototype, {
                 }
             	
                 if ( this.children.length > 0 && !this.templateNodes ) {
+
+                    // 先清除子节点再重新添加
+                    while ( this.node.firstChild ) {
+                        this.node.removeChild ( this.node.firstChild );
+                    }
+
                     f = document.createDocumentFragment ();
                     foreach ( this.children, child => {
                         f.appendChild ( child.render () );

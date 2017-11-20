@@ -1,9 +1,9 @@
 import { foreach } from "../../func/util";
 import { transformCompName, getFunctionName } from "../../func/private";
 import { rexpr } from "../../var/const";
-import { runtimeErr } from "../../error";
+import { runtimeErr, directiveErr } from "../../error";
 import Tmpl from "./Tmpl";
-import Component from "../component/core";
+import { getGlobal } from "../component/core";
 
 /**
     preTreat ( vnode: Object )
@@ -129,7 +129,7 @@ export default function mountVNode ( vnode, tmpl, mountModule, isRoot = true ) {
 					// 局部没有找到组件则查找全局组件
 					const 
 				   		componentName = transformCompName ( vnode.nodeName ),
-				   		ComponentDerivative = tmpl.getComponent ( componentName ) || Component.getGlobal ( componentName );
+				   		ComponentDerivative = tmpl.getComponent ( componentName ) || getGlobal ( componentName );
 					if ( ComponentDerivative && getFunctionName ( ComponentDerivative.__proto__ ) === "Component" ) {
 						compileHandlers.components.push ( { vnode, Class : ComponentDerivative } );
 				   		vnode.isComponent = true;
@@ -137,6 +137,10 @@ export default function mountVNode ( vnode, tmpl, mountModule, isRoot = true ) {
 				}
 			   
 				foreach ( vnode.attrs, ( attr, name ) => {
+					if ( new RegExp ( `^${ Tmpl.directivePrefix }(?:else-if|else)$` ).test ( name ) ) {
+						throw directiveErr ( name, `这个指令必须与'${ Tmpl.directivePrefix }if'一同使用` );
+					}
+
 					directive = rattr.exec ( name );
 					if ( directive ) {
 						directive = directive [ 1 ];
@@ -157,7 +161,7 @@ export default function mountVNode ( vnode, tmpl, mountModule, isRoot = true ) {
 						else {
 
 							// 没有找到该指令
-							throw runtimeErr ( "directive", "没有找到\"" + directive + "\"指令或表达式" );
+							throw runtimeErr ( "directive", `没有找到'${ directive }'指令或表达式` );
 						}
 
 						compileHandlers.watchers.push ( { handler, targetNode, expr } );
@@ -165,6 +169,7 @@ export default function mountVNode ( vnode, tmpl, mountModule, isRoot = true ) {
 					else if ( rexpr.test ( attr ) && !vnode.isComponent ) {
 
 						// 属性值表达式绑定
+						// 需排除组件上的属性表达式，因为它们会组件在组件初始化内处理
 						compileHandlers.watchers.push ( { handler: Tmpl.directives.attrExpr, targetNode : vnode, expr : `${ name }:${ attr }` } );
 					}
 				} );

@@ -10,7 +10,31 @@ import Tmpl from "../tmpl/Tmpl";
 import cache from "../../cache/core";
 import NodeTransaction from "../vnode/NodeTransaction";
 
+// 全局组件类
+// 所有的模板内都可以在不指定组件的情况下使用
+const globalClass = {};
+
+/**
+    getGlobal ( name: String )
+
+    Return Type:
+    Function|Class
+    对应的组件类
+
+    Description:
+    通过组件类名获取对应的组件类
+
+    URL doc:
+    http://icejs.org/######
+*/
+export function getGlobal ( name ) {
+    return globalClass [ name ];
+}
+
 export default function Component () {
+    if ( !this || getFunctionName ( this.constructor ) === "Component" ) {
+        throw componentErr ( "create", "Component类只能由另一个类继承，而不允许直接调用或创建对象" );
+    }
 
 	// check
 	check ( this.init ).type ( "function" ).ifNot ( "component:" + getFunctionName ( this.constructor ), "component derivative必须定义init方法" ).do ();
@@ -174,10 +198,6 @@ extend ( Component.prototype, {
 
 extend ( Component, {
 
-    // 全局组件类
-    // 所有的模板内都可以在不指定组件的情况下使用
-	globalClass : {},
-
     /**
         defineGlobal ( componentDerivative: Function|Class )
     
@@ -194,22 +214,5 @@ extend ( Component, {
 	defineGlobal ( componentDerivative ) {
         check ( getFunctionName ( componentDerivative.__proto__ ) ).be ( "Component" ).ifNot ( "Component.defineGlobal", "参数componentDerivative必须为继承ice.Component的组件衍生类" );
 		this.globalClass [ getFunctionName ( componentDerivative ) ] = componentDerivative;
-	},
-
-    /**
-        getGlobal ( name: String )
-    
-        Return Type:
-        Function|Class
-        对应的组件类
-    
-        Description:
-        通过组件类名获取对应的组件类
-    
-        URL doc:
-        http://icejs.org/######
-    */
-	getGlobal ( name ) {
-		return this.globalClass [ name ];
 	}
 } );

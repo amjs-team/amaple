@@ -6,7 +6,8 @@
 		<!-- <edit-table t-th="{{ title }}" t-tr="{{ content }}"></edit-table> -->
 		<div class="abc">{{ title }} {{ content }}</div>
 		<a href="/login/aa">{{ btn }}{{ postData }}</a>
-		<a href="/forget_pwd">{{ btn }}_404</a>
+		<a :onclick="changeData">change</a>
+		<a href="/forget_pwd" :if="postData">{{ btn }}_404</a>
 		<ul id="a87">
 			<li :for="t in title">{{ t }}</li>
 		</ul>
@@ -45,6 +46,9 @@
 	            	setPage : function ( event, btn ) {
 	            		console.log(event.currentTarget, btn);
 	                	this.content.push ( ["Sex"] );
+	                },
+	                changeData : function () {
+	                	this.postData = JSON.stringify ( {} );
 	                }
 				};
 			},
@@ -54,7 +58,7 @@
 			},
 
 			apply () {
-				this.state.postData = JSON.stringify ( this.post );
+				// this.state.postData = JSON.stringify ( this.post );
 			}
 		} );
 	</script>

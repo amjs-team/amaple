@@ -19,20 +19,25 @@ export default {
     */
 	before () {
         const 
+            rfncall = /^\s*([$\w]+)(?:\s*\((.*?)\))?\s*$/,
             exprMatch = this.expr.match ( /^(.*?):(.*)$/ ),
-            argMatch = exprMatch [ 2 ].match ( /([$\w]+)\s*\((.*?)\)/ ),
-            listener = argMatch ? argMatch [ 1 ] : exprMatch [ 2 ],
-        	arg = argMatch && argMatch [ 2 ] ? argMatch [ 2 ].split ( "," ).map ( item => item.trim () ) : [],
             event = "__$event__";
-      
 
+        let listener = exprMatch [ 2 ];
+        if ( rfncall.test ( listener ) ) {
+            const
+                argMatch = listener.match ( rfncall ),
+                arg = argMatch && argMatch [ 2 ] ? argMatch [ 2 ].split ( "," ).map ( item => item.trim () ) : [];
+
+            arg.unshift ( event );
+            listener = `${ argMatch ? argMatch [ 1 ] : listener }(${ arg.join ( "," ) })`;
+        }
+        
         this.type = exprMatch [ 1 ];
     	this.attrExpr = "on" + this.type;
-        arg.unshift ( event );
-    
     	this.expr = `function ( ${ event } ) {
             self.addScoped ();
-			${ listener }.call ( this, ${ arg.join ( "," ) } );
+			${ listener };
             self.removeScoped ();
 		}`;
     },

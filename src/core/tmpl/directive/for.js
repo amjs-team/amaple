@@ -1,4 +1,4 @@
-import { foreach, guid, noop } from "../../../func/util";
+import { foreach, guid, noop, type } from "../../../func/util";
 import { walkVDOM } from "../../../func/private";
 import { directiveErr } from "../../../error";
 import { VNODE_ADD, VNODE_REMOVE, VNODE_MOVE } from "../../../var/const";
@@ -141,12 +141,25 @@ export default {
         http://icejs.org/######
     */
 	update ( iterator ) {
+
 		const
         	elem = this.node,
             fragment = VFragment (),
             nodeMap = [];
       
         let itemNode, f;
+
+        // 如果迭代变量为number或string时需将它转换为array
+        if ( type ( iterator ) === "number" ) {
+            const num = iterator;
+            iterator = [];
+            for ( let i = 0; i < num; i++ ) {
+                iterator.push ( i );
+            }
+        }
+        else if ( type ( iterator ) === "string" ) {
+            iterator = iterator.split ( "" );
+        }
     	
         // 初始化视图时将模板元素替换为挂载后元素
         if ( elem.parent ) {

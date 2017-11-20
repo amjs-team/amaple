@@ -1,6 +1,6 @@
 import { foreach, type, noop } from "../../func/util";
 import configuration from "../../core/configuration/core";
-import { HASH_HISTORY, BROWSER_HISTORY } from "./historyMode";
+import { HASH, BROWSER } from "./historyMode";
 import hashHistory from "./hashHistory";
 import browserHistory from "./browserHistory";
 
@@ -13,9 +13,9 @@ export default {
     	if ( !this.history ) {
 
     		this.history = 
-    		( historyMode === HASH_HISTORY
+    		( historyMode === HASH
     		? hashHistory
-        	: historyMode === BROWSER_HISTORY
+        	: historyMode === BROWSER
         		? browserHistory
     			: { init : noop } ).init ();
         }

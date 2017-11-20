@@ -2,7 +2,7 @@ import { isEmpty, foreach } from "../func/util";
 import { transformCompName } from "../func/private";
 import iceAttr from "./iceAttr";
 import { attr } from "../func/node";
-import Module from "../core/Module";
+import { identifierName } from "../core/Module";
 import check from "../check";
 
 
@@ -115,7 +115,7 @@ function parseStyle ( moduleString, identifier, parses ) {
 			styleMatch [ 0 ] = styleMatch [ 0 ].replace ( styleMatch [ 1 ], placeholder );
 
 			// 为每个样式添加模块前缀以达到控制范围的作用
-			parses.style = parses.style.replace ( raddScoped, ( match, rep ) => match.replace ( rep, rnoscoped.test ( rep ) ? rep : `[${ Module.identifier }=${ identifier }] ` + rep ) );
+			parses.style = parses.style.replace ( raddScoped, ( match, rep ) => match.replace ( rep, rnoscoped.test ( rep ) ? rep : `[${ identifierName }=${ identifier }] ` + rep ) );
 
 			parses.style = styleMatch [ 0 ].replace ( placeholder, parses.style );
         }
@@ -190,7 +190,7 @@ function parseScript ( moduleString, scriptPaths, scriptNames, parses ) {
     	}
 
 		parses.script = parses.script.replace ( rmoduleDef, match => `${ match }moduleNode,` );
-		parses.script += "actingNt.collect(moduleNode,moduleNodeBackup);";
+		parses.script += "actingNt.collect(moduleNode);";
 	}
 
 	return moduleString;
@@ -252,7 +252,7 @@ export default function compileModule ( moduleString, identifier ) {
 		////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////
 		/// 构造编译函数
-		moduleString = `var title="${ parses.attrs [ iceAttr.title ] || "" }",view="${ parses.view }${ parses.style }",moduleNodeBackup=moduleNode.clone();`;
+		moduleString = `var title="${ parses.attrs [ iceAttr.title ] || "" }",view="${ parses.view }${ parses.style }";`;
 
 		if ( !isEmpty ( scriptPaths ) ) {
 			moduleString += `require([${ scriptPaths.join ( "," ) }],function(${ scriptNames.join ( "," ) }){${ buildView }${ parses.script };});`;

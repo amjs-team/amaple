@@ -197,15 +197,13 @@ export default {
     initTemplate ( template, scopedStyle ) {
         const 
             rblank = />(\s+)</g,
-            rtext = /["'\/&]/g,
             d = document.createElement ( "div" ),
             f = document.createDocumentFragment ();
         
         // 去除所有标签间的空格，并转义"和'符号
         d.innerHTML = template
         .replace ( rblank, ( match, rep ) => match
-            .replace ( rep, "" ) )
-        .replace ( rtext, match => "\\" + match );;
+            .replace ( rep, "" ) );
 
         // 为对应元素添加内嵌样式
         let num;

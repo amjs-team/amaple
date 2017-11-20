@@ -1,6 +1,5 @@
 import toString from "../var/toString";
 import slice from "../var/slice";
-import check from "../check";
 
 /**
  	type ( arg: any )
@@ -105,8 +104,10 @@ export function foreach ( target, callback ) {
 	http://icejs.org/######
 */
 export function isEmpty ( object ) {
-
-	check ( object ).type ( "array", "object" ).ifNot ( "object", "参数类型必须为array或object" ).do ();
+	const tobj = type ( object );
+	if ( !/array|object/.test ( tobj ) ) {
+		return;
+	}
 
 	let result = true;
 	foreach ( object, () => {
@@ -147,10 +148,12 @@ export function isEmpty ( object ) {
 	URL doc:
 	http://icejs.org/######
 */
-export function extend ( target, ...args ) {
+export function extend ( ...args ) {
 
-	let ttarget = type ( target ),
-		targ;
+	const 
+		target = args [ 0 ],
+		ttarget = type ( target );
+	let targ;
 
 	args = args.slice ( 1 );
 

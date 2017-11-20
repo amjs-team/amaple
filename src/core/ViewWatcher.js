@@ -81,7 +81,6 @@ export default function ViewWatcher ( directive, node, expr, tmpl, scoped ) {
 
 	this.directive = directive;
 	this.node = node;
-	this.parent = node.parent || node;
 	this.expr = expr;
 	this.tmpl = tmpl;
 	this.scoped = scoped;

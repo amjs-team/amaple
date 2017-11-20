@@ -1,5 +1,6 @@
 import { attr } from "../../../func/node";
 import { type } from "../../../func/util";
+import { directiveErr } from "../../../error";
 import event from "../../../event/core";
 
 export default {
@@ -21,6 +22,13 @@ export default {
     */
 	before () {
         const 
+            elem = this.node,
+            nodeName = elem.nodeName;
+        if ( !/INPUT|TEXTAREA|SELECT/.test ( nodeName ) ) {
+            throw directiveErr ( "model", "这个指令只能在包括'<input>'、'<textarea>'、'<select>'在内的表单元素上使用" );
+        }
+
+        const 
         	support = {
                 input : {
                     nodeName : "TEXTAREA",
@@ -31,10 +39,8 @@ export default {
                     inputType : "radio, checkbox"
                 }
             },
-            elem = this.node,
             expr = this.expr,
             vm = this.tmpl.getViewModel (),
-            nodeName = elem.nodeName,
             inputType = ( elem.attr ( "type" ) || "" ).toLowerCase (),
 
             // 如果是复选框则数据要以数组的形式表现

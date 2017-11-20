@@ -10,7 +10,7 @@ import ice from "../core/core";
 import cache from "../cache/core";
 import http from "../http/core";
 import event from "../event/core";
-import Module from "../core/Module";
+import { identifierName, getIdentifier } from "../core/Module";
 import Router from "../router/core";
 import Structure from "../core/tmpl/Structure";
 import Tmpl from "../core/tmpl/Tmpl";
@@ -322,9 +322,9 @@ extend ( ModuleLoader, {
 		// 1、用于模块加载时的模块识别
 		// 2、使用此属性作为子选择器限制样式范围
 		let moduleIdentifier = ( historyModule && historyModule.moduleIdentifier ) || 
-							( moduleNode && moduleNode.nodeType === 1 && moduleNode.attr ( Module.identifier ) );
+							( moduleNode && moduleNode.nodeType === 1 && moduleNode.attr ( identifierName ) );
 		if ( !moduleIdentifier ) {
-			moduleIdentifier = Module.getIdentifier ();
+			moduleIdentifier = getIdentifier ();
 		}
 
 		// 加入等待加载队列
@@ -341,8 +341,8 @@ extend ( ModuleLoader, {
 		) {
 	        currentStructure.updateFn = () => {
         		moduleNode = type ( moduleNode ) === "function" ? moduleNode () : moduleNode;
-                if ( !moduleNode.attr ( Module.identifier ) ) {
-                	moduleNode.attr ( Module.identifier, moduleIdentifier );
+                if ( !moduleNode.attr ( identifierName ) ) {
+                	moduleNode.attr ( identifierName, moduleIdentifier );
 
                 	// 调用render将添加的ice-identifier同步到实际node上
                 	moduleNode.render ();
@@ -394,8 +394,8 @@ extend ( ModuleLoader, {
 		            	} );
 	                }
 
-	                if ( !moduleNode.attr ( Module.identifier ) ) {
-	                	moduleNode.attr ( Module.identifier, moduleIdentifier );
+	                if ( !moduleNode.attr ( identifierName ) ) {
+	                	moduleNode.attr ( identifierName, moduleIdentifier );
 
 	                	// 调用render将添加的ice-identifier同步到实际node上
 	                	moduleNode.render ();

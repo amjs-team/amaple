@@ -13,6 +13,26 @@ import Structure from "./tmpl/Structure";
 import VNode from "./vnode/VNode";
 import NodeTransaction from "./vnode/NodeTransaction";
 
+// 模块标识名
+export const identifierName = "ice-identifier";
+	
+/**
+	getIdentifier ()
+
+	Return Type:
+	String
+	模块标识字符串
+
+	Description:
+	获取模块标识字符串
+	用于区分不同模块
+
+	URL doc:
+	http://icejs.org/######
+*/
+export function getIdentifier () {
+	return "module" + guid ();
+}
 
 /**
 	findParentVm ( elem: DOMObject )
@@ -269,25 +289,3 @@ extend ( Module.prototype, {
 	    this.lifeCycle.unmount.apply ( this, cache.getDependentPlugin ( this.lifeCycle.unmount ) );
     }
 } );
-
-extend ( Module, {
-	identifier : "ice-identifier",
-	
-	/**
-		getIdentifier ()
-	
-		Return Type:
-		String
-		模块标识字符串
-	
-		Description:
-		获取模块标识字符串
-		用于区分不同模块
-	
-		URL doc:
-		http://icejs.org/######
-	*/
-	getIdentifier () {
-		return "module" + guid ();
-	}
-} )

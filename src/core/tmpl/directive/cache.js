@@ -5,7 +5,7 @@ export default {
 	
 	// static为true时，模板将不会挂载watcher在对应vm下
 	static : true,
-
+    
     before () {
         if ( !/^true|false$/.test ( this.expr ) ) {
             throw directiveErr ( "cache", "cache指令的值只能为'true'或'false'，表示是否缓存此模块内容" );
