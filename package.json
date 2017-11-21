@@ -17,6 +17,7 @@
     "karma-ie-launcher": "^1.0.0",
     "karma-jasmine": "^1.1.0",
     "karma-safari-launcher": "^1.0.0",
+    "karma-sauce-launcher": "^1.2.0",
     "karma-sourcemap-loader": "^0.3.7",
     "karma-webpack": "^2.0.4",
     "lodash": "^4.17.4",
@@ -28,7 +29,8 @@
   "scripts": {
     "build": "rollup -c build/build.js",
     "dev": "rollup -w -c build/dev.js",
-    "test:unit": "karma start test/unit/karma.unit.conf.js"
+    "test:unit": "karma start test/unit/karma.unit.conf.js",
+    "test:sauce": "karma start test/unit/karma.sauce.conf.js"
   },
   "keywords": [
     "ice",
@@ -37,6 +39,10 @@
     "spa",
     "spi"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/icejs-team/icejs.git"
+  },
   "author": "JOU.San <huzhen555@qq.com>",
   "license": "MIT"
 }

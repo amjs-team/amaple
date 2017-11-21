@@ -1,4 +1,4 @@
-import map from "./eventMap";
+import eventMap from "./eventMap";
 import cache from "../cache/core";
 import { type, foreach, guid, isEmpty } from "../func/util";
 import { attr } from "../func/node";
@@ -6,9 +6,7 @@ import { rword } from "../var/const";
 import check from "../check";
 import correctParam from "../correctParam";
 
-let	// 创建事件触发对象时，根据事件类型来创建不同事件对象
-	eventMap = map,
-	expando = "eventExpando" + Date.now (),
+let	expando = "eventExpando" + Date.now (),
 
 	// 特殊事件的判断函数替代事件
 	special = {

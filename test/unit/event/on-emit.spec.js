@@ -1,7 +1,7 @@
 import event from "src/event/core";
 import cache from "src/cache/core";
 
-describe ( "event", () => {
+describe ( "event =>", () => {
 	let d, expando;
 	beforeEach ( () => {
 		d = document.createElement ( "div" );
