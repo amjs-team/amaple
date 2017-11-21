@@ -247,19 +247,25 @@ export default {
 
 		( types || "" ).replace ( rword, t => {
 			if ( elem && this.support ( t, elem ) ) {
+				let e;
+				if ( document.createEvent ) {
 
-				// 使用creaeEvent创建事件
-				let e, eventType;
-				foreach ( eventMap, ( k, v ) => {
-					if ( v.indexOf ( t ) !== -1 ) {
-						eventType = k;
-					}
-				} )
-				e = document.createEvent ( eventType || "CustomEvent" );
-				e.initEvent ( t, true, false );
+					// 使用createEvent创建事件
+					let eventType;
+					foreach ( eventMap, ( v, k ) => {
+						if ( v.indexOf ( t ) !== -1 ) {
+							eventType = k;
+						}
+					} )
+					e = document.createEvent ( eventType || "CustomEvent" );
+					e.initEvent ( t, true, false );
 
-				elem.dispatchEvent ( e );
-				
+					elem.dispatchEvent ( e );
+				}
+				else if ( document.createEventObject ) {
+					e = document.createEventObject ();
+					elem.fireEvent ( "on" + t, e );
+				}
 			}
 			else {
 				handler.event = this;

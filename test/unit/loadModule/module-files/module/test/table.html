@@ -7,7 +7,7 @@
 		<button :onclick="changeData">Change</button>
 		<a href="/forget_pwd">{{ btn }}_404</a>
 		<ul id="a87">
-			<li :for="t in title">{{ t }}</li>
+			<li :for="(t, k) in title">{{ t }}_{{ k }}</li>
 		</ul>
 	</template>
 	

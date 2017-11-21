@@ -1,10 +1,10 @@
 const 
 	customLaunchers = {
-		sl_ie_11: {
+		sl_ie_9: {
 			base: 'SauceLabs',
 			browserName: 'internet explorer',
-			platform: 'Windows 8.1',
-			version: '11'
+			platform: 'Windows 7',
+			version: '9'
 		}
 	},
 	path = require ( 'path' );
@@ -58,8 +58,8 @@ module.exports = function(config) {
     // saucelabs configuration
     sauceLabs: {
     	testName: "icejs cross browser test",
-    	recordVideo: false,
     	recordScreenshots: false,
+        recordVideo: true,
     	build: 'build-' + Date.now(),
     },
     customLaunchers: customLaunchers,
@@ -103,16 +103,12 @@ module.exports = function(config) {
 
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    // browsers: ['Firefox'],
-    // browsers: ['Safari'],
     browsers: Object.keys ( customLaunchers ),
-    // browsers: ['IE'],
-    // browsers: ['Chrome', 'Safari', 'Firefox'],
 
 
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
-    singleRun: true,
+    singleRun: false,
 
     // Concurrency level
     // how many browser should be started simultaneous

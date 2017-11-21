@@ -153,36 +153,38 @@ describe ( "directive ref => ", () => {
     } );
 
     it ( "directive :ref in component element with :for", () => {
-        const TestComp = ice.class ( "TestComp" ).extends ( ice.Component ) ( {
-            init () {
-                return {
-                    btnText : "test-btn",
-                    console : ""
-                };
-            },
-            render () {
-                this.template (
-                    "<button>{{ btnText }}</button><div class='console'>{{ console }}</div>"
-                )
-                .style ( {
-                    ".console" : {
-                        color : "#00aae6"
-                    }
-                } );
-            },
-            unmount () {
-                console.log( "testComp unmount" );
-            },
-            action () {
-                return {
-                    print ( con ) {
-                        this.state.console = con;
-                    }
-                };
-            }
-        } );
+        const 
+            unmountSpy = jasmine.createSpy ( "unmountSpy" ),
+            TestComp = ice.class ( "TestComp" ).extends ( ice.Component ) ( {
+                init () {
+                    return {
+                        btnText : "test-btn",
+                        console : ""
+                    };
+                },
+                render () {
+                    this.template (
+                        "<button>{{ btnText }}</button><div class='console'>{{ console }}</div>"
+                    )
+                    .style ( {
+                        ".console" : {
+                            color : "#00aae6"
+                        }
+                    } );
+                },
+                unmount () {
+                    unmountSpy ();
+                },
+                action () {
+                    return {
+                        print ( con ) {
+                            this.state.console = con;
+                        }
+                    };
+                }
+            } ),
+            d = document.createElement ( "div" );
 
-        const d = document.createElement ( "div" );
         d.innerHTML = `<test-comp :ref="ref_comp" :for="i in list"></test-comp>`;
 
         const module = new ice.Module ( d, {
@@ -207,6 +209,7 @@ describe ( "directive ref => ", () => {
         expect ( module.refs ( "ref_comp" ) [ 3 ] ).toBe ( module.components [ 3 ].action );
 
         module.state.list.splice ( 1, 1 );
+        expect ( unmountSpy.calls.count () ).toBe ( 1 );
         expect ( module.refs ( "ref_comp" ).length ).toBe ( 3 );
         expect ( module.refs ( "ref_comp" ) [ 0 ] ).toBe ( module.components [ 0 ].action );
         expect ( module.refs ( "ref_comp" ) [ 1 ] ).toBe ( module.components [ 1 ].action );

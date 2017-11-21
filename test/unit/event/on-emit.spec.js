@@ -1,8 +1,9 @@
 import event from "src/event/core";
 import cache from "src/cache/core";
 
-describe ( "event =>", () => {
+describe ( "event.on-emit =>", () => {
 	let d, expando;
+	jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000;
 	beforeEach ( () => {
 		d = document.createElement ( "div" );
 	} );
