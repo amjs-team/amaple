@@ -150,8 +150,12 @@ export default {
 		pathAnchor.href = path;
 		
 		return {
-			host : pathAnchor.host,
-			pathname : pathAnchor.pathname,
+
+			// IE下给a.href赋值为相对路径时，a.host为空，赋值为全域名路径时能获取值
+			host : pathAnchor.host || window.location.host,
+
+			// IE下的a标签的pathname属性开头没有"/"
+			pathname : ( pathAnchor.pathname.substr ( 0, 1 ) === "/" ? "" : "/" ) + pathAnchor.pathname,
 			search : pathAnchor.search 
 		};
 	},

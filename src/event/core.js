@@ -1,6 +1,6 @@
 import eventMap from "./eventMap";
 import cache from "../cache/core";
-import { type, foreach, guid, isEmpty } from "../func/util";
+import { type, foreach, guid, isEmpty, isPlainObject } from "../func/util";
 import { attr } from "../func/node";
 import { rword } from "../var/const";
 import check from "../check";
@@ -31,9 +31,9 @@ let	expando = "eventExpando" + Date.now (),
 	http://icejs.org/######
 */
 function handler ( e ) {
-	let _listeners = this ? 
-		this [ expando ] ? this [ expando ] [ e.type ] : []
-		: cache.getEvent ( e.type );
+	let _listeners = isPlainObject ( this )  
+		? cache.getEvent ( e.type )
+		: this [ expando ] ? this [ expando ] [ e.type ] : [];
 
 	foreach ( _listeners || [], listener => {
 		listener.call ( this, e );
@@ -264,7 +264,9 @@ export default {
 			}
 			else {
 				handler.event = this;
-				handler ( { type: t } );
+
+				// IE9下的call调用传入非引用类型的值时，函数内的this指针无效
+				handler.call ( {}, { type: t } );
 			}
 		} );
 	}

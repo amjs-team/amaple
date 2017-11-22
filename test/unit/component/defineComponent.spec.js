@@ -158,7 +158,9 @@ describe ( "define component =>", () => {
 		expect ( fragment.children [ 0 ].templateNodes [ 0 ].attr ( "href" ) ).toBe ( "/a/b/c" );
 		fragment.diff ( fBackup ).patch ();
 		expect ( realDOM.firstChild.firstChild.nodeValue ).toBe ( "external button.ice" );
-		expect ( realDOM.firstChild.pathname ).toBe ( "/a/b/c" );
+
+		// IE下的a标签的pathname属性开头没有"/"
+		expect ( ( realDOM.firstChild.pathname.substr ( 0, 1 ) === "/" ? "" : "/" ) + realDOM.firstChild.pathname ).toBe ( "/a/b/c" );
 		
 
 		// ////////////////////////////////////////
@@ -246,7 +248,9 @@ describe ( "define component =>", () => {
 		expect ( fragment.children [ 0 ].templateNodes [ 0 ].attr ( "href" ) ).toBe ( "/b" );
 		fragment.diff ( fBackup ).patch ();
 		expect ( realDOM.firstChild.firstChild.nodeValue ).toBe ( "button" );
-		expect ( realDOM.firstChild.pathname ).toBe ( "/b" );
+
+		// IE下的a标签的pathname属性开头没有"/"
+		expect ( ( realDOM.firstChild.pathname.substr ( 0, 1 ) === "/" ? "" : "/" ) + realDOM.firstChild.pathname ).toBe ( "/b" );
 
 		////////////////////////////////////////
 		////////////////////////////////////////
@@ -259,11 +263,15 @@ describe ( "define component =>", () => {
 		//使用计算属性做props代理后，vm的属性改变会影响组件内使用该组件的绑定
 		vm.link = "/c";
 		expect ( fragment.children [ 0 ].templateNodes [ 0 ].attr ( "href" ) ).toBe ( "/c" );
-		expect ( realDOM.firstChild.pathname ).toBe ( "/c" );
+
+		// IE下的a标签的pathname属性开头没有"/"
+		expect ( ( realDOM.firstChild.pathname.substr ( 0, 1 ) === "/" ? "" : "/" ) + realDOM.firstChild.pathname ).toBe ( "/c" );
 
 		tc.action.changeLink ( "/d" );
 		expect ( vm.link ).toBe ( "/d" );
 		expect ( fragment.children [ 0 ].templateNodes [ 0 ].attr ( "href" ) ).toBe ( "/d" );
-		expect ( realDOM.firstChild.pathname ).toBe ( "/d" );
+
+		// IE下的a标签的pathname属性开头没有"/"
+		expect ( ( realDOM.firstChild.pathname.substr ( 0, 1 ) === "/" ? "" : "/" ) + realDOM.firstChild.pathname ).toBe ( "/d" );
 	} );
 } );
