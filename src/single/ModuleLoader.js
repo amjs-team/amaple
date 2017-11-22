@@ -1,5 +1,5 @@
 import { type, extend, foreach, noop, isPlainObject, isEmpty, timestamp } from "../func/util";
-import { query, attr, serialize } from "../func/node";
+import { query, attr } from "../func/node";
 import { queryModuleNode, parseGetQuery } from "../func/private";
 import require from "../core/component/require/require";
 import { envErr, moduleErr } from "../error";
@@ -298,10 +298,8 @@ extend ( ModuleLoader, {
 		if ( path === null ) {
 			currentStructure.updateFn = () => {
 				moduleNode = type ( moduleNode ) === "function" ? moduleNode () : moduleNode;
-
-				const diffBackup = moduleNode.clone ();
+				NodeTransaction.acting.collect ( moduleNode );
 				moduleNode.clear ();
-				NodeTransaction.acting.collect ( moduleNode, diffBackup );
 			};
 
 			return;
@@ -348,7 +346,7 @@ extend ( ModuleLoader, {
                 	moduleNode.render ();
                 }
 
-            	Structure.signCurrentRender ( currentStructure, param, args, isPlainObject ( data ) ? data : serialize ( data ) );
+            	Structure.signCurrentRender ( currentStructure, param, args, data );
 	        	const title = historyModule.updateFn ( ice, moduleNode, VNode, NodeTransaction.acting, require );
 
 				return title;
@@ -369,6 +367,7 @@ extend ( ModuleLoader, {
 				method 		: /^(GET|POST)$/i.test ( method ) ? method.toUpperCase () : "GET",
 	        	data 		: data,
 				timeout 	: timeout || 0,
+				cache 		: false,
 				beforeSend 	: () => {
 					before ( moduleNode );
 				},
@@ -401,7 +400,7 @@ extend ( ModuleLoader, {
 	                	moduleNode.render ();
 	                }
                 	
-                	Structure.signCurrentRender ( currentStructure, param, args, isPlainObject ( data ) ? data : serialize ( data ) );
+                	Structure.signCurrentRender ( currentStructure, param, args, data );
 
 	        		const title = updateFn ( ice, moduleNode, VNode, NodeTransaction.acting, require );
 

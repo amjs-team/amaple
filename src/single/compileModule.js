@@ -62,6 +62,7 @@ function parseTemplate ( moduleString, parses ) {
 		rtemplate = /<template>([\s\S]+)<\/template>/,
 		rblank = />(\s+)</g,
 		rtext = /["'\/&]/g,
+		rwrap = /\r?\n/g,
 
 		viewMatch = rtemplate.exec ( moduleString );
 
@@ -74,7 +75,8 @@ function parseTemplate ( moduleString, parses ) {
 		parses.view = parses.view
 		.replace ( rblank, ( match, rep ) => match
 			.replace ( rep, "" ) )
-		.replace ( rtext, match => "\\" + match );
+		.replace ( rtext, match => "\\" + match )
+		.replace ( rwrap, match => "" );
 	}
 
 	return moduleString;

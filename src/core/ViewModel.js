@@ -127,6 +127,11 @@ function initArray ( array, subs, context ) {
                   	args = args.map ( item => convertState ( item, subs, context ) );
         		}
         		const res = nativeMethod.apply ( this, args );
+
+        		// 如果此数组映射了dom元素，则也需对此映射数组做出改变
+        		if ( this.nodeMap ) {
+        			nativeMethod.apply ( this.nodeMap, args );
+        		}
               	
               	// 更新视图
 				subs.notify ();

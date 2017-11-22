@@ -1,10 +1,7 @@
-import iceAttr from "./iceAttr";
 import { serialize } from "../func/node";
-import { type } from "../func/util";
 import Router from "../router/core";
 import http from "../http/core";
 import iceHistory from "./history/iceHistory";
-import { moduleErr } from "../error";
 import Structure from "../core/tmpl/Structure";
 
 /**
@@ -29,13 +26,13 @@ export default function requestEventHandler ( pathResolver, method, post ) {
         	nextStructure = Router.matchRoutes ( pathResolver.pathname, param ),
             nextStructureBackup = nextStructure.copy ();
 
-    	if ( !nextStructure.isEmptyStructure () ) {
+    	if ( !nextStructure.isEmpty () ) {
             const location = {
                 path : pathResolver.pathname + pathResolver.search,
                 nextStructure,
                 param,
                 get : pathResolver.search,
-                post : post.nodeType ? serialize ( post ) : post,
+                post : post.nodeType ? serialize ( post, false ) : post,
                 method,
                 action : "PUSH"
             };

@@ -55,6 +55,16 @@ extend ( Tmpl.prototype, {
             
         //////////////////////////////
         //////////////////////////////
+        // 如果有model属性则需将此属性放到最后
+        // 因为当前元素的value值为一个"{{ }}"时需先挂载value的表达式，这样在model处理时才能获取到正确的value值
+        compileHandlers.watchers.sort ( ( a, b ) => {
+            if ( a.handler.name === "model" ) {
+                return 1;
+            }
+            else {
+                return 0;
+            }
+        } );
         // 为相应模板元素挂载数据
         foreach ( compileHandlers.watchers, watcher => {
             new ViewWatcher ( watcher.handler, watcher.targetNode, watcher.expr, this, scoped );

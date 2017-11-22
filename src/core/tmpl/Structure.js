@@ -1,11 +1,8 @@
-import { extend, foreach, type, isEmpty } from "../../func/util";
-import { query, attr, serialize } from "../../func/node";
-import { moduleErr } from "../../error";
+import { extend, foreach, type } from "../../func/util";
 import ModuleLoader from "../../single/ModuleLoader";
 import requestEventHandler from "../../single/requestEventHandler";
 import iceAttr from "../../single/iceAttr";
 import iceHistory from "../../single/history/iceHistory";
-import NodeTransaction from "../../core/vnode/NodeTransaction";
 
 /**
     unmountStructure ( structure: Object )
@@ -102,7 +99,7 @@ extend ( Structure.prototype, {
 	},
 
     /**
-        isEmptyStructure ()
+        isEmpty ()
     
         Return Type:
         Boolean
@@ -114,8 +111,17 @@ extend ( Structure.prototype, {
         URL doc:
         http://icejs.org/######
     */
-    isEmptyStructure () {
-        return isEmpty ( this.entity );
+    isEmpty () {
+        let empty = true;
+        foreach ( this.entity, entity => {
+            if ( entity.modulePath !== null ) {
+                empty = false;
+
+                return false;
+            }
+        } );
+
+        return empty;
     },
 
     /**
@@ -173,7 +179,7 @@ extend ( Structure.prototype, {
             locationGuide.structure = nextStructureBackup;
             locationGuide.param = location.param;
             locationGuide.get = location.get;
-            locationGuide.post = serialize ( location.post );
+            locationGuide.post = location.post;
         }
 
         // 使用模块加载器来加载更新模块

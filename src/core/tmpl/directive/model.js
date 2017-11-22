@@ -23,9 +23,17 @@ export default {
 	before () {
         const 
             elem = this.node,
-            nodeName = elem.nodeName;
+            nodeName = elem.nodeName,
+            inputType = ( elem.attr ( "type" ) || "" ).toLowerCase (),
+            expr = this.expr,
+            vm = this.tmpl.getViewModel (),
+            modelArray = vm [ expr ];
         if ( !/INPUT|TEXTAREA|SELECT/.test ( nodeName ) ) {
             throw directiveErr ( "model", "这个指令只能在包括'<input>'、'<textarea>'、'<select>'在内的表单元素上使用" );
+        }
+
+        if ( nodeName === "INPUT" && inputType === "checkbox" && type ( modelArray ) !== "array" ) {
+            throw directiveErr ( "model", "checkbox表单元素只能绑定一个array类型的变量" );
         }
 
         const 
@@ -39,17 +47,21 @@ export default {
                     inputType : "radio, checkbox"
                 }
             },
-            expr = this.expr,
-            vm = this.tmpl.getViewModel (),
-            inputType = ( elem.attr ( "type" ) || "" ).toLowerCase (),
 
             // 如果是复选框则数据要以数组的形式表现
             handler = nodeName === "INPUT" && inputType === "checkbox" ? function () {
-                if ( this.checked ) {
-                    vm [ expr ].push ( this.value );
+
+                // 兼容处理，当数组中没有时才加入此数据
+                // 因为当node.checked = false时是不触发此事件的
+                // 如果不判断则可能导致重复的数据
+                if ( this.checked && modelArray.indexOf ( this.value ) === -1 ) {
+                    modelArray.push ( this.value );
                 }
-                else {
-                    vm [ expr ].splice ( vm [ expr ].indexOf ( this.value ), 1 );
+                else if ( !this.checked ) {
+                    const i = modelArray.indexOf ( this.value );
+                    if ( i >= 0 ) {
+                        modelArray.splice ( i, 1 );
+                    }
                 }
 
                 // 同步虚拟dom的值

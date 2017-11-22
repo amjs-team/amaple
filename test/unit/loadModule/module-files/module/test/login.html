@@ -11,6 +11,10 @@
 					<label>{{ lpwd }}</label><input type="password" name="password" :model="password" />
 					<span>{{ password }}</span>
 				</li>
+				<li :for="item in checkList">
+					<input type="checkbox" name="checkList" value="{{ item }}">
+					</label>{{ item }}</label>
+				</li>
 				<li>
 					<!-- <submit-button text="{{ btnOpts.btnText }}"></submit-button> -->
 					<input type="submit" value="{{ btnOpts.btnText }}">
@@ -18,7 +22,7 @@
 				<li>{{ query }}</li>
 			</ul>
 		</form>
-		<a href="./login/bb?g=1&c=2">btn</a>
+		<a href="/login/bb?g=1&c=2">btn</a>
 		<div :module></div>
 		</div>
 	</template>
@@ -43,6 +47,7 @@
 					btnOpts 	: {
 						btnText : "提交"
 					},
+					checkList 	: [ "a", "c", "d" ],
 					query 		: JSON.stringify (  this.get ),
 					style 		: {
 						opacity : 1

@@ -147,8 +147,7 @@ export default {
 
 		const
         	elem = this.node,
-            fragment = VFragment (),
-            nodeMap = [];
+            fragment = VFragment ();
       
         let itemNode, f;
 
@@ -167,59 +166,57 @@ export default {
         // 初始化视图时将模板元素替换为挂载后元素
         if ( elem.parent ) {
             fragment.appendChild ( this.startNode );
+
+            const nodeMap = [];
             foreach ( iterator, ( val, i ) => {
             	itemNode = createVNode ( this, val, i );
-            	nodeMap.push ( {
-                	itemNode,
-                	val,
-                } );
+            	nodeMap.push ( itemNode );
             	
                 fragment.appendChild ( itemNode );
             	
             } );
+
             fragment.appendChild ( this.endNode );
-            
             elem.parent.replaceChild ( fragment, elem );
+
+            // 创建数组的映射vnodes map
+            Object.defineProperty ( iterator, "nodeMap", { value : nodeMap, writable : true, configurable : true, enumeratable : false } );
         }
     	else {
 
             // 改变数据后更新视图
-        	foreach ( iterator, ( val, index ) => {
+        	foreach ( iterator.nodeMap, ( val, index ) => {
                 let itemNode;
 
-                // 在原数组中找到对应项时，使用该项的key创建vnode
-        		foreach ( this.nodeMap, item => {
-                	if ( item.val === val ) {
-                        itemNode = item.itemNode;
+                // 在映射数组中找到对应项时，使用该项的key创建vnode
+            	if ( val.nodeType ) {
+                    itemNode = val;
 
-                        // 当if和for指令同时使用在一个元素上，且在改变数组重新遍历前改变过if的条件时
-                        // nodeMap中的元素非显示的元素，需遍历conditionElems获取当前显示的元素
-                        if ( itemNode.conditionElems && !itemNode.parent ) {
-                            foreach ( itemNode.conditionElems.concat ( itemNode.conditionElems [ 0 ].replacement ), conditionElem => {
-                                if ( conditionElem.parent ) {
-                                    itemNode = conditionElem;
-                                }
-                            } );
-                        }
-
-                        // 有index时更新index值
-                        if ( this.index ) {
-                            const rindex = new RegExp ( this.index + "$" );
-                            foreach ( itemNode.scoped, ( val, key, scoped ) => {
-                                if ( rindex.test ( key ) && val !== index ) {
-                                    scoped [ key ] = index;
-                                }
-                            } );
-                        }
-
-            			return false;
+                    // 当if和for指令同时使用在一个元素上，且在改变数组重新遍历前改变过if的条件时
+                    // nodeMap中的元素非显示的元素，需遍历conditionElems获取当前显示的元素
+                    if ( itemNode.conditionElems && !itemNode.parent ) {
+                        foreach ( itemNode.conditionElems.concat ( itemNode.conditionElems [ 0 ].replacement ), conditionElem => {
+                            if ( conditionElem.parent ) {
+                                itemNode = conditionElem;
+                            }
+                        } );
                     }
-                } );
 
-                if ( !itemNode ) {
-                    itemNode = createVNode ( this, val, index, {} );
+                    // 更新局部监听数据
+                    // 有index时更新index值
+                    if ( this.index ) {
+                        const rindex = new RegExp ( this.index + "$" );
+                        foreach ( itemNode.scoped, ( val, key, scoped ) => {
+                            if ( rindex.test ( key ) && val !== index ) {
+                                scoped [ key ] = index;
+                            }
+                        } );
+                    }
                 }
-    			nodeMap.push ( { itemNode, val } );
+                else {
+                    itemNode = createVNode ( this, val, index, {} );
+                    iterator.nodeMap.splice ( index, 1, itemNode );
+                }
 
     			fragment.appendChild ( itemNode );
             } );
@@ -237,7 +234,5 @@ export default {
         	
         	p.insertBefore ( fragment, this.endNode );
         }
-        
-        this.nodeMap = nodeMap;
     }
 };

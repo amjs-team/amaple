@@ -264,7 +264,7 @@ export default {
 			}
 			else {
 				handler.event = this;
-				handler.call ( elem, { type: t } );
+				handler ( { type: t } );
 			}
 		} );
 	}

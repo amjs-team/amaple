@@ -61,9 +61,7 @@ export default {
 	*/
 	replace ( state, url ) {
 		this.pushOrReplace = true;
-
-		const hashPathname = this.buildURL ( url );
-		window.location.replace ( hashPathname );
+		window.location.replace ( "#" + url );
 
 		this.saveState ( state, this.getPathname () );
 	},
@@ -82,9 +80,7 @@ export default {
 	*/
 	push ( state, title, url ) {
     	this.pushOrReplace = true;
-
-		const hashPathname = this.buildURL ( url );
-		window.location.hash = hashPathname;
+		window.location.hash = url;
 
 		this.saveState ( state, this.getPathname () );
 	},
@@ -137,17 +133,34 @@ export default {
 		使用path与hash pathname构建新的pathname
         mode为true时不返回hash的开头“#”
         
-    	构建规则与普通跳转的构建相同，当新path以“/”开头时则从原url的根目录开始替换，当新path不以“/”老头时，以原url最后一个“/”开始替换
+    	构建规则与普通跳转的构建相同，当新path以“/”开头时则从原url的根目录开始替换，当新path不以“/”开头时，以原url最后一个“/”开始替换
 
 		URL doc:
 		http://icejs.org/######
 	*/
 	buildURL ( path, mode ) {
-		let pathname = ( window.location.hash || "#/" ).replace ( path.substr ( 0, 1 ) === "/" ? /#(.*)$/ : /(?:\/)([^\/]*)?$/, ( match, rep ) => {
-			return match.replace ( rep, "" ) + path;
+		let host = window.location.host,
+			search = "";
+		path = path.replace ( /\s*http(?:s)?:\/\/(.+?\/|.+)/, ( match, rep ) => {
+			host = rep;
+			return "";
+		} )
+		.replace ( /\?.*?$/, match => {
+			search = match;
+			return "";
 		} );
+
+		const pathname = ( window.location.hash || "#/" ).replace ( 
+			path.substr ( 0, 1 ) === "/" ? /#(.*)$/ : /\/([^\/]*)$/, 
+			( match, rep ) => {
+				return match.replace ( rep, "" ) + path;
+			} );
     
-    	return mode === true ? pathname.substr ( 0, 1 ) : pathname;
+    	return {
+    		host,
+    		search,
+    		pathname : pathname.substr ( 1 )
+    	};
 	},
 	
 	/**

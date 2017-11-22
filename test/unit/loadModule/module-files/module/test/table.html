@@ -3,15 +3,14 @@
 	<!-- 模块页面模板 -->
 	<template>
 		<div class="abc">{{ title }} {{ content }}</div>
-		<a href="/login/aa">{{ btn }}{{ postData }}</a>
+		<a href="/login/aa?a=1&b899=2">{{ btn }}{{ postData }}</a>
 		<button :onclick="changeData">Change</button>
 		<a href="/forget_pwd">{{ btn }}_404</a>
 		<ul id="a87">
-			<li :for="(t, k) in title">{{ t }}_{{ k }}</li>
+			<li :for="(t, k) in title">{{ t }}_{{ k }}
+			</li>
 		</ul>
 		<input type="checkbox" :model="title" value="NO."><label>NO.</label>
-		<input type="checkbox" :model="title" value="UserName"><label>UserName</label>
-		<input type="checkbox" :model="title" value="666"><label>666</label>
 	</template>
 	
 
@@ -42,7 +41,7 @@
 
 	                changeData : function () {
 	                	// this.title.shift ();
-	                	// this.title.push ( "666" );
+	                	// this.title.unshift ( "666" );
 	                	// this.show ++;
 	                	this.title.reverse ();
 	                }

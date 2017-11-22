@@ -352,7 +352,14 @@ extend ( VNode.prototype, {
                     if ( this.node.nodeType ) {
 
                         // 存在对应node时修正node属性
-                        attr ( this.node, this.attrs );
+                        foreach ( this.attrs, ( attrVal, name ) => {
+                            if ( attrAssignmentHook.indexOf ( name ) === -1 ) {
+                                attr ( this.node, name, attrVal );
+                            }
+                            else {
+                                this.node [ name ] = attrVal;
+                            }
+                        } );
 
                         // 移除不存在的属性
                         foreach ( slice.call ( this.node.attributes ), attrNode => {

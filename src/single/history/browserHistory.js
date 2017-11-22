@@ -150,6 +150,7 @@ export default {
 		pathAnchor.href = path;
 		
 		return {
+			host : pathAnchor.host,
 			pathname : pathAnchor.pathname,
 			search : pathAnchor.search 
 		};

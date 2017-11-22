@@ -106,11 +106,15 @@ export default {
         	const
 	        	target = e.target,
 	       		path = attr ( target, e.type.toLowerCase () === "submit" ? iceAttr.action : iceAttr.href ),
-	        	method = e.type.toLowerCase () === "submit" ? attr ( target, "method" ).toUpperCase () : "GET";
+	        	method = e.type.toLowerCase () === "submit" ? attr ( target, "method" ).toUpperCase () : "GET",
+	        	buildedPath = iceHistory.history.buildURL ( path );
 
-	        if ( path && !/#/.test ( path ) ) {
-	        	if ( requestEventHandler ( 
-	        			iceHistory.history.buildURL ( path ), 
+	        if ( path && window.location.host === buildedPath.host && !/#/.test ( path ) ) {
+	        	if ( buildedPath.pathname === window.location.pathname && buildedPath.search === window.location.search ) {
+	        		e.preventDefault ();
+	        	}
+	        	else if ( requestEventHandler ( 
+	        			buildedPath, 
 	        			method, 
 	        			method.toLowerCase () === "post" ? target : {} 
 	        		) !== false ) {

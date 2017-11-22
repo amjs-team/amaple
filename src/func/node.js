@@ -271,25 +271,27 @@ export function attr ( context, name, val ) {
 }
 
 /**
-	serialize ( form: DOMObject )
+	serialize ( form: DOMObject, serializePrivate: Boolean )
 
 	Return Type:
 	Object
-	序列化后表单信息对象
+	序列化后表单信息Object对象
 
 	Description:
 	将表单内的信息序列化为表单信息对象
+	当serializePrivate为false时表示不序列化私有信息表单(如password)
 
 	URL doc:
 	http://icejs.org/######
 */
-export function serialize ( form ) {
+export function serialize ( form, serializePrivate ) {
 	if ( !form.nodeName || form.nodeName.toUpperCase () !== "FORM" ) {
 		return form;
 	}
 
 	const 
-		rcheckableType 	= ( /^(?:checkbox|radio)$/i ),
+		rcheckableType 	= /^(?:checkbox|radio)$/i,
+		rprivateType 	= /^password$/i,
 		rsubmitterTypes = /^(?:submit|button|image|reset|file)$/i,
 		rsubmittable 	= /^(?:input|select|textarea|keygen)/i,
 		rCRLF 			= /\r?\n/g,
@@ -299,10 +301,23 @@ export function serialize ( form ) {
 
 	// 判断表单中是否含有上传文件
 	foreach ( inputs, inputItem => {
-		const name = attr ( inputItem, "name" );
-		if ( name && !attr ( inputItem, "disabled" ) && rsubmittable.test( inputItem.nodeName ) && !rsubmitterTypes.test( inputItem.type ) && ( inputItem.checked || !rcheckableType.test( inputItem.type ) ) ) {
+		const name = attr ( inputItem, "name" ),
+			type = inputItem.type || attr ( inputItem, "type" );
 
-			formObject [ name ] = inputItem.value.replace ( rCRLF, "\r\n" );
+		if ( name && !attr ( inputItem, "disabled" ) 
+			&& rsubmittable.test( inputItem.nodeName ) 
+			&& ( serializePrivate !== false || !rprivateType.test ( type ) ) 
+			&& !rsubmitterTypes.test( type ) 
+			&& ( inputItem.checked || !rcheckableType.test( type ) ) 
+		) {
+			const val = inputItem.value.replace ( rCRLF, "\r\n" );
+			if ( type === "checkbox" ) {
+				formObject [ name ] = formObject [ name ] || [];
+				formObject [ name ].push ( val )
+			}
+			else {
+				formObject [ name ] = val;
+			}
 		}
 	} );
 
