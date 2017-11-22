@@ -3,9 +3,12 @@ import cache from "src/cache/core";
 
 describe ( "event.on-emit =>", () => {
 	let d, expando;
-	jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000;
+	// jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000;
 	beforeEach ( () => {
 		d = document.createElement ( "div" );
+
+		// IE11下，有parentNodes的元素才能触发事件
+		document.createElement ( "div" ).appendChild ( d );
 	} );
 	afterEach ( () => {
 		d = null;
@@ -19,8 +22,8 @@ describe ( "event.on-emit =>", () => {
 		expect ( d [ expando ] [ "change" ] ).toEqual ( jasmine.any ( Array ) );
 	} );
 
-	it ( "element's listener emit", ( done ) => {
-		event.on ( d, "click", ( e ) => {
+	it ( "element's listener emit", done => {
+		event.on ( d, "click", e => {
 			expect ( e.type ).toBe ( "click" );
 			done ();
 		} );
@@ -35,8 +38,8 @@ describe ( "event.on-emit =>", () => {
 		expect ( d [ expando ] [ "click" ].length ).toBe ( 0 );
 	} );
 
-	it ( "Non element listener bind and emit", ( done ) => {
-		event.on ( "click", ( e ) => {
+	it ( "Non element listener bind and emit", done => {
+		event.on ( "click", e => {
 			expect ( e.type ).toBe ( "click" );
 			done ();
 		} );

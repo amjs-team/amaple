@@ -247,7 +247,6 @@ export default {
 
 		( types || "" ).replace ( rword, t => {
 			if ( elem && this.support ( t, elem ) ) {
-				let e;
 				if ( document.createEvent ) {
 
 					// 使用createEvent创建事件
@@ -257,14 +256,10 @@ export default {
 							eventType = k;
 						}
 					} )
-					e = document.createEvent ( eventType || "CustomEvent" );
+					const e = document.createEvent ( eventType || "CustomEvent" );
 					e.initEvent ( t, true, false );
 
 					elem.dispatchEvent ( e );
-				}
-				else if ( document.createEventObject ) {
-					e = document.createEventObject ();
-					elem.fireEvent ( "on" + t, e );
 				}
 			}
 			else {

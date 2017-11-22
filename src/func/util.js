@@ -195,12 +195,13 @@ export function extend ( ...args ) {
 
 	Description:
 	判断一个对象是否为纯粹的对象
+	兼容性处理：IE10及一下的对象上没有__proto__原型引用，而constructor是直接在object上
 
 	URL doc:
 	http://icejs.org/######
 */
 export function isPlainObject ( object ) {
-	return object.__proto__.constructor === Object && object.__proto__.toString && object.__proto__.valueOf;
+	return object.constructor === Object;
 }
 
 /**
@@ -216,7 +217,7 @@ export function isPlainObject ( object ) {
 	http://icejs.org/######
 */
 export function guid () {
-	return setTimeout( 1 ) + "";
+	return setTimeout ( noop, 1 ) + "";
 }
 
 /**

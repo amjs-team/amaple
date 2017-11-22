@@ -7,19 +7,19 @@
 		var sera = new ice.Module ( {
 
 			// 该函数返回的对象为该模块内的数据绑定，包括变量和方法
-			init () {
+			init : function () {
 				return {
 					sera : "sub_sera tips" + this.parent.state.luserName,
 					paramData : this.param.sub_sera
 				};
 			},
 
-			paramUpdated () {
+			paramUpdated : function () {
 				this.state.paramData = this.param.sub_sera;
 				console.log ( "sub_sera paramUpdated" );
 			},
 
-			unmount () {
+			unmount : function () {
 				console.log ( "sub_sera unmount" );
 			}
 		} );

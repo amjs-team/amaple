@@ -117,7 +117,7 @@ extend ( Component.prototype, {
         // 验证组件类
         this.depComponents = this.depComponents || [];
         foreach ( this.depComponents, comp => {
-            if ( comp && getFunctionName ( comp.__proto__ ) !== "Component" ) {
+            if ( comp && getFunctionName ( comp.constructor ) !== "Component" ) {
                 throw componentErr ( "depComponents", `组件"${ getFunctionName ( this.constructor ) }"内错误的依赖组件对象，请确保依赖组件为一个组件衍生类` );
             }
         } );
@@ -212,7 +212,7 @@ extend ( Component, {
         http://icejs.org/######
     */
 	defineGlobal ( componentDerivative ) {
-        check ( getFunctionName ( componentDerivative.__proto__ ) ).be ( "Component" ).ifNot ( "Component.defineGlobal", "参数componentDerivative必须为继承ice.Component的组件衍生类" );
+        check ( getFunctionName ( componentDerivative.constructor ) ).be ( "Component" ).ifNot ( "Component.defineGlobal", "参数componentDerivative必须为继承ice.Component的组件衍生类" );
 		this.globalClass [ getFunctionName ( componentDerivative ) ] = componentDerivative;
 	}
 } );

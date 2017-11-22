@@ -9,6 +9,9 @@
 		<ul id="a87">
 			<li :for="(t, k) in title">{{ t }}_{{ k }}</li>
 		</ul>
+		<input type="checkbox" :model="title" value="NO."><label>NO.</label>
+		<input type="checkbox" :model="title" value="UserName"><label>UserName</label>
+		<input type="checkbox" :model="title" value="666"><label>666</label>
 	</template>
 	
 
@@ -46,11 +49,11 @@
 				};
 			},
 
-			unmount () {
+			unmount : function () {
 				console.log( "table unmount" );
 			},
 
-			apply () {
+			apply : function () {
 				this.state.postData = JSON.stringify ( this.post );
 			}
 		} );
