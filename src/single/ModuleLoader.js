@@ -23,9 +23,7 @@ function loopFlush ( structure ) {
 	let title, _title;
 	foreach ( structure, route => {
 		if ( route.updateFn ) {
-			const nt = new NodeTransaction ().start ()
 			_title = route.updateFn ();
-			nt.commit ();
 
 			title = title || _title;
 
@@ -90,6 +88,10 @@ export default function ModuleLoader ( nextStructure, param, get, post ) {
 
 	// 加载错误时会将错误信息保存在此
 	this.moduleError = null;
+
+	// 已使用的模块节点数组
+	// 防止多层使用相同模块名时，子模块获取到的是父模块的模块节点
+	this.usedModuleNodes = [];
 }
 
 
@@ -185,7 +187,9 @@ extend ( ModuleLoader.prototype, {
 		        if ( !moduleNode ) {
 		        	moduleNode = queryModuleNode ( route.name === "default" ? "" : route.name, route.parent && route.parent.moduleNode.node || undefined );
 
-		            if ( moduleNode ) {
+		        	// 模块存在并且不在已使用的模块节点中时可使用
+		            if ( moduleNode && this.usedModuleNodes.indexOf ( moduleNode ) === -1 ) {
+		            	this.usedModuleNodes.push ( moduleNode );
 
 		            	// 获取到moduleNode时去解析此moduleNode
 		            	moduleNode = VNode.domToVNode ( moduleNode );
@@ -345,9 +349,9 @@ extend ( ModuleLoader, {
                 	// 调用render将添加的ice-identifier同步到实际node上
                 	moduleNode.render ();
                 }
-
-            	Structure.signCurrentRender ( currentStructure, param, args, data );
-	        	const title = historyModule.updateFn ( ice, moduleNode, VNode, NodeTransaction.acting, require );
+	        	const title = historyModule.updateFn ( ice, moduleNode, VNode, NodeTransaction, require, () => {
+					Structure.signCurrentRender ( currentStructure, param, args, data );
+	        	} );
 
 				return title;
 	        };
@@ -399,10 +403,10 @@ extend ( ModuleLoader, {
 	                	// 调用render将添加的ice-identifier同步到实际node上
 	                	moduleNode.render ();
 	                }
-                	
-                	Structure.signCurrentRender ( currentStructure, param, args, data );
 
-	        		const title = updateFn ( ice, moduleNode, VNode, NodeTransaction.acting, require );
+	        		const title = updateFn ( ice, moduleNode, VNode, NodeTransaction, require, () => {
+	        			Structure.signCurrentRender ( currentStructure, param, args, data );
+	        		} );
 
 	            	// 调用success回调
 					success ( moduleNode );

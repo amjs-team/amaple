@@ -1,6 +1,6 @@
 import check from "../../../check";
 import { foreach, guid } from "../../../func/util";
-import { appendScript } from "../../../func/node";
+import { attr, appendScript } from "../../../func/node";
 import ComponentLoader from "./ComponentLoader";
 import cache from "../../../cache/core";
 
@@ -34,7 +34,7 @@ export default function require ( deps, factory ) {
 
 	// 遍历依赖，如果依赖未被加载，则放入waiting中等待加载完成
 	foreach ( deps, depStr => {
-		check ( depStr.substr ( 0, 1 ).be ( "/" ) ).ifNot ( "import", `"${depStr}"错误，组件加载路径必须为以”/“开头的绝对路径` );
+		check ( depStr.substr ( 0, 1 ) ).be ( "/" ).ifNot ( "import", `"${depStr}"错误，组件加载路径必须为以”/“开头的绝对路径` );
 		if ( !cache.getComponent ( depStr ) ) {
 
 			// 放入待加载列表中等待加载
@@ -44,8 +44,8 @@ export default function require ( deps, factory ) {
 			const script = document.createElement ( "script" );
 
 			script.src 	= depStr + ComponentLoader.suffix;
-			script [ ComponentLoader.depName ] = depStr;
-			script [ ComponentLoader.ComponentLoaderID ] = nguid;
+			attr ( script, ComponentLoader.depName, depStr );
+			attr ( script, ComponentLoader.loaderID, nguid );
 
 			appendScript ( script, ComponentLoader.onScriptLoaded );
 

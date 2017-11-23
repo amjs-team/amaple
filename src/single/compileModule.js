@@ -248,7 +248,7 @@ export default function compileModule ( moduleString, identifier ) {
 			.ifNot ( "module:script", "<Module>内的<script>为必须子元素，它的内部js代码用于初始化模块的页面布局" )
 			.do ();
 
-		const buildView = `actingNt.collect(moduleNode);moduleNode.html(VNode.domToVNode(view));`;
+		const buildView = `signCurrentRender();var nt=new NodeTransaction().start();nt.collect(moduleNode);moduleNode.html(VNode.domToVNode(view));`;
 
 		////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////
@@ -256,14 +256,14 @@ export default function compileModule ( moduleString, identifier ) {
 		moduleString = `var title="${ parses.attrs [ iceAttr.title ] || "" }",view="${ parses.view }${ parses.style }";`;
 
 		if ( !isEmpty ( scriptPaths ) ) {
-			moduleString += `require([${ scriptPaths.join ( "," ) }],function(${ scriptNames.join ( "," ) }){${ buildView }${ parses.script };});`;
+			moduleString += `require([${ scriptPaths.join ( "," ) }],function(){${ buildView }${ parses.script };nt.commit();});`;
 		}
 		else {
-			moduleString += `${ buildView }${ parses.script };`
+			moduleString += `${ buildView }${ parses.script };nt.commit();`
 		}
 
 		moduleString += "return title;";
 	}
   
-	return new Function ( "ice", "moduleNode", "VNode", "actingNt", "require", moduleString );
+	return new Function ( "ice", "moduleNode", "VNode", "NodeTransaction", "require", "signCurrentRender", moduleString );
 }

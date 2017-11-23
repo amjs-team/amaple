@@ -26,7 +26,9 @@ export default function configuration ( params ) {
 	params.baseURL = params.baseURL.substr ( -1, 1 ) === "/" ? params.baseURL : params.baseURL + "/";
 
 	// params.stateSymbol = allowState.indexOf ( params.stateSymbol ) === -1 ? allowState [ 0 ] : params.stateSymbol;
-	params.moduleSuffix = params.moduleSuffix.substr ( 0, 1 ) === "." ? params.moduleSuffix : "." + params.moduleSuffix;
+	if ( type ( params.moduleSuffix ) === "string" ) {
+		params.moduleSuffix = params.moduleSuffix.substr ( 0, 1 ) === "." ? params.moduleSuffix : "." + params.moduleSuffix;
+	}
 
 	paramStore = extend ( paramStore, params );
 }
