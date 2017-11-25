@@ -22,7 +22,11 @@ describe ( "render component => ", () => {
 			},
 			render () {
 				this.template (
-			    	"<button>{{ btnText }}</button><div class='console'>{{ console }}</div>{{ subElements.SubComp }}<ul id='SubComp2'><li :for='item in subElements.SubComp2'>{{ item }}</li></ul><div id='default'>{{ subElements.default }}</div>"
+			    	`<button>{{ btnText }}</button>
+			    	<div class='console'>{{ console }}</div>{{ subElements.SubComp }}<ul id='SubComp2'>
+			    		<li :for='item in subElements.SubComp2'>{{ item }}</li>
+			    	</ul>
+			    	<div id='default'>{{ subElements.default }}</div>`
 			    )
 			    .style ( {
 			    	".console" : {
@@ -448,5 +452,63 @@ describe ( "render component => ", () => {
 		expect ( div.children [ 0 ].templateNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "b" );
 		expect ( realDOM.children.length ).toBe ( 4 );
 		expect ( realDOM.querySelector ( "#default" ).firstChild.nodeValue ).toBe ( "b" );
+	} );
+
+	it ( "render a component that dependent on other components", () => {
+		const 
+			unmountSpy = jasmine.createSpy ( "unmountSpy" ),
+			ParentComp = Class ( "ParentComp" ).extends ( Component ) ( {
+			constructor () {
+				this.__super ();
+				this.depComponents = [ TestComp ];
+			},
+			init () {
+				return {
+			    	console : ""
+			    };
+			},
+			render () {
+				this.template ( "<div><test-comp>default</test-comp><span>{{ console }}</span></div>" )
+			},
+			unmount () {
+				unmountSpy ();
+			},
+			action () {
+				return {
+					console ( text ) {
+						this.state.console = text;
+					}
+				};
+			}
+		} );
+
+		const 
+			moduleObj = { references : {} },
+			div = VElement ( "div" ),
+			vm = new ViewModel ( {
+				visible: "a"
+			} ),
+			tmpl = new Tmpl ( vm, [ ParentComp ], moduleObj );
+
+		div.appendChild ( VElement ( "parent-comp", { ":ref" : "pc" } ) );
+		let realDOM = div.render (),
+			dBackup = div.clone ();
+		tmpl.mount ( div, true );
+
+		expect ( div.children [ 0 ].isComponent ).toBeTruthy ();
+		expect ( div.children [ 0 ].templateNodes [ 0 ].children [ 0 ].isComponent ).toBeTruthy ();
+		expect ( div.children [ 0 ].templateNodes [ 0 ].children [ 0 ].templateNodes.length ).toBe ( 5 );
+		div.diff ( dBackup ).patch ();
+		expect ( realDOM.firstChild.childNodes.length ).toBe ( 6 );
+		expect ( realDOM.firstChild.firstChild.nodeName ).toBe ( "BUTTON" );
+
+		moduleObj.references.pc.component.action.console ( "parent console" );
+		expect ( div.children [ 0 ].templateNodes [ 0 ].children [ 1 ].children [ 0 ].nodeValue ).toBe ( "parent console" );
+		expect ( realDOM.firstChild.childNodes.item ( 5 ).firstChild.nodeValue ).toBe ( "parent console" );
+
+		moduleObj.references.pc.component.__unmount__ ();
+		expect ( unmountSpy.calls.count () ).toBe ( 1 );
+		expect ( moduleObj.components.length ).toBe ( 0 );
+		expect ( Object.keys ( moduleObj.references ).length ).toBe ( 0 );
 	} );
 } );

@@ -4039,14 +4039,14 @@ extend(VNode.prototype, {
                 break;
         }
 
-        // if ( type ( this.node ) === "array" ) {
-        //     f = document.createDocumentFragment ();
-        //     foreach ( this.node, node => {
-        //         f.appendChild ( node );
-        //     } );
+        if (type$1(this.node) === "array") {
+            f = document.createDocumentFragment();
+            foreach(this.node, function (node) {
+                f.appendChild(node);
+            });
 
-        //     return f;
-        // }
+            return f;
+        }
 
         return this.node;
     },
@@ -8535,6 +8535,7 @@ extend(ModuleLoader.prototype, {
 			// 根据更新后的页面结构体渲染新视图
 			Structure.currentPage.update(location.nextStructure).render(location, nextStructureBackup);
 		} else {
+
 			foreach(this.nextStructure.entity, function (structure) {
 				if (structure.updateFn) {
 					structure.updateFn();

@@ -1,30 +1,131 @@
 const 
 	customLaunchers = {
-		sl_ie_9: {
-			base: 'SauceLabs',
-			browserName: 'internet explorer',
-			platform: 'Windows 7',
-			version: '9'
-		},
-        sl_ie_10: {
-            base: 'SauceLabs',
-            browserName: 'internet explorer',
-            platform: 'Windows 8',
-            version: '10'
+        ies: {
+            sl_ie_9: {
+                base: 'SauceLabs',
+                browserName: 'internet explorer',
+                platform: 'Windows 7',
+                version: '9'
+            },
+            sl_ie_10: {
+                base: 'SauceLabs',
+                browserName: 'internet explorer',
+                platform: 'Windows 8',
+                version: '10'
+            },
+            sl_ie_11: {
+                base: 'SauceLabs',
+                browserName: 'internet explorer',
+                platform: 'Windows 8.1',
+                version: '11'
+            },
+            sl_edge_13: {
+                base: 'SauceLabs',
+                browserName: 'MicrosoftEdge',
+                platform: 'Windows 10',
+                version: '13'
+            },
+            sl_edge_15: {
+                base: 'SauceLabs',
+                browserName: 'MicrosoftEdge',
+                platform: 'Windows 10',
+                version: '15'
+            },
         },
-        sl_ie_11: {
-            base: 'SauceLabs',
-            browserName: 'internet explorer',
-            platform: 'Windows 8.1',
-            version: '11'
+        firefoxs: {
+            sl_firefox_7: {
+                base: 'SauceLabs',
+                browserName: 'Firefox',
+                platform: 'Windows 7',
+                version: '7'
+            },
+            sl_firefox_14: {
+                base: 'SauceLabs',
+                browserName: 'Firefox',
+                platform: 'Windows 7',
+                version: '14'
+            },
+            sl_firefox_25: {
+                base: 'SauceLabs',
+                browserName: 'Firefox',
+                platform: 'Windows 7',
+                version: '25'
+            },
+            sl_firefox_40: {
+                base: 'SauceLabs',
+                browserName: 'Firefox',
+                platform: 'Windows 7',
+                version: '40'
+            },
+            sl_firefox_56: {
+                base: 'SauceLabs',
+                browserName: 'Firefox',
+                platform: 'Windows 7',
+                version: '56'
+            },
         },
-        sl_edge: {
-            base: 'SauceLabs',
-            browserName: 'MicrosoftEdge',
-            platform: 'Windows 10'
+        chromes: {
+            sl_chrome_26: {
+                base: 'SauceLabs',
+                browserName: 'chrome',
+                platform: 'Windows 7',
+                version: '26'
+            },
+            // sl_chrome_32: {
+            //     base: 'SauceLabs',
+            //     browserName: 'chrome',
+            //     platform: 'Windows 7',
+            //     version: '32.0'
+            // },
+            // sl_chrome_48: {
+            //     base: 'SauceLabs',
+            //     browserName: 'chrome',
+            //     platform: 'Windows 7',
+            //     version: '48.0'
+            // },
+            // sl_chrome_62: {
+            //     base: 'SauceLabs',
+            //     browserName: 'chrome',
+            //     platform: 'Windows 7',
+            //     version: '62.0'
+            // },
+            // sl_chrome_beta: {
+            //     base: 'SauceLabs',
+            //     browserName: 'chrome',
+            //     platform: 'Windows 7',
+            //     version: 'beta'
+            // },
+        },
+        safaris: {
+            sl_safari_8: {
+                base: 'SauceLabs',
+                browserName: 'safari',
+                platform: 'OS X 10.10',
+                version: '8'
+            },
+            sl_safari_10: {
+                base: 'SauceLabs',
+                browserName: 'safari',
+                platform: 'OS X 10.12',
+                version: '10'
+            },
+        },
+        mobiles: {
+            sl_ios: {
+                base: 'SauceLabs',
+                browserName: 'iphone',
+                version: '10'
+            },
+                sl_android: {
+                base: 'SauceLabs',
+                browserName: 'android',
+                version: '6.0'
+            }
         }
 	},
-	path = require ( 'path' );
+	path = require ( 'path' ),
+    testLaunchers = customLaunchers [ process.argv [ 4 ] ];
+
 
 // Karma configuration
 // Generated on Fri Jun 23 2017 23:26:20 GMT+0800 (CST)
@@ -74,12 +175,13 @@ module.exports = function(config) {
 
     // saucelabs configuration
     sauceLabs: {
-    	testName: "icejs cross browser test",
+    	testName: "icejs test on " + process.argv [ 4 ] || "",
     	recordScreenshots: false,
         recordVideo: false,
     	build: 'build-' + Date.now(),
     },
-    customLaunchers: customLaunchers,
+    retryLimit: 10,
+    customLaunchers: testLaunchers,
     captureTimeout: 300000,
     browserNoActivityTimeout: 300000,
 
@@ -120,7 +222,7 @@ module.exports = function(config) {
 
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: Object.keys ( customLaunchers ),
+    browsers: Object.keys ( testLaunchers ),
 
 
     // Continuous Integration mode

@@ -18,17 +18,19 @@ export default {
         http://icejs.org/######
     */
 	before () {
+        const rexpr = /{{\s*(.*?)\s*}}/g;
 
         // 当表达式只有“{{ expr }}”时直接取出表达式的值
         if ( /^{{\s*(\S+)\s*}}$/.test ( this.expr ) ) {
-            this.expr = this.expr.replace ( /{{\s*(.*?)\s*}}/g, ( match, rep ) => rep );
+            this.expr = this.expr.replace ( rexpr, ( match, rep ) => rep );
         }
         else {
 
             // 当表达式为混合表达式时，将表达式转换为字符串拼接代码
             // 拼接前先过滤换行符为空格，防止解析出错
-            this.expr = this.expr.replace ( /[\r\n]/g, " " ).replace ( /{{\s*(.*?)\s*}}/g, ( match, rep ) => "\" + " + rep + " + \"" );
-            this.expr = "\"" + this.expr + "\"";
+            this.expr = this.expr.replace ( /[\r\n]/g, " " ).replace ( rexpr, ( match, rep ) => `" + ${ rep } + "` );
+
+            this.expr = `"${ this.expr }"`;
         }
     },
 
