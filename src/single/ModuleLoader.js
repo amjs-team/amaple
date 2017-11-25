@@ -263,10 +263,9 @@ extend ( ModuleLoader.prototype, {
 		   	.render ( location, nextStructureBackup );
 		}
 		else {
-			const 
-
-				// 正常加载，将调用模块更新函数更新模块
-				title = loopFlush ( this.nextStructure.entity );
+			
+			// 正常加载，将调用模块更新函数更新模块
+			const title = loopFlush ( this.nextStructure.entity );
 
 			// 更新页面title
 			if ( title && document.title !== title ) {
@@ -302,8 +301,9 @@ extend ( ModuleLoader, {
 		if ( path === null ) {
 			currentStructure.updateFn = () => {
 				moduleNode = type ( moduleNode ) === "function" ? moduleNode () : moduleNode;
-				NodeTransaction.acting.collect ( moduleNode );
+				const diffBackup = moduleNode.clone ();
 				moduleNode.clear ();
+				moduleNode.diff ( diffBackup ).patch ();
 			};
 
 			return;

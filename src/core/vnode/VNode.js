@@ -347,9 +347,15 @@ extend ( VNode.prototype, {
          		}
                 else {
 
-                    // vnode为组件时，node为一个数组，代表了此组件的模板元素
+                    // vnode为组件或template时，node为一个数组，代表了此组件的模板元素
                     // 此时不需要修正属性
-                    if ( this.node.nodeType ) {
+                    if ( this.templateNodes ) {
+                        this.node = [];
+                        foreach ( this.templateNodes, vnode => {
+                            this.node.push ( vnode.render () );
+                        } );
+                    }
+                    else {
 
                         // 存在对应node时修正node属性
                         foreach ( this.attrs, ( attrVal, name ) => {
@@ -418,14 +424,14 @@ extend ( VNode.prototype, {
                 break;
         }
     	
-        // if ( type ( this.node ) === "array" ) {
-        //     f = document.createDocumentFragment ();
-        //     foreach ( this.node, node => {
-        //         f.appendChild ( node );
-        //     } );
+        if ( type ( this.node ) === "array" ) {
+            f = document.createDocumentFragment ();
+            foreach ( this.node, node => {
+                f.appendChild ( node );
+            } );
 
-        //     return f;
-        // }
+            return f;
+        }
 
     	return this.node;
     },

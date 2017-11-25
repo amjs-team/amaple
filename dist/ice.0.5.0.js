@@ -3141,7 +3141,7 @@ function diffChildren(newChildren, oldChildren, nodePatcher) {
         });
     } else if (newChildren && newChildren.length > 0 && (!oldChildren || oldChildren.length <= 0)) {
         foreach(newChildren, function (newChild, i) {
-            nodePatcher.addNode(newChild, i);
+            nodePatcher.addNode(newChild, getInsertIndex(i, newChildren));
         });
     } else if (newChildren && newChildren.length > 0 && oldChildren && oldChildren.length > 0) {
 
@@ -3965,9 +3965,14 @@ extend(VNode.prototype, {
                     }
                 } else {
 
-                    // vnode为组件时，node为一个数组，代表了此组件的模板元素
+                    // vnode为组件或template时，node为一个数组，代表了此组件的模板元素
                     // 此时不需要修正属性
-                    if (this.node.nodeType) {
+                    if (this.templateNodes) {
+                        this.node = [];
+                        foreach(this.templateNodes, function (vnode) {
+                            _this5.node.push(vnode.render());
+                        });
+                    } else {
 
                         // 存在对应node时修正node属性
                         foreach(this.attrs, function (attrVal, name) {
