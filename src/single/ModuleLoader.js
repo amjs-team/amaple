@@ -18,29 +18,19 @@ import VNode from "../core/vnode/VNode";
 import NodeTransaction from "../core/vnode/NodeTransaction";
 
 
-function loopFlush ( structure ) {
+/**
+	compareArgs ( newArgs: Array, originalArgs: Array )
 
-	let title, _title;
-	foreach ( structure, route => {
-		if ( route.updateFn ) {
-			const nt = new NodeTransaction ().start ()
-			_title = route.updateFn ();
-			nt.commit ();
+	Return Type:
+	Boolean
+	参数是否有改变
 
-			title = title || _title;
+	Description:
+	对比新旧参数数组中是否存在改变的参数，有则返回true，没有则返回false
 
-			delete route.updateFn;
-		}
-
-		if ( type ( route.children ) === "array" ) {
-			_title = loopFlush ( route.children );
-			title = title || _title;
-		}
-	} );
-
-	return title;
-}
-
+	URL doc:
+	http://icejs.org/######
+*/
 function compareArgs ( newArgs, originalArgs ) {
 	const len = Object.keys ( newArgs ).length;
 	
@@ -90,6 +80,9 @@ export default function ModuleLoader ( nextStructure, param, get, post ) {
 
 	// 加载错误时会将错误信息保存在此
 	this.moduleError = null;
+
+	// 当前跳转的标题
+	this.title = "";
 }
 
 
@@ -133,6 +126,27 @@ extend ( ModuleLoader.prototype, {
 		// 如果等待队列已空则立即刷新模块
 		if ( isEmpty ( this.waiting ) ) {
 			this.flush ();
+		}
+	},
+
+	/**
+		update ( title: String )
+	
+		Return Type:
+		void
+	
+		Description:
+		更新标题
+		标题按模块从上到下，从外到内的顺序遍历获取第一个有标题的模块进行更新
+	
+		URL doc:
+		http://icejs.org/######
+	*/
+	updateTitle ( title ) {
+		if ( !this.title ) {
+			document.title = title;
+
+			this.title = title;
 		}
 	},
 
@@ -259,15 +273,12 @@ extend ( ModuleLoader.prototype, {
 		   	.render ( location, nextStructureBackup );
 		}
 		else {
-			const 
-
-				// 正常加载，将调用模块更新函数更新模块
-				title = loopFlush ( this.nextStructure.entity );
-
-			// 更新页面title
-			if ( title && document.title !== title ) {
-    			document.title = title;
-    		}
+			foreach ( this.nextStructure.entity, structure => {
+				if ( structure.updateFn ) {
+					structure.updateFn ();
+					delete structure.updateFn;
+				}
+			} );
 		}
 	}
 } );
@@ -347,9 +358,8 @@ extend ( ModuleLoader, {
                 }
 
             	Structure.signCurrentRender ( currentStructure, param, args, data );
-	        	const title = historyModule.updateFn ( ice, moduleNode, VNode, NodeTransaction.acting, require );
-
-				return title;
+	        	historyModule.updateFn ( ice, moduleNode, VNode, NodeTransaction.acting, require );
+	        	this.updateTitle ( historyModule.title );
 	        };
 
 	        // 获取模块更新函数完成后在等待队列中移除
@@ -379,7 +389,8 @@ extend ( ModuleLoader, {
 				/////////////////////////////////////////////////////////
 	        	// 编译module为可执行函数
 				// 将请求的html替换到module模块中
-	            const updateFn = compileModule ( moduleString, moduleIdentifier );
+	            const { updateFn, title } = compileModule ( moduleString, moduleIdentifier );
+	            this.updateTitle ( title );
 	        	
 	        	currentStructure.updateFn = () => {
 	        		moduleNode = type ( moduleNode ) === "function" ? moduleNode () : moduleNode;
@@ -387,6 +398,7 @@ extend ( ModuleLoader, {
 		            // 满足缓存条件时缓存模块更新函数
 	            	if ( moduleConfig.cache === true && moduleNode.cache !== false ) {
 		            	cache.pushModule ( path, {
+		            		title,
 		            		updateFn, 
 		            		time : timestamp (),
 		            		moduleIdentifier
@@ -402,12 +414,10 @@ extend ( ModuleLoader, {
                 	
                 	Structure.signCurrentRender ( currentStructure, param, args, data );
 
-	        		const title = updateFn ( ice, moduleNode, VNode, NodeTransaction.acting, require );
+	        		updateFn ( ice, moduleNode, VNode, NodeTransaction.acting, require );
 
 	            	// 调用success回调
 					success ( moduleNode );
-
-					return title;
 	            };
 
 	            // 获取模块更新函数完成后在等待队列中移除
