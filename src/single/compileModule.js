@@ -215,6 +215,7 @@ export default function compileModule ( moduleString, identifier ) {
 
 	// 模块编译正则表达式
 	const rmodule = /^<Module[\s\S]+<\/Module>/;
+	let title = "";
 	if ( rmodule.test ( moduleString ) ) {
 		
 		const
@@ -227,6 +228,7 @@ export default function compileModule ( moduleString, identifier ) {
 
 		// 解析模板
 		moduleString = parseTemplate ( moduleString, parses );
+		title = parses.attrs [ iceAttr.title ] || "";
 
 		// 解析样式
 		moduleString = parseStyle ( moduleString, identifier, parses );
@@ -248,22 +250,23 @@ export default function compileModule ( moduleString, identifier ) {
 			.ifNot ( "module:script", "<Module>内的<script>为必须子元素，它的内部js代码用于初始化模块的页面布局" )
 			.do ();
 
-		const buildView = `signCurrentRender();var nt=new NodeTransaction().start();nt.collect(moduleNode);moduleNode.html(VNode.domToVNode(view));`;
+		const buildView = `signCurrentRender();var nt=new NodeTransaction();nt.collect(moduleNode);moduleNode.html(VNode.domToVNode(view));`;
 
 		////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////
 		/// 构造编译函数
-		moduleString = `var title="${ parses.attrs [ iceAttr.title ] || "" }",view="${ parses.view }${ parses.style }";`;
+		moduleString = `var view="${ parses.view }${ parses.style }";`;
 
 		if ( !isEmpty ( scriptPaths ) ) {
-			moduleString += `require([${ scriptPaths.join ( "," ) }],function(){${ buildView }${ parses.script };nt.commit();});`;
+			moduleString += `require([${ scriptPaths.join ( "," ) }],function(){${ buildView }${ parses.script };nt.commit();flushChildren();});`;
 		}
 		else {
-			moduleString += `${ buildView }${ parses.script };nt.commit();`
+			moduleString += `${ buildView }${ parses.script };nt.commit();flushChildren();`;
 		}
-
-		moduleString += "return title;";
 	}
   
-	return new Function ( "ice", "moduleNode", "VNode", "NodeTransaction", "require", "signCurrentRender", moduleString );
+	return { 
+		updateFn : new Function ( "ice", "moduleNode", "VNode", "NodeTransaction", "require", "signCurrentRender", "flushChildren", moduleString ),
+		title
+	};
 }

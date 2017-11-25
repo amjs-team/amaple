@@ -6,7 +6,7 @@ describe ( "ice test =>", () => {
 		document.body.innerHTML = `<div :module></div><div :module="tips"></div>`;
 
 		ice.startRouter ( {
-			// history : ice.BROWSER,
+			history : ice.BROWSER,
 			module : {
 				cache : true,
 				expired : 3000
