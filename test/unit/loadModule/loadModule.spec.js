@@ -11,19 +11,19 @@ describe ( "ice test =>", () => {
 				cache : true,
 				expired : 3000
 			},
-			moduleSuffix: ".html",
+			// moduleSuffix: ".html",
 			baseURL : "module",
 			routes : function ( router ) {
 				router.module ()
-				.route ( [ "/debug", "/table" ], "test/table" )
-				.route ( "/login", "test/login", childRouter => {
-					childRouter.module ().route ( ":sub_sera", "test/sub_sera" );
+				.route ( [ "/debug", "/table" ], "index/table" )
+				.route ( "/login", "login/login", childRouter => {
+					childRouter.module ().route ( ":sub_sera", "login/sub_sera" );
 				} )
-				.route ( "/forget_pwd", "test/forget_pwd" )
+				.route ( "/forget_pwd", "index/forget_pwd" )
 				.route ( "/error404", "error/404" );
 
 				router.module ( "tips" )
-				.route ( [ "/debug", "/table" ], "test/sera" );
+				.route ( [ "/debug", "/table" ], "index/sera" );
 
 				// 设置404页面路径
 				router.error404 ( "/error404" );

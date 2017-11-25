@@ -1,4 +1,5 @@
 import event from "../../event/core";
+import Structure from "../../core/tmpl/Structure";
 import Router from "../../router/core";
 
 
@@ -16,14 +17,14 @@ export default {
     	    let locationGuide = this.getState ();
     	    if ( !locationGuide ) {
 	    	    const 
-	    	    	path = window.location.pathname,
+	    	    	path = this.getPathname (),
 	    	    	param = {},
 	    			structure = Router.matchRoutes ( path, param );
 
 	    		locationGuide = {
 	    			structure,
 	    			param,
-	    			get : window.location.search,
+	    			get : this.getQuery (),
 	    			post : {}
 	    		};
 
@@ -78,9 +79,9 @@ export default {
 		URL doc:
 		http://icejs.org/######
 	*/
-	push ( state, title, url ) {
+	push ( state, url ) {
     	this.pushOrReplace = true;
-		window.location.hash = url;
+		window.location.hash = `#${ url }`;
 
 		this.saveState ( state, this.getPathname () );
 	},
@@ -177,7 +178,7 @@ export default {
 		http://icejs.org/######
 	*/
 	getPathname () {
-    	return ( window.location.hash.match ( /#([^?]*)$/ ) || [ "", "" ] ) [ 1 ];
+    	return ( window.location.hash.match ( /#([^?]*)/ ) || [ "", "/" ] ) [ 1 ];
     },
 
     /**

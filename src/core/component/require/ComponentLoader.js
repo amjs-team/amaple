@@ -217,8 +217,8 @@ extend ( ComponentLoader, {
 	onScriptLoaded ( e ) {
 
 		const
-        	loadID = e.target [ ComponentLoader.loaderID ],
-        	depName = e.target [ ComponentLoader.depName ],
+        	loadID = attr ( e.target, ComponentLoader.loaderID ),
+        	depName = attr ( e.target, ComponentLoader.depName ),
 			curLoader = ComponentLoader.loaderMap [ loadID ];
 		
 		curLoader.loadedComponent [ depName ] = ComponentLoader.currentLoaded;

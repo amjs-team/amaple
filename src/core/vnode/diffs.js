@@ -187,7 +187,7 @@ export function diffChildren ( newChildren, oldChildren, nodePatcher ) {
     }
     else if ( newChildren && newChildren.length > 0 && ( !oldChildren || oldChildren.length <= 0 ) ) {
         foreach ( newChildren, ( newChild, i ) => {
-            nodePatcher.addNode ( newChild, i );
+            nodePatcher.addNode ( newChild, getInsertIndex ( i, newChildren ) );
         } );
     }
     else if ( newChildren && newChildren.length > 0 && oldChildren && oldChildren.length > 0 ) {

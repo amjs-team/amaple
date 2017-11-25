@@ -75,28 +75,22 @@ function request ( method ) {
 	    		if ( method ) {
 
 	    			let
-	    				url 		= options [ 0 ];
-	    				args 		= options [ 1 ];
-	    				callback 	= options [ 2 ];
+	    				url 		= options [ 0 ],
+	    				data 		= options [ 1 ],
+	    				callback 	= options [ 2 ],
 	    				dataType 	= options [ 3 ];
 
 	    			// 纠正参数
-	    			// 1、如果没有传入args，则将callback的值给dataType，将args的值给callback，args设为undefined，
-	    			// 2、如果没有传入args和dataType，将args的值给callback，args设为undefined
-	    			correctParam ( args, callback, dataType ).to ( [ /=/, "object" ], "function", rtype ).done ( function () {
-                    	args = this.$1;
+	    			// 1、如果没有传入data，则将callback的值给dataType，将data的值给callback，data设为undefined，
+	    			// 2、如果没有传入data和dataType，将data的值给callback，data设为undefined
+	    			correctParam ( data, callback, dataType ).to ( [ /=/, "object" ], "function", rtype ).done ( function () {
+                    	data = this.$1;
                     	callback = this.$2;
                     	dataType = this.$3;
                     } );
 
 	    			// get请求参数初始化
-	    			params = {
-	    				url 	: url, 
-	    				args 	: args, 
-	    				success : callback,
-	    				dataType: dataType,
-	    				method 	: method
-	    			};
+	    			params = { url, data, success : callback, dataType, method };
 	    		}
 	    		else {
 	    			params = options [ 0 ];

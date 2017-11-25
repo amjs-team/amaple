@@ -18,8 +18,22 @@ import VNode from "../core/vnode/VNode";
 import NodeTransaction from "../core/vnode/NodeTransaction";
 
 
+<<<<<<< HEAD
 /**
 	compareArgs ( newArgs: Array, originalArgs: Array )
+=======
+function loopFlush ( structure ) {
+
+	let title, _title;
+	foreach ( structure, route => {
+		if ( route.updateFn ) {
+			_title = route.updateFn ();
+
+			title = title || _title;
+
+			delete route.updateFn;
+		}
+>>>>>>> 82d560e1d02c59552115f33d28806cb77c1837ca
 
 	Return Type:
 	Boolean
@@ -81,8 +95,14 @@ export default function ModuleLoader ( nextStructure, param, get, post ) {
 	// 加载错误时会将错误信息保存在此
 	this.moduleError = null;
 
+<<<<<<< HEAD
 	// 当前跳转的标题
 	this.title = "";
+=======
+	// 已使用的模块节点数组
+	// 防止多层使用相同模块名时，子模块获取到的是父模块的模块节点
+	this.usedModuleNodes = [];
+>>>>>>> 82d560e1d02c59552115f33d28806cb77c1837ca
 }
 
 
@@ -199,7 +219,9 @@ extend ( ModuleLoader.prototype, {
 		        if ( !moduleNode ) {
 		        	moduleNode = queryModuleNode ( route.name === "default" ? "" : route.name, route.parent && route.parent.moduleNode.node || undefined );
 
-		            if ( moduleNode ) {
+		        	// 模块存在并且不在已使用的模块节点中时可使用
+		            if ( moduleNode && this.usedModuleNodes.indexOf ( moduleNode ) === -1 ) {
+		            	this.usedModuleNodes.push ( moduleNode );
 
 		            	// 获取到moduleNode时去解析此moduleNode
 		            	moduleNode = VNode.domToVNode ( moduleNode );
@@ -356,10 +378,18 @@ extend ( ModuleLoader, {
                 	// 调用render将添加的ice-identifier同步到实际node上
                 	moduleNode.render ();
                 }
+<<<<<<< HEAD
 
             	Structure.signCurrentRender ( currentStructure, param, args, data );
 	        	historyModule.updateFn ( ice, moduleNode, VNode, NodeTransaction.acting, require );
 	        	this.updateTitle ( historyModule.title );
+=======
+	        	const title = historyModule.updateFn ( ice, moduleNode, VNode, NodeTransaction, require, () => {
+					Structure.signCurrentRender ( currentStructure, param, args, data );
+	        	} );
+
+				return title;
+>>>>>>> 82d560e1d02c59552115f33d28806cb77c1837ca
 	        };
 
 	        // 获取模块更新函数完成后在等待队列中移除
@@ -411,10 +441,14 @@ extend ( ModuleLoader, {
 	                	// 调用render将添加的ice-identifier同步到实际node上
 	                	moduleNode.render ();
 	                }
-                	
-                	Structure.signCurrentRender ( currentStructure, param, args, data );
 
+<<<<<<< HEAD
 	        		updateFn ( ice, moduleNode, VNode, NodeTransaction.acting, require );
+=======
+	        		const title = updateFn ( ice, moduleNode, VNode, NodeTransaction, require, () => {
+	        			Structure.signCurrentRender ( currentStructure, param, args, data );
+	        		} );
+>>>>>>> 82d560e1d02c59552115f33d28806cb77c1837ca
 
 	            	// 调用success回调
 					success ( moduleNode );
