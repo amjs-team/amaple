@@ -17,23 +17,8 @@ import Tmpl from "../core/tmpl/Tmpl";
 import VNode from "../core/vnode/VNode";
 import NodeTransaction from "../core/vnode/NodeTransaction";
 
-
-<<<<<<< HEAD
 /**
 	compareArgs ( newArgs: Array, originalArgs: Array )
-=======
-function loopFlush ( structure ) {
-
-	let title, _title;
-	foreach ( structure, route => {
-		if ( route.updateFn ) {
-			_title = route.updateFn ();
-
-			title = title || _title;
-
-			delete route.updateFn;
-		}
->>>>>>> 82d560e1d02c59552115f33d28806cb77c1837ca
 
 	Return Type:
 	Boolean
@@ -95,14 +80,12 @@ export default function ModuleLoader ( nextStructure, param, get, post ) {
 	// 加载错误时会将错误信息保存在此
 	this.moduleError = null;
 
-<<<<<<< HEAD
 	// 当前跳转的标题
 	this.title = "";
-=======
+
 	// 已使用的模块节点数组
 	// 防止多层使用相同模块名时，子模块获取到的是父模块的模块节点
 	this.usedModuleNodes = [];
->>>>>>> 82d560e1d02c59552115f33d28806cb77c1837ca
 }
 
 
@@ -331,8 +314,9 @@ extend ( ModuleLoader, {
 		if ( path === null ) {
 			currentStructure.updateFn = () => {
 				moduleNode = type ( moduleNode ) === "function" ? moduleNode () : moduleNode;
-				NodeTransaction.acting.collect ( moduleNode );
+				const diffBackup = moduleNode.clone ();
 				moduleNode.clear ();
+				moduleNode.diff ( diffBackup ).patch ();
 			};
 
 			return;
@@ -347,7 +331,22 @@ extend ( ModuleLoader, {
 
 		const 
 			moduleConfig = configuration.getConfigure ( "module" ),
-			historyModule = cache.getModule ( path );
+			historyModule = cache.getModule ( path ),
+			signCurrentRender = () => {
+				Structure.signCurrentRender ( currentStructure, param, args, data );
+			},
+			flushChildren = ( route ) => {
+				return () => {
+					if ( type ( route.children ) === "array" ) {
+						foreach ( route.children, child => {
+							if ( child.updateFn ) {
+								child.updateFn ();
+								delete child.updateFn;
+							}
+						} )
+					}
+				};
+			};
 
 		// 给模块元素添加编号属性，此编号有两个作用：
 		// 1、用于模块加载时的模块识别
@@ -370,7 +369,8 @@ extend ( ModuleLoader, {
 			&& historyModule
 			&& ( moduleConfig.expired === 0 || historyModule.time + moduleConfig.expired > timestamp () )
 		) {
-	        currentStructure.updateFn = () => {
+			this.updateTitle ( historyModule.title );
+	        currentStructure.updateFn = function () {
         		moduleNode = type ( moduleNode ) === "function" ? moduleNode () : moduleNode;
                 if ( !moduleNode.attr ( identifierName ) ) {
                 	moduleNode.attr ( identifierName, moduleIdentifier );
@@ -378,18 +378,8 @@ extend ( ModuleLoader, {
                 	// 调用render将添加的ice-identifier同步到实际node上
                 	moduleNode.render ();
                 }
-<<<<<<< HEAD
 
-            	Structure.signCurrentRender ( currentStructure, param, args, data );
-	        	historyModule.updateFn ( ice, moduleNode, VNode, NodeTransaction.acting, require );
-	        	this.updateTitle ( historyModule.title );
-=======
-	        	const title = historyModule.updateFn ( ice, moduleNode, VNode, NodeTransaction, require, () => {
-					Structure.signCurrentRender ( currentStructure, param, args, data );
-	        	} );
-
-				return title;
->>>>>>> 82d560e1d02c59552115f33d28806cb77c1837ca
+	        	historyModule.updateFn ( ice, moduleNode, VNode, NodeTransaction, require, signCurrentRender, flushChildren ( this ) );
 	        };
 
 	        // 获取模块更新函数完成后在等待队列中移除
@@ -422,7 +412,7 @@ extend ( ModuleLoader, {
 	            const { updateFn, title } = compileModule ( moduleString, moduleIdentifier );
 	            this.updateTitle ( title );
 	        	
-	        	currentStructure.updateFn = () => {
+	        	currentStructure.updateFn = function () {
 	        		moduleNode = type ( moduleNode ) === "function" ? moduleNode () : moduleNode;
 
 		            // 满足缓存条件时缓存模块更新函数
@@ -442,13 +432,7 @@ extend ( ModuleLoader, {
 	                	moduleNode.render ();
 	                }
 
-<<<<<<< HEAD
-	        		updateFn ( ice, moduleNode, VNode, NodeTransaction.acting, require );
-=======
-	        		const title = updateFn ( ice, moduleNode, VNode, NodeTransaction, require, () => {
-	        			Structure.signCurrentRender ( currentStructure, param, args, data );
-	        		} );
->>>>>>> 82d560e1d02c59552115f33d28806cb77c1837ca
+	        		updateFn ( ice, moduleNode, VNode, NodeTransaction, require, signCurrentRender, flushChildren ( this ) );
 
 	            	// 调用success回调
 					success ( moduleNode );
