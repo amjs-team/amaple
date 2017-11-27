@@ -3872,6 +3872,32 @@ extend(VNode.prototype, {
 
 
     /**
+        nextElementSibling ()
+    
+        Return Type:
+        void
+    
+        Description:
+        获取此vnode的下一个element vnode
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    nextElementSibling: function nextElementSibling() {
+        if (this.parent) {
+            var index = this.parent.children.indexOf(this) + 1,
+                nextElem = this.parent.children[index];
+
+            while (nextElem && nextElem.nodeType !== 1) {
+                nextElem = this.parent.children[++index];
+            }
+
+            return nextElem;
+        }
+    },
+
+
+    /**
         prevSibling ()
     
         Return Type:
@@ -4535,7 +4561,7 @@ var componentConstructor = {
     */
     initTemplate: function initTemplate(template, scopedStyle) {
         var rblank = />(\s+)</g,
-            rwrap = /\r?\n/g,
+            rwrap = /\r?\n\s*/g,
             d = document.createElement("div"),
             f = document.createDocumentFragment();
 
@@ -4597,7 +4623,7 @@ var componentConstructor = {
 
             if (subElementNames.hasOwnProperty(componentName)) {
                 vf = VFragment();
-                foreach(vnode.children, function (subVNode) {
+                foreach(vnode.children.concat(), function (subVNode) {
                     vf.appendChild(subVNode);
                 });
 
@@ -4766,7 +4792,7 @@ extend(Component.prototype, {
         // 验证组件类
         this.depComponents = this.depComponents || [];
         foreach(this.depComponents, function (comp) {
-            if (comp && getFunctionName(comp.constructor) !== "Component") {
+            if (comp && getFunctionName(comp.__proto__) !== "Component") {
                 throw componentErr("depComponents", "\u7EC4\u4EF6\"" + getFunctionName(_this.constructor) + "\"\u5185\u9519\u8BEF\u7684\u4F9D\u8D56\u7EC4\u4EF6\u5BF9\u8C61\uFF0C\u8BF7\u786E\u4FDD\u4F9D\u8D56\u7EC4\u4EF6\u4E3A\u4E00\u4E2A\u7EC4\u4EF6\u884D\u751F\u7C7B");
             }
         });
@@ -4887,17 +4913,17 @@ function preTreat(vnode) {
 	    _elseif = Tmpl.directivePrefix + "else-if",
 	    _else = Tmpl.directivePrefix + "else";
 
-	var nextSib = void 0,
-	    parent = void 0,
-	    condition = vnode.attr(_if);
+	var condition = vnode.attr(_if);
 
 	if (condition && !vnode.conditionElems) {
 		var conditionElems = [vnode];
+		var nextSib = void 0,
+		    parent = void 0;
 
 		vnode.conditions = [condition];
 		vnode.conditionElems = conditionElems;
 		parent = vnode.parent;
-		while (nextSib = vnode.nextSibling()) {
+		while (nextSib = vnode.nextElementSibling()) {
 			if (condition = nextSib.attr(_elseif)) {
 				nextSib.conditionElems = conditionElems;
 				vnode.conditions.push(condition);
@@ -5766,20 +5792,23 @@ var textExpr = {
         http://icejs.org/######
     */
     before: function before() {
+        var rexpr = /{{\s*(.*?)\s*}}/g;
 
         // 当表达式只有“{{ expr }}”时直接取出表达式的值
         if (/^{{\s*(\S+)\s*}}$/.test(this.expr)) {
-            this.expr = this.expr.replace(/{{\s*(.*?)\s*}}/g, function (match, rep) {
+            this.expr = this.expr.replace(rexpr, function (match, rep) {
                 return rep;
             });
         } else {
 
             // 当表达式为混合表达式时，将表达式转换为字符串拼接代码
             // 拼接前先过滤换行符为空格，防止解析出错
-            this.expr = this.expr.replace(/[\r\n]/g, " ").replace(/{{\s*(.*?)\s*}}/g, function (match, rep) {
-                return "\" + " + rep + " + \"";
+            var exprArray = this.expr.replace(/[\r\n]/g, " ").replace(rexpr, function (match, rep) {
+                return "\"," + rep + ",\"";
             });
-            this.expr = "\"" + this.expr + "\"";
+
+            // 当组件设置了subElements，且在模板中在同一个文本节点连续输出两个subElements，或subElements与普通文本一起使用时，需按subElements进行分割，然后遍历插入其中
+            this.expr = "(function(){\n                var arr=[\"" + exprArray + "\"],tempArr=[],ret=[];\n                for(var i=0;i<arr.length;i++){\n                    if(!arr[i].nodeType){\n                        tempArr.push(arr[i]);\n                    }\n                    else{\n                        ret.push(tempArr.join(\"\"),arr[i]);\n                        tempArr=[];\n                    }\n                }\n                if(tempArr.length>0) {\n                    ret.push(tempArr.join(\"\"));\n                }\n                return ret.length===1?ret[0]:ret;\n            })()";
         }
     },
 
@@ -5801,11 +5830,22 @@ var textExpr = {
     update: function update(val) {
         var node = this.node;
 
-        // 定义了组件子元素时，需将组件表达式（nodeType为3）替换为实际传入的dom结构
-        if (val && val.nodeType > 0 && node.nodeType === 3) {
-            node.parent.replaceChild(val, node);
+        if (type$1(val) !== "array") {
+
+            // 定义了组件子元素时，需将组件表达式（nodeType为3）替换为实际传入的dom结构
+            if (val && val.nodeType > 0 && node.nodeType === 3) {
+                node.parent.replaceChild(val, node);
+            } else {
+                node.nodeValue = val;
+            }
         } else {
-            node.nodeValue = val;
+            var p = node.parent;
+            p.clear();
+
+            foreach(val, function (item) {
+                item = item.nodeType ? item : VTextNode(item);
+                p.appenChild(item);
+            });
         }
     }
 };
@@ -6788,7 +6828,7 @@ function parseTemplate(moduleString, parses) {
 	var rtemplate = /<template>([\s\S]+)<\/template>/,
 	    rblank = />(\s+)</g,
 	    rtext = /["'\/&]/g,
-	    rwrap = /\r?\n/g,
+	    rwrap = /\r?\n\s*/g,
 	    viewMatch = rtemplate.exec(moduleString);
 
 	if (viewMatch) {
@@ -6853,6 +6893,8 @@ function parseStyle(moduleString, identifier, parses) {
 		parses.style = parses.style.replace(rstyleblank, function (match) {
 			return match.replace(/\s+/g, "");
 		});
+	} else {
+		parses.style = "";
 	}
 
 	return moduleString;

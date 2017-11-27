@@ -197,7 +197,7 @@ export default {
     initTemplate ( template, scopedStyle ) {
         const 
             rblank = />(\s+)</g,
-            rwrap = /\r?\n/g,
+            rwrap = /\r?\n\s*/g,
             d = document.createElement ( "div" ),
             f = document.createDocumentFragment ();
         
@@ -255,7 +255,7 @@ export default {
 
             if ( subElementNames.hasOwnProperty ( componentName ) ) {
                 vf = VFragment ();
-                foreach ( vnode.children, subVNode => {
+                foreach ( vnode.children.concat (), subVNode => {
                     vf.appendChild ( subVNode );
                 } );
 

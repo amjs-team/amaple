@@ -250,6 +250,31 @@ extend ( VNode.prototype, {
     },
 
     /**
+        nextElementSibling ()
+    
+        Return Type:
+        void
+    
+        Description:
+        获取此vnode的下一个element vnode
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    nextElementSibling () {
+        if ( this.parent ) {
+            let index = this.parent.children.indexOf ( this ) + 1,
+                nextElem = this.parent.children [ index ];
+
+            while ( nextElem && nextElem.nodeType !== 1 ) {
+                nextElem = this.parent.children [ ++index ];
+            }
+            
+            return nextElem;
+        }
+    },
+
+    /**
         prevSibling ()
     
         Return Type:

@@ -1,4 +1,5 @@
-import { type } from "../../../func/util";
+import { type, foreach } from "../../../func/util";
+import VTextNode from "../../vnode/VTextNode";
 
 export default {
 	
@@ -28,9 +29,27 @@ export default {
 
             // 当表达式为混合表达式时，将表达式转换为字符串拼接代码
             // 拼接前先过滤换行符为空格，防止解析出错
-            this.expr = this.expr.replace ( /[\r\n]/g, " " ).replace ( rexpr, ( match, rep ) => `" + ${ rep } + "` );
+            const exprArray = this.expr
+                    .replace ( /[\r\n]/g, " " )
+                    .replace ( rexpr, ( match, rep ) => `",${ rep },"` );
 
-            this.expr = `"${ this.expr }"`;
+            // 当组件设置了subElements，且在模板中在同一个文本节点连续输出两个subElements，或subElements与普通文本一起使用时，需按subElements进行分割，然后遍历插入其中
+            this.expr = `(function(){
+                var arr=["${ exprArray }"],tempArr=[],ret=[];
+                for(var i=0;i<arr.length;i++){
+                    if(!arr[i].nodeType){
+                        tempArr.push(arr[i]);
+                    }
+                    else{
+                        ret.push(tempArr.join(""),arr[i]);
+                        tempArr=[];
+                    }
+                }
+                if(tempArr.length>0) {
+                    ret.push(tempArr.join(""));
+                }
+                return ret.length===1?ret[0]:ret;
+            })()`;
         }
     },
 
@@ -51,12 +70,24 @@ export default {
 	update ( val ) {
         const node = this.node;
 
-        // 定义了组件子元素时，需将组件表达式（nodeType为3）替换为实际传入的dom结构
-        if ( val && val.nodeType > 0 && node.nodeType === 3 ) {
-            node.parent.replaceChild ( val, node );
+        if ( type ( val ) !== "array" ) {
+
+            // 定义了组件子元素时，需将组件表达式（nodeType为3）替换为实际传入的dom结构
+            if ( val && val.nodeType > 0 && node.nodeType === 3 ) {
+                node.parent.replaceChild ( val, node );
+            }
+            else {
+                node.nodeValue = val;
+            }
         }
-    	else {
-        	node.nodeValue = val;
+        else {
+            const p = node.parent;
+            p.clear ();
+
+            foreach ( val, item => {
+                item = item.nodeType ? item : VTextNode ( item );
+                p.appendChild ( item );
+            } );
         }
     }
 };

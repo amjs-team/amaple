@@ -62,7 +62,7 @@ function parseTemplate ( moduleString, parses ) {
 		rtemplate = /<template>([\s\S]+)<\/template>/,
 		rblank = />(\s+)</g,
 		rtext = /["'\/&]/g,
-		rwrap = /\r?\n/g,
+		rwrap = /\r?\n\s*/g,
 
 		viewMatch = rtemplate.exec ( moduleString );
 
@@ -127,6 +127,9 @@ function parseStyle ( moduleString, identifier, parses ) {
 
         // 去除所有标签间的空格
         parses.style = parses.style.replace ( rstyleblank, match => match.replace ( /\s+/g, "" ) );
+	}
+	else {
+		parses.style = "";
 	}
 
 	return moduleString;

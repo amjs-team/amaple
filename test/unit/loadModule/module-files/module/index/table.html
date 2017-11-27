@@ -2,6 +2,16 @@
 	
 	<!-- 模块页面模板 -->
 	<template>
+		<div :if="show === 1">
+			<input type="checkbox" :model="title" value="NO."><label>NO.</label>
+		</div>
+		<div :else-if="show === 2">
+			<input type="checkbox" :model="title" value="UserName"><label>UserName</label>
+		</div>
+		<div :else>
+			<input type="checkbox" :model="title" value="Avatar"><label>Avatar</label>
+		</div>
+
 		<div class="abc">{{ title }} {{ content }}</div>
 		<a href="/login/aa?a=1&b899=2">{{ btn }}{{ postData }}</a>
 		<button :onclick="changeData">Change</button>
@@ -10,7 +20,6 @@
 			<li :for="(t, k) in title">{{ t }}_{{ k }}
 			</li>
 		</ul>
-		<input type="checkbox" :model="title" value="NO."><label>NO.</label>
 	</template>
 	
 
@@ -37,7 +46,7 @@
 					},
 					btn: "Button",
 					postData: "",
-					show: 1,
+					show: 2,
 
 	                changeData : function () {
 	                	// this.title.shift ();
