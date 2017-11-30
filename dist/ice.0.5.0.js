@@ -11,12 +11,6 @@
 
 var slice = Array.prototype.slice;
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
-  return typeof obj;
-} : function (obj) {
-  return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
-};
-
 /**
  	type ( arg: any )
  
@@ -31,7 +25,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
  	http://icejs.org/######
  */
 function type$1(arg) {
-	return arg !== null ? arg instanceof Array ? "array" : typeof arg === "undefined" ? "undefined" : _typeof(arg) : "null";
+	return arg !== null ? arg instanceof Array ? "array" : typeof arg : "null";
 }
 
 /**
@@ -606,8 +600,8 @@ var DEVELOP_SINGLE = 1;
 // 连续字符正则表达式
 var rword = /\S+/g;
 
-// 变量正则表达式
-var rvar = /[^0-9][\w$]*/;
+// 变量名正则表达式
+var rvar = /[A-Za-z$_][\w$]*/;
 
 // 模板表达式匹配正则
 var rexpr = /{{\s*(.*?)\s*}}/;
@@ -615,15 +609,9 @@ var rexpr = /{{\s*(.*?)\s*}}/;
 // 组件名正则表达式
 var rcomponentName = /^[A-Z][a-zA-Z0-9]*/;
 
-// 模块事件常量
-
-
-
-
-// viewModel更新数组时的虚拟DOM处理类型
-
-
-
+// 模块类型常量
+var TYPE_COMPONENT = 0;
+var TYPE_PLUGIN = 1;
 
 // 重复利用的常量
 // 样式值为数字时不添加单位“px”的样式名
@@ -1452,7 +1440,18 @@ function scriptEval(code) {
 	URL doc:
 	http://icejs.org/######
 */
+function clear(context) {
 
+	check(context.nodeType).be(1, 11).ifNot("function clear:context", "元素类型必须是dom节点").do();
+
+	// 防止内存泄漏，需删除context节点内的其他内容
+	// add...
+
+	// 删除此元素所有内容
+	context.textContent = "";
+
+	return context;
+}
 
 /**
 	html ( context: DOMObject, node: DOMObject|DOMString|DocumentFragmentObject|String, callback?: Function )
@@ -1553,10 +1552,14 @@ function serialize(form, serializePrivate) {
 // 目前所支持的状态标记符号，如果所传入的状态标记符号不在此列表中，则会使用默认的状态标记符号@
 
 var defaultParams = {
+
 	// 异步加载时的依赖目录，设置后默认在此目录下查找，此对象下有4个依赖目录的设置，如果不设置则表示不依赖任何目录
 	// url请求base路径，设置此参数后则跳转请求都依赖此路径
-	// 此参数可传入string类型的路径字符串，也可传入一个方法，当传入方法时必须返回一个路径字符串，否则使用"/"
-	baseURL: "/",
+	baseURL: {
+		module: "/",
+		plugin: "/",
+		component: "/"
+	},
 
 	// url地址中的状态标识符，如http://...@login表示当前页面在login的状态
 	// stateSymbol : allowState [ 0 ],
@@ -1566,13 +1569,14 @@ var defaultParams = {
 
 		// 是否开启跳转缓存，默认开启。跳转缓存是当页面无刷新跳转时的缓存跳转数据，当此页面实时性较低时建议开启，以提高相应速度
 		cache: true,
-		expired: 0
-	},
+		expired: 0,
 
-	moduleSuffix: ".html"
+		// 模块文件后缀
+		suffix: ".html"
+	}
 };
 
-var paramStore = defaultParams;
+var paramStore = null;
 
 /**
 	configuration ( params: Object )
@@ -1588,21 +1592,48 @@ var paramStore = defaultParams;
 */
 function configuration(params) {
 
-	var _type = type$1(params.baseURL);
-
-	params.baseURL = _type === "string" ? params.baseURL : _type === "function" ? params.baseURL() : "";
-	params.baseURL = params.baseURL.substr(0, 1) === "/" ? params.baseURL : "/" + params.baseURL;
-	params.baseURL = params.baseURL.substr(-1, 1) === "/" ? params.baseURL : params.baseURL + "/";
-
-	// params.stateSymbol = allowState.indexOf ( params.stateSymbol ) === -1 ? allowState [ 0 ] : params.stateSymbol;
-	if (type$1(params.moduleSuffix) === "string") {
-		params.moduleSuffix = params.moduleSuffix.substr(0, 1) === "." ? params.moduleSuffix : "." + params.moduleSuffix;
+	if (type$1(params.baseURL) === "object") {
+		foreach(defaultParams.baseURL, function (base, name) {
+			if (params.baseURL.hasOwnProperty(name)) {
+				base = params.baseURL[name];
+				params.baseURL[name] = base.substr(0, 1) === "/" ? base : "/" + base;
+				params.baseURL[name] += base.substr(-1, 1) === "/" ? "" : "/";
+			} else {
+				params.baseURL[name] = base;
+			}
+		});
+	} else {
+		params.baseURL = defaultParams.baseURL;
 	}
 
-	paramStore = extend(paramStore, params);
+	if (type$1(params.module) === "object") {
+		foreach(defaultParams.module, function (item, name) {
+			if (!params.module.hasOwnProperty(name)) {
+				params.module[name] = defaultParams.module[name];
+			} else if (name === "suffix") {
+				params.module[name] = params.module[name].substr(0, 1) === "." ? params.module[name] : "." + params.module[name];
+			}
+		});
+	} else {
+		params.module = defaultParams.module;
+	}
+
+	// params.stateSymbol = allowState.indexOf ( params.stateSymbol ) === -1 ? allowState [ 0 ] : params.stateSymbol;
+
+	paramStore = params;
 }
 
 extend(configuration, {
+
+	/**
+ 	getConfigure ( param: String )
+ 		Return Type:
+ 	Any
+ 		Description:
+ 	根据配置名获取配置数据
+ 		URL doc:
+ 	http://icejs.org/######
+ */
 	getConfigure: function getConfigure(param) {
 		return paramStore[param];
 	}
@@ -1754,28 +1785,28 @@ function queryModuleNode(moduleName, context) {
 }
 
 /**
-	ComponentLoader ( load: Object )
+	Loader ( load: Object )
 
 	Return Type:
 	void
 
 	Description:
-	组件依赖加载器
+	依赖加载器
 
 	URL doc:
 	http://icejs.org/######
 */
-function ComponentLoader(load) {
+function Loader(load) {
 
 	// 需要加载的依赖，加载完成所有依赖需要遍历此对象上的所有依赖并调用相应回调函数
 	this.load = load;
 
 	// 等待加载完成的依赖，每加载完成一个依赖都会将此依赖在waiting对象上移除，当waiting为空时则表示相关依赖已全部加载完成
 	this.waiting = [];
-	this.loadedComponent = {};
+	this.loadedModule = {};
 }
 
-extend(ComponentLoader.prototype, {
+extend(Loader.prototype, {
 
 	/**
  	putWaiting ( name: String )
@@ -1831,25 +1862,14 @@ extend(ComponentLoader.prototype, {
 	inject: function inject() {
 		var _this = this;
 
-		var depComponent = void 0,
-		    componentName = void 0;
-		var componentNames = [];
+		var deps = [];
 		foreach(this.load.deps, function (depStr) {
-			depComponent = _this.loadedComponent[depStr];
-			componentName = getFunctionName(depComponent);
-			componentNames.push(componentName);
-
-			window[componentName] = depComponent;
+			deps.push(_this.loadedModule[depStr]);
 		});
 
 		// 返回注入后工厂方法
 		return function () {
-			_this.load.factory();
-
-			// 在window上移除对依赖组件
-			foreach(componentNames, function (name) {
-				delete window[name];
-			});
+			_this.load.factory.apply({}, deps);
 		};
 	},
 
@@ -1868,11 +1888,11 @@ extend(ComponentLoader.prototype, {
  */
 	fire: function fire(factory) {
 		factory();
-		ComponentLoader.isRequiring = false;
+		Loader.isRequiring = false;
 	}
 });
 
-extend(ComponentLoader, {
+extend(Loader, {
 
 	// 是否正在加载依赖组件
 	isRequiring: false,
@@ -1902,56 +1922,9 @@ extend(ComponentLoader, {
  	http://icejs.org/######
  */
 	create: function create(guid$$1, loadDep) {
-		return ComponentLoader.loaderMap[guid$$1] = new ComponentLoader(loadDep);
+		return Loader.loaderMap[guid$$1] = new Loader(loadDep);
 	},
 
-
-	/**
- 	getCurrentPath ()
- 
- 	Return Type:
- 	Object
- 
- 	Description:
- 	获取当前正在执行的依赖名与对应的依赖加载器编号
-  	此方法使用报错的方式获取错误所在路径，使用正则表达式解析出对应依赖信息
- 
- 	URL doc:
- 	http://icejs.org/######
- */
-	// getCurrentPath () {
-	// 	const anchor = document.createElement ( "a" );
-	//    	if ( document.currentScript ) {
-
-	//    		// Chrome, Firefox, Safari高版本
-	//        	anchor.href = document.currentScript.src;
-	//        }
-	//    	else {
-
-	//        	// IE10+, Safari低版本, Opera9
-	//        	try {
-	// 			____a.____b();
-	// 		} catch ( e ) {
-	// 			const stack = e.stack || e.sourceURL || e.stacktrace;
-	//            	if ( stack ) {
-	// 				anchor.href = ( e.stack.match ( /(?:http|https|file):\/\/.*?\/.+?\.js/ ) || [ "" ] ) [ 0 ];
-	//                }
-	//            	else {
-
-	//                	// IE9
-	//                	const scripts = slice.call ( document.querySelectorAll ( "script" ) );
-	//                	for ( let i = scripts.length - 1, script; script = script [ i-- ]; ) {
-	//                    	if ( script.readyState === "interative" ) {
-	//                        	anchor.href = script.src;
-	//                        	break;
-	//                        }
-	//                    }
-	//                }
-	// 		}
-	//        }
-
-	//        return anchor.pathname;
-	// },
 
 	/**
  	onScriptLoaded ( event: Object )
@@ -1961,32 +1934,41 @@ extend(ComponentLoader, {
  
  	Description:
  	js依赖加载onload事件回调函数
- 	此函数不是直接在其他地方调用，而是赋值给script的onload事件的，所以函数里的this都需要使用ComponentLoader来替代
+ 	此函数不是直接在其他地方调用，而是赋值给script的onload事件的，所以函数里的this都需要使用Loader来替代
  
  	URL doc:
  	http://icejs.org/######
  */
 	onScriptLoaded: function onScriptLoaded(e) {
 
-		var loadID = attr(e.target, ComponentLoader.loaderID),
-		    depName = attr(e.target, ComponentLoader.depName),
-		    curLoader = ComponentLoader.loaderMap[loadID];
+		var loadID = attr(e.target, Loader.loaderID),
+		    depName = attr(e.target, Loader.depName),
+		    curLoader = Loader.loaderMap[loadID];
 
-		curLoader.loadedComponent[depName] = ComponentLoader.currentLoaded;
-		cache.pushModule(depName, ComponentLoader.currentLoaded);
-		delete ComponentLoader.currentLoaded;
-
+		curLoader.loadedModule[depName] = curLoader.getLoadedModule(depName);
 		if (curLoader.dropWaiting(depName) === 0) {
 
 			// 调用工厂方法
 			curLoader.fire(curLoader.inject());
-			delete ComponentLoader.loaderMap[loadID];
+			delete Loader.loaderMap[loadID];
 		}
 	}
 });
 
+function getLoadedComponent(loadURL, Loader) {
+	var loadedCompoennt = Loader.currentLoaded;
+	cache.pushModule(loadURL, loadedCompoennt);
+
+	delete Loader.currentLoaded;
+	return loadedCompoennt;
+}
+
+function getLoadedPlugin(loadURL, Loader) {
+	return null;
+}
+
 /**
-	require ( deps: Object, factory: Function )
+	require ( deps: Object, factory: Function, moduleType )
 
 	Return Type:
 	void
@@ -1998,23 +1980,42 @@ extend(ComponentLoader, {
 	URL doc:
 	http://icejs.org/######
 */
-function require(deps, factory) {
-	ComponentLoader.isRequiring = true;
+function require(deps, factory, moduleType) {
+	Loader.isRequiring = true;
 
 	// 正在加载的依赖数
-	var loadingCount = 0;
+	var loadingCount = 0,
+	    getCache = null;
 
 	var nguid = guid(),
 	    module = {
 		deps: deps,
 		factory: factory
 	},
-	    loadObj = ComponentLoader.create(nguid, module);
+	    loadObj = Loader.create(nguid, module);
+
+	switch (moduleType) {
+		case TYPE_COMPONENT:
+			loadObj.getLoadedModule = function (loadURL) {
+				return getLoadedComponent(loadURL, Loader);
+			};
+			getCache = function getCache(depStr) {
+				return cache.getComponent(depStr);
+			};
+
+			break;
+		case TYPE_PLUGIN:
+			loadObj.getLoadedModule = function (loadURL) {
+				return getLoadedPlugin(loadURL, Loader);
+			};
+			getCache = noop;
+
+			break;
+	}
 
 	// 遍历依赖，如果依赖未被加载，则放入waiting中等待加载完成
 	foreach(deps, function (depStr) {
-		check(depStr.substr(0, 1)).be("/").ifNot("import", "\"" + depStr + "\"\u9519\u8BEF\uFF0C\u7EC4\u4EF6\u52A0\u8F7D\u8DEF\u5F84\u5FC5\u987B\u4E3A\u4EE5\u201D/\u201C\u5F00\u5934\u7684\u7EDD\u5BF9\u8DEF\u5F84");
-		if (!cache.getComponent(depStr)) {
+		if (!getCache(depStr)) {
 
 			// 放入待加载列表中等待加载
 			loadObj.putWaiting(depStr);
@@ -2022,20 +2023,19 @@ function require(deps, factory) {
 			// 加载依赖
 			var script = document.createElement("script");
 
-			script.src = depStr + ComponentLoader.suffix;
-			attr(script, ComponentLoader.depName, depStr);
-			attr(script, ComponentLoader.loaderID, nguid);
+			script.src = depStr + Loader.suffix;
+			attr(script, Loader.depName, depStr);
+			attr(script, Loader.loaderID, nguid);
 
-			appendScript(script, ComponentLoader.onScriptLoaded);
+			appendScript(script, Loader.onScriptLoaded);
 
 			loadingCount++;
 		}
 	});
 
 	// 如果顶层执行依赖没有待加载的依赖参数，或可以直接触发，则直接执行
-	if (loadingCount === 0 && name === ComponentLoader.topName) {
-		loadObj.inject();
-		loadObj.fire();
+	if (loadingCount === 0) {
+		loadObj.fire(loadObj.inject());
 	}
 }
 
@@ -2717,9 +2717,9 @@ function Class(clsName) {
 			defineMemberFunction(classFn, proto);
 		}
 
-		// 单页模式下将会临时保存ComponentLoader
-		if (ComponentLoader.isRequiring) {
-			ComponentLoader.currentLoaded = classFn;
+		// 单页模式下将会临时保存Loader
+		if (Loader.isRequiring) {
+			Loader.currentLoaded = classFn;
 		}
 
 		return classFn;
@@ -4802,6 +4802,12 @@ extend(Component.prototype, {
             subElements = componentConstructor.initSubElements(componentVNode, subElementNames),
             tmpl = new Tmpl(componentVm, this.depComponents, this),
             vfragmentBackup = vfragment.clone();
+
+        // 先清空后再添加上去进行对比
+        // 避免造成if、else-if、for指令在对比时出错
+        vfragmentBackup.clear();
+        clear(vfragmentBackup.node);
+
         tmpl.moduleNode = componentVNode;
         tmpl.mount(vfragment, false, Tmpl.defineScoped(subElements, componentVNode, false));
 
@@ -5844,7 +5850,7 @@ var textExpr = {
 
             foreach(val, function (item) {
                 item = item.nodeType ? item : VTextNode(item);
-                p.appenChild(item);
+                p.appendChild(item);
             });
         }
     }
@@ -6648,6 +6654,11 @@ function Module(moduleElem) {
 		// 将module元素转换为vnode，并拷贝vnode
 		moduleElem = VNode.domToVNode(moduleElem);
 		moduleElemBackup = moduleElem.clone();
+
+		// 先清空后再添加上去进行对比
+		// 避免造成if、else-if、for指令在对比时出错
+		moduleElemBackup.clear();
+		clear(moduleElemBackup.node);
 	}
 	this.parent = parent;
 
@@ -6917,7 +6928,7 @@ function parseScript(moduleString, scriptPaths, scriptNames, parses) {
 
 	var rscript = /<script(?:.*?)>([\s\S]+)<\/script>/,
 	    rscriptComment = /\/\/(.*?)\n|\/\*([\s\S]*?)\*\//g,
-	    rimport = /(?:(?:var|let|const)\s+)?([A-Za-z$_][\w$]+)\s*=\s*import\s*\(\s*"(.*?)"\s*\)\s*(?:,|;)/g,
+	    rimport = /\s*(?:(?:(?:var|let|const)\s+)?(.+?)\s*=\s*)?import\s*\(\s*["'](.*?)["']\s*\)(?:\s*[,;])?/g,
 	    rhtmlComment = /<!--(.*?)-->/g,
 	    rmoduleDef = /new\s*ice\s*\.\s*Module\s*\(/,
 	    raddComponents = new RegExp(rmoduleDef.source + "\\s*\\{"),
@@ -6931,8 +6942,11 @@ function parseScript(moduleString, scriptPaths, scriptNames, parses) {
 		});
 
 		// 获取import的script
-		parses.script = matchScript.replace(rimport, function (match, rep1, rep2) {
-			scripts[rep1] = rep2;
+		parses.script = matchScript.replace(rimport, function (match, scriptName, scriptPath) {
+			if (!scriptName) {
+				throw moduleErr("import", "import(\"" + scriptPath + "\")\u8FD4\u56DE\u7684\u7EC4\u4EF6\u884D\u751F\u7C7B\u9700\u88AB\u4E00\u4E2A\u53D8\u91CF\u63A5\u6536\uFF0C\u5426\u5219\u53EF\u80FD\u56E0\u83B7\u53D6\u4E0D\u5230\u6B64\u7EC4\u4EF6\u800C\u5BFC\u81F4\u89E3\u6790\u51FA\u9519");
+			}
+			scripts[scriptName] = scriptPath;
 			return "";
 		}).trim();
 
@@ -6948,7 +6962,7 @@ function parseScript(moduleString, scriptPaths, scriptNames, parses) {
 
 				// 只有在view中有使用的component才会被使用
 				if (new RegExp("<\s*" + transformCompName(name, true)).test(matchView)) {
-					scriptPaths.push("\"" + path + "\"");
+					scriptPaths.push(path);
 					scriptNames.push(name);
 				}
 			});
@@ -6962,7 +6976,7 @@ function parseScript(moduleString, scriptPaths, scriptNames, parses) {
 		}
 
 		parses.script = parses.script.replace(rmoduleDef, function (match) {
-			return match + "moduleNode,";
+			return match + "args.moduleNode,";
 		});
 	}
 
@@ -7012,7 +7026,7 @@ function compileModule(moduleString, identifier) {
 
 		check(parses.script).notBe("").ifNot("module:script", "<Module>内的<script>为必须子元素，它的内部js代码用于初始化模块的页面布局").do();
 
-		var buildView = "signCurrentRender();var nt=new NodeTransaction();nt.collect(moduleNode);moduleNode.html(VNode.domToVNode(view));";
+		var buildView = "args.signCurrentRender();\n\t\tvar nt=new args.NodeTransaction();\n\t\tnt.collect(args.moduleNode);\n\t\targs.moduleNode.html(args.VNode.domToVNode(view));";
 
 		////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////
@@ -7020,16 +7034,25 @@ function compileModule(moduleString, identifier) {
 		moduleString = "var view=\"" + parses.view + parses.style + "\";";
 
 		if (!isEmpty(scriptPaths)) {
-			moduleString += "require([" + scriptPaths.join(",") + "],function(){" + buildView + parses.script + ";nt.commit();flushChildren();});";
+			var addToWindow = "",
+			    delFromWindow = "";
+			foreach(scriptNames, function (name) {
+				addToWindow += "window." + name + "=" + name + ";";
+				delFromWindow += "delete window." + name + ";";
+			});
+
+			var componentBaseURL = configuration.getConfigure("baseURL").component;
+			foreach(scriptPaths, function (path, i) {
+				scriptPaths[i] = "\"" + (componentBaseURL + path) + "\"";
+			});
+
+			moduleString += "args.require([" + scriptPaths.join(",") + "],function(" + scriptNames.join(",") + "){\n\t\t\t\t" + addToWindow + "\n\t\t\t\t" + buildView + "\n\t\t\t\t" + parses.script + ";\n\t\t\t\t" + delFromWindow + "\n\t\t\t\tnt.commit();\n\t\t\t\targs.flushChildren();\n\t\t\t}," + TYPE_COMPONENT + ");";
 		} else {
-			moduleString += "" + buildView + parses.script + ";nt.commit();flushChildren();";
+			moduleString += buildView + "\n\t\t\t" + parses.script + ";\n\t\t\tnt.commit();\n\t\t\targs.flushChildren();";
 		}
 	}
 
-	return {
-		updateFn: new Function("ice", "moduleNode", "VNode", "NodeTransaction", "require", "signCurrentRender", "flushChildren", moduleString),
-		title: title
-	};
+	return { updateFn: new Function("ice", "args", moduleString), title: title };
 }
 
 /**
@@ -8630,12 +8653,12 @@ extend(ModuleLoader, {
 		//////////////////////////////////////////////////
 		//////////////////////////////////////////////////
 		//////////////////////////////////////////////////
-		var baseURL = configuration.getConfigure("baseURL");
+		var baseURL = configuration.getConfigure("baseURL").module,
+		    moduleConfig = configuration.getConfigure("module");
 		path = path.substr(0, 1) === "/" ? baseURL.substr(0, baseURL.length - 1) : baseURL + path;
-		path += configuration.getConfigure("moduleSuffix") + args;
+		path += moduleConfig.suffix + args;
 
-		var moduleConfig = configuration.getConfigure("module"),
-		    historyModule = cache.getModule(path),
+		var historyModule = cache.getModule(path),
 		    signCurrentRender = function signCurrentRender() {
 			Structure.signCurrentRender(currentStructure, param, args, data);
 		},
@@ -8678,7 +8701,7 @@ extend(ModuleLoader, {
 					moduleNode.render();
 				}
 
-				historyModule.updateFn(ice, moduleNode, VNode, NodeTransaction, require, signCurrentRender, flushChildren(this));
+				historyModule.updateFn(ice, { moduleNode: moduleNode, VNode: VNode, NodeTransaction: NodeTransaction, require: require, signCurrentRender: signCurrentRender, flushChildren: flushChildren(this) });
 			};
 
 			// 获取模块更新函数完成后在等待队列中移除
@@ -8733,7 +8756,7 @@ extend(ModuleLoader, {
 						moduleNode.render();
 					}
 
-					updateFn(ice, moduleNode, VNode, NodeTransaction, require, signCurrentRender, flushChildren(this));
+					updateFn(ice, { moduleNode: moduleNode, VNode: VNode, NodeTransaction: NodeTransaction, require: require, signCurrentRender: signCurrentRender, flushChildren: flushChildren(this) });
 
 					// 调用success回调
 					success(moduleNode);
@@ -9360,150 +9383,161 @@ function requestEventHandler(pathResolver, method, post) {
 /////////////////////////////////
 var ice = {
 
-				// 路由模式，启动路由时可进行模式配置
-				// 默认为自动选择路由模式，即在支持html5 history API时使用新特性，不支持的情况下自动回退到hash模式
-				AUTO: AUTO,
+	// 路由模式，启动路由时可进行模式配置
+	// 默认为自动选择路由模式，即在支持html5 history API时使用新特性，不支持的情况下自动回退到hash模式
+	AUTO: AUTO,
 
-				// 强制使用hash模式
-				HASH: HASH,
+	// 强制使用hash模式
+	HASH: HASH,
 
-				// 强制使用html5 history API模式
-				// 使用此模式时需注意：在不支持新特新的浏览器中是不能正常使用的
-				BROWSER: BROWSER,
+	// 强制使用html5 history API模式
+	// 使用此模式时需注意：在不支持新特新的浏览器中是不能正常使用的
+	BROWSER: BROWSER,
 
-				// Module对象
-				Module: Module,
+	// Module对象
+	Module: Module,
 
-				// Component对象
-				Component: Component,
+	// Component对象
+	Component: Component,
 
-				// Class类构造器
-				// 用于创建组件类
-				class: Class,
+	// Class类构造器
+	// 用于创建组件类
+	class: Class,
 
-				/**
-    	start ( rootModuleName: String, routerConfig: Object )
-    	
-    	Return Type:
-    	void
-    	
-    	Description:
-    	以一个module作为起始点启动ice
-    	
-    	URL doc:
-    	http://icejs.org/######
-    */
-				startRouter: function startRouter(routerConfig) {
+	/**
+ 	start ( routerConfig: Object )
+ 	
+ 	Return Type:
+ 	void
+ 	
+ 	Description:
+ 	启动ice路由
+ 	表示启动单页模式
+ 	
+ 	URL doc:
+ 	http://icejs.org/######
+ */
+	startRouter: function startRouter(routerConfig) {
+		var _this = this;
 
-								// 纠正参数
-								// correctParam ( rootModuleName, routerConfig ).to ( "string", "object" ).done ( function () {
-								// 	this.$1 = rootModuleName;
-								// 	this.$2 = routerConfig;
-								// } );
+		check(routerConfig).type("object").ifNot("ice.startRouter", "当routerConfig传入参数时，必须为object类型").do();
 
-								// if ( rootModuleName !== undefined ) {
-								// 	check ( rootModuleName ).type ( "string" ).notBe ( "" ).ifNot ( "ice.startRouter", "当rootModuleName传入参数时，必须是不为空的字符串" ).do ();
-								// }
+		// 执行routes配置路由
+		(routerConfig.routes || noop)(new Router(Router.routeTree));
+		delete routerConfig.routes;
 
-								check(routerConfig).type("object").ifNot("ice.startRouter", "当routerConfig传入参数时，必须为object类型").do();
+		routerConfig.history = routerConfig.history || AUTO;
+		if (routerConfig.history === AUTO) {
+			if (iceHistory.supportNewApi()) {
+				routerConfig.history = BROWSER;
+			} else {
+				routerConfig.history = HASH;
+			}
+		}
 
-								// 执行routes配置路由
-								(routerConfig.routes || noop)(new Router(Router.routeTree));
-								delete routerConfig.routes;
+		iceHistory.initHistory(routerConfig.history);
 
-								routerConfig.history = routerConfig.history || AUTO;
-								if (routerConfig.history === AUTO) {
-												if (iceHistory.supportNewApi()) {
-																routerConfig.history = BROWSER;
-												} else {
-																routerConfig.history = HASH;
-												}
-								}
+		// 当使用hash模式时纠正路径
+		var href = window.location.href,
+		    host = window.location.protocol + "//" + window.location.host + "/";
 
-								iceHistory.initHistory(routerConfig.history);
+		if (routerConfig.history === HASH && href !== host && href.indexOf(host + "#") === -1) {
+			if (window.location.hash) {
+				window.location.hash = "";
+			}
 
-								// 当使用hash模式时纠正路径
-								var href = window.location.href,
-								    host = window.location.protocol + "//" + window.location.host + "/";
+			window.location.replace(href.replace(host, host + "#/"));
+		}
+		delete routerConfig.history;
 
-								if (routerConfig.history === HASH && href !== host && href.indexOf(host + "#") === -1) {
-												if (window.location.hash) {
-																window.location.hash = "";
-												}
+		// 绑定元素请求或提交表单的事件到body元素上
+		event.on(document.body, "click submit", function (e) {
 
-												window.location.replace(href.replace(host, host + "#/"));
-								}
+			var target = e.target,
+			    path = attr(target, e.type.toLowerCase() === "submit" ? iceAttr.action : iceAttr.href);
 
-								delete routerConfig.history;
+			if (path && !/#/.test(path)) {
 
-								// 将除routes、history外的配置信息进行保存
-								configuration(routerConfig);
+				var method = e.type.toLowerCase() === "submit" ? attr(target, "method").toUpperCase() : "GET",
+				    buildedPath = iceHistory.history.buildURL(path);
 
-								// 绑定元素请求或提交表单的事件到body元素上
-								event.on(document.body, "click submit", function (e) {
+				if (window.location.host === buildedPath.host) {
+					if (buildedPath.pathname === window.location.pathname && buildedPath.search === window.location.search) {
 
-												var target = e.target,
-												    path = attr(target, e.type.toLowerCase() === "submit" ? iceAttr.action : iceAttr.href);
-
-												if (path && !/#/.test(path)) {
-
-																var method = e.type.toLowerCase() === "submit" ? attr(target, "method").toUpperCase() : "GET",
-																    buildedPath = iceHistory.history.buildURL(path);
-
-																if (window.location.host === buildedPath.host) {
-																				if (buildedPath.pathname === window.location.pathname && buildedPath.search === window.location.search) {
-
-																								e.preventDefault();
-																				} else if (requestEventHandler(buildedPath, method, method.toLowerCase() === "post" ? target : {}) !== false) {
-																								e.preventDefault();
-																				}
-																}
-												}
-								});
-
-								var param = {},
-								    path = iceHistory.history.getPathname(),
-								    location = {
-												path: path,
-												nextStructure: Router.matchRoutes(path, param),
-												param: param,
-												get: iceHistory.history.getQuery(),
-												post: {},
-												method: "GET",
-												action: "NONE"
-								};
-
-								// Router.matchRoutes()匹配当前路径需要更新的模块
-								// 因路由刚启动，故将nextStructure直接赋值给currentPage
-								Structure.currentPage = location.nextStructure;
-
-								// 根据更新后的页面结构体渲染新视图
-								Structure.currentPage.render(location, location.nextStructure.copy());
-				},
-
-
-				/**
-    install ( pluginDefinition: Object )
-    
-    Return Type:
-    void
-    
-    Description:
-    安装插件
-    插件定义对象必须拥有build方法
-    若插件安装后会返回一个对象，则可在模块或组件的生命周期钩子函数中直接使用插件名引入，框架会自动注入对应插件
-    
-    URL doc:
-    http://icejs.org/######
-    */
-				install: function install(pluginDefinition) {
-								check(pluginDefinition.name).type("string").notBe("").check(cache.hasPlugin(pluginDefinition.name)).be(false).ifNot("pluginDefinition.name", "plugin安装对象必须定义name属性以表示此插件的名称，且不能与已有插件名称重复").do();
-
-								check(pluginDefinition.build).type("function").ifNot("pluginDefinition.build", "plugin安装对象必须包含build方法").do();
-
-								var deps = cache.getDependentPlugin(pluginDefinition.build);
-								cache.pushPlugin(pluginDefinition.name, pluginDefinition.build.apply(this, deps));
+						e.preventDefault();
+					} else if (requestEventHandler(buildedPath, method, method.toLowerCase() === "post" ? target : {}) !== false) {
+						e.preventDefault();
+					}
 				}
+			}
+		});
+
+		var plugin = routerConfig.plugin,
+		    loadPlugins = [];
+
+		// 将除routes、history、plugin外的配置信息进行处理保存
+		delete routerConfig.plugin;
+		configuration(routerConfig);
+
+		var pluginBaseURL = configuration.getConfigure("baseURL").plugin;
+
+		// 初始化插件列表
+		if (type$1(plugin) === "array") {
+			foreach(plugin, function (pluginItem) {
+				if (type$1(pluginItem) === "string") {
+					loadPlugins.push(pluginBaseURL + pluginItem);
+				} else {
+					_this.install(pluginItem);
+				}
+			});
+		}
+
+		// 如果存在需加载的插件则待插件加载完成后再执行模块更新操作
+		require(loadPlugins, function () {
+			var param = {},
+			    path = iceHistory.history.getPathname(),
+			    location = {
+				path: path,
+				nextStructure: Router.matchRoutes(path, param),
+				param: param,
+				get: iceHistory.history.getQuery(),
+				post: {},
+				method: "GET",
+				action: "NONE"
+			};
+
+			// Router.matchRoutes()匹配当前路径需要更新的模块
+			// 因路由刚启动，故将nextStructure直接赋值给currentPage
+			Structure.currentPage = location.nextStructure;
+
+			// 根据更新后的页面结构体渲染新视图
+			Structure.currentPage.render(location, location.nextStructure.copy());
+		}, TYPE_PLUGIN);
+	},
+
+
+	/**
+ install ( pluginDefinition: Object )
+ 
+ Return Type:
+ void
+ 
+ Description:
+ 安装插件
+ 插件定义对象必须拥有build方法
+ 若插件安装后会返回一个对象，则可在模块或组件的生命周期钩子函数中直接使用插件名引入，框架会自动注入对应插件
+ 
+ URL doc:
+ http://icejs.org/######
+ */
+	install: function install(pluginDefinition) {
+		check(pluginDefinition.name).type("string").notBe("").check(cache.hasPlugin(pluginDefinition.name)).be(false).ifNot("pluginDefinition.name", "plugin安装对象必须定义name属性以表示此插件的名称，且不能与已有插件名称重复").do();
+
+		check(pluginDefinition.build).type("function").ifNot("pluginDefinition.build", "plugin安装对象必须包含build方法").do();
+
+		var deps = cache.getDependentPlugin(pluginDefinition.build);
+		cache.pushPlugin(pluginDefinition.name, pluginDefinition.build.apply(this, deps));
+	}
 };
 
 return ice;

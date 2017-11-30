@@ -1,7 +1,6 @@
 import { foreach, guid, noop, type } from "../../../func/util";
 import { walkVDOM } from "../../../func/private";
 import { directiveErr } from "../../../error";
-import { VNODE_ADD, VNODE_REMOVE, VNODE_MOVE } from "../../../var/const";
 import Tmpl from "../Tmpl";
 import VTextNode from "../../vnode/VTextNode";
 import VFragment from "../../vnode/VFragment";

@@ -1,8 +1,8 @@
 import allowState from "./allowState";
 import defaultParams from "./defaultParams";
-import { type, extend } from "../../func/util";
+import { type, foreach, extend } from "../../func/util";
 
-let paramStore = defaultParams;
+let paramStore = null;
 
 /**
 	configuration ( params: Object )
@@ -18,22 +18,55 @@ let paramStore = defaultParams;
 */
 export default function configuration ( params ) {
 
-	const _type = type ( params.baseURL );
-
-	params.baseURL = _type === "string" ? params.baseURL : 
-				   _type === "function" ? params.baseURL () : "";
-	params.baseURL = params.baseURL.substr ( 0, 1 ) === "/" ? params.baseURL : "/" + params.baseURL;
-	params.baseURL = params.baseURL.substr ( -1, 1 ) === "/" ? params.baseURL : params.baseURL + "/";
-
-	// params.stateSymbol = allowState.indexOf ( params.stateSymbol ) === -1 ? allowState [ 0 ] : params.stateSymbol;
-	if ( type ( params.moduleSuffix ) === "string" ) {
-		params.moduleSuffix = params.moduleSuffix.substr ( 0, 1 ) === "." ? params.moduleSuffix : "." + params.moduleSuffix;
+	if ( type ( params.baseURL ) === "object" ) {
+		foreach ( defaultParams.baseURL, ( base, name ) => {
+			if ( params.baseURL.hasOwnProperty ( name ) ) {
+				base = params.baseURL [ name ];
+				params.baseURL [ name ] = base.substr ( 0, 1 ) === "/" ? base : "/" + base;
+				params.baseURL [ name ] += base.substr ( -1, 1 ) === "/" ? "" : "/";
+			}
+			else {
+				params.baseURL [ name ] = base;
+			}
+		} );
+	}
+	else {
+		params.baseURL = defaultParams.baseURL;
 	}
 
-	paramStore = extend ( paramStore, params );
+	if ( type ( params.module ) === "object" ) {
+		foreach ( defaultParams.module, ( item, name ) => {
+			if ( !params.module.hasOwnProperty ( name ) ) {
+				params.module [ name ] = defaultParams.module [ name ];
+			}
+			else if ( name === "suffix" ) {
+				params.module [ name ] = params.module [ name ].substr ( 0, 1 ) === "." ? params.module [ name ] : "." + params.module [ name ];
+			}
+		} );
+	}
+	else {
+		params.module = defaultParams.module;
+	}
+
+	// params.stateSymbol = allowState.indexOf ( params.stateSymbol ) === -1 ? allowState [ 0 ] : params.stateSymbol;
+
+	paramStore = params;
 }
 
 extend ( configuration, {
+
+	/**
+		getConfigure ( param: String )
+
+		Return Type:
+		Any
+
+		Description:
+		根据配置名获取配置数据
+
+		URL doc:
+		http://icejs.org/######
+	*/
 	getConfigure ( param ) {
 		return paramStore [ param ];
 	}

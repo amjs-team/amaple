@@ -34,8 +34,8 @@ export default {
                     .replace ( rexpr, ( match, rep ) => `",${ rep },"` );
 
             // 当组件设置了subElements，且在模板中在同一个文本节点连续输出两个subElements，或subElements与普通文本一起使用时，需按subElements进行分割，然后遍历插入其中
-            this.expr = `(function(){
-                var arr=["${ exprArray }"],tempArr=[],ret=[];
+            this.expr = `(function(arr){
+                var arr=arr,tempArr=[],ret=[];
                 for(var i=0;i<arr.length;i++){
                     if(!arr[i].nodeType){
                         tempArr.push(arr[i]);
@@ -49,7 +49,7 @@ export default {
                     ret.push(tempArr.join(""));
                 }
                 return ret.length===1?ret[0]:ret;
-            })()`;
+            })(["${ exprArray }"])`;
         }
     },
 

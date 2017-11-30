@@ -20,11 +20,16 @@
 			<li :for="(t, k) in title">{{ t }}_{{ k }}
 			</li>
 		</ul>
+		<edit-table></edit-table>
+		<page-ctrl></page-ctrl>
 	</template>
 	
 
 	<!-- 此模板对应的数据 -->
 	<script>
+		var EditTable = import ( "EditTable" );
+		const PageCtrl = import ( "PageCtrl" );
+
 		var table = new ice.Module ( {
 			init : function () {
 
@@ -61,8 +66,8 @@
 				console.log( "table unmount" );
 			},
 
-			apply : function () {
-				this.state.postData = JSON.stringify ( this.post );
+			apply : function ( demoPlugin ) {
+				this.state.postData = JSON.stringify ( demoPlugin );
 			}
 		} );
 	</script>

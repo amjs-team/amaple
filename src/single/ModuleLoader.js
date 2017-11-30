@@ -1,7 +1,7 @@
 import { type, extend, foreach, noop, isPlainObject, isEmpty, timestamp } from "../func/util";
 import { query, attr } from "../func/node";
 import { queryModuleNode, parseGetQuery } from "../func/private";
-import require from "../core/component/require/require";
+import require from "../require/core";
 import { envErr, moduleErr } from "../error";
 import iceHistory from "../single/history/iceHistory";
 import compileModule from "./compileModule";
@@ -326,12 +326,13 @@ extend ( ModuleLoader, {
 		//////////////////////////////////////////////////
 		//////////////////////////////////////////////////
 		//////////////////////////////////////////////////
-		const baseURL = configuration.getConfigure ( "baseURL" );
+		const 
+			baseURL = configuration.getConfigure ( "baseURL" ).module,
+			moduleConfig = configuration.getConfigure ( "module" );
 		path = path.substr ( 0, 1 ) === "/" ? baseURL.substr ( 0, baseURL.length - 1 ) : baseURL + path;
-		path += configuration.getConfigure ( "moduleSuffix" ) + args;
+		path += moduleConfig.suffix + args;
 
 		const 
-			moduleConfig = configuration.getConfigure ( "module" ),
 			historyModule = cache.getModule ( path ),
 			signCurrentRender = () => {
 				Structure.signCurrentRender ( currentStructure, param, args, data );
@@ -380,7 +381,7 @@ extend ( ModuleLoader, {
                 	moduleNode.render ();
                 }
 
-	        	historyModule.updateFn ( ice, moduleNode, VNode, NodeTransaction, require, signCurrentRender, flushChildren ( this ) );
+	        	historyModule.updateFn ( ice, { moduleNode, VNode, NodeTransaction, require, signCurrentRender, flushChildren : flushChildren ( this ) } );
 	        };
 
 	        // 获取模块更新函数完成后在等待队列中移除
@@ -433,7 +434,7 @@ extend ( ModuleLoader, {
 	                	moduleNode.render ();
 	                }
 
-	        		updateFn ( ice, moduleNode, VNode, NodeTransaction, require, signCurrentRender, flushChildren ( this ) );
+	        		updateFn ( ice, { moduleNode, VNode, NodeTransaction, require, signCurrentRender, flushChildren : flushChildren ( this ) } );
 
 	            	// 调用success回调
 					success ( moduleNode );

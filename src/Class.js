@@ -1,6 +1,6 @@
 import { foreach, isEmpty, type, noop } from "./func/util";
 import { classErr } from "./error";
-import ComponentLoader from "./core/component/require/ComponentLoader";
+import Loader from "./require/Loader";
 
 const 
 	rconstructor = /^(?:constructor\s*|function\s*)?(?:constructor\s*)?\((.*?)\)\s*(?:=>\s*)?{([\s\S]*)}$/,
@@ -193,9 +193,9 @@ export default function Class ( clsName ) {
 			defineMemberFunction ( classFn, proto );
 		}
     	
-    	// 单页模式下将会临时保存ComponentLoader
-		if ( ComponentLoader.isRequiring ) {
-			ComponentLoader.currentLoaded = classFn;
+    	// 单页模式下将会临时保存Loader
+		if ( Loader.isRequiring ) {
+			Loader.currentLoaded = classFn;
 		}
 
 		return classFn;
