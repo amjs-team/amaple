@@ -4766,7 +4766,7 @@ extend(Component.prototype, {
         // 验证组件类
         this.depComponents = this.depComponents || [];
         foreach(this.depComponents, function (comp) {
-            if (comp && getFunctionName(comp.constructor) !== "Component") {
+            if (comp && getFunctionName(comp.__proto__) !== "Component") {
                 throw componentErr("depComponents", "\u7EC4\u4EF6\"" + getFunctionName(_this.constructor) + "\"\u5185\u9519\u8BEF\u7684\u4F9D\u8D56\u7EC4\u4EF6\u5BF9\u8C61\uFF0C\u8BF7\u786E\u4FDD\u4F9D\u8D56\u7EC4\u4EF6\u4E3A\u4E00\u4E2A\u7EC4\u4EF6\u884D\u751F\u7C7B");
             }
         });
@@ -5766,19 +5766,21 @@ var textExpr = {
         http://icejs.org/######
     */
     before: function before() {
+        var rexpr = /{{\s*(.*?)\s*}}/g;
 
         // 当表达式只有“{{ expr }}”时直接取出表达式的值
         if (/^{{\s*(\S+)\s*}}$/.test(this.expr)) {
-            this.expr = this.expr.replace(/{{\s*(.*?)\s*}}/g, function (match, rep) {
+            this.expr = this.expr.replace(rexpr, function (match, rep) {
                 return rep;
             });
         } else {
 
             // 当表达式为混合表达式时，将表达式转换为字符串拼接代码
             // 拼接前先过滤换行符为空格，防止解析出错
-            this.expr = this.expr.replace(/[\r\n]/g, " ").replace(/{{\s*(.*?)\s*}}/g, function (match, rep) {
+            this.expr = this.expr.replace(/[\r\n]/g, " ").replace(rexpr, function (match, rep) {
                 return "\" + " + rep + " + \"";
             });
+
             this.expr = "\"" + this.expr + "\"";
         }
     },

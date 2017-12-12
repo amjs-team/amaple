@@ -18,7 +18,7 @@ describe ( "event.on-emit =>", () => {
 		function listener () {};
 		event.on ( d, "change", listener );
 		expect ( listener.guid ).toEqual ( jasmine.any ( String ) );
-		expando = Object.keys ( d ) [ 0 ];
+		expando = Object.keys ( d ).filter ( val => /^eventExpando/.test ( val ) ) [ 0 ];
 		expect ( d [ expando ] [ "change" ] ).toEqual ( jasmine.any ( Array ) );
 	} );
 
@@ -34,7 +34,7 @@ describe ( "event.on-emit =>", () => {
 		function listener () {};
 		event.on ( d, "click", listener );
 		event.remove ( d, "click", listener );
-		expando = Object.keys ( d ) [ 0 ];
+		expando = Object.keys ( d ).filter ( val => /^eventExpando/.test ( val ) ) [ 0 ];
 		expect ( d [ expando ] [ "click" ].length ).toBe ( 0 );
 	} );
 

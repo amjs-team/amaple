@@ -71,30 +71,30 @@ const
                 platform: 'Windows 7',
                 version: '26'
             },
-            // sl_chrome_32: {
-            //     base: 'SauceLabs',
-            //     browserName: 'chrome',
-            //     platform: 'Windows 7',
-            //     version: '32.0'
-            // },
-            // sl_chrome_48: {
-            //     base: 'SauceLabs',
-            //     browserName: 'chrome',
-            //     platform: 'Windows 7',
-            //     version: '48.0'
-            // },
-            // sl_chrome_62: {
-            //     base: 'SauceLabs',
-            //     browserName: 'chrome',
-            //     platform: 'Windows 7',
-            //     version: '62.0'
-            // },
-            // sl_chrome_beta: {
-            //     base: 'SauceLabs',
-            //     browserName: 'chrome',
-            //     platform: 'Windows 7',
-            //     version: 'beta'
-            // },
+            sl_chrome_32: {
+                base: 'SauceLabs',
+                browserName: 'chrome',
+                platform: 'Windows 7',
+                version: '32.0'
+            },
+            sl_chrome_48: {
+                base: 'SauceLabs',
+                browserName: 'chrome',
+                platform: 'Windows 7',
+                version: '48.0'
+            },
+            sl_chrome_62: {
+                base: 'SauceLabs',
+                browserName: 'chrome',
+                platform: 'Windows 7',
+                version: '62.0'
+            },
+            sl_chrome_beta: {
+                base: 'SauceLabs',
+                browserName: 'chrome',
+                platform: 'Windows 7',
+                version: 'beta'
+            },
         },
         safaris: {
             sl_safari_8: {
@@ -106,7 +106,7 @@ const
             sl_safari_10: {
                 base: 'SauceLabs',
                 browserName: 'safari',
-                platform: 'OS X 10.12',
+                platform: 'OS X 10.11',
                 version: '10'
             },
         },
@@ -114,7 +114,7 @@ const
             sl_ios: {
                 base: 'SauceLabs',
                 browserName: 'iphone',
-                version: '10'
+                version: '10.3'
             },
                 sl_android: {
                 base: 'SauceLabs',
@@ -123,8 +123,20 @@ const
             }
         }
 	},
-	path = require ( 'path' ),
+	path = require ( 'path' );
+
+let testLaunchers;
+if ( process.argv [ 4 ] ) {
     testLaunchers = customLaunchers [ process.argv [ 4 ] ];
+}
+else {
+    testLaunchers = {};
+    for ( let i  in customLaunchers ) {
+        for ( let j in customLaunchers [ i ] ) {
+            testLaunchers [ j ] = customLaunchers [ i ] [ j ];
+        }
+    }
+}
 
 
 // Karma configuration
@@ -175,7 +187,7 @@ module.exports = function(config) {
 
     // saucelabs configuration
     sauceLabs: {
-    	testName: "icejs test on " + process.argv [ 4 ] || "",
+    	testName: "icejs test" + ( process.argv [ 4 ] ? " on " + process.argv [ 4 ] : "" ),
     	recordScreenshots: false,
         recordVideo: false,
     	build: 'build-' + Date.now(),
@@ -227,7 +239,7 @@ module.exports = function(config) {
 
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
-    singleRun: false,
+    singleRun: true,
 
     // Concurrency level
     // how many browser should be started simultaneous
