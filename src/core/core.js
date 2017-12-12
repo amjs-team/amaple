@@ -6,6 +6,8 @@ import requestEventHandler from "../single/requestEventHandler";
 import iceAttr from "../single/iceAttr";
 import iceHistory from "../single/history/iceHistory";
 import { AUTO, HASH, BROWSER } from "../single/history/historyMode";
+import { TYPE_PLUGIN } from "../var/const";
+import require from "../require/core";
 import event from "../event/core";
 import check from "../check";
 import correctParam from "../correctParam";
@@ -41,29 +43,19 @@ export default {
 	class : Class,
 	
 	/**
-		start ( rootModuleName: String, routerConfig: Object )
+		start ( routerConfig: Object )
 		
 		Return Type:
 		void
 		
 		Description:
-		以一个module作为起始点启动ice
+		启动ice路由
+		表示启动单页模式
 		
 		URL doc:
 		http://icejs.org/######
 	*/
 	startRouter ( routerConfig ) {
-
-		// 纠正参数
-		// correctParam ( rootModuleName, routerConfig ).to ( "string", "object" ).done ( function () {
-		// 	this.$1 = rootModuleName;
-		// 	this.$2 = routerConfig;
-		// } );
-
-		// if ( rootModuleName !== undefined ) {
-		// 	check ( rootModuleName ).type ( "string" ).notBe ( "" ).ifNot ( "ice.startRouter", "当rootModuleName传入参数时，必须是不为空的字符串" ).do ();
-		// }
-
 		check ( routerConfig ).type ( "object" ).ifNot ( "ice.startRouter", "当routerConfig传入参数时，必须为object类型" ).do ();
 
     	// 执行routes配置路由
@@ -94,11 +86,7 @@ export default {
             
             window.location.replace ( href.replace ( host, host + "#/" ) );
         }
-
         delete routerConfig.history;
-    	
-    	// 将除routes、history外的配置信息进行保存
-    	configuration ( routerConfig );
 
         // 绑定元素请求或提交表单的事件到body元素上
         event.on ( document.body, "click submit", ( e ) => {
@@ -128,28 +116,52 @@ export default {
 	        	}
 	        }
         } );
+
+        const 
+        	plugin = routerConfig.plugin,
+        	loadPlugins = [];
+
+        // 将除routes、history、plugin外的配置信息进行处理保存
+        delete routerConfig.plugin;
+    	configuration ( routerConfig );
+
+    	const pluginBaseURL = configuration.getConfigure ( "baseURL" ).plugin;
     	
+    	// 初始化插件列表
+    	if ( type ( plugin ) === "array" ) {
+    		foreach ( plugin, pluginItem => {
+    			if ( type ( pluginItem ) === "string" ) {
+    				loadPlugins.push ( pluginBaseURL + pluginItem );
+    			}
+    			else {
+    				this.install ( pluginItem );
+    			}
+    		} );
+    	}
 
-    	const 
-    		param = {},
-    		path = iceHistory.history.getPathname (),
+    	// 如果存在需加载的插件则待插件加载完成后再执行模块更新操作
+    	require ( loadPlugins, () => {
+	    	const 
+	    		param = {},
+	    		path = iceHistory.history.getPathname (),
+	    		
+	    		location = {
+		        	path,
+		        	nextStructure : Router.matchRoutes ( path, param ),
+		        	param,
+		        	get : iceHistory.history.getQuery (),
+		        	post : {},
+		        	method : "GET",
+		        	action : "NONE"
+		        };
 
-    		location = {
-	        	path,
-	        	nextStructure : Router.matchRoutes ( path, param ),
-	        	param,
-	        	get : iceHistory.history.getQuery (),
-	        	post : {},
-	        	method : "GET",
-	        	action : "NONE"
-	        };
+	    	// Router.matchRoutes()匹配当前路径需要更新的模块
+			// 因路由刚启动，故将nextStructure直接赋值给currentPage
+	    	Structure.currentPage = location.nextStructure;
 
-    	// Router.matchRoutes()匹配当前路径需要更新的模块
-		// 因路由刚启动，故将nextStructure直接赋值给currentPage
-    	Structure.currentPage = location.nextStructure;
-
-    	// 根据更新后的页面结构体渲染新视图
-    	Structure.currentPage.render ( location, location.nextStructure.copy () );
+	    	// 根据更新后的页面结构体渲染新视图
+	    	Structure.currentPage.render ( location, location.nextStructure.copy () );
+    	}, TYPE_PLUGIN );
     },
 
  	/**

@@ -204,7 +204,7 @@ export function append ( context, node, callback ) {
 */
 export function clear ( context ) {
 	
-	check ( context.nodeType ).be ( 1 ).ifNot ( "function clear:context", "元素类型必须是dom节点" ).do ();
+	check ( context.nodeType ).be ( 1, 11 ).ifNot ( "function clear:context", "元素类型必须是dom节点" ).do ();
 
 	// 防止内存泄漏，需删除context节点内的其他内容
 	// add...

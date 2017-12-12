@@ -1,7 +1,6 @@
 import { foreach, type, isPlainObject, noop } from "../func/util";
 import { vmComputedErr } from "../error";
 import { defineReactiveProperty } from "../func/private";
-import { VNODE_ADD, VNODE_REMOVE, VNODE_MOVE } from "../var/const";
 import Subscriber from "./Subscriber";
 import ValueWatcher from "./ValueWatcher";
 import NodeTransaction from "./vnode/NodeTransaction";

@@ -1,4 +1,5 @@
 import { extend, foreach, noop, type, isEmpty } from "../../func/util";
+import { clear } from "../../func/node";
 import { transformCompName, getFunctionName } from "../../func/private";
 import { rcomponentName } from "../../var/const";
 import { componentErr } from "../../error";
@@ -128,6 +129,13 @@ extend ( Component.prototype, {
             subElements = componentConstructor.initSubElements ( componentVNode, subElementNames ),
             tmpl = new Tmpl ( componentVm, this.depComponents, this ),
             vfragmentBackup = vfragment.clone ();
+
+        // 先清空后再添加上去进行对比
+        // 避免造成if、else-if、for指令在对比时出错
+        vfragmentBackup.clear ();
+        clear ( vfragmentBackup.node );
+
+
     	tmpl.moduleNode = componentVNode;
 		tmpl.mount ( vfragment, false, Tmpl.defineScoped ( subElements, componentVNode, false ) );
 

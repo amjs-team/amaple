@@ -1,4 +1,4 @@
-ice.Class ( "PageCtrl" ).extends ( ice.Component ) ( {
+ice.class ( "PageCtrl" ).extends ( ice.Component ) ( {
 	init () {
 		return {
 			desc : "this is a PageCtrl component"

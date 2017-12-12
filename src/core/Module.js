@@ -1,5 +1,6 @@
 import { noop, guid, extend, type, foreach, isEmpty } from "../func/util";
 import { parseGetQuery, queryModuleNode } from "../func/private";
+import { clear } from "../func/node";
 import { DEVELOP_COMMON, DEVELOP_SINGLE } from "../var/const";
 import slice from "../var/slice";
 import cache from "../cache/core";
@@ -152,6 +153,11 @@ export default function Module ( moduleElem, vmData = { init: function () { retu
 		// 将module元素转换为vnode，并拷贝vnode
 		moduleElem = VNode.domToVNode ( moduleElem );
 		moduleElemBackup = moduleElem.clone ();
+
+		// 先清空后再添加上去进行对比
+        // 避免造成if、else-if、for指令在对比时出错
+        moduleElemBackup.clear ();
+        clear ( moduleElemBackup.node );
 	}
     this.parent = parent;
 	

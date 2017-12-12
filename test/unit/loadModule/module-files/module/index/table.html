@@ -2,6 +2,16 @@
 	
 	<!-- 模块页面模板 -->
 	<template>
+		<div :if="show === 1">
+			<input type="checkbox" :model="title" value="NO."><label>NO.</label>
+		</div>
+		<div :else-if="show === 2">
+			<input type="checkbox" :model="title" value="UserName"><label>UserName</label>
+		</div>
+		<div :else>
+			<input type="checkbox" :model="title" value="Avatar"><label>Avatar</label>
+		</div>
+
 		<div class="abc">{{ title }} {{ content }}</div>
 		<a href="/login/aa?a=1&b899=2">{{ btn }}{{ postData }}</a>
 		<button :onclick="changeData">Change</button>
@@ -10,12 +20,16 @@
 			<li :for="(t, k) in title">{{ t }}_{{ k }}
 			</li>
 		</ul>
-		<input type="checkbox" :model="title" value="NO."><label>NO.</label>
+		<edit-table></edit-table>
+		<page-ctrl></page-ctrl>
 	</template>
 	
 
 	<!-- 此模板对应的数据 -->
 	<script>
+		var EditTable = import ( "EditTable" );
+		const PageCtrl = import ( "PageCtrl" );
+
 		var table = new ice.Module ( {
 			init : function () {
 
@@ -37,7 +51,7 @@
 					},
 					btn: "Button",
 					postData: "",
-					show: 1,
+					show: 2,
 
 	                changeData : function () {
 	                	// this.title.shift ();
@@ -52,8 +66,8 @@
 				console.log( "table unmount" );
 			},
 
-			apply : function () {
-				this.state.postData = JSON.stringify ( this.post );
+			apply : function ( demoPlugin ) {
+				this.state.postData = JSON.stringify ( demoPlugin );
 			}
 		} );
 	</script>

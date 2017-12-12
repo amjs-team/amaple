@@ -5,14 +5,20 @@ describe ( "ice test =>", () => {
 	it ( "load a simple ice module", () => {
 		document.body.innerHTML = `<div :module></div><div :module="tips"></div>`;
 
+		window.ice = ice;
 		ice.startRouter ( {
 			history : ice.BROWSER,
 			module : {
 				cache : true,
-				expired : 3000
+				expired : 3000,
+				// suffix: ".ice",
 			},
-			// moduleSuffix: ".html",
-			baseURL : "module",
+			plugin : [ "demoPlugin" ],
+			baseURL : {
+				module : "module",
+				component : "component",
+				plugin : "plugin"
+			},
 			routes : function ( router ) {
 				router.module ()
 				.route ( [ "/debug", "/table" ], "index/table" )

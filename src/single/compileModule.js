@@ -1,9 +1,11 @@
 import { isEmpty, foreach } from "../func/util";
 import { transformCompName } from "../func/private";
+import { TYPE_COMPONENT } from "../var/const";
+import { moduleErr } from "../error";
 import iceAttr from "./iceAttr";
-import { attr } from "../func/node";
 import { identifierName } from "../core/Module";
 import check from "../check";
+import configuration from "../core/configuration/core";
 
 
 /**
@@ -62,7 +64,7 @@ function parseTemplate ( moduleString, parses ) {
 		rtemplate = /<template>([\s\S]+)<\/template>/,
 		rblank = />(\s+)</g,
 		rtext = /["'\/&]/g,
-		rwrap = /\r?\n/g,
+		rwrap = /\r?\n\s*/g,
 
 		viewMatch = rtemplate.exec ( moduleString );
 
@@ -128,6 +130,9 @@ function parseStyle ( moduleString, identifier, parses ) {
         // 去除所有标签间的空格
         parses.style = parses.style.replace ( rstyleblank, match => match.replace ( /\s+/g, "" ) );
 	}
+	else {
+		parses.style = "";
+	}
 
 	return moduleString;
 }
@@ -151,7 +156,7 @@ function parseScript ( moduleString, scriptPaths, scriptNames, parses ) {
 	const 
 		rscript = /<script(?:.*?)>([\s\S]+)<\/script>/,
 		rscriptComment = /\/\/(.*?)\n|\/\*([\s\S]*?)\*\//g,
-		rimport = /(?:(?:var|let|const)\s+)?([A-Za-z$_][\w$]+)\s*=\s*import\s*\(\s*"(.*?)"\s*\)\s*(?:,|;)/g,
+		rimport = /\s*(?:(?:(?:var|let|const)\s+)?(.+?)\s*=\s*)?import\s*\(\s*["'](.*?)["']\s*\)(?:\s*[,;])?/g,
 		rhtmlComment = /<!--(.*?)-->/g,
 		rmoduleDef 	= /new\s*ice\s*\.\s*Module\s*\(/,
 		raddComponents = new RegExp ( rmoduleDef.source + "\\s*\\{" ),
@@ -165,8 +170,11 @@ function parseScript ( moduleString, scriptPaths, scriptNames, parses ) {
 		const matchScript = ( scriptMatch [ 1 ] || "" ).replace ( rscriptComment, match => "" );
 
 		// 获取import的script
-		parses.script = matchScript.replace ( rimport, ( match, rep1, rep2 ) => {
-			scripts [ rep1 ] = rep2;
+		parses.script = matchScript.replace ( rimport, ( match, scriptName, scriptPath ) => {
+			if ( !scriptName ) {
+				throw moduleErr ( "import", `import("${ scriptPath }")返回的组件衍生类需被一个变量接收，否则可能因获取不到此组件而导致解析出错` );
+			}
+			scripts [ scriptName ] = scriptPath;
 			return "";
 		} ).trim ();
 
@@ -180,7 +188,7 @@ function parseScript ( moduleString, scriptPaths, scriptNames, parses ) {
 
     			// 只有在view中有使用的component才会被使用
     			if ( new RegExp ( "<\s*" + transformCompName ( name, true ) ).test ( matchView ) ) {
-    				scriptPaths.push ( `"${ path }"` );
+    				scriptPaths.push ( path );
     				scriptNames.push ( name );
     			}
     		} );
@@ -191,7 +199,7 @@ function parseScript ( moduleString, scriptPaths, scriptNames, parses ) {
     		}
     	}
 
-		parses.script = parses.script.replace ( rmoduleDef, match => `${ match }moduleNode,` );
+		parses.script = parses.script.replace ( rmoduleDef, match => `${ match }args.moduleNode,` );
 	}
 
 	return moduleString;
@@ -250,7 +258,10 @@ export default function compileModule ( moduleString, identifier ) {
 			.ifNot ( "module:script", "<Module>内的<script>为必须子元素，它的内部js代码用于初始化模块的页面布局" )
 			.do ();
 
-		const buildView = `signCurrentRender();var nt=new NodeTransaction();nt.collect(moduleNode);moduleNode.html(VNode.domToVNode(view));`;
+		const buildView = `args.signCurrentRender();
+		var nt=new args.NodeTransaction();
+		nt.collect(args.moduleNode);
+		args.moduleNode.html(args.VNode.domToVNode(view));`;
 
 		////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////
@@ -258,15 +269,34 @@ export default function compileModule ( moduleString, identifier ) {
 		moduleString = `var view="${ parses.view }${ parses.style }";`;
 
 		if ( !isEmpty ( scriptPaths ) ) {
-			moduleString += `require([${ scriptPaths.join ( "," ) }],function(){${ buildView }${ parses.script };nt.commit();flushChildren();});`;
+			let addToWindow = "",
+				delFromWindow = "";
+			foreach ( scriptNames, name => {
+				addToWindow += `window.${ name }=${ name };`;
+				delFromWindow += `delete window.${ name };`;
+			} );
+
+			const componentBaseURL = configuration.getConfigure ( "baseURL" ).component;
+			foreach ( scriptPaths, ( path, i ) => {
+				scriptPaths [ i ] = `"${ componentBaseURL + path }"`;
+			} );
+
+			moduleString += `args.require([${ scriptPaths.join ( "," ) }],function(${ scriptNames.join ( "," ) }){
+				${ addToWindow }
+				${ buildView }
+				${ parses.script };
+				${ delFromWindow }
+				nt.commit();
+				args.flushChildren();
+			},${ TYPE_COMPONENT });`;
 		}
 		else {
-			moduleString += `${ buildView }${ parses.script };nt.commit();flushChildren();`;
+			moduleString += `${ buildView }
+			${ parses.script };
+			nt.commit();
+			args.flushChildren();`;
 		}
 	}
-  
-	return { 
-		updateFn : new Function ( "ice", "moduleNode", "VNode", "NodeTransaction", "require", "signCurrentRender", "flushChildren", moduleString ),
-		title
-	};
+
+	return { updateFn : new Function ( "ice", "args", moduleString ), title };
 }

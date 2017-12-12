@@ -26,16 +26,16 @@ function preTreat ( vnode ) {
         _elseif = Tmpl.directivePrefix + "else-if",
         _else = Tmpl.directivePrefix + "else";
 
-    let nextSib, parent, 
-        condition = vnode.attr ( _if );
+    let condition = vnode.attr ( _if );
 
     if ( condition && !vnode.conditionElems ) {
         const conditionElems = [ vnode ];
+        let nextSib, parent;
 
         vnode.conditions = [ condition ];
         vnode.conditionElems = conditionElems;
         parent = vnode.parent;
-        while ( nextSib = vnode.nextSibling () ) {
+        while ( nextSib = vnode.nextElementSibling () ) {
             if ( condition = nextSib.attr ( _elseif ) ) {
                 nextSib.conditionElems = conditionElems;
                 vnode.conditions.push ( condition );
