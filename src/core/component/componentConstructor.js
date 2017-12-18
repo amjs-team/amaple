@@ -134,7 +134,7 @@ export default {
         foreach ( propsValidator, ( validatorItem, propName ) => {
             if ( !props [ propName ] ) {
                 if ( validatorItem.require === true && validatorItem.default === undefined ) {
-                    throw componentErr ( "prop:" + propName, "组件传递属性" + propName + "为必须值" );
+                    throw componentErr ( `prop:${ propName }`, `组件传递属性${ propName }为必须值` );
                 }
                 else if ( validatorItem.default !== undefined ) {
                     props [ propName ] = validatorItem.default;
@@ -277,7 +277,7 @@ export default {
     
     /**
         initAction ( component: Object, actions: Object )
-    
+        
         Return Type:
         void
     
@@ -299,11 +299,9 @@ export default {
 
             component.action [ name ] = ( ...args ) => {
                 const nt = new NodeTransaction ().start ();
-                action.apply ( component, args );
+                action.apply ( {}, args );
                 nt.commit ();
             };
         } );
-
-        // caller.action = actions;
     }
 };

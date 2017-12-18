@@ -42,9 +42,10 @@ describe ( "render component => ", () => {
 				updateSpy ();
 			},
 			action () {
+				var _this = this;
 				return {
 					print ( con ) {
-						this.state.console = con;
+						_this.state.console = con;
 					}
 				};
 			}
@@ -474,9 +475,10 @@ describe ( "render component => ", () => {
 				unmountSpy ();
 			},
 			action () {
+				var _this = this;
 				return {
 					console ( text ) {
-						this.state.console = text;
+						_this.state.console = text;
 					}
 				};
 			}

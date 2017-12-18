@@ -39,7 +39,7 @@ describe ( "plugin define =>", () => {
 					}
 				};
 			},
-			apply ( counter, util, http ) {
+			mounted ( counter, util, http ) {
 				counter.addCount ();
 				caller ();
 				expect ( util.type ( util ) ).toBe ( "object" );

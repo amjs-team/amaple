@@ -62,13 +62,13 @@
 				};
 			},
 
+			mounted : function ( demoPlugin ) {
+				this.state.postData = JSON.stringify ( demoPlugin );
+			},
+
 			unmount : function () {
 				console.log( "table unmount" );
 			},
-
-			apply : function ( demoPlugin ) {
-				this.state.postData = JSON.stringify ( demoPlugin );
-			}
 		} );
 	</script>
 	

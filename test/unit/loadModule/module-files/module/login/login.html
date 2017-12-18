@@ -83,40 +83,13 @@
 				console.log( "login queryUpdated" );
 			},
 
+			mounted : function () {
+				
+			},
+
 			unmount : function () {
 				console.log( "login unmount" );
 			},
-
-			// 要操作模块内的dom，可调用该函数，参数this.moduleElem为module对应的元素封装，可链式调用
-			apply : function () {
-				
-			}
 		} );
 	</script>
 </Module>
-
- <!-- ice-loading="#submit::setState('loading')" ice-finish="#submit::setState('default')" -->
-<!-- function(crystals, language, event) {
-
-	// 获取提交按钮对象
-	var btn = crystals('#submit');
-
-	event.on(btn, 'click', function() {
-		btn.setState('loading');
-		crystals.submit({
-			formName: 'login_form',
-			module: {200: 'root'},
-			code: 'code',
-			data: '',
-			timeout: 3000,
-			success: function(result) {
-				btn.setState('default');
-				if (result.code === 400) {
-					alert(result.message);
-				}
-			}
-		});
-	});
-
-
-} -->

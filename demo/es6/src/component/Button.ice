@@ -4,7 +4,9 @@
 	</template>
 
 	<script>
-		class Button extends ice.Component {
+		import Component from "core/Component";
+
+		class Button extends Component {
 
 			// init方法中使用的this.props表示父作用域的state对象
 			init () {
@@ -13,20 +15,24 @@
 					btnText : this.props.opts.btnText,
 					loading : "loading..."
 				};
-			}
+			},
 
-			// action中定义驱动器方法，会过滤不是function的属性。方法中的this.state为init方法返回的vm对象，this.action指向此driver的封装方法
-			// 定义驱动器方法时不能使用箭头函数定义，因为这样内部的this的指向将会错误
-			loadStart () {
-				this.state.opts.btnText = this.state.loading;
-			}
+			action () {
+				return {
+					// action中定义驱动器方法，会过滤不是function的属性。方法中的this.state为init方法返回的vm对象，this.action指向此driver的封装方法
+					// 定义驱动器方法时不能使用箭头函数定义，因为这样内部的this的指向将会错误
+					loadStart () {
+						this.state.opts.btnText = this.state.loading;
+					}
 
-			loadEnd () {
-				this.state.opts.btnText = this.state.btnText;
-			}
+					loadEnd () {
+						this.state.opts.btnText = this.state.btnText;
+					}
+				};
+			},
 
 			// this.action指向此driver的封装方法
-			apply ( http ) {
+			mounted ( http ) {
 				http
 				.reqBefore ( "self", function () {
 					this.action.loadStart ();

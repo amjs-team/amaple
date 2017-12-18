@@ -135,29 +135,24 @@ extend ( Component.prototype, {
         vfragmentBackup.clear ();
         clear ( vfragmentBackup.node );
 
-
+        // 保存组件对象和结构
+        componentVNode.component = this;
+        componentVNode.templateNodes = vfragment.children.concat ();
     	tmpl.moduleNode = componentVNode;
+        
 		tmpl.mount ( vfragment, false, Tmpl.defineScoped ( subElements, componentVNode, false ) );
 
-		// 保存组件对象和结构
-    	componentVNode.component = this;
-    	componentVNode.templateNodes = vfragment.children.concat ();
+        // 初始化action
+        if ( this.action ) {
+            const actions = this.action.apply ( this, cache.getDependentPlugin ( this.action ) );
+            componentConstructor.initAction ( this, actions );
+        }
 
 		// 调用mounted钩子函数
 		( this.mounted || noop ).apply ( this, cache.getDependentPlugin ( this.mounted || noop ) );
 
-    	// 初始化action
-    	if ( this.action ) {
-    		const actions = this.action.apply ( this, cache.getDependentPlugin ( this.action ) );
-    		componentConstructor.initAction ( this, actions );
-    	}
-
         // 初始化生命周期
         componentConstructor.initLifeCycle ( this, componentVNode, moduleObj );
-
-    	// 组件初始化完成，调用apply钩子函数
-    	( this.apply || noop ).apply ( this, cache.getDependentPlugin ( this.apply || noop ) );
-
         vfragment.diff ( vfragmentBackup ).patch ();
     },
 

@@ -166,7 +166,7 @@ export default function Module ( moduleElem, vmData = { init: function () { retu
     const
 		// 获取后初始化vm的init方法
 		// 对数据模型进行转换
-		vm = new ViewModel ( vmData.init.apply ( this, cache.getDependentPlugin ( vmData.init ) ) ),
+		vm = new ViewModel ( vmData.init.apply ( this, cache.getDependentPlugin ( vmData.init ) ) || {} ),
 
 		// 使用vm解析模板
 		tmpl = new Tmpl ( vm, vmData.depComponents || [], this );
@@ -180,8 +180,8 @@ export default function Module ( moduleElem, vmData = { init: function () { retu
 	// 普通模式下，如果parent为对象时表示此模块不是最上层模块，不需挂载
 	tmpl.mount ( moduleElem, Structure.currentPage ? false : !parent );
 	
-	// 调用apply方法
-	( vmData.apply || noop ).apply ( this, cache.getDependentPlugin ( vmData.apply || noop ) );
+	// 调用mounted钩子函数
+	( vmData.mounted || noop ).apply ( this, cache.getDependentPlugin ( vmData.mounted || noop ) );
 
 	/////////////////////////////////
   	/////////////////////////////////

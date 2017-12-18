@@ -9,6 +9,20 @@ export default function Router ( finger ) {
 }
 
 extend ( Router.prototype, {
+
+    /**
+        module ()
+    
+        Return Type:
+        Object
+        当前Router对象
+    
+        Description:
+        指定当前配置的模块节点
+    
+        URL doc:
+        http://icejs.org/######
+    */
 	module ( moduleName = "default" ) {
     	check ( moduleName ).type ( "string" ).notBe ( "" ).ifNot ( "Router.module", "模块名必须为不为空的字符串，不传入模块名默认为'default'" ).do ();
     	
@@ -18,15 +32,25 @@ extend ( Router.prototype, {
             }
         } );
     	
-    	this.routeItem = {
-        	name : moduleName,
-        	routes : []
-        };
+    	this.routeItem = { name : moduleName, routes : [] };
     	this.finger.push ( this.routeItem );
     	
     	return this;
     },
 	
+    /**
+        route ()
+    
+        Return Type:
+        Object
+        当前Router对象
+    
+        Description:
+        为一个模块节点配置渲染模块路径
+    
+        URL doc:
+        http://icejs.org/######
+    */
 	route ( pathExpr, modulePath, childDefineFn ) {
         check ( pathExpr ).type ( "string", "array" ).ifNot ( "Router.route", "pathExpr参数必须为字符串或数组" );
 
@@ -48,12 +72,37 @@ extend ( Router.prototype, {
     	return this;
     },
 	
+    /**
+        defaultRoute ()
+    
+        Return Type:
+        Object
+        当前Router对象
+    
+        Description:
+        为一个模块节点配置路由路径为""时的渲染模块路径
+    
+        URL doc:
+        http://icejs.org/######
+    */
 	defaultRoute ( modulePath, childDefineFn ) {
     	this.route ( "", modulePath, childDefineFn );
-    	
     	return this;
     },
 	
+    /**
+        redirect ()
+    
+        Return Type:
+        Object
+        当前Router对象
+    
+        Description:
+        在当前模块目录层次定义重定向
+    
+        URL doc:
+        http://icejs.org/######
+    */
 	redirect ( from, to ) {
     	let redirect;
     	foreach ( this.finger, routeItem => {
@@ -134,10 +183,38 @@ extend ( Router, {
 	routeTree : [],
     errorPaths: {},
 
+    /**
+        getError ()
+    
+        Return Type:
+        Object
+        错误路径
+    
+        Description:
+        获取错误路径
+    
+        URL doc:
+        http://icejs.org/######
+    */
     getError ( errorCode ) {
         return this.errorPaths [ "error" + errorCode ];
     },
 
+    /**
+        pathToRegexp ()
+    
+        Return Type:
+        Object
+        解析后的路径正则表达式与需捕获的参数对象
+    
+        Description:
+        将一个路径解析为路径匹配正则表达式及需捕获的参数
+        正则表达式解析示例：
+        // /settings => /\/settings/、/settings/:page => /\/settings/([^\\/]+?)/、/settings/:page(\d+)
+    
+        URL doc:
+        http://icejs.org/######
+    */
     pathToRegexp ( pathExpr, from ) {
         const 
             pathObj = { param : {} },
@@ -175,10 +252,22 @@ extend ( Router, {
         return pathObj;
     },
 
-    // 路由路径嵌套模型
-    // /settings => /\/settings/、/settings/:page => /\/settings/([^\\/]+?)/、/settings/:page(\d+)
+    /**
+        matchRoutes ()
+    
+        Return Type:
+        Object
+        匹配结果集
+    
+        Description:
+        使用一个path匹配更新模块
+        匹配结果示例：
+        [ { module: "...", modulePath: "...", parent: ..., param: {}, children: [ {...}, {...} ] } ]
+    
+        URL doc:
+        http://icejs.org/######
+    */
 	matchRoutes ( path, param, routeTree = this.routeTree, parent = null, matchError404 ) {
-        // [ { module: "...", modulePath: "...", parent: ..., param: {}, children: [ {...}, {...} ] } ]
         let routes = [];
     	
     	foreach ( routeTree, route => {

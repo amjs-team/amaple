@@ -176,9 +176,10 @@ describe ( "directive ref => ", () => {
                     unmountSpy ();
                 },
                 action () {
+                    var _this = this;
                     return {
                         print ( con ) {
-                            this.state.console = con;
+                            _this.state.console = con;
                         }
                     };
                 }

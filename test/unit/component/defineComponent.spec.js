@@ -25,9 +25,10 @@ describe ( "define component =>", () => {
 			    } );
 			},
 			action () {
+				var _this = this;
 				return {
 					print ( con ) {
-						this.state.console = con;
+						_this.state.console = con;
 					}
 				};
 			}
@@ -217,9 +218,10 @@ describe ( "define component =>", () => {
 			    } );
 			},
 			action () {
+				var _this = this;
 				return {
 					changeLink ( link ) {
-						this.props.link = link;
+						_this.props.link = link;
 					}
 				}
 			}

@@ -24,13 +24,13 @@ import configuration from "../core/configuration/core";
 function parseModuleAttr ( moduleString, parses ) {
 	const
 		rend = /^\s*>/,
-		rmoduleAttr = /^\s*(<Module\s+)?(?:([^\s"'<>/=]+))?(?:\s*(?:=)\s*(?:"([^"]*)"|'([^']*)'))?/;
+		rmoduleAttr = /^\s*(<module\s+)?(?:([^\s"'<>/=]+))?(?:\s*(?:=)\s*(?:"([^"]*)"|'([^']*)'))?/i;
 
 	let attrMatch;
 
 	parses.attrs = {};
 
-	// 匹配出Module标签内的属性
+	// 匹配出module标签内的属性
 	while ( !rend.test ( moduleString ) ) {
 		attrMatch = rmoduleAttr.exec ( moduleString );
 		if ( attrMatch ) {
@@ -61,7 +61,7 @@ function parseModuleAttr ( moduleString, parses ) {
 */
 function parseTemplate ( moduleString, parses ) {
 	const 
-		rtemplate = /<template>([\s\S]+)<\/template>/,
+		rtemplate = /<template>([\s\S]+)<\/template>/i,
 		rblank = />(\s+)</g,
 		rtext = /["'\/&]/g,
 		rwrap = /\r?\n\s*/g,
@@ -101,7 +101,7 @@ function parseTemplate ( moduleString, parses ) {
 function parseStyle ( moduleString, identifier, parses ) {
 
 	const
-		rstyle = /<style(?:.*?)>([\s\S]*)<\/style>/,
+		rstyle = /<style(?:.*?)>([\s\S]*)<\/style>/i,
 		risScoped = /^<style(?:.*?)scoped(?:.*?)/i,
 		raddScoped = /\s*([^/@%{}]+)\s*{[^{}]+}/g,
 		rnoscoped = /^(from|to)\s*$/i,
@@ -154,7 +154,7 @@ function parseStyle ( moduleString, identifier, parses ) {
 function parseScript ( moduleString, scriptPaths, scriptNames, parses ) {
 
 	const 
-		rscript = /<script(?:.*?)>([\s\S]+)<\/script>/,
+		rscript = /<script(?:.*?)>([\s\S]+)<\/script>/i,
 		rscriptComment = /\/\/(.*?)\n|\/\*([\s\S]*?)\*\//g,
 		rimport = /\s*(?:(?:(?:var|let|const)\s+)?(.+?)\s*=\s*)?import\s*\(\s*["'](.*?)["']\s*\)(?:\s*[,;])?/g,
 		rhtmlComment = /<!--(.*?)-->/g,
@@ -222,7 +222,7 @@ function parseScript ( moduleString, scriptPaths, scriptNames, parses ) {
 export default function compileModule ( moduleString, identifier ) {
 
 	// 模块编译正则表达式
-	const rmodule = /^<Module[\s\S]+<\/Module>/;
+	const rmodule = /^<module[\s\S]+<\/module>/i;
 	let title = "";
 	if ( rmodule.test ( moduleString ) ) {
 		
@@ -250,12 +250,12 @@ export default function compileModule ( moduleString, identifier ) {
 		/// 检查参数
 		check ( parses.view )
 			.notBe ( "" )
-			.ifNot ( "module:template", "<Module>内的<template>为必须子元素，它的内部DOM tree代表模块的页面布局" )
+			.ifNot ( "module:template", "<module>内的<template>为必须子元素，它的内部DOM tree代表模块的页面布局" )
 			.do ();
 
 		check ( parses.script )
 			.notBe ( "" )
-			.ifNot ( "module:script", "<Module>内的<script>为必须子元素，它的内部js代码用于初始化模块的页面布局" )
+			.ifNot ( "module:script", "<module>内的<script>为必须子元素，它的内部js代码用于初始化模块的页面布局" )
 			.do ();
 
 		const buildView = `args.signCurrentRender();
