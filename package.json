@@ -30,7 +30,7 @@
     "build": "rollup -c build/build.js",
     "dev": "rollup -w -c build/dev.js",
     "test:unit": "karma start test/unit/karma.unit.conf.js",
-    "test:sauce": "karma start test/unit/karma.sauce.conf.js"
+    "test:sauce": "karma start test/unit/karma.sauce.conf.js firefoxs && karma start test/unit/karma.sauce.conf.js chromes && karma start test/unit/karma.sauce.conf.js ies && karma start test/unit/karma.sauce.conf.js safaris && karma start test/unit/karma.sauce.conf.js mobiles"
   },
   "keywords": [
     "ice",

@@ -69,12 +69,12 @@ extend ( Component.prototype, {
             this.props = componentConstructor.initProps ( componentVNode, moduleObj.state, validator || {} );
         };
 
+		const componentVm = new ViewModel ( this.init.apply ( this, cache.getDependentPlugin ( this.init ) ) );
+
         // 没有验证时手动调用初始化props
         if ( !isCallPropsType ) {
             this.propsType ();
         }
-
-		const componentVm = new ViewModel ( this.init.apply ( this, cache.getDependentPlugin ( this.init ) ) );
         delete this.propsType;
 
         this.state = componentVm;
