@@ -100,7 +100,7 @@ function concatHandler ( target, source ) {
 export default function mountVNode ( vnode, tmpl, mountModule, isRoot = true ) {
 	const rattr = /^:([\$\w]+)$/;
 
-	let directive, handler, targetNode, expr, forAttrValue, firstChild,
+	let directive, handler, targetNode, expr, forOrIfExpr, firstChild,
 		compileHandlers = {
 			watchers : [],
 			components : [],
@@ -116,8 +116,11 @@ export default function mountVNode ( vnode, tmpl, mountModule, isRoot = true ) {
 			// 处理:on
 			// 处理:model
 			vnode = preTreat ( vnode );
-				if ( forAttrValue = vnode.attr ( Tmpl.directivePrefix + "for" ) ) {
-				compileHandlers.watchers.push ( { handler : Tmpl.directives.for, targetNode : vnode, expr : forAttrValue } );
+			if ( forOrIfExpr = vnode.attr ( Tmpl.directivePrefix + "for" ) ) {
+				compileHandlers.watchers.push ( { handler : Tmpl.directives.for, targetNode : vnode, expr : forOrIfExpr } );
+			}
+			else if ( forOrIfExpr = vnode.attr ( Tmpl.directivePrefix + "if" ) ) {
+				compileHandlers.watchers.push ( { handler : Tmpl.directives.if, targetNode : vnode, expr : forOrIfExpr } );
 			}
 			else {
 				if ( vnode.nodeName === "TEMPLATE" ) {
@@ -184,7 +187,7 @@ export default function mountVNode ( vnode, tmpl, mountModule, isRoot = true ) {
 		}
 
 		firstChild = vnode.children && vnode.children [ 0 ];
-		if ( firstChild && !forAttrValue ) {
+		if ( firstChild && !forOrIfExpr ) {
 			compileHandlers = concatHandler ( compileHandlers, mountVNode ( firstChild, tmpl, true, false ) );
 		}
 	} while ( !isRoot && ( vnode = vnode.nextSibling () ) )

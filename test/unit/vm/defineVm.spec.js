@@ -29,17 +29,17 @@ describe ( "define vm => ", () => {
 		} );
 	} );
 
-	it ( "It transform basic type data to vm data", () => {
+	it ( "transform basic type data to vm data", () => {
 		let str = Object.getOwnPropertyDescriptor ( vm, "str" );
 		expect ( str ).toEqual ( jasmine.any ( Object ) );
 	} );
 
-	it ( "It transform inner object to the instance of ViewModel", () => {
+	it ( "transform inner object to the instance of ViewModel", () => {
 		expect ( vm.obj instanceof ViewModel ).toBe ( true );
 		expect ( vm.obj.c instanceof ViewModel ).toBe ( true );
 	} );
 
-	it ( "It transform some functions of array", () => {
+	it ( "transform some functions of array", () => {
 		vm.arr.push ( { aa: 1 }, [ "str", { cc: 1 } ] );
 		expect ( vm.arr [ 3 ] ).toEqual ( jasmine.any ( Object ) );
 		expect ( Object.getOwnPropertyDescriptor ( vm.arr [ 4 ], "aa" ) ).toEqual ( jasmine.any ( Object ) );
@@ -50,7 +50,7 @@ describe ( "define vm => ", () => {
 		expect ( Object.getOwnPropertyDescriptor ( vm.arr [ 2 ], "add3" ) ).toEqual ( jasmine.any ( Object ) );
 	} );
 
-	it ( "It transform the computed data which depend on vm data", () => {
+	it ( "transform the computed data which depend on vm data", () => {
 		expect ( vm.comp1 ).toBe ( "hello world" );
 
 		vm.str = "hel";
@@ -62,5 +62,25 @@ describe ( "define vm => ", () => {
 		vm.comp2 = "123";
 		expect ( vm.comp2 ).toBe ( "123 ice" );
 		expect ( vm.str ).toBe ( "123" );
+	} );
+
+	it ( "it will throw exception when computed isn't a plain object", () => {
+		let vmData = { computed : "throw exception" };
+		expect ( () => {
+			new ViewModel ( vmData );
+		} ).toThrow ();
+
+		vmData = {
+			obj : {
+				computed: {
+					comp3 () {
+						return "throw exception too"
+					}
+				}
+			}
+		};
+		expect ( () => {
+			new ViewModel ( vmData );
+		} ).toThrow ();
 	} );
 } );

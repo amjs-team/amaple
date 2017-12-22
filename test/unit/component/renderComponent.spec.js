@@ -21,13 +21,15 @@ describe ( "render component => ", () => {
 			    };
 			},
 			render () {
-				this.template (
-			    	`<button>{{ btnText }}</button>
-			    	<div class='console'>{{ console }}</div>{{ subElements.SubComp }}<ul id='SubComp2'>
+				this.template ( `
+			    	<button>{{ btnText }}</button>
+			    	<div class='console'>{{ console }}</div>
+			    	{{ subElements.SubComp }}
+			    	<ul id='SubComp2'>
 			    		<li :for='item in subElements.SubComp2'>{{ item }}</li>
 			    	</ul>
-			    	<div id='default'>{{ subElements.default }}</div>`
-			    )
+			    	<div id='default'>{{ subElements.default }}</div>
+			    ` )
 			    .style ( {
 			    	".console" : {
 			        	color : "#00aae6"

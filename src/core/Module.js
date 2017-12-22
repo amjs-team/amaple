@@ -1,5 +1,5 @@
 import { noop, guid, extend, type, foreach, isEmpty } from "../func/util";
-import { parseGetQuery, queryModuleNode } from "../func/private";
+import { parseGetQuery, queryModuleNode, getReference } from "../func/private";
 import { clear } from "../func/node";
 import { DEVELOP_COMMON, DEVELOP_SINGLE } from "../var/const";
 import slice from "../var/slice";
@@ -198,11 +198,11 @@ extend ( Module.prototype, {
 
 	/**
 		refs ( ref: String )
-	
+		
 		Return Type:
 		DOMObject|Object
 		被引用的组件行为对象或元素
-	
+		
 		Description:
 		获取被引用的组件行为对象或元素
 		当组件不可见时返回undefined
@@ -211,24 +211,7 @@ extend ( Module.prototype, {
 		http://icejs.org/######
 	*/
 	refs ( ref ) {
-		let reference = this.references [ ref ];
-		if ( type ( reference ) === "array" ) {
-			const _ref = [];
-			foreach ( reference, refItem => {
-				if ( refItem.parent ) {
-					_ref.push ( refItem.isComponent ? refItem.component.action : refItem.node );
-				}
-			} );
-			reference = isEmpty ( _ref ) 
-						? undefined 
-						: _ref.length === 1 ? _ref [ 0 ] : _ref;
-		}
-		else {
-			reference = reference.parent
-				? reference.isComponent ? reference.component.action : reference.node
-				: undefined;
-		}
-    	return reference;
+		return getReference ( this.references, ref );
     },
 
     /**

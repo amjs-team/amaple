@@ -38,12 +38,10 @@ export default {
         // 将elem在DOM结构中去掉，以便在下面循环扫描时不会扫描到elem的nextSibling元素
         elem.parent.replaceChild ( this.replacement, elem );
         this.currentNode = this.replacement;
-      
-    	foreach ( elem.conditionElems, nextSib => {
-            if ( nextSib !== elem ) {
-                this.tmpl.mount ( nextSib, true, this.scoped );
-            }
-        } );
+        
+        // 记录需挂载的nodes
+        // 当node为显示状态时进行数据挂载
+        this.needMount = elem.conditionElems.concat ();
     },
 
     /**
@@ -65,13 +63,22 @@ export default {
             elem = this.node,
             conditionElems = elem.conditionElems,
             cNode = this.currentNode,
-            parent = cNode.parent;
+            parent = cNode.parent,
+            needMount = this.needMount;
 
         let newNode, _cNode;
 
         foreach ( conditions, ( cond, i ) => {
         	if ( cond ) {
                 newNode = conditionElems [ i ];
+
+                // 当此显示的node未挂载时进行数据挂载
+                const index = needMount.indexOf ( newNode );
+                if ( index > -1 ) {
+                    this.tmpl.mount ( newNode, true, this.scoped );
+                    needMount.splice ( index, 1 );
+                }
+
             	return false;
             }
         } );

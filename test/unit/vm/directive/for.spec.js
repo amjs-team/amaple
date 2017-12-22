@@ -139,6 +139,45 @@ describe ( "directive for => ", () => {
         expect ( realDOM.childNodes.item ( 4 ).childNodes.item ( 1 ).childNodes.item ( 0 ).nodeValue ).toBe ( "hello icejs5" );
     } );
 
+    it ( "assign a new array to the vm array", () => {
+        d.appendChild ( VElement ( "p", { ":for" : "( item, k ) in list" }, null, [
+            VTextNode ( "{{ item }}" )
+        ] ) );
+        const realDOM = d.render ();
+
+        let dBackup = d.clone (),
+            vm = new ViewModel ( {
+                list: [ "a", "b", "c" ]
+            } ),
+            t = new Tmpl ( vm, [], {} ),
+            children;
+        t.mount ( d, true );
+
+        d.diff ( dBackup ).patch ();
+
+        children = d.children;
+        vm.list = [ "d", "e" ];
+
+        // 带有startNode、endNode两个标识节点，所以children为4
+        expect ( children.length ).toBe ( 4 );
+        expect ( children [ 1 ].children [ 0 ].nodeValue ).toBe ( "d" );
+        expect ( children [ 2 ].children [ 0 ].nodeValue ).toBe ( "e" );
+        expect ( realDOM.childNodes.item ( 1 ).childNodes.item ( 0 ).nodeValue ).toBe ( "d" );
+        expect ( realDOM.childNodes.item ( 2 ).childNodes.item ( 0 ).nodeValue ).toBe ( "e" );
+
+        vm.list = [];
+        expect ( children.length ).toBe ( 2 );
+        expect ( children [ 0 ].nodeValue ).toBe ( "" );
+        expect ( children [ 1 ].nodeValue ).toBe ( "" );
+        expect ( realDOM.childNodes.item ( 0 ).nodeValue ).toBe ( "" );
+        expect ( realDOM.childNodes.item ( 1 ).nodeValue ).toBe ( "" );
+
+        vm.list.push ( "f" );
+        expect ( children.length ).toBe ( 3 );
+        expect ( children [ 1 ].children [ 0 ].nodeValue ).toBe ( "f" );
+        expect ( realDOM.childNodes.item ( 1 ).childNodes.item ( 0 ).nodeValue ).toBe ( "f" );
+    } );
+
     it ( "directive :for with nesting directive", () => {
         d.innerHTML = `<p :for="item in list"><span :if="next === item">{{ item }}</span><span :else>{{ item }} else</span></p>`;
         d.appendChild ( VElement ( "p", { ":for" : "item in list" }, null, [

@@ -68,6 +68,22 @@ describe ( "directive model => ", () => {
         expect ( d.children [ 0 ].attr ( "value" ) ).toBe ( "hello icejs2" );
     } );
 
+    it ( "the input node's value is always synced with the vm data which bind with ':model' ", () => {
+        d.appendChild ( VElement ( "input", { type: "text", value: "hello icejs", ":model": "text" } ) );
+        const realDOM = d.render ();
+
+        let dBackup = d.clone (),
+            vm = new ViewModel ( {
+                text : ""
+            } ),
+            t = new Tmpl ( vm, [], {} );
+        t.mount ( d, true );
+
+        expect ( d.children [ 0 ].attr ( "value" ) ).toBe ( "" );
+        d.diff ( dBackup ).patch ();
+        expect ( realDOM.childNodes.item ( 0 ).value ).toBe ( "" );
+    } );
+
 	it ( "directive :model will mount in radio input node", () => {
         d.appendChild ( VElement ( "input", { type : "radio", ":model" : "text", value : "a" } ) );
         d.appendChild ( VElement ( "input", { type : "radio", ":model" : "text", value : "b" } ) );

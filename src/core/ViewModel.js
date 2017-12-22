@@ -5,15 +5,42 @@ import Subscriber from "./Subscriber";
 import ValueWatcher from "./ValueWatcher";
 import NodeTransaction from "./vnode/NodeTransaction";
 
+/**
+	convertSubState ( value: Any, subs: Object, context: Object )
 
-function convertState ( value, subs, context ) {
-  	return type ( value ) === "object" && isPlainObject ( value ) ? 
-				new ViewModel ( value, false ) : 
-					type ( value ) === "array" ? 
-					initArray ( value, subs, context ) : value;
+	Return Type:
+	void
+
+	Description:
+	转换子状态数据
+	当一个状态数据为数组或对象时，它也需要被转换为监听数据
+
+	URL doc:
+	http://icejs.org/######
+*/
+function convertSubState ( value, subs, context ) {
+	if ( value && isPlainObject ( value ) ) {
+		value = new ViewModel ( value, false ); 
+	}
+	else if ( type ( value ) === "array" ) {
+		value = initArray ( value, subs, context );
+	}
+  	
+  	return value;
 }
 
-// 初始化绑定事件
+/**
+	initMethod ( methods: Array, context: Object )
+
+	Return Type:
+	void
+
+	Description:
+	初始化绑定事件
+
+	URL doc:
+	http://icejs.org/######
+*/
 function initMethod ( methods, context ) {
 	foreach ( methods, ( method, key ) => {
 		context [ key ] = function ( ...args ) {
@@ -26,7 +53,18 @@ function initMethod ( methods, context ) {
 	} );
 }
 
-// 初始化监听属性
+/**
+	initState ( states: Array, context: Object )
+
+	Return Type:
+	void
+
+	Description:
+	初始化监听属性
+
+	URL doc:
+	http://icejs.org/######
+*/
 function initState ( states, context ) {
 	foreach ( states, ( state, key ) => {
 		const subs = new Subscriber ();
@@ -40,7 +78,7 @@ function initState ( states, context ) {
 			state = state.value;
 		}
       
-    	state = convertState ( state, subs, context );
+    	state = convertSubState ( state, subs, context );
       	
       	defineReactiveProperty ( key, () => {
 
@@ -50,7 +88,20 @@ function initState ( states, context ) {
 			},
 			( newVal ) => {
 				if ( state !== newVal ) {
-					oldVal = state
+
+					// 转换object或数组
+					if ( isPlainObject ( newVal ) ) {
+						newVal = new ViewModel ( newVal, false );
+					}
+					else if ( type ( newVal ) === "array" ) {
+						const newValBackup = newVal;
+						newVal = initArray ( newVal, subs, context );
+						if ( state.nodeMap ) {
+							newVal.nodeMap = newValBackup;
+						}
+					}
+
+					oldVal = state;
 					state = newVal;
 
 					watch.call ( context, newVal, oldVal );
@@ -62,7 +113,18 @@ function initState ( states, context ) {
     } );
 }
 
-// 初始化监听计算属性
+/**
+	initComputed ( computeds: Object, context: Object )
+
+	Return Type:
+	void
+
+	Description:
+	初始化监听计算属性
+
+	URL doc:
+	http://icejs.org/######
+*/
 function initComputed ( computeds, context ) {
 	foreach ( computeds, function ( computed, key ) {
 
@@ -109,11 +171,22 @@ function initComputed ( computeds, context ) {
 	} );
 }
 
-// 初始化监听数组
+/**
+	initComputed ( array: Array, subs: Object, context: Object )
+
+	Return Type:
+	void
+
+	Description:
+	初始化监听数组
+
+	URL doc:
+	http://icejs.org/######
+*/
 function initArray ( array, subs, context ) {
 
   	// 监听数组转换
-	array = array.map ( item => convertState ( item, subs, context ) );
+	array = array.map ( item => convertSubState ( item, subs, context ) );
   	
   	foreach ( [ "push", "pop", "shift", "unshift", "splice", "sort", "reverse" ], method => {
       	const nativeMethod = Array.prototype [ method ];
@@ -123,7 +196,7 @@ function initArray ( array, subs, context ) {
           		if ( /push|unshift|splice/.test ( method ) ) {
                   	
                   	// 转换数组新加入的项
-                  	args = args.map ( item => convertState ( item, subs, context ) );
+                  	args = args.map ( item => convertSubState ( item, subs, context ) );
         		}
         		const res = nativeMethod.apply ( this, args );
 
@@ -160,6 +233,8 @@ function initArray ( array, subs, context ) {
 	http://icejs.org/######
 */
 export default function ViewModel ( vmData, isRoot = true ) {
+
+	const computedName = "computed";
 	let state = {},
 		method = {},
 		computed = {};
@@ -174,8 +249,13 @@ export default function ViewModel ( vmData, isRoot = true ) {
 
 		// 转换计算属性
 		// 深层嵌套内的computed属性对象不会被当做计算属性初始化
-		else if ( key === "computed" && type ( value ) === "object" && isRoot ) {
-			computed = value;
+		else if ( key === computedName ) {
+			if ( isPlainObject ( value ) && isRoot ) {
+				computed = value;
+			}
+			else {
+				throw vmComputedErr ( "DataTyle", `计算属性必须包含在一个object对象中，且子状态对象无法定义计算属性` );
+			}
 		}
 
 		// 转换监听属性，当值为包含value和watch时将watch转换为监听属性	

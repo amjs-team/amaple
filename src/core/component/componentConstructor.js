@@ -64,7 +64,7 @@ function validateProp ( prop, validate ) {
 export default {
 
     /**
-        initProps ( componentNode: DOMObject, moduleVm: Object, propsValidator: Object )
+        initProps ( componentNode: DOMObject, moduleVm: Object )
     
         Return Type:
         props
@@ -95,7 +95,6 @@ export default {
 
                     new ValueWatcher ( ( newVal ) => {
                         propValue = newVal;
-
                         subs.notify ();
                     }, getter );
 
@@ -117,14 +116,33 @@ export default {
                 else {
                     props [ name ] = attrVal;
                 }
+            }
+        } );
 
-                // 验证属性值
-                const validateItem = propsValidator && propsValidator [ name ];
-                if ( validateItem ) {
-                    const validate = isPlainObject ( validateItem ) ? validateItem.validate : validateItem;
-                    if ( validate && !validateProp ( props [ name ], validate ) ) {
-                        throw componentErr ( `prop: ${ name }`, `组件传递属性'${ name }'的值未通过验证，请检查该值的正确性或修改验证规则` );
-                    }
+        return props;
+    },
+
+    /**
+        validateProps ( props: Object, propsValidator: Object )
+    
+        Return Type:
+        void
+    
+        Description:
+        验证props
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    validateProps ( props, propsValidator ) {
+        foreach ( props, ( val, name ) => {
+
+            // 验证属性值
+            const validateItem = propsValidator [ name ];
+            if ( validateItem ) {
+                const validate = isPlainObject ( validateItem ) ? validateItem.validate : validateItem;
+                if ( validate && !validateProp ( val, validate ) ) {
+                    throw componentErr ( `prop: ${ name }`, `组件传递属性'${ name }'的值未通过验证，请检查该值的正确性或修改验证规则` );
                 }
             }
         } );
@@ -141,8 +159,6 @@ export default {
                 }
             }
         } );
-
-        return props;
     },
 
     /**

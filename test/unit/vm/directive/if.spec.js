@@ -266,4 +266,47 @@ describe ( "directive if => ", () => {
         expect ( realDOM.childNodes.length ).toBe ( 1 );
         expect ( realDOM.childNodes.item ( 0 ).childNodes.item ( 0 ).nodeValue ).toBe ( "999" );
     } );
+
+    it ( "the nodes will mount when they are visible", () => {
+        const realDOM = d.render ();
+        let dBackup = d.clone ();
+        d.appendChild ( VElement ( "template", { ":if" : "userInfo" }, null, [
+            VElement ( "span", {}, null, [
+                VTextNode ( "{{ userInfo.username }}" ),
+            ] )
+        ] ) );
+        d.appendChild ( VElement ( "div", { ":else" : "" }, null, [ 
+            VTextNode ( "{{ noUserTips }}" )
+        ] ) );
+
+        let vm = new ViewModel ( {
+                userInfo: null,
+                noUserTips: "No user"
+            } ),
+            t = new Tmpl ( vm, [], {} ),
+            children;
+        t.mount ( d, true );
+        d.diff ( dBackup ).patch ();
+
+        children = d.children;
+        expect ( children.length ).toBe ( 1 );
+        expect ( children [ 0 ].nodeName ).toBe ( "DIV" );
+        expect ( children [ 0 ].children [ 0 ].nodeValue ).toBe ( "No user" );
+        expect ( realDOM.childNodes.length ).toBe ( 1 );
+        expect ( realDOM.childNodes.item ( 0 ).childNodes.item ( 0 ).nodeValue ).toBe ( "No user" );
+
+        vm.userInfo = { username: "icejs_team" };
+        expect ( children.length ).toBe ( 1 );
+        expect ( children [ 0 ].templateNodes [ 0 ].nodeName ).toBe ( "SPAN" );
+        expect ( children [ 0 ].templateNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( "icejs_team" );
+        expect ( realDOM.childNodes.length ).toBe ( 1 );
+        expect ( realDOM.childNodes.item ( 0 ).childNodes.item ( 0 ).nodeValue ).toBe ( "icejs_team" );
+
+        vm.userInfo.username = "icejs_team2";
+        expect ( children.length ).toBe ( 1 );
+        expect ( children [ 0 ].templateNodes [ 0 ].nodeName ).toBe ( "SPAN" );
+        expect ( children [ 0 ].templateNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( "icejs_team2" );
+        expect ( realDOM.childNodes.length ).toBe ( 1 );
+        expect ( realDOM.childNodes.item ( 0 ).childNodes.item ( 0 ).nodeValue ).toBe ( "icejs_team2" );
+    } );
 } );

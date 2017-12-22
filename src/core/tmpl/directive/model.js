@@ -32,6 +32,7 @@ export default {
             throw directiveErr ( "model", "这个指令只能在包括'<input>'、'<textarea>'、'<select>'在内的表单元素上使用" );
         }
 
+        // 绑定checkbox上时，vm属性值必须为array
         if ( nodeName === "INPUT" && inputType === "checkbox" && type ( modelArray ) !== "array" ) {
             throw directiveErr ( "model", "checkbox表单元素只能绑定一个array类型的变量" );
         }
@@ -75,17 +76,20 @@ export default {
             };
     	
 
-        // 判断支持input事件的元素名称或对应type的input元素
-        if ( ( nodeName === "INPUT" && support.input.type.indexOf ( inputType ) !== -1 ) || support.input.nodeName.indexOf ( nodeName ) !== -1 ) {
+        // 判断表单元素需绑定的事件，并为它们绑定不同事件
+        if ( ( nodeName === "INPUT" && support.input.type.indexOf ( inputType ) >= 0 ) || support.input.nodeName.indexOf ( nodeName ) >= 0 ) {
+
+            // 绑定input事件
             elem.bindEvent ( "input", handler );
         }
         else if ( ( nodeName === "INPUT" && support.change.inputType.indexOf ( inputType ) !== -1 ) || support.change.nodeName.indexOf ( nodeName ) !== -1 ) {
 
-        	// 将相同model的radio控件分为一组
-        	if ( inputType === "radio" ) {
+        	// 当input[radio]元素没有设置name属性时自动为它添加name属性
+        	if ( inputType === "radio" && !elem.attr ( "name" ) ) {
             	elem.attr ( "name", expr );
             }
-          
+
+            // 绑定input事件
             elem.bindEvent ( "change", handler );
         }
     },

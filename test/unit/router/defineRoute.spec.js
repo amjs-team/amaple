@@ -15,8 +15,6 @@ describe ( "router =>", () => {
 			childRouter.module ( "footer" ).route ( [ "profile", "admin", "keys", ":a/:b(\\d+)" ], "footer" );
 		} );
 
-		console.log ( routeTree );
-
 		expect ( routeTree.length ).toBe ( 1 );
 		expect ( routeTree [ 0 ].name ).toBe ( "default" );
 		expect ( routeTree [ 0 ].routes.length ).toBe ( 1 );

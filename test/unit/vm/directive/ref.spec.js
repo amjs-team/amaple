@@ -65,32 +65,48 @@ describe ( "directive ref => ", () => {
         expect ( module.refs ( "ref_p" ) [ 2 ] ).toBe ( d.children.item ( 2 ) );
     } );
 
-    it ( "directive :ref in component element", () => {
-        const TestComp = ice.class ( "TestComp" ).extends ( ice.Component ) ( {
-            init () {
-                return {
-                    btnText : "test-btn",
-                    console : ""
-                };
-            },
-            render () {
-                this.template (
-                    "<button>{{ btnText }}</button><div class='console'>{{ console }}</div>"
-                )
-                .style ( {
-                    ".console" : {
-                        color : "#00aae6"
-                    }
-                } );
-            },
-            action () {
-                return {
-                    print ( con ) {
-                        this.state.console = con;
-                    }
-                };
-            }
-        } );
+    it ( "directive :ref in component element and sub component", () => {
+        const 
+            SubComp = ice.class ( "SubComp" ).extends ( ice.Component ) ( {
+                init () {
+                    return {};
+                },
+                render () {
+                    this.template ( "<span>SubComp</span>" )
+                }
+            } ),
+            TestComp = ice.class ( "TestComp" ).extends ( ice.Component ) ( {
+                constructor () {
+                    this.__super ();
+                    this.depComponents = [ SubComp ];
+                },
+                init () {
+                    return {
+                        btnText : "test-btn",
+                        console : ""
+                    };
+                },
+                render () {
+                    this.template (
+                        "<button>{{ btnText }}</button><div class='console'>{{ console }}</div><sub-comp :ref='sub_comp'></sub-comp>"
+                    )
+                    .style ( {
+                        ".console" : {
+                            color : "#00aae6"
+                        }
+                    } );
+                },
+                action () {
+                    return {
+                        print ( con ) {
+                            this.state.console = con;
+                        }
+                    };
+                },
+                mounted () {
+                    expect ( this.refs ( "sub_comp" ) ).toBe ( this.components [ 0 ].action );
+                }
+            } );
 
         const d = document.createElement ( "div" );
         d.innerHTML = `<test-comp :ref="ref_comp"></test-comp>`;

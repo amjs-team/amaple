@@ -1,6 +1,6 @@
 import { extend, foreach, noop, type, isEmpty } from "../../func/util";
 import { clear } from "../../func/node";
-import { transformCompName, getFunctionName } from "../../func/private";
+import { transformCompName, getFunctionName, getReference } from "../../func/private";
 import { rcomponentName } from "../../var/const";
 import { componentErr } from "../../error";
 import slice from "../../var/slice";
@@ -57,27 +57,21 @@ extend ( Component.prototype, {
         http://icejs.org/######
     */
 	__init__ ( componentVNode, moduleObj ) {
-        let isCallPropsType = false;
     	
+        // 初始化props
+        this.props = componentConstructor.initProps ( componentVNode, moduleObj.state );
+
     	//////////////////////////////////////////
     	// 获取init方法返回值并初始化vm数据
         // 构造属性验证获取器获取属性验证参数
-        this.propsType = ( validator ) => {
-            isCallPropsType = true;
-
-            // 获取props，如果有需要则验证它们
-            this.props = componentConstructor.initProps ( componentVNode, moduleObj.state, validator || {} );
+        this.propsType = validator => {
+            componentConstructor.validateProps ( this.props, validator || {} );
         };
 
 		const componentVm = new ViewModel ( this.init.apply ( this, cache.getDependentPlugin ( this.init ) ) );
-
-        // 没有验证时手动调用初始化props
-        if ( !isCallPropsType ) {
-            this.propsType ();
-        }
-        delete this.propsType;
-
         this.state = componentVm;
+
+        delete this.propsType;
 
     	/////////////////////
     	// 转换组件代表元素为实际的组件元素节点
@@ -135,12 +129,14 @@ extend ( Component.prototype, {
         vfragmentBackup.clear ();
         clear ( vfragmentBackup.node );
 
+        // 解析组件并挂载数据
+        this.references = {};
+        tmpl.mount ( vfragment, false, Tmpl.defineScoped ( subElements, componentVNode, false ) );
+
         // 保存组件对象和结构
         componentVNode.component = this;
         componentVNode.templateNodes = vfragment.children.concat ();
     	tmpl.moduleNode = componentVNode;
-        
-		tmpl.mount ( vfragment, false, Tmpl.defineScoped ( subElements, componentVNode, false ) );
 
         // 初始化action
         if ( this.action ) {
@@ -196,6 +192,24 @@ extend ( Component.prototype, {
         }
 
         this.lifeCycle.unmount ();
+    },
+
+    /**
+        refs ( ref: String )
+    
+        Return Type:
+        DOMObject|Object
+        被引用的组件行为对象或元素
+        
+        Description:
+        获取被引用的组件行为对象或元素
+        当组件不可见时返回undefined
+    
+        URL doc:
+        http://icejs.org/######
+    */
+    refs ( ref ) {
+        return getReference ( this.references, ref );
     }
 } );
 
