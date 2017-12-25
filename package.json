@@ -2,7 +2,9 @@
   "name": "ice.js",
   "version": "0.5.0",
   "description": "ice.js是一个基于状态的web单页面框架，通过ice，你可以快速构建华丽的web单页应用，并且它可以记住每个页面的操作状态如打开某组件后的状态、已经输入好信息的状态等，当你将此界面分享给你的好友时，你的操作状态也可以一并被你的好友所看到",
-  "dependencies": {},
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.2"
+  },
   "devDependencies": {
     "babel-core": "^6.25.0",
     "babel-loader": "^7.1.1",

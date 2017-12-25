@@ -1,7 +1,32 @@
-import { extend, foreach } from "../../func/util";
+import { extend, foreach, type } from "../../func/util";
 import { attr } from "../../func/node";
 import { attrAssignmentHook } from "../../var/const";
 import event from "../../event/core";
+
+/**
+	walkTemplateNodes ( nodes: Array, callback: Function )
+
+	Return Type:
+	void
+
+	Description:
+	遍历vnode实例的node数组项
+	当node数组项中有Array数组时继续遍历此数组
+	回调函数为每项遍历的处理回调函数
+
+	URL doc:
+	http://icejs.org/######
+*/
+function walkTemplateNodes ( templateNodes, callback ) {
+	foreach ( templateNodes, vnode => {
+		if ( vnode.templateNodes ) {
+			walkTemplateNodes ( vnode.templateNodes, callback );
+		}
+		else {
+			callback ( vnode.node );
+		}
+	} );
+}
 
 export default function NodePatcher () {
 	this.patches = [];
@@ -193,9 +218,9 @@ extend ( NodePatcher.prototype, {
                 	p = patchItem.item.parent.node;
               		if ( patchItem.item.templateNodes ) {
                     	const f = document.createDocumentFragment ();
-                    	foreach ( patchItem.item.templateNodes, vnode => {
-                        	f.appendChild ( vnode.node );
-                        } );
+                    	walkTemplateNodes ( patchItem.item.templateNodes, node => {
+                    		f.appendChild ( node );
+                    	} );
                     	
                     	if ( patchItem.index < p.childNodes.length ) {
 
@@ -227,9 +252,9 @@ extend ( NodePatcher.prototype, {
                 case NodePatcher.NODE_REMOVE :
                 	let unmountNodes;
                 	if ( patchItem.item.templateNodes ) {
-                    	foreach ( patchItem.item.templateNodes, vnode => {
-                        	vnode.node.parentNode.removeChild ( vnode.node );
-                        } );
+                		walkTemplateNodes ( patchItem.item.templateNodes, node => {
+                    		node.parentNode.removeChild ( node );
+                    	} );
                     	
                     	// 移除的组件需调用unmount生命周期函数
                     	if ( patchItem.item.isComponent ) {

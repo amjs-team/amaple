@@ -143,6 +143,9 @@ extend ( Component.prototype, {
             const actions = this.action.apply ( this, cache.getDependentPlugin ( this.action ) );
             componentConstructor.initAction ( this, actions );
         }
+        else {
+            this.action = {};
+        }
 
 		// 调用mounted钩子函数
 		( this.mounted || noop ).apply ( this, cache.getDependentPlugin ( this.mounted || noop ) );

@@ -6,6 +6,7 @@ import iceAttr from "./iceAttr";
 import { identifierName } from "../core/Module";
 import check from "../check";
 import configuration from "../core/configuration/core";
+import cheerio from "cheerio";
 
 
 /**
@@ -63,22 +64,25 @@ function parseTemplate ( moduleString, parses ) {
 	const 
 		rtemplate = /<template>([\s\S]+)<\/template>/i,
 		rblank = />(\s+)</g,
-		rtext = /["'\/&]/g,
+		rtext = /"/g,
 		rwrap = /\r?\n\s*/g,
 
 		viewMatch = rtemplate.exec ( moduleString );
 
-
+	let view;
 	if ( viewMatch ) {
 		moduleString = moduleString.replace ( viewMatch [ 0 ], "" );
-		parses.view = ( viewMatch [ 1 ] || "" ).trim ();
+		view = ( viewMatch [ 1 ] || "" ).trim ();
 
-		// 去除所有标签间的空格，并转义"和'符号
-		parses.view = parses.view
+		// 去除所有标签间的空格，并将"转换为'符号
+		view = view
 		.replace ( rblank, ( match, rep ) => match
 			.replace ( rep, "" ) )
-		.replace ( rtext, match => "\\" + match )
+		.replace ( rtext, match => "'" )
 		.replace ( rwrap, match => "" );
+
+		// parses.view = cheerio.parseHTML ( parses.view );
+		parses.view = view;
 	}
 
 	return moduleString;
@@ -112,23 +116,24 @@ function parseStyle ( moduleString, identifier, parses ) {
 	if ( styleMatch ) {
 		moduleString = moduleString.replace ( styleMatch [ 0 ], "" );
 
+		let style;
     	if ( risScoped.test ( styleMatch [ 0 ] ) ) {
         	const placeholder = "{{style}}";
 
-			parses.style = ( styleMatch [ 1 ] || "" ).trim ();
+			style = ( styleMatch [ 1 ] || "" ).trim ();
 			styleMatch [ 0 ] = styleMatch [ 0 ].replace ( styleMatch [ 1 ], placeholder );
 
 			// 为每个样式添加模块前缀以达到控制范围的作用
-			parses.style = parses.style.replace ( raddScoped, ( match, rep ) => match.replace ( rep, rnoscoped.test ( rep ) ? rep : `[${ identifierName }=${ identifier }] ` + rep ) );
+			style = style.replace ( raddScoped, ( match, rep ) => match.replace ( rep, rnoscoped.test ( rep ) ? rep : `[${ identifierName }=${ identifier }] ` + rep ) );
 
-			parses.style = styleMatch [ 0 ].replace ( placeholder, parses.style );
+			style = styleMatch [ 0 ].replace ( placeholder, style );
         }
 		else {
-        	parses.style = styleMatch [ 0 ];
+        	style = styleMatch [ 0 ];
         }
 
         // 去除所有标签间的空格
-        parses.style = parses.style.replace ( rstyleblank, match => match.replace ( /\s+/g, "" ) );
+        parses.style = style.replace ( rstyleblank, match => match.replace ( /\s+/g, "" ) );
 	}
 	else {
 		parses.style = "";
@@ -266,6 +271,7 @@ export default function compileModule ( moduleString, identifier ) {
 		////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////
 		/// 构造编译函数
+		// cheerio.load ( parses.view ) ( "body" ).children ();
 		moduleString = `var view="${ parses.view }${ parses.style }";`;
 
 		if ( !isEmpty ( scriptPaths ) ) {

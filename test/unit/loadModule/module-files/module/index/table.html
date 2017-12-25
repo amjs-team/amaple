@@ -85,9 +85,15 @@
 		}
 		#a87 {
 			background: green;
+			-webkit-animation: anim 1s;
+			animation: anim 1s;
 		}
 		#a87 li {
 			border: solid 1px #888;
+		}
+		@-webkit-keyframes anim {
+			from { opacity: 0;}
+			to { opacity: 1;}
 		}
 	</style>
 </Module>
