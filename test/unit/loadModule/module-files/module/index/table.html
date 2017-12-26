@@ -22,6 +22,8 @@
 		</ul>
 		<edit-table></edit-table>
 		<page-ctrl></page-ctrl>
+		<hr />
+		<!-- 模块页面模板 -->
 	</template>
 	
 
@@ -75,25 +77,40 @@
 
 	<!-- 此模板对应的样式 -->
 	<style scoped>
-		a {
-			color: gray;
-			font-size: 20px;
-			margin: 0 20px;
-		}
-		.abc {
-			background: red;
-		}
 		#a87 {
 			background: green;
 			-webkit-animation: anim 1s;
 			animation: anim 1s;
 		}
-		#a87 li {
-			border: solid 1px #888;
+		@keyframes anim {
+			0% { opacity: 0; }
+			100% { opacity: 1; }
 		}
 		@-webkit-keyframes anim {
-			from { opacity: 0;}
-			to { opacity: 1;}
+			0% { opacity: 0; }
+			100% { opacity: 1; }
+		}
+
+		a {
+			color: gray;
+			font-size: 20px;
+			margin: 0 20px;
+		}
+		@-o-keyframes anim {
+			from {
+				opacity: 0;
+				color: #545;
+			}
+			to {
+				pacity: 1;
+				color: #999;
+			}
+		}
+		.abc {
+			background: red;
+		}
+		#a87 li {
+			border: solid 1px #888;
 		}
 	</style>
 </Module>

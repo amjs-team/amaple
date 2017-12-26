@@ -394,7 +394,7 @@ extend ( VNode.prototype, {
 
                         // 移除不存在的属性
                         foreach ( slice.call ( this.node.attributes ), attrNode => {
-                            if ( !this.attrs.hasOwnProperty ( attrNode.name ) ) {
+                            if ( !Object.prototype.hasOwnProperty.call ( this.attrs, attrNode.name ) ) {
                                 attr ( this.node, attrNode.name, null );
                             }
                         } );

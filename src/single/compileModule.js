@@ -1,12 +1,14 @@
-import { isEmpty, foreach } from "../func/util";
+import { isEmpty, foreach, guid, type } from "../func/util";
 import { transformCompName } from "../func/private";
 import { TYPE_COMPONENT } from "../var/const";
 import { moduleErr } from "../error";
 import iceAttr from "./iceAttr";
-import { identifierName } from "../core/Module";
 import check from "../check";
 import configuration from "../core/configuration/core";
 import cheerio from "cheerio";
+import VElement from "../core/vnode/VElement";
+import VTextNode from "../core/vnode/VTextNode";
+import VFragment from "../core/vnode/VFragment";
 
 
 /**
@@ -81,16 +83,34 @@ function parseTemplate ( moduleString, parses ) {
 		.replace ( rtext, match => "'" )
 		.replace ( rwrap, match => "" );
 
-		// parses.view = cheerio.parseHTML ( parses.view );
+		parses.nodeQuery= cheerio.load ( view );
 		parses.view = view;
 	}
 
 	return moduleString;
 }
 
+/**
+	parseStyle ( css: String )
+
+	Return Type:
+	String
+	处理后的css字符串
+
+	Description:
+	移除css空白符
+
+	URL doc:
+	http://icejs.org/######
+*/
+function removeCssBlank ( css ) {
+	const rstyleblank = /(>\s*|\s*[{:;}]\s*|\s*<)/g;
+	return css.replace ( rstyleblank, match => match.replace ( /\s+/g, "" ) );
+}
+
 
 /**
-	parseStyle ( moduleString: String, identifier: String, parses: Object )
+	parseStyle ( moduleString: String, parses: Object )
 
 	Return Type:
 	String
@@ -102,14 +122,15 @@ function parseTemplate ( moduleString, parses ) {
 	URL doc:
 	http://icejs.org/######
 */
-function parseStyle ( moduleString, identifier, parses ) {
+function parseStyle ( moduleString, parses ) {
 
 	const
 		rstyle = /<style(?:.*?)>([\s\S]*)<\/style>/i,
 		risScoped = /^<style(?:.*?)scoped(?:.*?)/i,
-		raddScoped = /\s*([^/@%{}]+)\s*{[^{}]+}/g,
-		rnoscoped = /^(from|to)\s*$/i,
-		rstyleblank = /(>\s*|\s*[{:;}]\s*|\s*<)/g,
+		rselector = /[^/@{}]+?/,
+		rkeyframes = /@(?:-\w+-)?keyframes\s+\w+/,
+		rcssparser = new RegExp ( `\\s*(${ rselector.source }|${ rkeyframes.source })\\s*{([\\s\\S]+?)}`, "g" ),
+		ranimateScoped = /^(from|to|\d+%)\s*$/i,
 
 		styleMatch = rstyle.exec ( moduleString );
 
@@ -118,22 +139,48 @@ function parseStyle ( moduleString, identifier, parses ) {
 
 		let style;
     	if ( risScoped.test ( styleMatch [ 0 ] ) ) {
-        	const placeholder = "{{style}}";
-
 			style = ( styleMatch [ 1 ] || "" ).trim ();
-			styleMatch [ 0 ] = styleMatch [ 0 ].replace ( styleMatch [ 1 ], placeholder );
 
-			// 为每个样式添加模块前缀以达到控制范围的作用
-			style = style.replace ( raddScoped, ( match, rep ) => match.replace ( rep, rnoscoped.test ( rep ) ? rep : `[${ identifierName }=${ identifier }] ` + rep ) );
+			// 解析每个css项并保存到parsers.style中
+			parses.style = [];
+			let keyframesItem;
+			style = style.replace ( rcssparser, ( match, selector, content ) => {
+				content = content.trim ();
 
-			style = styleMatch [ 0 ].replace ( placeholder, style );
+				// css选择器为普通选择器时
+				if ( new RegExp ( `^${ rselector.source }` ).test ( selector ) ) {
+					if ( ranimateScoped.test ( selector ) ) {
+						keyframesItem.content += `${ selector }{${ removeCssBlank ( content ) }}`;
+					}
+					else {
+						if ( keyframesItem ) {
+							parses.style.push ( keyframesItem );
+							keyframesItem = undefined;
+						}
+						parses.style.push ( {
+							selector,
+							content : removeCssBlank ( content )
+						} );
+					}
+				}
+
+				// css选择器为@keyframes时
+				else if ( rkeyframes.test ( selector ) ) {
+					if ( keyframesItem ) {
+						parses.style.push ( keyframesItem );
+					}
+					keyframesItem = {
+						selector, 
+						content : removeCssBlank ( content + "}" )
+					};
+				}
+			} );
         }
 		else {
-        	style = styleMatch [ 0 ];
-        }
 
-        // 去除所有标签间的空格
-        parses.style = style.replace ( rstyleblank, match => match.replace ( /\s+/g, "" ) );
+			// 去除所有标签间的空格
+        	style = removeCssBlank ( styleMatch [ 0 ] );
+        }
 	}
 	else {
 		parses.style = "";
@@ -210,10 +257,30 @@ function parseScript ( moduleString, scriptPaths, scriptNames, parses ) {
 	return moduleString;
 }
 
+function ASTToVnode ( astNodes, parent ) {
+
+	foreach ( astNodes, astNode => {
+		let vnode;
+		if ( /^tag|style$/.test ( astNode.type ) ) {
+			vnode = VElement ( astNode.name, astNode.attribs, null, null );
+			if ( astNode.children.length > 0 ) {
+				ASTToVnode ( astNode.children, vnode );
+			}
+		}
+		else if ( astNode.type === "text" ) {
+			vnode = VTextNode ( astNode.data, null );
+		}
+
+		if ( vnode ) {
+			parent.appendChild ( vnode );
+		}
+	} );
+}
+
 
 
 /**
-	compileModule ( moduleString: String, identifier: String )
+	compileModule ( moduleString: String )
 
 	Return Type:
 	Function
@@ -224,11 +291,12 @@ function parseScript ( moduleString, scriptPaths, scriptNames, parses ) {
 	URL doc:
 	http://icejs.org/######
 */
-export default function compileModule ( moduleString, identifier ) {
+export default function compileModule ( moduleString ) {
 
 	// 模块编译正则表达式
 	const rmodule = /^<module[\s\S]+<\/module>/i;
-	let title = "";
+	let title = "",
+		moduleFragment;
 	if ( rmodule.test ( moduleString ) ) {
 		
 		const
@@ -244,7 +312,7 @@ export default function compileModule ( moduleString, identifier ) {
 		title = parses.attrs [ iceAttr.title ] || "";
 
 		// 解析样式
-		moduleString = parseStyle ( moduleString, identifier, parses );
+		moduleString = parseStyle ( moduleString, parses );
 
 		// 解析js脚本
 		moduleString = parseScript ( moduleString, scriptPaths, scriptNames, parses );
@@ -263,17 +331,38 @@ export default function compileModule ( moduleString, identifier ) {
 			.ifNot ( "module:script", "<module>内的<script>为必须子元素，它的内部js代码用于初始化模块的页面布局" )
 			.do ();
 
-		const buildView = `args.signCurrentRender();
-		var nt=new args.NodeTransaction();
-		nt.collect(args.moduleNode);
-		args.moduleNode.html(args.VNode.domToVNode(view));`;
+		////////////////////////////////////////////////////////
+		////////////////////////////////////////////////////////
+		/// 编译局部样式
+		if ( type ( parses.style ) === "array" ) {
+			let moduleIdentifier,
+				styleString = "";
+			foreach ( parses.style, styleItem => {
+				if ( styleItem.selector.substr ( 0, 1 ) !== "@" ) {
+					moduleIdentifier = "data-no-" + guid ();
+					parses.nodeQuery ( styleItem.selector ).attr ( moduleIdentifier, "" );
+					styleItem.selector += `[${ moduleIdentifier }]`;
+				}
+
+				styleString += `${ styleItem.selector }{${ styleItem.content }}`;
+			} );
+
+			parses.style = styleString ? `<style scoped>${ styleString }</style>` : "";
+		}
+
+		const body = parses.nodeQuery ( "body" );
+		moduleFragment = new VFragment ();
+		body.append ( parses.style );
+		ASTToVnode ( body [ 0 ].children, moduleFragment );
 
 		////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////
 		/// 构造编译函数
-		// cheerio.load ( parses.view ) ( "body" ).children ();
-		moduleString = `var view="${ parses.view }${ parses.style }";`;
-
+		const buildView = `args.signCurrentRender();
+			var nt=new args.NodeTransaction().start ();
+			nt.collect(args.moduleNode);
+			args.moduleNode.html(args.moduleFragment);`;
+		moduleString = "";
 		if ( !isEmpty ( scriptPaths ) ) {
 			let addToWindow = "",
 				delFromWindow = "";
@@ -304,5 +393,7 @@ export default function compileModule ( moduleString, identifier ) {
 		}
 	}
 
-	return { updateFn : new Function ( "ice", "args", moduleString ), title };
+	const updateFn = new Function ( "ice", "args", moduleString );
+	updateFn.moduleFragment = moduleFragment;
+	return { updateFn, title };
 }

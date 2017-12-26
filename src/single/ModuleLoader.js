@@ -350,9 +350,8 @@ extend ( ModuleLoader, {
 				};
 			};
 
-		// 给模块元素添加编号属性，此编号有两个作用：
+		// 给模块元素添加编号属性，此编号的作用：
 		// 1、用于模块加载时的模块识别
-		// 2、使用此属性作为子选择器限制样式范围
 		let moduleIdentifier = ( historyModule && historyModule.moduleIdentifier ) || 
 							( moduleNode && moduleNode.nodeType === 1 && moduleNode.attr ( identifierName ) );
 		if ( !moduleIdentifier ) {
@@ -381,7 +380,7 @@ extend ( ModuleLoader, {
                 	moduleNode.render ();
                 }
 
-	        	historyModule.updateFn ( ice, { moduleNode, VNode, NodeTransaction, require, signCurrentRender, flushChildren : flushChildren ( this ) } );
+	        	historyModule.updateFn ( ice, { moduleNode, moduleFragment: historyModule.updateFn.moduleFragment, NodeTransaction, require, signCurrentRender, flushChildren : flushChildren ( this ) } );
 	        };
 
 	        // 获取模块更新函数完成后在等待队列中移除
@@ -411,7 +410,7 @@ extend ( ModuleLoader, {
 				/////////////////////////////////////////////////////////
 	        	// 编译module为可执行函数
 				// 将请求的html替换到module模块中
-	            const { updateFn, title } = compileModule ( moduleString, moduleIdentifier );
+	            const { updateFn, title } = compileModule ( moduleString );
 	            this.updateTitle ( title );
 	        	
 	        	currentStructure.updateFn = function () {
@@ -434,7 +433,7 @@ extend ( ModuleLoader, {
 	                	moduleNode.render ();
 	                }
 
-	        		updateFn ( ice, { moduleNode, VNode, NodeTransaction, require, signCurrentRender, flushChildren : flushChildren ( this ) } );
+	        		updateFn ( ice, { moduleNode, moduleFragment: updateFn.moduleFragment, NodeTransaction, require, signCurrentRender, flushChildren : flushChildren ( this ) } );
 
 	            	// 调用success回调
 					success ( moduleNode );

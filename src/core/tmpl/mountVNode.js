@@ -43,7 +43,7 @@ function preTreat ( vnode ) {
                 nextSib.attr ( _elseif, null );
                 parent.removeChild ( nextSib );
             }
-            else if ( nextSib.attrs.hasOwnProperty ( _else ) ) {
+            else if ( Object.prototype.hasOwnProperty.call ( nextSib.attrs, _else ) ) {
                 nextSib.conditionElems = conditionElems;
                 vnode.conditions.push ( "true" );
                 vnode.conditionElems.push ( nextSib );

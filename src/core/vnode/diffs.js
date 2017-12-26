@@ -89,7 +89,7 @@ export function diffAttrs ( newVNode, oldVNode, nodePatcher ) {
 
     //找出移除的属性
     foreach ( oldVNode.attrs, ( attr, name ) => {
-        if ( !newVNode.attrs.hasOwnProperty ( name ) ) {
+        if ( !Object.prototype.hasOwnProperty.call ( newVNode.attrs, name ) ) {
             nodePatcher.removeAttr ( newVNode, name );
         }
     } );
