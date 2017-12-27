@@ -380,7 +380,7 @@ extend ( ModuleLoader, {
                 	moduleNode.render ();
                 }
 
-	        	historyModule.updateFn ( ice, { moduleNode, moduleFragment: historyModule.updateFn.moduleFragment, NodeTransaction, require, signCurrentRender, flushChildren : flushChildren ( this ) } );
+	        	historyModule.updateFn ( ice, { moduleNode, moduleFragment: historyModule.updateFn.moduleFragment.clone (), NodeTransaction, require, signCurrentRender, flushChildren : flushChildren ( this ) } );
 	        };
 
 	        // 获取模块更新函数完成后在等待队列中移除
@@ -433,7 +433,7 @@ extend ( ModuleLoader, {
 	                	moduleNode.render ();
 	                }
 
-	        		updateFn ( ice, { moduleNode, moduleFragment: updateFn.moduleFragment, NodeTransaction, require, signCurrentRender, flushChildren : flushChildren ( this ) } );
+	        		updateFn ( ice, { moduleNode, moduleFragment: updateFn.moduleFragment.clone (), NodeTransaction, require, signCurrentRender, flushChildren : flushChildren ( this ) } );
 
 	            	// 调用success回调
 					success ( moduleNode );

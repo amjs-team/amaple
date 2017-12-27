@@ -88,11 +88,12 @@ describe ( "render component => ", () => {
 			dBackup = div.clone ();
 		tmpl.mount ( div, true );
 
-		expect ( div.children [ 0 ].templateNodes.length ).toBe ( 5 );
+		// 包含一个<style>节点
+		expect ( div.children [ 0 ].templateNodes.length ).toBe ( 6 );
 		expect ( div.children [ 0 ].templateNodes [ 2 ].nodeName ).toBe ( "SPAN" );
 		expect ( div.children [ 0 ].templateNodes [ 2 ].children [ 0 ].nodeValue ).toBe ( "SubComp" );
 		div.diff ( dBackup ).patch ();
-		expect ( realDOM.childNodes.length ).toBe ( 5 );
+		expect ( realDOM.childNodes.length ).toBe ( 6 );
 		expect ( realDOM.childNodes.item ( 2 ).nodeName ).toBe ( "SPAN" );
 		expect ( realDOM.childNodes.item ( 2 ).firstChild.nodeValue ).toBe ( "SubComp" );
 
@@ -240,7 +241,7 @@ describe ( "render component => ", () => {
 		expect ( div.children.length ).toBe ( 5 );
 		expect ( div.children [ 2 ].templateNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "b" );
 		div.diff ( dBackup ).patch ();
-		expect ( realDOM.children.length ).toBe ( 4 );
+		expect ( realDOM.children.length ).toBe ( 5 );
 		expect ( realDOM.children.item ( 3 ).firstChild.nodeValue ).toBe ( "b" );
 
 		vm.item = "a";
@@ -261,7 +262,7 @@ describe ( "render component => ", () => {
 		vm.item = "c";
 		expect ( div.children.length ).toBe ( 5 );
 		expect ( div.children [ 3 ].templateNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "c" );
-		expect ( realDOM.children.length ).toBe ( 4 );
+		expect ( realDOM.children.length ).toBe ( 5 );
 		expect ( realDOM.children.item ( 3 ).firstChild.nodeValue ).toBe ( "c" );
 	} );
 
@@ -429,17 +430,18 @@ describe ( "render component => ", () => {
 			dBackup = div.clone ();
 		tmpl.mount ( div, true );
 		
-		expect ( div.children [ 0 ].templateNodes.length ).toBe ( 5 );
+		// 包含一个<style>元素
+		expect ( div.children [ 0 ].templateNodes.length ).toBe ( 6 );
 		expect ( div.children [ 0 ].templateNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "a" );
 		div.diff ( dBackup ).patch ();
-		expect ( realDOM.children.length ).toBe ( 4 );
+		expect ( realDOM.children.length ).toBe ( 5 );
 		expect ( realDOM.querySelector ( "#default" ).firstChild.nodeValue ).toBe ( "a" );
 
 
 		vm.visible = "b";
-		expect ( div.children [ 0 ].templateNodes.length ).toBe ( 5 );
+		expect ( div.children [ 0 ].templateNodes.length ).toBe ( 6 );
 		expect ( div.children [ 0 ].templateNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "b" );
-		expect ( realDOM.children.length ).toBe ( 4 );
+		expect ( realDOM.children.length ).toBe ( 5 );
 		expect ( realDOM.querySelector ( "#default" ).firstChild.nodeValue ).toBe ( "b" );
 
 
@@ -451,9 +453,9 @@ describe ( "render component => ", () => {
 
 
 		vm.visible = "b";
-		expect ( div.children [ 0 ].templateNodes.length ).toBe ( 5 );
+		expect ( div.children [ 0 ].templateNodes.length ).toBe ( 6 );
 		expect ( div.children [ 0 ].templateNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "b" );
-		expect ( realDOM.children.length ).toBe ( 4 );
+		expect ( realDOM.children.length ).toBe ( 5 );
 		expect ( realDOM.querySelector ( "#default" ).firstChild.nodeValue ).toBe ( "b" );
 	} );
 
@@ -501,14 +503,14 @@ describe ( "render component => ", () => {
 
 		expect ( div.children [ 0 ].isComponent ).toBeTruthy ();
 		expect ( div.children [ 0 ].templateNodes [ 0 ].children [ 0 ].isComponent ).toBeTruthy ();
-		expect ( div.children [ 0 ].templateNodes [ 0 ].children [ 0 ].templateNodes.length ).toBe ( 5 );
+		expect ( div.children [ 0 ].templateNodes [ 0 ].children [ 0 ].templateNodes.length ).toBe ( 6 );
 		div.diff ( dBackup ).patch ();
-		expect ( realDOM.firstChild.childNodes.length ).toBe ( 6 );
+		expect ( realDOM.firstChild.childNodes.length ).toBe ( 7 );
 		expect ( realDOM.firstChild.firstChild.nodeName ).toBe ( "BUTTON" );
 
 		moduleObj.references.pc.component.action.console ( "parent console" );
 		expect ( div.children [ 0 ].templateNodes [ 0 ].children [ 1 ].children [ 0 ].nodeValue ).toBe ( "parent console" );
-		expect ( realDOM.firstChild.childNodes.item ( 5 ).firstChild.nodeValue ).toBe ( "parent console" );
+		expect ( realDOM.firstChild.childNodes.item ( 6 ).firstChild.nodeValue ).toBe ( "parent console" );
 
 		moduleObj.references.pc.component.__unmount__ ();
 		expect ( unmountSpy.calls.count () ).toBe ( 1 );

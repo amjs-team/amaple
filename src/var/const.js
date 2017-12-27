@@ -17,6 +17,9 @@ export const rexpr = /{{\s*(.*?)\s*}}/;
 // 组件名正则表达式
 export const rcomponentName = /^[A-Z][a-zA-Z0-9]*/;
 
+// 局部属性标识前缀
+export const identifierPrefix = "data-no-";
+
 // 模块类型常量
 export const TYPE_COMPONENT = 0;
 export const TYPE_PLUGIN = 1;

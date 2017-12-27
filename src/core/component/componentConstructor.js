@@ -1,16 +1,13 @@
 import slice from "../../var/slice";
 import { foreach, noop, type, isPlainObject } from "../../func/util";
-import { query } from "../../func/node";
 import cache from "../../cache/core";
-import { defineReactiveProperty, transformCompName } from "../../func/private";
-import { rexpr, rvar } from "../../var/const";
+import { defineReactiveProperty, transformCompName, stringToScopedVNode } from "../../func/private";
+import { rexpr, rvar, noUnitHook } from "../../var/const";
 import { componentErr } from "../../error";
-import { noUnitHook } from "../../var/const";
 import Subscriber from "../Subscriber";
 import ValueWatcher from "../ValueWatcher";
-import VNode from "../vnode/VNode";
-import VFragment from "../vnode/VFragment";
 import NodeTransaction from "../vnode/NodeTransaction";
+import VFragment from "../vnode/VFragment";
 
 const dataType = [ String, Number, Function, Boolean, Object ];
 
@@ -214,31 +211,28 @@ export default {
         const 
             rblank = />(\s+)</g,
             rwrap = /\r?\n\s*/g,
-            d = document.createElement ( "div" ),
             f = document.createDocumentFragment ();
         
         // 去除所有标签间的空格，并转义"和'符号
-        d.innerHTML = template
+        template = template
         .replace ( rblank, ( match, rep ) => match
             .replace ( rep, "" ) )
         .replace ( rwrap, match => "" );
 
         // 为对应元素添加内嵌样式
-        let num;
+        let num, styleString;
+        const styleObject = [];
         foreach ( scopedStyle, ( styles, selector ) => {
-            foreach ( query ( selector, d, true ), elem => {
-                foreach ( styles, ( val, styleName ) => {
-                    num = parseInt ( val );
-                    elem.style [ styleName ] += val + ( type ( num ) === "number" && ( num >= 0 || num <= 0 ) && noUnitHook.indexOf ( styleName ) === -1 ? "px" : "" );
-                } );
+            styleString = "";
+            foreach ( styles, ( val, styleName ) => {
+                num = parseInt ( val );
+                styleString += `${ styleName }:${ val + ( type ( num ) === "number" && ( num >= 0 || num <= 0 ) && noUnitHook.indexOf ( styleName ) === -1 ? "px" : "" ) };`;
             } );
+
+            styleObject.push ( { selector, content: styleString } );
         } );
         
-        foreach ( slice.call ( d.childNodes ), child => {
-            f.appendChild ( child );
-        } );
-    
-        return VNode.domToVNode ( f );
+        return stringToScopedVNode ( template, styleObject );
     },
     
     /**

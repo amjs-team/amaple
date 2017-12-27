@@ -1,11 +1,27 @@
-import { foreach, type, isEmpty } from "./util";
+import { foreach, type, isEmpty, guid } from "./util";
 import { attr } from "./node";
 import { componentErr } from "../error";
 import slice from "../var/slice";
+import { identifierPrefix } from "../var/const";
 import iceAttr from "../single/iceAttr";
+import cheerio from "cheerio";
+import VElement from "../core/vnode/VElement";
+import VTextNode from "../core/vnode/VTextNode";
+import VFragment from "../core/vnode/VFragment";
 
 
-// 转换存取器属性
+/**
+	defineReactiveProperty ( key: String, getter: Function, setter: Function, target: Object )
+
+	Return Type:
+	void
+
+	Description:
+	转换存取器属性
+
+	URL doc:
+	http://icejs.org/######
+*/
 export function defineReactiveProperty ( key, getter, setter, target ) {
 	Object.defineProperty ( target, key, {
 		enumerable : true,
@@ -171,4 +187,64 @@ export function getReference ( references, refName ) {
 			: undefined;
 	}
 	return reference;
+}
+
+/**
+	ASTToVNode ( astNodes: Array, parent: Object )
+
+	Return Type:
+	void
+
+	Description:
+	将ast节点转换为vnode
+
+	URL doc:
+	http://icejs.org/######
+*/
+function ASTToVNode ( astNodes, parent ) {
+
+	foreach ( astNodes, astNode => {
+		let vnode;
+		if ( /^tag|style$/.test ( astNode.type ) ) {
+			vnode = VElement ( astNode.name, astNode.attribs, null, null );
+			if ( astNode.children.length > 0 ) {
+				ASTToVNode ( astNode.children, vnode );
+			}
+		}
+		else if ( astNode.type === "text" ) {
+			vnode = VTextNode ( astNode.data, null );
+		}
+
+		if ( vnode ) {
+			parent.appendChild ( vnode );
+		}
+	} );
+}
+
+export function stringToScopedVNode ( htmlString, styles ) {
+	const nodeQuery = cheerio.load ( htmlString );
+
+	if ( type ( styles ) === "array" ) {
+		let scopedCssIdentifier,
+			styleString = "";
+		foreach ( styles, styleItem => {
+			if ( styleItem.selector.substr ( 0, 1 ) !== "@" ) {
+				scopedCssIdentifier = identifierPrefix + guid ();
+				nodeQuery ( styleItem.selector ).attr ( scopedCssIdentifier, "" );
+				styleItem.selector += `[${ scopedCssIdentifier }]`;
+			}
+
+			styleString += `${ styleItem.selector }{${ styleItem.content }}`;
+		} );
+
+		styles = styleString ? `<style scoped>${ styleString }</style>` : "";
+	}
+
+	const 
+		body = nodeQuery ( "body" ),
+		scopedFragment = new VFragment ();
+	body.append ( styles );
+	ASTToVNode ( body [ 0 ].children, scopedFragment );
+
+	return scopedFragment;
 }

@@ -1,14 +1,10 @@
-import { isEmpty, foreach, guid, type } from "../func/util";
-import { transformCompName } from "../func/private";
+import { isEmpty, foreach } from "../func/util";
+import { transformCompName, stringToScopedVNode } from "../func/private";
 import { TYPE_COMPONENT } from "../var/const";
 import { moduleErr } from "../error";
 import iceAttr from "./iceAttr";
 import check from "../check";
 import configuration from "../core/configuration/core";
-import cheerio from "cheerio";
-import VElement from "../core/vnode/VElement";
-import VTextNode from "../core/vnode/VTextNode";
-import VFragment from "../core/vnode/VFragment";
 
 
 /**
@@ -83,7 +79,6 @@ function parseTemplate ( moduleString, parses ) {
 		.replace ( rtext, match => "'" )
 		.replace ( rwrap, match => "" );
 
-		parses.nodeQuery= cheerio.load ( view );
 		parses.view = view;
 	}
 
@@ -257,27 +252,6 @@ function parseScript ( moduleString, scriptPaths, scriptNames, parses ) {
 	return moduleString;
 }
 
-function ASTToVnode ( astNodes, parent ) {
-
-	foreach ( astNodes, astNode => {
-		let vnode;
-		if ( /^tag|style$/.test ( astNode.type ) ) {
-			vnode = VElement ( astNode.name, astNode.attribs, null, null );
-			if ( astNode.children.length > 0 ) {
-				ASTToVnode ( astNode.children, vnode );
-			}
-		}
-		else if ( astNode.type === "text" ) {
-			vnode = VTextNode ( astNode.data, null );
-		}
-
-		if ( vnode ) {
-			parent.appendChild ( vnode );
-		}
-	} );
-}
-
-
 
 /**
 	compileModule ( moduleString: String )
@@ -334,26 +308,7 @@ export default function compileModule ( moduleString ) {
 		////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////
 		/// 编译局部样式
-		if ( type ( parses.style ) === "array" ) {
-			let moduleIdentifier,
-				styleString = "";
-			foreach ( parses.style, styleItem => {
-				if ( styleItem.selector.substr ( 0, 1 ) !== "@" ) {
-					moduleIdentifier = "data-no-" + guid ();
-					parses.nodeQuery ( styleItem.selector ).attr ( moduleIdentifier, "" );
-					styleItem.selector += `[${ moduleIdentifier }]`;
-				}
-
-				styleString += `${ styleItem.selector }{${ styleItem.content }}`;
-			} );
-
-			parses.style = styleString ? `<style scoped>${ styleString }</style>` : "";
-		}
-
-		const body = parses.nodeQuery ( "body" );
-		moduleFragment = new VFragment ();
-		body.append ( parses.style );
-		ASTToVnode ( body [ 0 ].children, moduleFragment );
+		moduleFragment = stringToScopedVNode ( parses.view, parses.style );
 
 		////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////
