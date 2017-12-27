@@ -2,9 +2,20 @@
   "name": "ice.js",
   "version": "0.5.0",
   "description": "ice.js是一个基于状态的web单页面框架，通过ice，你可以快速构建华丽的web单页应用，并且它可以记住每个页面的操作状态如打开某组件后的状态、已经输入好信息的状态等，当你将此界面分享给你的好友时，你的操作状态也可以一并被你的好友所看到",
+  "author": "JOU.San <huzhen555@qq.com>",
+  "license": "MIT",
+  "keywords": [
+    "ice",
+    "icejs",
+    "state-based",
+    "spa"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/icejs-team/icejs.git"
+  },
   "dependencies": {
-    "cheerio": "^1.0.0-rc.2",
-    "commitizen": "^2.9.6"
+    "cheerio": "^1.0.0-rc.2"
   },
   "devDependencies": {
     "babel-core": "^6.25.0",
@@ -13,6 +24,7 @@
     "babel-preset-env": "^1.6.1",
     "babel-preset-es2015": "^6.24.1",
     "babel-preset-es2015-rollup": "^3.0.0",
+    "commitizen": "^2.9.6",
     "cz-conventional-changelog": "^2.1.0",
     "jasmine-core": "^2.6.4",
     "karma": "^1.7.0",
@@ -31,24 +43,12 @@
     "webpack": "^3.3.0"
   },
   "scripts": {
-    "build": "rollup -c build/build.js",
-    "dev": "rollup -w -c build/dev.js",
+    "build": "rollup -c scripts/build.js",
+    "dev": "rollup -w -c scripts/dev.js",
     "test:unit": "karma start test/unit/karma.unit.conf.js",
     "test:sauce": "karma start test/unit/karma.sauce.conf.js firefoxs && karma start test/unit/karma.sauce.conf.js chromes && karma start test/unit/karma.sauce.conf.js ies && karma start test/unit/karma.sauce.conf.js safaris && karma start test/unit/karma.sauce.conf.js mobiles",
     "commit": "git-cz"
   },
-  "keywords": [
-    "ice",
-    "icejs",
-    "state-based",
-    "spa"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/icejs-team/icejs.git"
-  },
-  "author": "JOU.San <huzhen555@qq.com>",
-  "license": "MIT",
   "config": {
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
