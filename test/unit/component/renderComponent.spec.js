@@ -184,19 +184,19 @@ describe ( "render component => ", () => {
 		expect ( div.children [ 3 ].templateNodes [ 0 ].nodeName ).toBe ( "BUTTON" );
 		expect ( div.children [ 3 ].templateNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "c" );
 		div.diff ( dBackup ).patch ();
-		expect ( realDOM.children.length ).toBe ( 12 );
+		expect ( realDOM.children.length ).toBe ( 15 );
 		expect ( realDOM.children.item ( 0 ).nodeName ).toBe ( "BUTTON" );
-		expect ( realDOM.children.item ( 4 ).nodeName ).toBe ( "BUTTON" );
-		expect ( realDOM.children.item ( 8 ).nodeName ).toBe ( "BUTTON" );
+		expect ( realDOM.children.item ( 5 ).nodeName ).toBe ( "BUTTON" );
+		expect ( realDOM.children.item ( 10 ).nodeName ).toBe ( "BUTTON" );
 
 
 		vm.list.splice ( 0, 1 );
 		expect ( div.children.length ).toBe ( 4 );
 		expect ( div.children [ 1 ].templateNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "b" );
 		expect ( div.children [ 2 ].templateNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "c" );
-		expect ( realDOM.children.length ).toBe ( 8 );
+		expect ( realDOM.children.length ).toBe ( 10 );
 		expect ( realDOM.children.item ( 3 ).firstChild.nodeValue ).toBe ( "b" );
-		expect ( realDOM.children.item ( 7 ).firstChild.nodeValue ).toBe ( "c" );
+		expect ( realDOM.children.item ( 8 ).firstChild.nodeValue ).toBe ( "c" );
 		expect ( mountedSpy.calls.count () ).toBe ( 3 );
 		
 
@@ -205,15 +205,15 @@ describe ( "render component => ", () => {
 		expect ( div.children [ 1 ].templateNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "aa" );
 		expect ( div.children [ 2 ].templateNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "b" );
 		expect ( div.children [ 3 ].templateNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "c" );
-		expect ( realDOM.children.length ).toBe ( 12 );
+		expect ( realDOM.children.length ).toBe ( 15 );
 		expect ( realDOM.children.item ( 3 ).firstChild.nodeValue ).toBe ( "aa" );
-		expect ( realDOM.children.item ( 7 ).firstChild.nodeValue ).toBe ( "b" );
-		expect ( realDOM.children.item ( 11 ).firstChild.nodeValue ).toBe ( "c" );
+		expect ( realDOM.children.item ( 8 ).firstChild.nodeValue ).toBe ( "b" );
+		expect ( realDOM.children.item ( 13 ).firstChild.nodeValue ).toBe ( "c" );
 
 		vm.list.reverse ();
 		expect ( realDOM.children.item ( 3 ).firstChild.nodeValue ).toBe ( "c" );
-		expect ( realDOM.children.item ( 7 ).firstChild.nodeValue ).toBe ( "b" );
-		expect ( realDOM.children.item ( 11 ).firstChild.nodeValue ).toBe ( "aa" );
+		expect ( realDOM.children.item ( 8 ).firstChild.nodeValue ).toBe ( "b" );
+		expect ( realDOM.children.item ( 13 ).firstChild.nodeValue ).toBe ( "aa" );
 		expect ( updateSpy.calls.count() ).toBe ( 2 );
 
 
@@ -247,7 +247,7 @@ describe ( "render component => ", () => {
 		vm.item = "a";
 		expect ( div.children.length ).toBe ( 5 );
 		expect ( div.children [ 1 ].templateNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "a" );
-		expect ( realDOM.children.length ).toBe ( 4 );
+		expect ( realDOM.children.length ).toBe ( 5 );
 		expect ( realDOM.children.item ( 3 ).firstChild.nodeValue ).toBe ( "a" );
 
 		vm.item = "d";
@@ -398,14 +398,14 @@ describe ( "render component => ", () => {
 		expect ( div.children [ 1 ].templateNodes [ 3 ].children [ 1 ].children [ 0 ].nodeValue ).toBe ( "2" );
 		expect ( div.children [ 1 ].templateNodes [ 3 ].children [ 2 ].children [ 0 ].nodeValue ).toBe ( "3" );
 		div.diff ( dBackup ).patch ();
-		expect ( realDOM.children.length ).toBe ( 8 );
+		expect ( realDOM.children.length ).toBe ( 10 );
 		expect ( realDOM.children.item ( 3 ).firstChild.nodeValue ).toBe ( "a" );
-		expect ( realDOM.children.item ( 7 ).firstChild.nodeValue ).toBe ( "b" );
+		expect ( realDOM.children.item ( 8 ).firstChild.nodeValue ).toBe ( "b" );
 		expect ( realDOM.children.item ( 2 ).children.length ).toBe ( 1 );
 		expect ( realDOM.children.item ( 2 ).children.item ( 0 ).firstChild.nodeValue ).toBe ( "1" );
-		expect ( realDOM.children.item ( 6 ).children.length ).toBe ( 2 );
-		expect ( realDOM.children.item ( 6 ).children.item ( 0 ).firstChild.nodeValue ).toBe ( "2" );
-		expect ( realDOM.children.item ( 6 ).children.item ( 1 ).firstChild.nodeValue ).toBe ( "3" );
+		expect ( realDOM.children.item ( 7 ).children.length ).toBe ( 2 );
+		expect ( realDOM.children.item ( 7 ).children.item ( 0 ).firstChild.nodeValue ).toBe ( "2" );
+		expect ( realDOM.children.item ( 7 ).children.item ( 1 ).firstChild.nodeValue ).toBe ( "3" );
 	} );
 
 	it ( "render multiple components with directive ':if',':else-if',':else'", () => {

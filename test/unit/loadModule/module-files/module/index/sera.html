@@ -14,9 +14,15 @@
 
 			// 该函数返回的对象为该模块内的数据绑定，包括变量和方法
 			init : function () {
+				console.log( "sera init" );
+
 				return {
 					sera : "test tips"
 				};
+			},
+
+			mounted : function () {
+				console.log( "sera mounted" );
 			},
 
 			unmount : function () {

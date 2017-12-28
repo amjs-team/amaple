@@ -1,4 +1,4 @@
-import { type, extend, foreach, noop, isPlainObject, isEmpty, timestamp } from "../func/util";
+import { type, extend, foreach, noop, isPlainObject, isEmpty } from "../func/util";
 import { query, attr } from "../func/node";
 import { queryModuleNode, parseGetQuery } from "../func/private";
 import require from "../require/core";
@@ -328,9 +328,9 @@ extend ( ModuleLoader, {
 		//////////////////////////////////////////////////
 		const 
 			baseURL = configuration.getConfigure ( "baseURL" ).module,
-			moduleConfig = configuration.getConfigure ( "module" );
+			suffix = configuration.getConfigure ( "moduleSuffix" );
 		path = path.substr ( 0, 1 ) === "/" ? baseURL.substr ( 0, baseURL.length - 1 ) : baseURL + path;
-		path += moduleConfig.suffix + args;
+		path += suffix + args;
 
 		const 
 			historyModule = cache.getModule ( path ),
@@ -350,8 +350,7 @@ extend ( ModuleLoader, {
 				};
 			};
 
-		// 给模块元素添加编号属性，此编号的作用：
-		// 1、用于模块加载时的模块识别
+		// 给模块元素添加编号属性，此编号是用于模块加载时的模块识别
 		let moduleIdentifier = ( historyModule && historyModule.moduleIdentifier ) || 
 							( moduleNode && moduleNode.nodeType === 1 && moduleNode.attr ( identifierName ) );
 		if ( !moduleIdentifier ) {
@@ -361,20 +360,14 @@ extend ( ModuleLoader, {
 		// 加入等待加载队列
 		this.addWaiting ( moduleIdentifier );
 
-		// 并且请求不为post
+		// 请求不为post
 		// 并且已有缓存
-		// 并且缓存未过期
-		// cache已有当前模块的缓存时，才使用缓存
-		if (
-			( !method || method.toUpperCase () !== "POST" )
-			&& historyModule
-			&& ( moduleConfig.expired === 0 || historyModule.time + moduleConfig.expired > timestamp () )
-		) {
+		if ( ( !method || method.toUpperCase () !== "POST" ) && historyModule ) {
 			this.updateTitle ( historyModule.title );
 	        currentStructure.updateFn = function () {
         		moduleNode = type ( moduleNode ) === "function" ? moduleNode () : moduleNode;
-                if ( !moduleNode.attr ( identifierName ) ) {
-                	moduleNode.attr ( identifierName, moduleIdentifier );
+                if ( !moduleNode [ identifierName ] ) {
+                	moduleNode [ identifierName ] = moduleIdentifier;
 
                 	// 调用render将添加的ice-identifier同步到实际node上
                 	moduleNode.render ();
@@ -416,21 +409,15 @@ extend ( ModuleLoader, {
 	        	currentStructure.updateFn = function () {
 	        		moduleNode = type ( moduleNode ) === "function" ? moduleNode () : moduleNode;
 
-		            // 满足缓存条件时缓存模块更新函数
-	            	if ( moduleConfig.cache === true && moduleNode.cache !== false ) {
-		            	cache.pushModule ( path, {
-		            		title,
-		            		updateFn, 
-		            		time : timestamp (),
-		            		moduleIdentifier
-		            	} );
-	                }
+		            // 缓存模块
+		            cache.pushModule ( path, {
+		            	title,
+		            	updateFn, 
+		            	moduleIdentifier
+		            } );
 
-	                if ( !moduleNode.attr ( identifierName ) ) {
-	                	moduleNode.attr ( identifierName, moduleIdentifier );
-
-	                	// 调用render将添加的ice-identifier同步到实际node上
-	                	moduleNode.render ();
+	                if ( !moduleNode [ identifierName ] ) {
+	                	moduleNode [ identifierName ] = moduleIdentifier;
 	                }
 
 	        		updateFn ( ice, { moduleNode, moduleFragment: updateFn.moduleFragment.clone (), NodeTransaction, require, signCurrentRender, flushChildren : flushChildren ( this ) } );

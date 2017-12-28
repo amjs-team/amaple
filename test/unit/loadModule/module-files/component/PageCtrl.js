@@ -1,11 +1,15 @@
 ice.class ( "PageCtrl" ).extends ( ice.Component ) ( {
-	init () {
+	constructor : function () {
+		this.__super ();
+		this.depComponents = [ Num ];
+	},
+	init : function () {
 		return {
 			desc : "this is a PageCtrl component"
 		};
 	},
-	render () {
-		this.template ( "<span>{{ desc }}</span>" ).
+	render : function () {
+		this.template ( "<span>{{ desc }}</span><num></num>" ).
 		style ( {
 			span : { color : "pink" }
 		} );

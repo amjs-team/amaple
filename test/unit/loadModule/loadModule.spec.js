@@ -1,4 +1,4 @@
-import ice from "ice";
+import ice, { startRouter } from "ice";
 
 describe ( "ice test =>", () => {
 
@@ -6,13 +6,8 @@ describe ( "ice test =>", () => {
 		document.body.innerHTML = `<div :module></div><div :module="tips"></div>`;
 
 		window.ice = ice;
-		ice.startRouter ( {
+		startRouter ( {
 			history : ice.BROWSER,
-			module : {
-				cache : true,
-				expired : 3000,
-				// suffix: ".ice",
-			},
 			plugin : [ "demoPlugin" ],
 			baseURL : {
 				module : "module",
@@ -20,6 +15,8 @@ describe ( "ice test =>", () => {
 				plugin : "plugin"
 			},
 			routes : function ( router ) {
+
+				// default模块路由设置
 				router.module ()
 				.route ( [ "/debug", "/table" ], "index/table" )
 				.route ( "/login", "login/login", childRouter => {
@@ -28,6 +25,8 @@ describe ( "ice test =>", () => {
 				.route ( "/forget_pwd", "index/forget_pwd" )
 				.route ( "/error404", "error/404" );
 
+
+				// tips模块路由设置
 				router.module ( "tips" )
 				.route ( [ "/debug", "/table" ], "index/sera" );
 

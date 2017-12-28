@@ -1,6 +1,7 @@
 import { foreach, isEmpty, type, noop } from "./func/util";
 import { classErr } from "./error";
 import Loader from "./require/Loader";
+import cache from "./cache/core";
 
 const 
 	rconstructor = /^(?:constructor\s*|function\s*)?(?:constructor\s*)?\((.*?)\)\s*(?:=>\s*)?{([\s\S]*)}$/,
@@ -113,24 +114,7 @@ export default function Class ( clsName ) {
 	let _superClass;
 
 	function classDefiner ( proto ) {
-		let customConstructor = proto.constructor;
-		const 
-			constructor = function ( ...args ) {
-        	try {
-        		( customConstructor || noop ).apply ( this, args );
-            }
-        	catch ( e ) {
-            	customConstructor = ( new Function ( "return " + customConstructor.toString ().replace ( /this\.depComponents\s*\((.+?)\)/, ( match, rep ) => {
-					return match.replace ( rep, rep.split ( "," )
-					.map ( item => "\"" + item.trim () + "\"" )
-					.join ( "," ) );
-				} ) ) ) ();
-            	
-            	customConstructor.apply ( this, args );
-            }
-        };
-    	// proto.constructor = proto.constructor || noop;
-
+		const constructor = proto.hasOwnProperty ( "constructor" ) ? proto.constructor : noop;
 		let fnBody = `return function ${ clsName } (`,
 			mustNew = `newClassCheck(this, ${ clsName });`,
 			constructMatch = rconstructor.exec ( proto.constructor.toString () || "" ) || [],
@@ -196,6 +180,7 @@ export default function Class ( clsName ) {
     	// 单页模式下将会临时保存Loader
 		if ( Loader.isRequiring ) {
 			Loader.currentLoaded = classFn;
+			cache.pushComponent ( Loader.getCurrentPath (), classFn );
 		}
 
 		return classFn;

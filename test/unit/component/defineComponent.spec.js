@@ -1,4 +1,4 @@
-import Component from "core/component/core";
+import { Component } from "ice";
 import Class from "src/Class";
 import ViewModel from "src/core/ViewModel";
 import { attr } from "src/func/node";

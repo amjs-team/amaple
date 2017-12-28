@@ -1,6 +1,8 @@
 import { extend, foreach } from "../func/util";
 import { attr } from "../func/node";
 import { getFunctionName } from "../func/private";
+import slice from "../var/slice";
+import cache from "../cache/core";
 
 /**
 	Loader ( load: Object )
@@ -143,6 +145,58 @@ extend ( Loader, {
 	},
 
 	/**
+			getCurrentPath ()
+		
+			Return Type:
+			Object
+		
+			Description:
+			获取当前正在执行的依赖名与对应的依赖加载器编号
+		 	此方法使用报错的方式获取错误所在路径，使用正则表达式解析出对应依赖信息
+		
+			URL doc:
+			http://icejs.org/######
+		*/
+		getCurrentPath () {
+			const anchor = document.createElement ( "a" );
+	    	if ( document.currentScript ) {
+
+	    		// Chrome, Firefox, Safari高版本
+	        	anchor.href = document.currentScript.src;
+	        }
+	    	else {
+
+	        	// IE10+, Safari低版本, Opera9
+	        	try {
+					____a.____b();
+				} catch ( e ) {
+					const stack = e.stack || e.sourceURL || e.stacktrace;
+	            	if ( stack ) {
+	            		const 
+	            			stackArray = e.stack.match ( /(?:http|https|file):\/\/.*?\/.+?\.js/g ) || [],
+	            			length = stackArray.length;
+	            		if ( length > 0 ) {
+	            			anchor.href = stackArray [ length - 1 ];
+	            		}
+	                }
+	            	else {
+
+	                	// IE9
+	                	const scripts = slice.call ( document.querySelectorAll ( "script" ) );
+	                	for ( let i = scripts.length - 1, script; script = scripts [ i-- ]; ) {
+	                    	if ( script.readyState === "interative" ) {
+	                        	anchor.href = script.src;
+	                        	break;
+	                        }
+	                    }
+	                }
+				}
+	        }
+
+	        return ( anchor.pathname.match ( /^(.*?).js$/ ) || [ "", "" ] ) [ 1 ];
+		},
+
+	/**
 		onScriptLoaded ( event: Object )
 	
 		Return Type:
@@ -158,10 +212,11 @@ extend ( Loader, {
 	onScriptLoaded ( e ) {
 
 		const
-        	loadID = attr ( e.target, Loader.loaderID ),
-        	depName = attr ( e.target, Loader.depName ),
+			target = e.target,
+        	loadID = attr ( target, Loader.loaderID ),
+        	depName = attr ( target, Loader.depName ),
 			curLoader = Loader.loaderMap [ loadID ];
-		
+
 		curLoader.loadedModule [ depName ] = curLoader.getLoadedModule ( depName );
 		if ( curLoader.dropWaiting ( depName ) === 0 ) {
 

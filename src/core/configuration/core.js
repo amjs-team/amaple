@@ -34,18 +34,11 @@ export default function configuration ( params ) {
 		params.baseURL = defaultParams.baseURL;
 	}
 
-	if ( type ( params.module ) === "object" ) {
-		foreach ( defaultParams.module, ( item, name ) => {
-			if ( !params.module.hasOwnProperty ( name ) ) {
-				params.module [ name ] = defaultParams.module [ name ];
-			}
-			else if ( name === "suffix" ) {
-				params.module [ name ] = params.module [ name ].substr ( 0, 1 ) === "." ? params.module [ name ] : "." + params.module [ name ];
-			}
-		} );
+	if ( params.moduleSuffix ) {
+		params.moduleSuffix = params.moduleSuffix.substr ( 0, 1 ) === "." ? params.moduleSuffix : "." + params.moduleSuffix;
 	}
 	else {
-		params.module = defaultParams.module;
+		params.moduleSuffix = defaultParams.moduleSuffix;
 	}
 
 	// params.stateSymbol = allowState.indexOf ( params.stateSymbol ) === -1 ? allowState [ 0 ] : params.stateSymbol;

@@ -39,7 +39,7 @@ describe ( "class =>", () => {
 				this.name = "Grake";
 			},
 			introduce () {
-				return "my name is " + this.name + ", I have " + this.handCount + " hands, and I have " + this.headCount + " head";
+				return `My name is ${ this.name }, I have ${ this.handCount } hands, and I have ${ this.headCount } head`;
 			}
 		} );
 
@@ -48,6 +48,21 @@ describe ( "class =>", () => {
 		expect ( g.handCount ).toBe ( 2 );
 		expect ( g.headCount ).toBe ( 1 );
 		expect ( g.say ( "hello" ) ).toBe ( "say: hello" );
-		expect ( g.introduce () ).toBe ( "my name is Grake, I have 2 hands, and I have 1 head" );
+		expect ( g.introduce () ).toBe ( "My name is Grake, I have 2 hands, and I have 1 head" );
+	} );
+
+	it ( "define class with constructor args", () => {
+		let People = Class ( "People" ) ( {
+			constructor ( name, age ) {
+				this.name = name;
+				this.age = age;
+			},
+			introduce () {
+				return `My name is ${ this.name }, my age is ${ this.age } years old`;
+			}
+		} );
+
+		let p = new People ( "Grake", 18 );
+		expect ( p.introduce () ).toBe ( "My name is Grake, my age is 18 years old" );
 	} );
 } );

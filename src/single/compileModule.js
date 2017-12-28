@@ -204,6 +204,7 @@ function parseScript ( moduleString, scriptPaths, scriptNames, parses ) {
 		rscript = /<script(?:.*?)>([\s\S]+)<\/script>/i,
 		rscriptComment = /\/\/(.*?)\n|\/\*([\s\S]*?)\*\//g,
 		rimport = /\s*(?:(?:(?:var|let|const)\s+)?(.+?)\s*=\s*)?import\s*\(\s*["'](.*?)["']\s*\)(?:\s*[,;])?/g,
+		rcomponent = /\s*(?:(?:(?:var|let|const)\s+)?(.+?)\s*=\s*)?ice\s*\.\s*class\s*\(\s*["'`].+?["'`]\s*\)\s*\.\s*extends\s*\(\s*ice\s*\.\s*Component\s*\)/,
 		rhtmlComment = /<!--(.*?)-->/g,
 		rmoduleDef 	= /new\s*ice\s*\.\s*Module\s*\(/,
 		raddComponents = new RegExp ( rmoduleDef.source + "\\s*\\{" ),
@@ -219,34 +220,44 @@ function parseScript ( moduleString, scriptPaths, scriptNames, parses ) {
 		// 获取import的script
 		parses.script = matchScript.replace ( rimport, ( match, scriptName, scriptPath ) => {
 			if ( !scriptName ) {
-				throw moduleErr ( "import", `import("${ scriptPath }")返回的组件衍生类需被一个变量接收，否则可能因获取不到此组件而导致解析出错` );
+				throw moduleErr ( "import", `import("${ scriptPath }")返回的组件衍生类需被一个变量接收，否则可能因获取不到此组件而导致执行出错` );
 			}
-			scripts [ scriptName ] = scriptPath;
+			// scripts [ scriptName ] = scriptPath;
+			scriptNames.import.push ( scriptName );
+			scriptPaths.push ( scriptPath );
 			return "";
 		} ).trim ();
 
+		parses.script = parses.script.replace ( rcomponent, ( match, rep ) => {
+			scriptNames.native.push ( rep );
+			return match.replace ( rep, `${ rep }=window.${ rep }` );
+		} );
+
 		// 如果有引入组件则将组件传入new ice.Module中
-    	if ( !isEmpty ( scripts ) ) {
+		const allScriptNames = scriptNames.native.concat ( scriptNames.import );
+    	if ( !isEmpty ( allScriptNames ) ) {
 
     		// 去掉注释的html的代码
     		const matchView = parses.view.replace ( rhtmlComment, match => "" );
+    		const deps = [];
+    		foreach ( allScriptNames, name => {
 
-    		foreach ( scripts, ( path, name ) => {
-
-    			// 只有在view中有使用的component才会被使用
+    			// 只有在view中有使用的component才会被此module依赖
     			if ( new RegExp ( "<\s*" + transformCompName ( name, true ) ).test ( matchView ) ) {
-    				scriptPaths.push ( path );
-    				scriptNames.push ( name );
+    				deps.push ( name );
     			}
     		} );
 
     		// 需要组件时才将组件添加到对应模块中
-    		if ( !isEmpty ( scriptNames ) ) {
-    			parses.script = parses.script.replace ( raddComponents, match => match + `depComponents:[${ scriptNames.join( "," ) }],` );
+    		if ( !isEmpty ( deps ) ) {
+    			parses.script = parses.script.replace ( raddComponents, match => match + `depComponents:[${ deps.join( "," ) }],` );
     		}
     	}
 
 		parses.script = parses.script.replace ( rmoduleDef, match => `${ match }args.moduleNode,` );
+	}
+	else {
+		parses.script = "";
 	}
 
 	return moduleString;
@@ -275,7 +286,7 @@ export default function compileModule ( moduleString ) {
 		
 		const
 			parses = {},
-			scriptNames = [],
+			scriptNames = { native: [], import: [] },
 			scriptPaths = [];
 
 		// 解析出Module标签内的属性
@@ -321,8 +332,10 @@ export default function compileModule ( moduleString ) {
 		if ( !isEmpty ( scriptPaths ) ) {
 			let addToWindow = "",
 				delFromWindow = "";
-			foreach ( scriptNames, name => {
+			foreach ( scriptNames.import, name => {
 				addToWindow += `window.${ name }=${ name };`;
+			} );
+			foreach ( scriptNames.native.concat ( scriptNames.import ), name => {
 				delFromWindow += `delete window.${ name };`;
 			} );
 
@@ -331,7 +344,7 @@ export default function compileModule ( moduleString ) {
 				scriptPaths [ i ] = `"${ componentBaseURL + path }"`;
 			} );
 
-			moduleString += `args.require([${ scriptPaths.join ( "," ) }],function(${ scriptNames.join ( "," ) }){
+			moduleString += `args.require([${ scriptPaths.join ( "," ) }],function(${ scriptNames.import.join ( "," ) }){
 				${ addToWindow }
 				${ buildView }
 				${ parses.script };

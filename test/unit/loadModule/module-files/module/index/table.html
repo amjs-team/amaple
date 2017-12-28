@@ -7,6 +7,7 @@
 		</div>
 		<div :else-if="show === 2">
 			<input type="checkbox" :model="title" value="UserName"><label>UserName</label>
+			<num></num>
 		</div>
 		<div :else>
 			<input type="checkbox" :model="title" value="Avatar"><label>Avatar</label>
@@ -32,8 +33,30 @@
 		var EditTable = import ( "EditTable" );
 		const PageCtrl = import ( "PageCtrl" );
 
+		var Num = ice.class ( "Num" ).extends ( ice.Component ) ( {
+			constructor : function () {
+				this.__super ();
+				this.depComponent = [ Num ];
+			},
+			init : function () {
+				return {
+					num : 1,
+					add : function () {
+						this.num ++;
+					}
+				};
+			},
+			render : function () {
+				this.template ( "<span :onclick='add'>num:{{ num }}</span>" ).
+				style ( {
+					span : { background : "pink", cursor: "pointer" }
+				} );
+			}
+		} );
+
 		var table = new ice.Module ( {
 			init : function () {
+				console.log( "table init" );
 
 				return {
 					// 绑定变量与绑定函数直接写返回对象内
@@ -66,6 +89,7 @@
 
 			mounted : function ( demoPlugin ) {
 				this.state.postData = JSON.stringify ( demoPlugin );
+				console.log( "table mounted" );
 			},
 
 			unmount : function () {

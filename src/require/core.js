@@ -55,7 +55,8 @@ export default function require ( deps, factory, moduleType ) {
 
 	// 遍历依赖，如果依赖未被加载，则放入waiting中等待加载完成
 	foreach ( deps, depStr => {
-		if ( !getCache ( depStr ) ) {
+		const dep = getCache ( depStr );
+		if ( !dep ) {
 
 			// 放入待加载列表中等待加载
 			loadObj.putWaiting ( depStr );
@@ -70,6 +71,9 @@ export default function require ( deps, factory, moduleType ) {
 			appendScript ( script, Loader.onScriptLoaded );
 
 			loadingCount ++;
+		}
+		else {
+			loadObj.loadedModule [ depStr ] = dep;
 		}
 	} );
 

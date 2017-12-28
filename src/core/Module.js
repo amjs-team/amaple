@@ -15,7 +15,7 @@ import VNode from "./vnode/VNode";
 import NodeTransaction from "./vnode/NodeTransaction";
 
 // 模块标识名
-export const identifierName = "ice-identifier";
+export const identifierName = "moduleIdentifier";
 	
 /**
 	getIdentifier ()
