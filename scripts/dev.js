@@ -3,7 +3,7 @@ const version 	= require ( "../package.json" ).version;
 
 const banner 	= `/**
  * iceJS v${version}
- * (c) 2017-${ Date.prototype.getFullYear() } JOU http://icejs.org
+ * (c) 2017-${ Date.prototype.getFullYear () } JOU http://icejs.org
  * License: MIT
  */`;
 

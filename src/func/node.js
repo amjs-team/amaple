@@ -161,7 +161,7 @@ export function append ( context, node, callback ) {
 	}
 	else if ( tnode === "object" ) {
 		// node.nodeType && nodes.push ( node );
-		context.appendChild(node);
+		context.appendChild ( node );
 	}
 	else {
 		fragment = document.createDocumentFragment (),
@@ -305,15 +305,15 @@ export function serialize ( form, serializePrivate ) {
 			type = inputItem.type || attr ( inputItem, "type" );
 
 		if ( name && !attr ( inputItem, "disabled" ) 
-			&& rsubmittable.test( inputItem.nodeName ) 
+			&& rsubmittable.test ( inputItem.nodeName ) 
 			&& ( serializePrivate !== false || !rprivateType.test ( type ) ) 
-			&& !rsubmitterTypes.test( type ) 
-			&& ( inputItem.checked || !rcheckableType.test( type ) ) 
+			&& !rsubmitterTypes.test ( type ) 
+			&& ( inputItem.checked || !rcheckableType.test ( type ) ) 
 		) {
 			const val = inputItem.value.replace ( rCRLF, "\r\n" );
 			if ( type === "checkbox" ) {
 				formObject [ name ] = formObject [ name ] || [];
-				formObject [ name ].push ( val )
+				formObject [ name ].push ( val );
 			}
 			else {
 				formObject [ name ] = val;

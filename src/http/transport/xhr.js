@@ -28,7 +28,8 @@ export default function () {
 				xhr = this.xhr = ( () => {
 					try {
 						return new XMLHttpRequest ();
-					} catch ( e ) {}
+					}
+					catch ( e ) {}
 				} ) ();
 
 			if ( options.crossDomain && !"withCredentials" in xhr ) {
@@ -39,7 +40,7 @@ export default function () {
 
 			// 覆盖原有的mimeType
 			if ( options.mimeType && xhr.overrideMimeType ) {
-				xhr.overrideMimeType( options.mimeType );
+				xhr.overrideMimeType ( options.mimeType );
 			}
 
 			xhr.setRequestHeader ( "X-Requested-With", "XMLHTTPRequest" );
@@ -51,7 +52,7 @@ export default function () {
             if ( type ( options.abort ) === "function" && event.support ( "abort", xhr ) ) {
             	xhr.onabort = function () {
             		options.abort ( this.statusText );
-            	}
+            	};
             }
 
             if ( event.support ( "error", xhr ) ) {
@@ -60,7 +61,7 @@ export default function () {
 					iceXHR.transport.status = xhr.status === 1223 ? 204 : xhr.status;
 
             		self.done ( iceXHR );
-            	}
+            	};
             }
             else {
             	xhr.onreadystatechange = function () {
@@ -72,13 +73,14 @@ export default function () {
             			self.done ( iceXHR );
 
             		}
-            	}
+            	};
             }
 
             // 发送请求
             try {
             	xhr.send ( options.hasContent && options.data || null );
-            } catch ( e ) {
+            }
+            catch ( e ) {
             	throw requestErr ( "send", e );
             }
 		},
@@ -97,7 +99,7 @@ export default function () {
 		*/
 		done ( iceXHR ) {
 
-			var xhr = this.xhr;
+			const xhr = this.xhr;
 
 			xhr.onload = xhr.onerror = xhr.onreadystatechange = null;
 

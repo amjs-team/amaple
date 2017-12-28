@@ -1,29 +1,29 @@
 <Module :title="登录">
 	<template>
 		<div>
-		<form action="/post/login" name="login_form" method="post">
-			<ul>
-				<li>
-					<label>{{ luserName }}</label><input type="text" name="user_name" :model="userName" />
-					<span>{{ userName }}</span>
-				</li>
-				<li>
-					<label>{{ lpwd }}</label><input type="password" name="password" :model="password" />
-					<span>{{ password }}</span>
-				</li>
-				<li :for="item in checkList">
-					<input type="checkbox" name="checkList" value="{{ item }}">
-					</label>{{ item }}</label>
-				</li>
-				<li>
-					<!-- <submit-button text="{{ btnOpts.btnText }}"></submit-button> -->
-					<input type="submit" value="{{ btnOpts.btnText }}">
-				</li>
-				<li>{{ query }}</li>
-			</ul>
-		</form>
-		<a href="/login/bb?g=1&c=2">btn</a>
-		<div :module></div>
+			<form action="/post/login" name="login_form" method="post">
+				<ul>
+					<li>
+						<label>{{ luserName }}</label><input type="text" name="user_name" :model="userName" />
+						<span>{{ userName }}</span>
+					</li>
+					<li>
+						<label>{{ lpwd }}</label><input type="password" name="password" :model="password" />
+						<span>{{ password }}</span>
+					</li>
+					<li :for="item in checkList">
+						<input type="checkbox" name="checkList" value="{{ item }}">
+						</label>{{ item }}</label>
+					</li>
+					<li>
+						<!-- <submit-button text="{{ btnOpts.btnText }}"></submit-button> -->
+						<input type="submit" value="{{ btnOpts.btnText }}">
+					</li>
+					<li>{{ query }}</li>
+				</ul>
+			</form>
+			<a href="/login/bb?g=1&c=2">btn</a>
+			<div :module></div>
 		</div>
 	</template>
 

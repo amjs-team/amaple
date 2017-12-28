@@ -210,6 +210,7 @@ extend ( ModuleLoader.prototype, {
 		            	moduleNode = VNode.domToVNode ( moduleNode );
 		            	const tmpl = new Tmpl ( {}, [], {} );
                 		tmpl.mount ( moduleNode, true );
+                		moduleNode.render ();
 
 		                route.moduleNode = moduleNode;
 		            }
@@ -224,7 +225,7 @@ extend ( ModuleLoader.prototype, {
 		                	else {
 		                		throw moduleErr ( "moduleNode", `找不到加载路径为"${ route.modulePath }"的模块node` );
 		                	}
-		                }
+		                };
 		            }
 		        }
 
@@ -345,7 +346,7 @@ extend ( ModuleLoader, {
 								child.updateFn ();
 								delete child.updateFn;
 							}
-						} )
+						} );
 					}
 				};
 			};

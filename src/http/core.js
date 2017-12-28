@@ -98,7 +98,7 @@ function request ( method ) {
 
 	    		// 合并参数
 	    		return extend ( {}, defaultOptions, params );
-	    	}
+	    	};
 	    } ) ( method ),
 
 		//////////////////////////////////////////////////////////////////////
@@ -127,7 +127,7 @@ function request ( method ) {
 		URL doc:
 		http://icejs.org/######
 	*/
-	return function ( ...args ) {
+	return ( ...args ) => {
 
 		let // 合并参数
 			options = extendOptions ( args ),
@@ -154,7 +154,8 @@ function request ( method ) {
 				// 如果支持FormData则使用此对象进行数据提交
 				try {
 					options.data = new FormData ( data );
-				} catch ( e ) {
+				}
+				catch ( e ) {
 
 					let hasFile;
 
@@ -206,7 +207,8 @@ function request ( method ) {
 			try {
 				options.crossDomain = originAnchor.protocol + "//" + originAnchor.host !==
 									urlAnchor.protocol + "//" + urlAnchor.host;
-			} catch ( e ) {
+			}
+			catch ( e ) {
 				options.crossDomain = true;
 			}
 		}
@@ -299,7 +301,7 @@ function request ( method ) {
 
 			iceXHR.transport.send ( options, iceXHR );
 		} );
-	}
+	};
 }
 
 

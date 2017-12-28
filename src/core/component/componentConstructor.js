@@ -6,6 +6,7 @@ import { rexpr, rvar, noUnitHook } from "../../var/const";
 import { componentErr } from "../../error";
 import Subscriber from "../Subscriber";
 import ValueWatcher from "../ValueWatcher";
+import ViewModel from "../ViewModel";
 import NodeTransaction from "../vnode/NodeTransaction";
 import VFragment from "../vnode/VFragment";
 
@@ -28,19 +29,23 @@ function validateProp ( prop, validate ) {
     let isPass = false;
     const tvalidate = type ( validate );
 
-    // 类型验证
     if ( dataType.indexOf ( validate ) >= 0 ) {
-        isPass = prop.constructor === validate;
-    }
 
-    // 正则表达式验证
+        // 类型验证
+        if ( prop !== undefined && prop !== null ) {
+
+            // 动态props的Object类型数据一般会被转换为ViewModel类型的对象
+            isPass = prop.constructor === validate || prop.constructor === ViewModel;
+        }
+    }
     else if ( validate instanceof RegExp ) {
+
+        // 正则表达式验证
         isPass = validate.test ( prop );
     }
-
-    // 多个值的验证
     else if ( tvalidate === "array" ) {
 
+        // 多个值的验证
         // 如果验证参数为数组，则满足数组中任意一项即通过
         foreach ( validate, v => {
             isPass = isPass || !!validateProp ( prop, v );
@@ -49,9 +54,9 @@ function validateProp ( prop, validate ) {
             }
         } );
     }
-
-    // 方法验证
     else if ( tvalidate === "function" ) {
+
+        // 方法验证
         isPass = validate ( prop );
     }
 
@@ -189,7 +194,7 @@ export default {
 
                 // 钩子函数调用
                 hookFn ();
-            }
+            };
         } );
     },
 

@@ -7,12 +7,21 @@
   "keywords": [
     "ice",
     "icejs",
+    "javascript",
     "state-based",
     "spa"
   ],
   "repository": {
     "type": "git",
     "url": "https://github.com/icejs-team/icejs.git"
+  },
+  "scripts": {
+    "build": "rollup -c scripts/build.js",
+    "dev": "rollup -w -c scripts/dev.js",
+    "test:unit": "karma start test/unit/karma.unit.conf.js",
+    "test:sauce": "karma start test/unit/karma.sauce.conf.js firefoxs && karma start test/unit/karma.sauce.conf.js chromes && karma start test/unit/karma.sauce.conf.js ies && karma start test/unit/karma.sauce.conf.js safaris && karma start test/unit/karma.sauce.conf.js mobiles",
+    "commit": "git-cz",
+    "lint": "eslint src scripts"
   },
   "dependencies": {
     "cheerio": "^1.0.0-rc.2"
@@ -26,6 +35,7 @@
     "babel-preset-es2015-rollup": "^3.0.0",
     "commitizen": "^2.9.6",
     "cz-conventional-changelog": "^2.1.0",
+    "eslint": "^4.14.0",
     "jasmine-core": "^2.6.4",
     "karma": "^1.7.0",
     "karma-chrome-launcher": "^2.1.1",
@@ -41,13 +51,6 @@
     "rollup-plugin-babel": "^2.7.1",
     "rollup-watch": "^4.0.0",
     "webpack": "^3.3.0"
-  },
-  "scripts": {
-    "build": "rollup -c scripts/build.js",
-    "dev": "rollup -w -c scripts/dev.js",
-    "test:unit": "karma start test/unit/karma.unit.conf.js",
-    "test:sauce": "karma start test/unit/karma.sauce.conf.js firefoxs && karma start test/unit/karma.sauce.conf.js chromes && karma start test/unit/karma.sauce.conf.js ies && karma start test/unit/karma.sauce.conf.js safaris && karma start test/unit/karma.sauce.conf.js mobiles",
-    "commit": "git-cz"
   },
   "config": {
     "commitizen": {

@@ -184,8 +184,12 @@ extend ( Promise.prototype, {
 					const result = type ( onFulfilled ) === "function" && onFulfilled.apply ( null, args ) || args;
 					if ( Promise.isThenable ( result ) ) {
 						result.then (
-							( ...args ) => { resolve.apply ( null, args ); },
-							( ...args ) => { reject.apply ( null, args ); }
+							( ...args ) => {
+								resolve.apply ( null, args );
+							},
+							( ...args ) => {
+								reject.apply ( null, args );
+							}
 						);
 					}
 				},

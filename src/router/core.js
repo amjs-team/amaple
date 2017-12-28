@@ -230,7 +230,7 @@ extend ( Router, {
             // 如果路径表达式为""时需在结尾增加"$"符号才能正常匹配到
             foreach ( pathExpr, ( exprItem, i ) => {
                 if ( exprItem === "" || exprItem === "/" ) {
-                    pathExpr [ i ] += "$"
+                    pathExpr [ i ] += "$";
                 }
             } );
             

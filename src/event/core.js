@@ -255,7 +255,7 @@ export default {
 						if ( v.indexOf ( t ) !== -1 ) {
 							eventType = k;
 						}
-					} )
+					} );
 					const e = document.createEvent ( eventType || "CustomEvent" );
 					e.initEvent ( t, true, false );
 

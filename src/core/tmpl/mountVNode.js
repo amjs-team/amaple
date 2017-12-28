@@ -190,7 +190,7 @@ export default function mountVNode ( vnode, tmpl, mountModule, isRoot = true ) {
 		if ( firstChild && !forOrIfExpr ) {
 			compileHandlers = concatHandler ( compileHandlers, mountVNode ( firstChild, tmpl, true, false ) );
 		}
-	} while ( !isRoot && ( vnode = vnode.nextSibling () ) )
+	} while ( !isRoot && ( vnode = vnode.nextSibling () ) );
 
 	return compileHandlers;
 }

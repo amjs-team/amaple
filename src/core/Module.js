@@ -105,7 +105,12 @@ function initModuleLifeCycle ( module, vmData ) {
 	URL doc:
 	http://icejs.org/######
 */
-export default function Module ( moduleElem, vmData = { init: function () { return {}; } } ) {
+export default function Module ( moduleElem, vmData ) {
+	vmData = vmData || {
+		init: function () {
+			return {};
+		}
+	};
 
 	newClassCheck ( this, Module );
 	
@@ -118,7 +123,7 @@ export default function Module ( moduleElem, vmData = { init: function () { retu
 		check ( vmData ).type ( "object" ).check ( vmData.init ).type ( "function" ).ifNot ( "Module", "vmData参数必须为带有init方法的的object" ).do ();
 	}
 	else {
-		throw argErr ( "Module", "module参数可传入模块元素的:module属性值或直接传入需挂在模块元素" )
+		throw argErr ( "Module", "module参数可传入模块元素的:module属性值或直接传入需挂在模块元素" );
 	}
   	
   	/////////////////////////////////

@@ -14,14 +14,14 @@
 		</div>
 
 		<div class="abc">{{ title }} {{ content }}</div>
-		<a href="/login/aa?a=1&b899=2">{{ btn }}{{ postData }}</a>
+		<a href="/login/aa?a=1&b899=2">{{ btn }}{{ pluginData }}</a>
 		<button :onclick="changeData">Change</button>
 		<a href="/forget_pwd">{{ btn }}_404</a>
 		<ul id="a87">
 			<li :for="(t, k) in title">{{ t }}_{{ k }}
 			</li>
 		</ul>
-		<edit-table></edit-table>
+		<edit-table post="{{ post }}"></edit-table>
 		<page-ctrl></page-ctrl>
 		<hr />
 		<!-- 模块页面模板 -->
@@ -47,7 +47,7 @@
 				};
 			},
 			render : function () {
-				this.template ( "<span :onclick='add'>num:{{ num }}</span>" ).
+				this.template ( "<span :onclick='add'>num:<span>{{ num }}</span></span>" ).
 				style ( {
 					span : { background : "pink", cursor: "pointer" }
 				} );
@@ -75,7 +75,8 @@
 						current 	: "current"
 					},
 					btn: "Button",
-					postData: "",
+					pluginData: "",
+					post : this.post,
 					show: 2,
 
 	                changeData : function () {
@@ -88,7 +89,7 @@
 			},
 
 			mounted : function ( demoPlugin ) {
-				this.state.postData = JSON.stringify ( demoPlugin );
+				this.state.pluginData = JSON.stringify ( demoPlugin );
 				console.log( "table mounted" );
 			},
 

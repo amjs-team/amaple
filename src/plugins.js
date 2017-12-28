@@ -11,7 +11,7 @@ cache.pushPlugin ( "event", {
 		event.on ( undefined, types, listener, false, once );
 	},
 	remove ( types, listener ) {
-		event.remove ( undefined, types, listener, false, );
+		event.remove ( undefined, types, listener, false );
 	},
 	emit ( types ) {
 		event.emit ( undefined, types );

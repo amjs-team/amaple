@@ -250,7 +250,7 @@ function parseScript ( moduleString, scriptPaths, scriptNames, parses ) {
 
     		// 需要组件时才将组件添加到对应模块中
     		if ( !isEmpty ( deps ) ) {
-    			parses.script = parses.script.replace ( raddComponents, match => match + `depComponents:[${ deps.join( "," ) }],` );
+    			parses.script = parses.script.replace ( raddComponents, match => match + `depComponents:[${ deps.join ( "," ) }],` );
     		}
     	}
 

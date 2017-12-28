@@ -88,7 +88,7 @@ extend ( Loader.prototype, {
 		// 返回注入后工厂方法
 		return () => {
 			this.load.factory.apply ( {}, deps );
-		}
+		};
 	},
 
 	/**
@@ -168,8 +168,9 @@ extend ( Loader, {
 
 	        	// IE10+, Safari低版本, Opera9
 	        	try {
-					____a.____b();
-				} catch ( e ) {
+					____a.____b ();
+				}
+				catch ( e ) {
 					const stack = e.stack || e.sourceURL || e.stacktrace;
 	            	if ( stack ) {
 	            		const 

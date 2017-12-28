@@ -78,7 +78,7 @@ export default {
 
 	// 添加页面模块缓存
 	pushModule ( name, d ) {
-		module.push ( name, d )
+		module.push ( name, d );
 	},
 
 	// 获取页面模块缓存

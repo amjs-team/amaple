@@ -190,7 +190,7 @@ export default function Class ( clsName ) {
 	classDefiner.extends = ( superClass ) => {
 
     	// superClass需要为函数类型，否则会报错
-    	if ( type ( superClass ) !== 'function' && superClass !== null ) {
+    	if ( type ( superClass ) !== "function" && superClass !== null ) {
         	throw classErr ( "extends", "Class extends value is not a constructor or null" );
     	}
     	

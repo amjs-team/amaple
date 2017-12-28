@@ -28,7 +28,7 @@ function createVNode ( watcher, arg, index ) {
     itemNode.key = key;
     
     if ( elem.conditionElems ) {
-        const conditionElems = [ itemNode ]
+        const conditionElems = [ itemNode ];
         itemNode.conditionElems = conditionElems;
         foreach ( elem.conditionElems, ( nextSib, i ) => {
             if ( i > 0 ) {

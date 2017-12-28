@@ -48,7 +48,7 @@ export function parseGetQuery ( getString ) {
 	const getObject = {};
 	if ( getString ) {
 		let kv;
-		foreach ( ( getString.substr( 0, 1 ) === "?" ? getString.substr( 1 ) : getString ).split ( "&" ), getObjectItem => {
+		foreach ( ( getString.substr ( 0, 1 ) === "?" ? getString.substr ( 1 ) : getString ).split ( "&" ), getObjectItem => {
 	    	kv = getObjectItem.split ( "=" );
 	    	getObject [ kv [ 0 ] ] = kv [ 1 ] || "";
 	    } );
@@ -118,7 +118,7 @@ export function walkVDOM ( vdom, callback, ...extra ) {
 			walkVDOM ( vnode.children [ 0 ], callback );
 		}
 
-	} while ( vnode = vnode.nextSibling () )
+	} while ( vnode = vnode.nextSibling () );
 }
 
 /**
@@ -149,9 +149,9 @@ export function queryModuleNode ( moduleName, context ) {
 				break;
 			}
 		}
-	} while ( node = node.nextSibling )
+	} while ( node = node.nextSibling );
 
-	return targetNode
+	return targetNode;
 }
 
 /**

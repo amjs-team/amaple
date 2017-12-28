@@ -29,14 +29,15 @@ export default function complete ( iceXHR ) {
 
 	// 如果存在计时ID，则清除此
 	if ( transport.timeoutID ) {
-		window.clearTimeout( transport.timeoutID );
+		window.clearTimeout ( transport.timeoutID );
 	}
 
 	// 如果解析错误也会报错，并调用error
 	if ( transport.response ) {
 		try {
 			transport.response = ajaxConverters [ transport.dataType ] && ajaxConverters [ transport.dataType ] ( transport.response );
-		} catch ( e ) {
+		}
+		catch ( e ) {
 			transport.status = 500;
 			transport.statusText = "Parse Error: " + e;
 		}

@@ -16,7 +16,7 @@ module.exports = {
 	moduleName: "ice",
 	plugins: [
 		babel ( {
-    		exclude: 'node_modules/**' // 仅仅转译我们的源码
+    		exclude: "node_modules/**" // 仅仅转译我们的源码
     	} )
 	],
 	banner

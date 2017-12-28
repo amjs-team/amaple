@@ -159,7 +159,7 @@ extend ( Tmpl, {
 		const
             scopedVars = {},
             scoped = {
-            	prefix : "ICE_FOR_" + Date.now() + "_",
+            	prefix : "ICE_FOR_" + Date.now () + "_",
                 scopedMounts : [],
                 scopedUnmounts : [],
             },
