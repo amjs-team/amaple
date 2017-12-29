@@ -22,7 +22,7 @@
     "test:sauce": "karma start test/unit/karma.sauce.conf.js firefoxs && karma start test/unit/karma.sauce.conf.js chromes && karma start test/unit/karma.sauce.conf.js ies && karma start test/unit/karma.sauce.conf.js safaris && karma start test/unit/karma.sauce.conf.js mobiles",
     "commit": "git-cz",
     "lint": "eslint src scripts",
-    "init": "npm install && bash scripts/ln.sh"
+    "init": "npm install && bash scripts/hooks.sh"
   },
   "dependencies": {
     "cheerio": "^1.0.0-rc.2"
@@ -51,6 +51,7 @@
     "rollup": "^0.43.0",
     "rollup-plugin-babel": "^2.7.1",
     "rollup-watch": "^4.0.0",
+    "shelljs": "^0.7.8",
     "webpack": "^3.3.0"
   },
   "config": {
