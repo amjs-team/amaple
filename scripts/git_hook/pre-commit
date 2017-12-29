@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+lint_files=$(git diff --cached --name-only --diff-filter=ACM | grep '\.js$')
+
+if [ -n "$lint_files" ]; then
+	./node_modules/.bin/eslint $lint_files
+fi

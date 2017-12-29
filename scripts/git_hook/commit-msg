@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+type_pattern="^Merge.+|(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert|types)(\(.+\))?: .{1,50}"
+
+egrep -iq "type_pattern" "$1"
+if [ "$?" != 0 ]; then
+	echo
+	echo -e "  \033[1;36mError: the commit message must conform to AngularJS's commit message convention.\033[0m"
+	echo
+	echo "  - See https://github.com/conventional-changelog-archived-repos/conventional-changelog-angular/blob/master/convention.md"
+	echo "  - You can use 'npm run commit' to generate a AngularJS's commit message."
+	echo
+	exit 1
+fi
