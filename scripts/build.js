@@ -14,6 +14,10 @@ module.exports = {
 	format: "umd",
 	dest: path.resolve ( __dirname, "../dist/ice." + version + ".js" ),
 	moduleName: "ice",
+	external: [ "cheerio" ],
+	globals: {
+		cheerio: "cheerio"
+	},
 	plugins: [
 		babel ( {
     		exclude: "node_modules/**" // 仅仅转译我们的源码

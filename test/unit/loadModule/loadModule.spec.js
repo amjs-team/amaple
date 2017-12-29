@@ -1,4 +1,4 @@
-import ice, { startRouter } from "ice";
+import ice from "ice";
 
 describe ( "ice test =>", () => {
 
@@ -6,7 +6,7 @@ describe ( "ice test =>", () => {
 		document.body.innerHTML = `<div :module></div><div :module="tips"></div>`;
 
 		window.ice = ice;
-		startRouter ( {
+		ice.startRouter ( {
 			history : ice.BROWSER,
 			plugin : [ "demoPlugin" ],
 			baseURL : {

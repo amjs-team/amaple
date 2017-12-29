@@ -20,7 +20,7 @@ import Component from "./component/core";
 
 
 /////////////////////////////////
-export { Module, Component };
+// export { Module, Component };
 /////////////////////////////////
 
 /**
@@ -36,7 +36,7 @@ export { Module, Component };
 	URL doc:
 	http://icejs.org/######
 */
-export function startRouter ( routerConfig ) {
+function startRouter ( routerConfig ) {
 	check ( routerConfig ).type ( "object" ).ifNot ( "ice.startRouter", "当routerConfig传入参数时，必须为object类型" ).do ();
 
 	// 执行routes配置路由
@@ -160,7 +160,7 @@ export function startRouter ( routerConfig ) {
 	URL doc:
 	http://icejs.org/######
 */
-export function install ( pluginDefinition ) {
+function install ( pluginDefinition ) {
 	check ( pluginDefinition.name )
 		.type ( "string" )
 		.notBe ( "" )
@@ -180,7 +180,7 @@ export function install ( pluginDefinition ) {
 }
 
 
-export default {
+const ice = {
 
 	// 路由模式，启动路由时可进行模式配置
 	// 默认为自动选择路由模式，即在支持html5 history API时使用新特性，不支持的情况下自动回退到hash模式
@@ -209,3 +209,5 @@ export default {
 	// 安装插件
  	install
 };
+
+export default ice;

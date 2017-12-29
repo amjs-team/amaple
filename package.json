@@ -21,8 +21,8 @@
     "test:unit": "karma start test/unit/karma.unit.conf.js",
     "test:sauce": "karma start test/unit/karma.sauce.conf.js firefoxs && karma start test/unit/karma.sauce.conf.js chromes && karma start test/unit/karma.sauce.conf.js ies && karma start test/unit/karma.sauce.conf.js safaris && karma start test/unit/karma.sauce.conf.js mobiles",
     "commit": "git-cz",
-    "lint": "eslint src scripts",
-    "init": "npm install && bash scripts/hooks.sh"
+    "lint": "eslint src scripts test",
+    "init": "npm install && node scripts/hooks.js"
   },
   "dependencies": {
     "cheerio": "^1.0.0-rc.2"

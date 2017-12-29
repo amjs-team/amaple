@@ -1,4 +1,4 @@
-import { Module, install } from "ice";
+import ice from "ice";
 
 describe ( "plugin define =>", () => {
 
@@ -9,7 +9,7 @@ describe ( "plugin define =>", () => {
 
 		div.innerHTML = `<div :module="root">{{ count }}<button :onclick="addCount">{{ btnText }}</button></div>`;
 
-		install ( {
+		ice.install ( {
 			name : "counter",
 			build () {
 				let count = 0;
@@ -27,7 +27,7 @@ describe ( "plugin define =>", () => {
 			}
 		} );
 
-		new Module ( div.firstChild, {
+		new ice.Module ( div.firstChild, {
 			init ( counter ) {
 				return {
 					count : counter.getCount (),

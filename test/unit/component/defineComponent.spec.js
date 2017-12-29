@@ -1,5 +1,4 @@
-import { Component } from "ice";
-import Class from "src/Class";
+import ice from "ice";
 import ViewModel from "src/core/ViewModel";
 import { attr } from "src/func/node";
 import VElement from "core/vnode/VElement";
@@ -7,7 +6,7 @@ import VFragment from "core/vnode/VFragment";
 
 describe ( "define component =>", () => {
 	it ( "use the function Class to define a component derivative", () => {
-		const TestComp = Class ( "TestComp" ).extends ( Component ) ( {
+		const TestComp = ice.class ( "TestComp" ).extends ( ice.Component ) ( {
 			init () {
 				return {
 			    	btnText : "test-btn",
@@ -25,7 +24,7 @@ describe ( "define component =>", () => {
 			    } );
 			},
 			action () {
-				var _this = this;
+				const _this = this;
 				return {
 					print ( con ) {
 						_this.state.console = con;
@@ -62,7 +61,7 @@ describe ( "define component =>", () => {
 	} );
 
 	it ( "validate component props without vm data", () => {
-		const TestComp = Class ( "TestComp" ).extends ( Component ) ( {
+		const TestComp = ice.class ( "TestComp" ).extends ( ice.Component ) ( {
 			init () {
 				this.propsType ( {
 					text : {
@@ -79,7 +78,9 @@ describe ( "define component =>", () => {
 					suffix : {
 						require : true,
 					},
-					classname : [ /abc/, function ( val ) { return val.length > 4; } ]
+					classname : [ /abc/,  val => {
+						return val.length > 4;
+					} ]
 				} );
 				
 				const self = this;
@@ -190,7 +191,7 @@ describe ( "define component =>", () => {
 	} );
 
 	it ( "validate the Two-way binding props of component with vm data", () => {
-		const TestComp = Class ( "TestComp" ).extends ( Component ) ( {
+		const TestComp = ice.class ( "TestComp" ).extends ( ice.Component ) ( {
 			init () {
 				const self = this;
 				return {
