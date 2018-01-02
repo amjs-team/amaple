@@ -1,4 +1,4 @@
-import VNode, { changeParent } from "./VNode";
+import VNode, { updateParent } from "./VNode";
 import { foreach } from "../../func/util";
 
 export default function VFragment ( children, docFragment ) {
@@ -6,7 +6,7 @@ export default function VFragment ( children, docFragment ) {
 	vnode.children = children && children.concat () || [];
 
 	foreach ( vnode.children, child => {
-		changeParent ( child, vnode );
+		updateParent ( child, vnode );
 	} );
 	
 	return vnode;

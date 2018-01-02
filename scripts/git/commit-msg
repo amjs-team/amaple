@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-type_pattern="^Merge.+|(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert|types)(\(.+\))?: .{1,50}"
+type_pattern="^Merge.+|(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert|types)(\(.+\))?: .{1,72}"
 
 egrep -iq "type_pattern" "$1"
 if [ "$?" != 0 ]; then

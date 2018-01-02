@@ -33,7 +33,7 @@ function supportCheck ( nodeType, method ) {
 
 
 /**
-    changeParent ( childVNode: Object, parent: Object )
+    updateParent ( childVNode: Object, parent: Object )
 
     Return Type:
     void
@@ -45,7 +45,7 @@ function supportCheck ( nodeType, method ) {
     URL doc:
     http://icejs.org/######
 */
-export function changeParent ( childVNode, parent ) {
+export function updateParent ( childVNode, parent ) {
     if ( childVNode && parent && childVNode.parent !== parent ) {
 
         // 如果有父节点，则从父节点中移除
@@ -73,8 +73,16 @@ export default function VNode ( nodeType, parent, node ) {
 	newClassCheck ( this, VNode );
 	
 	this.nodeType = nodeType;
+    this.node = node;
+
 	this.parent = parent || null;
-	this.node = node;
+    if ( 
+        this.parent instanceof VNode 
+        && this.parent.children
+        && this.parent.children.indexOf ( this ) === -1 
+    ) {
+        this.parent.push ( this );
+    }
 }
 
 extend ( VNode.prototype, {
@@ -108,7 +116,7 @@ extend ( VNode.prototype, {
 
         // 更换父节点
         foreach ( children, child => {
-            changeParent ( child, this );
+            updateParent ( child, this );
         } );
     },
 	
@@ -151,7 +159,7 @@ extend ( VNode.prototype, {
 
             // 更换父节点
             foreach ( children, child => {
-                changeParent ( child, this );
+                updateParent ( child, this );
             } );
 
             oldVNode.parent = null;
@@ -187,7 +195,7 @@ extend ( VNode.prototype, {
 
             // 更换父节点
             foreach ( children, child => {
-                changeParent ( child, this );
+                updateParent ( child, this );
             } );
     	}
     },

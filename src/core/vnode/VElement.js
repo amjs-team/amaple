@@ -1,4 +1,4 @@
-import VNode, { changeParent } from "./VNode";
+import VNode, { updateParent } from "./VNode";
 import { foreach } from "../../func/util";
 
 export default function VElement ( nodeName, attrs, parent, children, elem, isComponent ) {
@@ -9,7 +9,7 @@ export default function VElement ( nodeName, attrs, parent, children, elem, isCo
 	vnode.children = children && children.concat () || [];
 
 	foreach ( vnode.children, child => {
-		changeParent ( child, vnode );
+		updateParent ( child, vnode );
 	} );
 	
 	if ( isComponent === true ) {

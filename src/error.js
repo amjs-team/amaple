@@ -42,3 +42,4 @@ export const directiveErr = error ( "directive" );		// 指令使用错误
 export const componentErr = error ( "component" );		// 组件错误
 export const pluginErr = error ( "plugin" );		// 插件错误
 export const vnodeErr = error ( "vnode" );		// 虚拟节点错误
+export const HTMLParserErr = error ( "HTMLParser" );		// html解析错误
