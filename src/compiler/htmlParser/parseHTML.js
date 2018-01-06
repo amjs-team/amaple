@@ -1,8 +1,8 @@
 import { foreach } from "../../func/util";
-import { HTMLParserErr } from "../../error";
-import VElement from "./VElement";
-import VTextNode from "./VTextNode";
-import VFragment from "./VFragment";
+import { htmlParserErr } from "../../error";
+import VElement from "../../core/vnode/VElement";
+import VTextNode from "../../core/vnode/VTextNode";
+import VFragment from "../../core/vnode/VFragment";
 
 const 
 	attribute = /^\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/,
@@ -164,33 +164,28 @@ function endHandler ( stack ) {
 	closeElement ( vnode );
 }
 
-const preserveWhitespace = true;
 let inPre = false;
-function charsHandler ( text ) {
-
-	if ( !parent ) {
-		if ( text === template ) {
-			throw HTMLParserErr ( "plainText", "Component template requires a root element, rather than just text." );
-		}
-		else if ( text = text.trim () ) {
-			throw HTMLParserErr ( "", "text \"" + text + "\" outside root element will be ignored." );
-		}
-
-		return;
-	}
+function charsHandler ( text, rootVNodes ) {
 
 	// IE textarea placeholder bug
 	// if ( isIE && parent.tag === "textarea" && parent.attrs.placeholder === text ) {
 	// 	return;
 	// }
 
-	const children = parent.children;
+	const children = parent && parent.children || [];
 	text = inPre || text.trim () ? text
 
 		// only preserve whitespace if its not right after a starting tag
-		: preserveWhitespace && children.length ? " " : "";
+		// 节点与节点之间的空格与回车会解析为" "的文本节点
+		: children.length ? " " : "";
 	if ( text ) {
-		parent.appendChild ( VTextNode ( text ) );
+		const textNode = VTextNode ( text );
+		if ( parent ) {
+			parent.appendChild ( textNode );
+		}
+		else {
+			rootVNodes.push ( textNode );
+		}
 	}
 }
 
@@ -216,17 +211,16 @@ export default function parseHTML ( html ) {
 			if ( textEnd === 0 ) {
 
         		// Comment:
-				// if  ( comment.test ( html ) ) {
-				// 	const commentEnd = html.indexOf ( "-->" );
+        		// 暂忽略注释的解析
+				if  ( comment.test ( html ) ) {
+					const commentEnd = html.indexOf ( "-->" );
 
-				// 	if ( commentEnd >= 0 ) {
-				// 		if ( options.shouldKeepComment ) {
-				// 			options.comment ( html.substring ( 4, commentEnd ) );
-	   //          		}
-				// 		advance ( commentEnd + 3 );
-    //         			continue;
-				// 	}
-				// }
+					if ( commentEnd >= 0 ) {
+						// commentHandler ( html.substring ( 4, commentEnd ) );
+						advance ( commentEnd + 3 );
+            			continue;
+					}
+				}
 
 				// http://en.wikipedia.org/wiki/Conditional_comment#Downlevel-revealed_conditional_comment
 				if ( conditionalComment.test ( html ) ) {
@@ -292,7 +286,7 @@ export default function parseHTML ( html ) {
 			if ( text ) {
 
 				// charsHandler会将文本节点放入children数组中
-				charsHandler ( text );
+				charsHandler ( text, rootVNodes );
 			}
 		}
 		else {
@@ -310,7 +304,7 @@ export default function parseHTML ( html ) {
 						text = text.slice ( 1 );
 					}
 
-					charsHandler ( text );
+					charsHandler ( text, rootVNodes );
 					return "";
 				} );
 
@@ -320,7 +314,7 @@ export default function parseHTML ( html ) {
 		}
 
 		if ( html === last ) {
-			charsHandler ( html );
+			charsHandler ( html, rootVNodes );
 			break;
 		}
 	}
@@ -429,7 +423,7 @@ export default function parseHTML ( html ) {
 			// Close all the open elements, up the stack
 			for ( let i = stack.length - 1; i >= pos; i -- ) {
 				if ( ( i > pos || !tagName ) ) {
-					throw HTMLParserErr ( "", `tag <${ stack [ i ].nodeName }> has no matching end tag.` );
+					throw htmlParserErr ( "", `tag <${ stack [ i ].nodeName }> has no matching end tag.` );
 				}
 				
 				endHandler ( stack );

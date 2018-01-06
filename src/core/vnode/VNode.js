@@ -11,6 +11,7 @@ import VElement from "./VElement";
 import VTextNode from "./VTextNode";
 import VFragment from "./VFragment";
 import NodePatcher from "./NodePatcher";
+import query from "../../compiler/cssParser/core";
 
 /**
     supportCheck ( nodeType: Number, method: String )
@@ -334,6 +335,10 @@ extend ( VNode.prototype, {
         else {
             this.attrs [ name ] = val;
         }
+    },
+    
+    query ( selector ) {
+        return query ( selector, this );
     },
 
     /**
