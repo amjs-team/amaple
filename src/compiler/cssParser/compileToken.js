@@ -1,11 +1,11 @@
-/*
-	compiles a selector to an executable function
-*/
-
 import sort from "./sort.js";
 import general from "./general";
 import procedure from "./procedure";
 import { trueFunc, falseFunc } from "./util";
+
+/*
+	compiles a selector to an executable function
+*/
 
 var
     DomUtils    = require("domutils"),
@@ -73,27 +73,27 @@ function isTraversal(t){
 	return procedure[t.type] < 0;
 }
 
-function compileRules ( rules, options, context ) {
+function compileRules ( rules, context ) {
 	const acceptSelf = rules [ 0 ].name === "scope" && rules [ 1 ].type === "descendant";
 	return rules.reduce ( ( func, rule, index ) => {
 		if ( func === falseFunc ) {
 			return func;
 		}
 
-		return general [ rule.type ] ( func, rule, options, context, acceptSelf && index === 1 );
+		return general [ rule.type ] ( func, rule, context, acceptSelf && index === 1 );
 	}, trueFunc );
 }
 
 function reduceRules(a, b){
-	if(b === falseFunc || a === trueFunc){
+	if ( b === falseFunc || a === trueFunc ) {
 		return a;
 	}
-	if(a === falseFunc || b === trueFunc){
+	if ( a === falseFunc || b === trueFunc ) {
 		return b;
 	}
 
-	return function combine(elem){
-		return a(elem) || b(elem);
+	return elem => {
+		return a ( elem ) || b ( elem );
 	};
 }
 

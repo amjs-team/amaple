@@ -25,5 +25,6 @@ export default function ( selector, context ) {
     	parseSelector ( selector ),
     	context
     );
-	return findNode ( testFunc, context.children );
+
+	return ( testFunc ( context ) ? [ context ] : [] ).concat ( findNode ( testFunc, context.children ) );
 }

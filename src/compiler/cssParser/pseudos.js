@@ -1,3 +1,7 @@
+import { cssParserErr } from "../../error";
+import { type } from "../../func/util";
+import { rules } from "./attributes";
+
 /*
 	pseudo selectors
 
@@ -10,7 +14,6 @@
 	* pseudos get called on execution
 	  they need to return a boolean
 */
-import { rules } from "./attributes";
 
 var DomUtils    = require("domutils"),
     isTag       = DomUtils.isTag,
@@ -28,9 +31,11 @@ var DomUtils    = require("domutils"),
     falseFunc   = BaseFuncs.falseFunc;
 
 //helper methods
-function getFirstElement(elems){
-	for(var i = 0; elems && i < elems.length; i++){
-		if(isTag(elems[i])) return elems[i];
+function getFirstElement ( elems ) {
+	for ( var i = 0; elems && i < elems.length; i++ ) {
+		if ( isTag ( elems[i] ) ) {
+			return elems[i];
+		}
 	}
 }
 
@@ -48,9 +53,9 @@ function getChildFunc(next){
 }
 
 export const filters = {
-	contains: function(next, text){
-		return function contains(elem){
-			return next(elem) && getText(elem).indexOf(text) >= 0;
+	contains ( next, text ) {
+		return elem => {
+			return next ( elem ) && getText ( elem ).indexOf ( text ) >= 0;
 		};
 	},
 	icontains: function(next, text){
@@ -362,31 +367,34 @@ function verifyArgs(func, name, subselect){
 }
 
 //FIXME this feels hacky
-var re_CSS3 = /^(?:(?:nth|last|first|only)-(?:child|of-type)|root|empty|(?:en|dis)abled|checked|not)$/;
+var rCSS3 = /^(?:(?:nth|last|first|only)-(?:child|of-type)|root|empty|(?:en|dis)abled|checked|not)$/;
 
-export default function ( next, data, options, context ) {
-	var name = data.name,
+export default function ( next, data, context ) {
+	const 
+		name = data.name,
 		subselect = data.data;
 
-	if(options && options.strict && !re_CSS3.test(name)){
-		throw SyntaxError(":" + name + " isn't part of CSS3");
+	if ( !rCSS3.test ( name ) ) {
+		throw cssParserErr ( "syntax", `:${ name } isn't part of CSS3` );
 	}
 
-	if(typeof filters[name] === "function"){
-		verifyArgs(filters[name], name,  subselect);
-		return filters[name](next, subselect, options, context);
+	if( type ( filters [ name ] ) === "function" ) {
+		verifyArgs ( filters [ name ], name,  subselect );
+		return filters [ name ] ( next, subselect, options, context );
 	}
-	else if(typeof pseudos[name] === "function"){
-		var func = pseudos[name];
-		verifyArgs(func, name, subselect);
+	else if ( type ( pseudos [ name ] ) === "function" ) {
+		const func = pseudos [ name ];
+		verifyArgs ( func, name, subselect );
 
-		if(next === trueFunc) return func;
+		if ( next === trueFunc ) {
+			return func;
+		}
 
-		return function pseudoArgs(elem){
-			return func(elem, subselect) && next(elem);
+		return elem => {
+			return func ( elem, subselect ) && next ( elem );
 		};
 	}
 	else {
-		throw new SyntaxError("unmatched pseudo-class :" + name);
+		throw cssParserErr ( "syntax", `unmatched pseudo-class: ${ name }`);
 	}
 }

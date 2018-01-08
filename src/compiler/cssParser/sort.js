@@ -1,10 +1,12 @@
+import { foreach } from "../../func/util";
+import procedure from "./procedure.js";
+
+
 /*
 	sort the parts of the passed selector,
 	as there is potential for optimization
 	(some types of selectors are faster than others)
 */
-
-import procedure from "./procedure.js";
 
 const attributes = {
 	exists : 10,
@@ -47,23 +49,25 @@ function getProcedure ( token ) {
 		}
 		else if ( token.name === "matches" || token.name === "not" ) {
 			proc = 0;
-			for ( var i = 0; i < token.data.length; i++ ) {
+			foreach ( token.data, dataItem => {
 
 				//TODO better handling of complex selectors
-				if ( token.data [ i ].length !== 1 ) {
-					continue;
+				if ( dataItem.length !== 1 ) {
+
+					// continue
+					return true;
 				}
-				const cur = getProcedure ( token.data [ i ] [ 0 ] );
+				const cur = getProcedure ( dataItem [ 0 ] );
 
 				//avoid executing :has or :contains
 				if ( cur === 0 ) {
 					proc = 0;
-					break;
+					return false;
 				}
 				if ( cur > proc ) {
 					proc = cur;
 				}
-			}
+			} );
 			if ( token.data.length > 1 && proc > 0 ) {
 				proc -= 1;
 			}

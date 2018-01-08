@@ -1,12 +1,11 @@
+import { foreach } from "../../func/util";
+import { cssParserErr } from "../../error";
 import attributes from "./attributes";
 import pseudos from "./pseudos";
 
 var DomUtils    = require("domutils"),
-    isTag       = DomUtils.isTag,
-    getParent   = DomUtils.getParent,
     getChildren = DomUtils.getChildren,
-    getSiblings = DomUtils.getSiblings,
-    getName     = DomUtils.getName;
+    getSiblings = DomUtils.getSiblings;
 
 /*
 	all available rules
@@ -16,75 +15,82 @@ export default {
 	pseudo : pseudos,
 
 	//tags
-	tag: function(next, data){
-		var name = data.name;
-		return function tag(elem){
-			return getName(elem) === name && next(elem);
+	tag ( next, data ) {
+		const name = data.name;
+		return elem => {
+			return elem.nodeName.toLowerCase () === name && next ( elem );
 		};
 	},
 
 	//traversal
-	descendant: function(next, rule, options, context, acceptSelf){
-		return function descendant(elem){
+	descendant ( next, rule, context, acceptSelf ) {
+		return elem => {
 
-			if (acceptSelf && next(elem)) return true;
+			if (acceptSelf && next ( elem ) ) {
+				return true;
+			}
 
-			var found = false;
-
-			while(!found && (elem = getParent(elem))){
-				found = next(elem);
+			let found = false;
+			while ( !found && ( elem = elem.parent ) ) {
+				found = next ( elem );
 			}
 
 			return found;
 		};
 	},
-	parent: function(next, data, options){
-		if(options && options.strict) throw SyntaxError("Parent selector isn't part of CSS3");
+	parent ( next, data ) {
+		// if ( options && options.strict ) {
+		// 	throw cssParserErr ( "syntax", "Parent selector isn't part of CSS3" );
+		// }
 
-		return function parent(elem){
-			return getChildren(elem).some(test);
-		};
-
-		function test(elem){
-			return isTag(elem) && next(elem);
-		}
-	},
-	child: function(next){
-		return function child(elem){
-			var parent = getParent(elem);
-			return !!parent && next(parent);
+		return elem => {
+			return getChildren ( elem ).some ( elem => {
+				return elem.nodeType === 1 && next ( elem );
+			} );
 		};
 	},
-	sibling: function(next){
-		return function sibling(elem){
-			var siblings = getSiblings(elem);
-
-			for(var i = 0; i < siblings.length; i++){
-				if(isTag(siblings[i])){
-					if(siblings[i] === elem) break;
-					if(next(siblings[i])) return true;
+	child ( next ) {
+		return elem => {
+			const parent = elem.parent;
+			return !!parent && next ( parent );
+		};
+	},
+	sibling ( next ) {
+		return elem => {
+			const siblings = getSiblings ( elem );
+			foreach ( siblings, sibling => {
+				if ( sibling.nodeType === 1 ) {
+					if ( sibling === elem ) {
+						return false;
+					}
+					if ( next ( sibling ) ) {
+						return true;
+					}
 				}
-			}
+			} );
 
 			return false;
 		};
 	},
-	adjacent: function(next){
-		return function adjacent(elem){
-			var siblings = getSiblings(elem),
-			    lastElement;
+	adjacent ( next ) {
+		return elem => {
 
-			for(var i = 0; i < siblings.length; i++){
-				if(isTag(siblings[i])){
-					if(siblings[i] === elem) break;
-					lastElement = siblings[i];
+			const siblings = getSiblings ( elem );
+			let lastElement;
+			foreach ( siblings, sibling => {
+				if ( sibling.nodeType === 1 ) {
+					if ( sibling === elem ) {
+						return false;
+					}
+
+					lastElement = sibling;
 				}
-			}
+			} );
 
-			return !!lastElement && next(lastElement);
+			return !!lastElement && next ( lastElement );
 		};
 	},
-	universal: function(next){
+	universal ( next ) {
 		return next;
 	}
 };

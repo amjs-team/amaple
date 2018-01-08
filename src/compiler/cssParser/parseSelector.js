@@ -1,11 +1,11 @@
 import { cssParserErr } from "../../error";
 
 const 
-	reName = /^(?:\\.|[\w\-\u00c0-\uFFFF])+/,
-    reEscape = /\\([\da-f]{1,6}\s?|(\s)|.)/ig,
+	rName = /^(?:\\.|[\w\-\u00c0-\uFFFF])+/,
+    rEscape = /\\([\da-f]{1,6}\s?|(\s)|.)/ig,
 
     //modified version of https://github.com/jquery/sizzle/blob/master/src/sizzle.js#L87
-    reAttr = /^\s*((?:\\.|[\w\u00c0-\uFFFF\-])+)\s*(?:(\S?)=\s*(?:(['"])(.*?)\3|(#?(?:\\.|[\w\u00c0-\uFFFF\-])*)|)|)\s*(i)?\]/,
+    rAttr = /^\s*((?:\\.|[\w\u00c0-\uFFFF\-])+)\s*(?:(\S?)=\s*(?:(['"])(.*?)\3|(#?(?:\\.|[\w\u00c0-\uFFFF\-])*)|)|)\s*(i)?\]/,
 
 	actionTypes = {
 		"undefined" : "exists",
@@ -66,7 +66,7 @@ function funescape ( _, escaped, escapedWhitespace ) {
 }
 
 function unescapeCSS ( str ) {
-	return str.replace ( reEscape, ( _, escaped, escapedWhitespace ) => {
+	return str.replace ( rEscape, ( _, escaped, escapedWhitespace ) => {
 		const high = "0x" + escaped - 0x10000;
 
 		// NaN means non-codepoint
@@ -88,25 +88,13 @@ function isWhitespace ( c ) {
 	return c === " " || c === "\n" || c === "\t" || c === "\f" || c === "\r";
 }
 
-export default function parseSelector ( selector ) {
-	const subselects = [];
-
-	selector = actionToParseSelector ( subselects, selector + "" );
-
-	if ( selector !== "" ) {
-		throw cssParserErr ( "syntax", "Unmatched selector: " + selector );
-	}
-
-	return subselects;
-}
-
 function actionToParseSelector ( subselects, selector ) {
 	let tokens = [],
 		sawWS = false,
 		data, firstChar, name, quot;
 
 	function getName(){
-		const sub = selector.match ( reName ) [ 0 ];
+		const sub = selector.match ( rName ) [ 0 ];
 		selector = selector.substr ( sub.length );
 		return unescapeCSS ( sub );
 	}
@@ -174,9 +162,9 @@ function actionToParseSelector ( subselects, selector ) {
 			}
 			else if ( firstChar === "[" ) {
 				selector = selector.substr ( 1 );
-				data = selector.match ( reAttr );
+				data = selector.match ( rAttr );
 				if ( !data ) {
-					throw cssParserErr ( "syntax", "Malformed attribute selector: " + selector );
+					throw cssParserErr ( "syntax", `Malformed attribute selector:${ selector }` );
 				}
 				selector = selector.substr ( data [ 0 ].length );
 				name = unescapeCSS ( data [ 1 ] );
@@ -269,7 +257,7 @@ function actionToParseSelector ( subselects, selector ) {
 					data : data
 				} );
 			}
-			else if ( reName.test ( selector ) ) {
+			else if ( rName.test ( selector ) ) {
 				name = getName ();
 				tokens.push ( {
 					type : "tag", 
@@ -298,4 +286,17 @@ function addToken ( subselects, tokens ) {
 	}
 
 	subselects.push ( tokens );
+}
+
+
+export default function parseSelector ( selector ) {
+	const subselects = [];
+
+	selector = actionToParseSelector ( subselects, selector + "" );
+
+	if ( selector !== "" ) {
+		throw cssParserErr ( "syntax", "Unmatched selector: " + selector );
+	}
+
+	return subselects;
 }
