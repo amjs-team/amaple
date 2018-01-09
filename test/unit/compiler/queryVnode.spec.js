@@ -1,4 +1,5 @@
 import parseHTML from "src/compiler/htmlParser/parseHTML";
+import query from "src/compiler/cssParser/core";
 
 function getVElementLength ( velem, cb ) {
 	if ( velem.nodeType === 1 ) {
@@ -19,9 +20,10 @@ describe ( "vnode query => ", () => {
 		vnode = parseHTML ( `
 			<div>
 				<span class="selector1" custom-attr="sub1 sub2">.class</span>
-				<span id="selector2" custom-attr="sub1-sub2">#id</span>
-				<div custom-attr="sub1sub2">
+				<span id="selector2" custom-attr="sub1-sub2" custom-attr2="sub">#id</span>
+				<div custom-attr="sub1sub2" custom-attr2="sub">
 					<p>element</p>
+					<p class="selector1">element2</p>
 				</div>
 				<input type="text" />
 				<input type="password" />
@@ -31,15 +33,16 @@ describe ( "vnode query => ", () => {
 	} );
 
 	it ( ".class", () => {
-		const target = vnode.query ( ".selector1" );
-		expect ( target.length ).toBe ( 1 );
+		const target = query ( ".selector1", vnode );
+		expect ( target.length ).toBe ( 2 );
 		expect ( target [ 0 ].nodeName ).toBe ( "SPAN" );
 		expect ( target [ 0 ].attr ( "class" ) ).toBe ( "selector1" );
 		expect ( target [ 0 ].children [ 0 ].nodeValue ).toBe ( ".class" );
+		expect ( target [ 1 ].nodeName ).toBe ( "P" );
 	} );
 
 	it ( "#id", () => {
-		const target = vnode.query ( "#selector2" );
+		const target = query ( "#selector2", vnode );
 		expect ( target.length ).toBe ( 1 );
 		expect ( target [ 0 ].nodeName ).toBe ( "SPAN" );
 		expect ( target [ 0 ].attr ( "id" ) ).toBe ( "selector2" );
@@ -47,7 +50,7 @@ describe ( "vnode query => ", () => {
 	} );
 
 	it ( "*", () => {
-		const target = vnode.query ( "*" );
+		const target = query ( "*", vnode );
 
 		let tagLength = 0;
 		getVElementLength ( vnode, velem => {
@@ -58,14 +61,14 @@ describe ( "vnode query => ", () => {
 	} );
 
 	it ( "element", () => {
-		let target = vnode.query ( "div" );
+		let target = query ( "div", vnode );
 		expect ( target.length ).toBe ( 2 );
 		expect ( target [ 0 ].parent ).toBeNull ();
 		expect ( target [ 1 ].nodeName ).toBe ( "DIV" );
 		expect ( target [ 1 ].children [ 0 ].children [ 0 ].nodeValue ).toBe ( "element" );
 
 		const selector = [ "div", "span" ];
-		target = vnode.query ( selector.join ( "," ) );
+		target = query ( selector.join ( "," ), vnode );
 
 		let tagLength = 0;
 		getVElementLength ( vnode, velem => {
@@ -76,65 +79,94 @@ describe ( "vnode query => ", () => {
 		expect ( target.length ).toBe ( tagLength );
 	} );
 
-	it ( "element element", () => {
-		const target = vnode.query ( "div p" );
+	it ( "selectorA selectorB", () => {
+		let target = query ( "div p", vnode );
+		expect ( target.length ).toBe ( 2 );
+		expect ( target [ 0 ].nodeName ).toBe ( "P" );
+		expect ( target [ 0 ].children [ 0 ].nodeValue ).toBe ( "element" );
+		expect ( target [ 1 ].children [ 0 ].nodeValue ).toBe ( "element2" );
+
+		target = query ( "[custom-attr2=sub] p.selector1", vnode );
+		expect ( target.length ).toBe ( 1 );
+		expect ( target [ 0 ].nodeName ).toBe ( "P" );
+		expect ( target [ 0 ].children [ 0 ].nodeValue ).toBe ( "element2" );
+	} );
+
+	it ( "selectorA>selectorB", () => {
+		const target = query ( "div>p", vnode );
 		expect ( target [ 0 ].nodeName ).toBe ( "P" );
 		expect ( target [ 0 ].children [ 0 ].nodeValue ).toBe ( "element" );
 	} );
 
-	it ( "element>element", () => {
-		const target = vnode.query ( "div>p" );
-		expect ( target [ 0 ].nodeName ).toBe ( "P" );
-		expect ( target [ 0 ].children [ 0 ].nodeValue ).toBe ( "element" );
-	} );
-
-	it ( "element+element", () => {
-		const target = vnode.query ( "span+div" );
+	it ( "selectorA+selectorB", () => {
+		const target = query ( "span+div", vnode );
 		expect ( target [ 0 ].nodeName ).toBe ( "DIV" );
 		expect ( target [ 0 ].children [ 0 ].nodeName ).toBe ( "P" );
 	} );
 
 	it ( "[attribute]", () => {
-		let target = vnode.query ( "[type]" );
+		let target = query ( "[type]", vnode );
 		expect ( target.length ).toBe ( 2 );
 		expect ( target [ 0 ].nodeName ).toBe ( "INPUT" );
 		expect ( target [ 1 ].nodeName ).toBe ( "INPUT" );
 
-		target = vnode.query ( "[type=text]" );
+		target = query ( "[type=text]", vnode );
 		expect ( target.length ).toBe ( 1 );
 		expect ( target [ 0 ].nodeName ).toBe ( "INPUT" );
 
-		target = vnode.query ( "div[type=text]" );
+		target = query ( "div[type=text]", vnode );
 		expect ( target.length ).toBe ( 0 );
 
-		target = vnode.query ( "input[type=text]" );
+		target = query ( "input[type=text]", vnode );
 		expect ( target.length ).toBe ( 1 );
 
-		target = vnode.query ( "[custom-attr~=sub2]" );
+		target = query ( "[custom-attr~=sub2]", vnode );
 		expect ( target.length ).toBe ( 1 );
 		expect ( target [ 0 ].nodeName ).toBe ( "SPAN" );
 		expect ( target [ 0 ].children [ 0 ].nodeValue ).toBe ( ".class" );
 
-		target = vnode.query ( "[custom-attr|=sub1]" );
+		target = query ( "[custom-attr|=sub1]", vnode );
 		expect ( target.length ).toBe ( 1 );
 		expect ( target [ 0 ].nodeName ).toBe ( "SPAN" );
 		expect ( target [ 0 ].children [ 0 ].nodeValue ).toBe ( "#id" );
 
-		target = vnode.query ( "[custom-attr^=sub]" );
+		target = query ( "[custom-attr^=sub]", vnode );
 		expect ( target.length ).toBe ( 3 );
 
-		target = vnode.query ( "[custom-attr$=ub2]" );
+		target = query ( "[custom-attr$=ub2]", vnode );
 		expect ( target.length ).toBe ( 3 );
 
-		target = vnode.query ( "[custom-attr*=sub]" );
+		target = query ( "[custom-attr*=sub]", vnode );
 		expect ( target.length ).toBe ( 3 );
 		expect ( target [ 0 ].nodeName ).toBe ( "SPAN" );
 		expect ( target [ 1 ].nodeName ).toBe ( "SPAN" );
 		expect ( target [ 2 ].nodeName ).toBe ( "DIV" );
 	} );
 
+	it ( "selectorA~selectorB", () => {
+		let target = query ( "input~input", vnode );
+		expect ( target.length ).toBe ( 1 );
+		expect ( target [ 0 ].nodeName ).toBe ( "INPUT" );
+
+		target = query ( "span[custom-attr=sub1-sub2]~span", vnode );
+		expect ( target.length ).toBe ( 0 );
+
+		target = query ( ".selector1~[custom-attr2=sub]", vnode );
+		expect ( target.length ).toBe ( 2 );
+		expect ( target [ 0 ].nodeName ).toBe ( "SPAN" );
+		expect ( target [ 1 ].nodeName ).toBe ( "DIV" );
+	} );
+
+	// 伪类不会被当做选择器采用
+	// 如“a:empty”会查找所有的a标签
 	it ( "pseudo", () => {
-		const target = vnode.query ( "a:link" );
+		let target = query ( "a:link", vnode );
 		expect ( target [ 0 ].nodeName ).toBe ( "A" );
+
+		target = query ( "span:empty, input:checked", vnode );
+		expect ( target.length ).toBe ( 4 );
+
+		target = query ( "::selection", vnode );
+		expect ( target.length ).toBe ( 9 );
 	} );
 } );

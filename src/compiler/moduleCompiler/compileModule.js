@@ -174,7 +174,7 @@ function parseStyle ( moduleString, parses ) {
 		else {
 
 			// 去除所有标签间的空格
-        	style = removeCssBlank ( styleMatch [ 0 ] );
+        	style = removeCssBlank ( styleMatch [ 1 ] );
         }
 	}
 	else {
@@ -214,7 +214,6 @@ function parseScript ( moduleString, scriptPaths, scriptNames, parses ) {
 
 
 	if ( scriptMatch ) {
-
 		const matchScript = ( scriptMatch [ 1 ] || "" ).replace ( rscriptComment, match => "" );
 
 		// 获取import的script

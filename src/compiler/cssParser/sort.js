@@ -35,45 +35,7 @@ function getProcedure ( token ) {
 
 			//ignoreCase adds some overhead, prefer "normal" token
 			//this is a binary operation, to ensure it's still an int
-			proc >>= 1;
-		}
-	}
-	else if ( proc === procedure.pseudo ) {
-		if ( !token.data ) {
-			proc = 3;
-		}
-		else if ( token.name === "has" || token.name === "contains" ) {
-
-			//expensive in any case
-			proc = 0;
-		}
-		else if ( token.name === "matches" || token.name === "not" ) {
-			proc = 0;
-			foreach ( token.data, dataItem => {
-
-				//TODO better handling of complex selectors
-				if ( dataItem.length !== 1 ) {
-
-					// continue
-					return true;
-				}
-				const cur = getProcedure ( dataItem [ 0 ] );
-
-				//avoid executing :has or :contains
-				if ( cur === 0 ) {
-					proc = 0;
-					return false;
-				}
-				if ( cur > proc ) {
-					proc = cur;
-				}
-			} );
-			if ( token.data.length > 1 && proc > 0 ) {
-				proc -= 1;
-			}
-		}
-		else {
-			proc = 1;
+			proc >>= 1;		// eslint-disable-line
 		}
 	}
 

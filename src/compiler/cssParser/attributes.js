@@ -1,7 +1,7 @@
 import  { falseFunc } from "./util";
 
 //https://github.com/slevithan/XRegExp/blob/master/src/xregexp.js#L469
-const reChars = /[-[\]{}()*+?.,\\^$|#\s]/g;
+const rChars = /[-[\]{}()*+?.,\\^$|#\s]/g;
 
 /*
 	attribute selectors
@@ -17,7 +17,7 @@ export const rules = {
 
 			return elem => {
 				const attr = elem.attr ( name );
-				return attr != null && attr.toLowerCase() === value && next ( elem );
+				return attr !== undefined && attr.toLowerCase () === value && next ( elem );
 			};
 		}
 
@@ -36,7 +36,7 @@ export const rules = {
 
 			return elem => {
 				const attr = elem.attr ( name );
-				return attr != null &&
+				return attr !== undefined &&
 						( attr.length === len || attr.charAt ( len ) === "-" ) &&
 						attr.substr ( 0, len ).toLowerCase () === value &&
 						next ( elem );
@@ -45,7 +45,7 @@ export const rules = {
 
 		return elem => {
 			const attr = elem.attr ( name );
-			return attr != null &&
+			return attr !== undefined &&
 					attr.substr ( 0, len ) === value &&
 					( attr.length === len || attr.charAt ( len ) === "-" ) &&
 					next ( elem );
@@ -59,7 +59,7 @@ export const rules = {
 			return falseFunc;
 		}
 
-		value = value.replace ( reChars, "\\$&" );
+		value = value.replace ( rChars, "\\$&" );
 
 		const 
 			pattern = `(?:^|\\s)${ value }(?:$|\\s)`,
@@ -68,7 +68,7 @@ export const rules = {
 
 		return elem => {
 			const attr = elem.attr ( name );
-			return attr != null && regex.test ( attr ) && next ( elem );
+			return attr !== undefined && regex.test ( attr ) && next ( elem );
 		};
 	},
 	exists ( next, data ) {
@@ -92,13 +92,13 @@ export const rules = {
 
 			return elem => {
 				const attr = elem.attr ( name );
-				return attr != null && attr.substr ( 0, len ).toLowerCase () === value && next ( elem );
+				return attr !== undefined && attr.substr ( 0, len ).toLowerCase () === value && next ( elem );
 			};
 		}
 
 		return elem => {
 			const attr = elem.attr ( name );
-			return attr != null && attr.substr ( 0, len ) === value && next ( elem );
+			return attr !== undefined && attr.substr ( 0, len ) === value && next ( elem );
 		};
 	},
 	end ( next, data ) {
@@ -116,13 +116,13 @@ export const rules = {
 
 			return elem => {
 				const attr = elem.attr ( name );
-				return attr != null && attr.substr ( len ).toLowerCase () === value && next ( elem );
+				return attr !== undefined && attr.substr ( len ).toLowerCase () === value && next ( elem );
 			};
 		}
 
 		return elem => {
 			const attr = elem.attr ( name );
-			return attr != null && attr.substr ( len ) === value && next ( elem );
+			return attr !== undefined && attr.substr ( len ) === value && next ( elem );
 		};
 	},
 	any ( next, data ) {
@@ -134,17 +134,17 @@ export const rules = {
 		}
 
 		if ( data.ignoreCase ) {
-			const regex = new RegExp ( value.replace ( reChars, "\\$&" ), "i" );
+			const regex = new RegExp ( value.replace ( rChars, "\\$&" ), "i" );
 
 			return elem => {
 				const attr = elem.attr ( name );
-				return attr != null && regex.test ( attr ) && next ( elem );
+				return attr !== undefined && regex.test ( attr ) && next ( elem );
 			};
 		}
 
 		return elem => {
-			var attr = elem.attr ( name );
-			return attr != null && attr.indexOf ( value ) >= 0 && next ( elem );
+			const attr = elem.attr ( name );
+			return attr !== undefined && attr.indexOf ( value ) >= 0 && next ( elem );
 		};
 	},
 	not ( next, data ) {
@@ -161,7 +161,7 @@ export const rules = {
 
 			return elem => {
 				const attr = elem.attr ( name );
-				return attr != null && attr.toLowerCase () !== value && next ( elem );
+				return attr !== undefined && attr.toLowerCase () !== value && next ( elem );
 			};
 		}
 

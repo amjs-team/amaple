@@ -97,7 +97,7 @@ describe ( "define component =>", () => {
 			},
 			render () {
 				this.template (
-			    	'<a href="{{ link }}" class="{{ classname }}">{{ btn }}{{ suffix }}</a>'
+			    	`<a href="{{ link }}" class="{{ classname }}">{{ btn }}{{ suffix }}</a>`
 			    )
 			    .style ( {
 			    	"a" : {
@@ -210,7 +210,7 @@ describe ( "define component =>", () => {
 			},
 			render () {
 				this.template (
-			    	'<a href="{{ link }}">{{ btn }}</a>'
+			    	`<a href="{{ link }}">{{ btn }}</a>`
 			    )
 			    .style ( {
 			    	"a" : {
@@ -219,12 +219,12 @@ describe ( "define component =>", () => {
 			    } );
 			},
 			action () {
-				var _this = this;
+				const _this = this;
 				return {
 					changeLink ( link ) {
 						_this.props.link = link;
 					}
-				}
+				};
 			}
 		} );
 

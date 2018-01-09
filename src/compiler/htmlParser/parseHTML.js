@@ -8,9 +8,9 @@ const
 	attribute = /^\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/,
 	ncname = "[a-zA-Z_][\\w\\-\\.]*",
 	qnameCapture = `((?:${ncname}\\:)?${ncname})`,
-	startTagOpen = new RegExp(`^<${qnameCapture}`),
+	startTagOpen = new RegExp ( `^<${qnameCapture}` ),
 	startTagClose = /^\s*(\/?)>/,
-	endTag = new RegExp(`^<\\/${qnameCapture}[^>]*>`),
+	endTag = new RegExp ( `^<\\/${qnameCapture}[^>]*>` ),
 	doctype = /^<!DOCTYPE [^>]+>/i,
 
 	ieNSBug = /^xmlns:NS\d+/,
@@ -240,7 +240,7 @@ export default function parseHTML ( html ) {
 				}
 
 				// End tag:
-				const endTagMatch = html.match ( endTag ) 
+				const endTagMatch = html.match ( endTag );
 				if ( endTagMatch ) {
 					const curIndex = index;
 					advance ( endTagMatch [ 0 ].length );
@@ -324,7 +324,7 @@ export default function parseHTML ( html ) {
 
 	function advance ( n ) {
 		index += n;
-		html = html.substring(n);
+		html = html.substring ( n );
 	}
 
 	function parseStartTag () {
@@ -372,10 +372,10 @@ export default function parseHTML ( html ) {
 					delete args [ 3 ];
 				}
 				if ( args [ 4 ] === "" ) {
-					delete args [ 4 ]
+					delete args [ 4 ];
 				}
 				if ( args [ 5 ] === "" ) {
-					delete args [ 5 ]
+					delete args [ 5 ];
 				}
 			}
 
@@ -400,7 +400,7 @@ export default function parseHTML ( html ) {
 		if ( start === null ) {
 			start = index;
 		}
-		if ( end == null ) {
+		if ( end === null ) {
 			end = index;
 		}
 

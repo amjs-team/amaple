@@ -4,7 +4,7 @@ import { queryModuleNode, parseGetQuery } from "../func/private";
 import require from "../require/core";
 import { envErr, moduleErr } from "../error";
 import iceHistory from "../single/history/iceHistory";
-import compileModule from "./compileModule";
+import compileModule from "../compiler/moduleCompiler/compileModule";
 import configuration from "../core/configuration/core";
 import ice from "../core/core";
 import cache from "../cache/core";

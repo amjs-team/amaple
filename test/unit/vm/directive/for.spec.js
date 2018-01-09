@@ -209,7 +209,7 @@ describe ( "directive for => ", () => {
         expect ( realDOM.childNodes.item ( 3 ).childNodes.item ( 0 ).childNodes.item ( 0 ).nodeValue ).toBe ( "c else" );
 
         dBackup = d.clone ();
-        vm.next = "b"
+        vm.next = "b";
         expect ( children [ 1 ].children [ 0 ].children [ 0 ].nodeValue ).toBe ( "a else" );
         expect ( children [ 2 ].children [ 0 ].children [ 0 ].nodeValue ).toBe ( "b" );
         expect ( children [ 3 ].children [ 0 ].children [ 0 ].nodeValue ).toBe ( "c else" );

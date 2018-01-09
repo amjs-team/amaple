@@ -33,6 +33,6 @@ describe ( "ice test =>", () => {
 				// 设置404页面路径
 				router.error404 ( "/error404" );
 			}
-		} )
+		} );
 	} );
 } );

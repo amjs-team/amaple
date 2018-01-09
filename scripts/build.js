@@ -1,8 +1,5 @@
 const 
 	babel = require ( "rollup-plugin-babel" ),
-	resolve = require ( "rollup-plugin-node-resolve" ),
-	commonjs = require ( "rollup-plugin-commonjs" ),
-	// builtins = require ( "rollup-plugin-node-builtins" ),
 	{ name, version } = require ( "../package.json" ),
 	path = require ( "path" ),
 	banner = `/**
@@ -23,8 +20,6 @@ module.exports = {
 		babel ( {
     		exclude: "node_modules/**" // 仅仅转译我们的源码
     	} ),
-    	commonjs (),
-    	resolve (),
 	]
 	// sourceMap: true,
 };

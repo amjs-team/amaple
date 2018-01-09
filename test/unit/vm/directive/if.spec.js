@@ -173,7 +173,7 @@ describe ( "directive if => ", () => {
             vm = new ViewModel ( {
                 show: 2,
                 show2: "aa",
-                show3: 'a'
+                show3: "a"
             } ),
             t = new Tmpl ( vm, [], {} );
         t.mount ( d, true );
@@ -193,17 +193,17 @@ describe ( "directive if => ", () => {
         expect ( realDOM.childNodes.item ( 0 ).childNodes.item ( 0 ).childNodes.item ( 0 ).nodeValue ).toBe ( "hello icejs2" );
 
 
-        vm.show3 = 'b'
+        vm.show3 = "b";
         expect ( d.children [ 0 ].children [ 0 ].children [ 0 ].nodeValue ).toBe ( "hello icejs3" );
         expect ( realDOM.childNodes.item ( 0 ).childNodes.item ( 0 ).childNodes.item ( 0 ).nodeValue ).toBe ( "hello icejs3" );
 
 
-        vm.show3 = 'c';
+        vm.show3 = "c";
         expect ( d.children [ 0 ].children [ 0 ].nodeValue ).toBe ( "" );
         expect ( realDOM.childNodes.item ( 0 ).childNodes.item ( 0 ).nodeValue ).toBe ( "" );
 
 
-        vm.show = 0
+        vm.show = 0;
         expect ( d.children [ 0 ].children [ 0 ].nodeValue ).toBe ( "hello icejs4" );
         expect ( realDOM.childNodes.item ( 0 ).childNodes.item ( 0 ).nodeValue ).toBe ( "hello icejs4" );
     } );

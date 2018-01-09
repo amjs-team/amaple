@@ -24,13 +24,9 @@
     "lint": "eslint src scripts test",
     "init": "npm install && node scripts/hooks.js"
   },
-  "dependencies": {
-    "cheerio": "^1.0.0-rc.2"
-  },
   "devDependencies": {
     "babel-core": "^6.25.0",
     "babel-loader": "^7.1.1",
-    "babel-plugin-external-helpers": "^6.22.0",
     "babel-preset-env": "^1.6.1",
     "commitizen": "^2.9.6",
     "cz-conventional-changelog": "^2.1.0",
@@ -48,9 +44,6 @@
     "lodash": "^4.17.4",
     "rollup": "^0.52.1",
     "rollup-plugin-babel": "^2.7.1",
-    "rollup-plugin-commonjs": "^8.2.6",
-    "rollup-plugin-node-builtins": "^2.1.2",
-    "rollup-plugin-node-resolve": "^3.0.0",
     "shelljs": "^0.7.8",
     "webpack": "^3.3.0"
   },
@@ -58,5 +51,6 @@
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
     }
-  }
+  },
+  "dependencies": {}
 }

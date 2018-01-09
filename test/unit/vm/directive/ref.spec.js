@@ -3,7 +3,7 @@ import ice from "ice";
 describe ( "directive ref => ", () => {
 	it ( "directive :ref in common element", () => {
         const d = document.createElement ( "div" );
-        d.innerHTML = `<p :ref="ref_p">{{ text }}</p>`
+        d.innerHTML = `<p :ref="ref_p">{{ text }}</p>`;
 
         const module = new ice.Module ( d, {
             init () {
@@ -18,7 +18,7 @@ describe ( "directive ref => ", () => {
 
     it ( "directive :ref in common element with :if", () => {
         const d = document.createElement ( "div" );
-        d.innerHTML = `<p :ref="ref_p" :if="show">{{ text }}</p>`
+        d.innerHTML = `<p :ref="ref_p" :if="show">{{ text }}</p>`;
 
         const module = new ice.Module ( d, {
             init () {
@@ -36,7 +36,7 @@ describe ( "directive ref => ", () => {
 
     it ( "directive :ref in common element with :for", () => {
         const d = document.createElement ( "div" );
-        d.innerHTML = `<p :ref="ref_p" :for="i in list">{{ i }}</p>`
+        d.innerHTML = `<p :ref="ref_p" :for="i in list">{{ i }}</p>`;
 
         const module = new ice.Module ( d, {
             init () {
@@ -72,7 +72,7 @@ describe ( "directive ref => ", () => {
                     return {};
                 },
                 render () {
-                    this.template ( "<span>SubComp</span>" )
+                    this.template ( "<span>SubComp</span>" );
                 }
             } ),
             TestComp = ice.class ( "TestComp" ).extends ( ice.Component ) ( {
@@ -192,7 +192,7 @@ describe ( "directive ref => ", () => {
                     unmountSpy ();
                 },
                 action () {
-                    var _this = this;
+                    const _this = this;
                     return {
                         print ( con ) {
                             _this.state.console = con;

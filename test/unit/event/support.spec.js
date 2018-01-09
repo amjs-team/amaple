@@ -2,7 +2,7 @@ import event from "src/event/core";
 
 describe ( "event.support", () => {
 	it ( "specify DOMObject", () => {
-		expect ( event.support ( "readystatechange", new XMLHttpRequest() ) ).toBe ( true );
+		expect ( event.support ( "readystatechange", new XMLHttpRequest () ) ).toBe ( true );
 	} );
 
 	it ( "without specify DOMObject", () => {

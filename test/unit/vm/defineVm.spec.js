@@ -74,7 +74,7 @@ describe ( "define vm => ", () => {
 			obj : {
 				computed: {
 					comp3 () {
-						return "throw exception too"
+						return "throw exception too";
 					}
 				}
 			}

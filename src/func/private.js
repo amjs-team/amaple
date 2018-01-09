@@ -4,10 +4,11 @@ import { componentErr } from "../error";
 import slice from "../var/slice";
 import { identifierPrefix } from "../var/const";
 import iceAttr from "../single/iceAttr";
-import cheerio from "cheerio";
 import VElement from "../core/vnode/VElement";
 import VTextNode from "../core/vnode/VTextNode";
 import VFragment from "../core/vnode/VFragment";
+import parseHTML from "../compiler/htmlParser/parseHTML";
+import query from "../compiler/cssParser/core";
 
 
 /**
@@ -189,62 +190,46 @@ export function getReference ( references, refName ) {
 	return reference;
 }
 
-/**
-	ASTToVNode ( astNodes: Array, parent: Object )
-
-	Return Type:
-	void
-
-	Description:
-	将ast节点转换为vnode
-
-	URL doc:
-	http://icejs.org/######
-*/
-function ASTToVNode ( astNodes, parent ) {
-
-	foreach ( astNodes, astNode => {
-		let vnode;
-		if ( /^tag|style$/.test ( astNode.type ) ) {
-			vnode = VElement ( astNode.name, astNode.attribs, null, null );
-			if ( astNode.children.length > 0 ) {
-				ASTToVNode ( astNode.children, vnode );
-			}
-		}
-		else if ( astNode.type === "text" ) {
-			vnode = VTextNode ( astNode.data, null );
-		}
-
-		if ( vnode ) {
-			parent.appendChild ( vnode );
-		}
-	} );
-}
-
 export function stringToScopedVNode ( htmlString, styles ) {
-	const nodeQuery = cheerio.load ( htmlString );
+	const vstyle = VElement ( "style" );
 
+	let vf = parseHTML ( htmlString ),
+		styleString = styles;
+	vf = vf.nodeType === 11 ? vf : VFragment ( [ vf ] );
 	if ( type ( styles ) === "array" ) {
-		let scopedCssIdentifier,
-			styleString = "";
+		styleString = "";
+
+		const scopedCssIdentifier = identifierPrefix + guid ();
 		foreach ( styles, styleItem => {
 			if ( styleItem.selector.substr ( 0, 1 ) !== "@" ) {
-				scopedCssIdentifier = identifierPrefix + guid ();
-				nodeQuery ( styleItem.selector ).attr ( scopedCssIdentifier, "" );
-				styleItem.selector += `[${ scopedCssIdentifier }]`;
+
+				// 为范围样式添加范围属性限制
+				foreach ( query ( styleItem.selector, vf ), velem => {
+					velem.attr ( scopedCssIdentifier, "" );
+				} );
+
+				// 为css选择器添加范围属性限制
+				let selectorArray = [];
+				foreach ( styleItem.selector.split ( "," ), selector => {
+					const pseudoMatch = selector.match ( /:[\w-()\s]+|::selection/i );
+					if ( pseudoMatch ) {
+						selectorArray.push ( selector.replace ( pseudoMatch [ 0 ], `[${ scopedCssIdentifier }]${ pseudoMatch [ 0 ] }` ) );
+					}
+					else {
+						selectorArray.push ( `${ selector.trim () }[${ scopedCssIdentifier }]` );
+					}
+				} );
+				styleItem.selector = selectorArray.join ( "," );
 			}
 
 			styleString += `${ styleItem.selector }{${ styleItem.content }}`;
 		} );
 
-		styles = styleString ? `<style scoped>${ styleString }</style>` : "";
+		vstyle.attr ( "scoped", "" );
 	}
 
-	const 
-		body = nodeQuery ( "body" ),
-		scopedFragment = new VFragment ();
-	body.append ( styles );
-	ASTToVNode ( body [ 0 ].children, scopedFragment );
+	vstyle.appendChild ( VTextNode ( styleString ) );
+	vf.appendChild ( vstyle );
 
-	return scopedFragment;
+	return vf;
 }

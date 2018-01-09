@@ -215,8 +215,7 @@ export default {
     initTemplate ( template, scopedStyle ) {
         const 
             rblank = />(\s+)</g,
-            rwrap = /\r?\n\s*/g,
-            f = document.createDocumentFragment ();
+            rwrap = /\r?\n\s*/g;
         
         // 去除所有标签间的空格，并转义"和'符号
         template = template

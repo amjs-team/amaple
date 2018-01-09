@@ -44,7 +44,7 @@ describe ( "render component => ", () => {
 				updateSpy ();
 			},
 			action () {
-				var _this = this;
+				const _this = this;
 				return {
 					print ( con ) {
 						_this.state.console = con;
@@ -214,7 +214,7 @@ describe ( "render component => ", () => {
 		expect ( realDOM.children.item ( 3 ).firstChild.nodeValue ).toBe ( "c" );
 		expect ( realDOM.children.item ( 8 ).firstChild.nodeValue ).toBe ( "b" );
 		expect ( realDOM.children.item ( 13 ).firstChild.nodeValue ).toBe ( "aa" );
-		expect ( updateSpy.calls.count() ).toBe ( 2 );
+		expect ( updateSpy.calls.count () ).toBe ( 2 );
 
 
 		div.children [ 1 ].component.action.print ( "reverse test" );
@@ -473,13 +473,13 @@ describe ( "render component => ", () => {
 			    };
 			},
 			render () {
-				this.template ( "<div><test-comp>default</test-comp><span>{{ console }}</span></div>" )
+				this.template ( "<div><test-comp>default</test-comp><span>{{ console }}</span></div>" );
 			},
 			unmount () {
 				unmountSpy ();
 			},
 			action () {
-				var _this = this;
+				const _this = this;
 				return {
 					console ( text ) {
 						_this.state.console = text;

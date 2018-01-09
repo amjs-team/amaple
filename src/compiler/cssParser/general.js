@@ -1,18 +1,17 @@
 import { foreach } from "../../func/util";
 import { cssParserErr } from "../../error";
 import attributes from "./attributes";
-import pseudos from "./pseudos";
 
-var DomUtils    = require("domutils"),
-    getChildren = DomUtils.getChildren,
-    getSiblings = DomUtils.getSiblings;
+
+function getSiblings ( elem ) {
+	return elem.parent ? elem.parent.children : [ elem ];
+}
 
 /*
 	all available rules
 */
 export default {
 	attribute : attributes,
-	pseudo : pseudos,
 
 	//tags
 	tag ( next, data ) {
@@ -44,7 +43,7 @@ export default {
 		// }
 
 		return elem => {
-			return getChildren ( elem ).some ( elem => {
+			return elem.children.some ( elem => {
 				return elem.nodeType === 1 && next ( elem );
 			} );
 		};
@@ -58,18 +57,20 @@ export default {
 	sibling ( next ) {
 		return elem => {
 			const siblings = getSiblings ( elem );
+			let ret = false;
 			foreach ( siblings, sibling => {
 				if ( sibling.nodeType === 1 ) {
 					if ( sibling === elem ) {
 						return false;
 					}
 					if ( next ( sibling ) ) {
-						return true;
+						ret = true;
+						return false;
 					}
 				}
 			} );
 
-			return false;
+			return ret;
 		};
 	},
 	adjacent ( next ) {

@@ -7,7 +7,6 @@ describe ( "query vnodes by selector => ", () => {
 			classSelector = "p, .console",
 			token = parseSelector ( classSelector );
 
-		console.log ( token );
 		// expect ( va.nodeName ).toBe ( "A" );
 		// expect ( va.attrs.href ).toBe ( "aa.html" );
 		// expect ( va.children [ 0 ].nodeValue ).toBe ( "link" );

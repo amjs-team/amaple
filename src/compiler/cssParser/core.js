@@ -20,11 +20,16 @@ function findNode ( test, targetChildren ) {
 	return result;
 }
 
-export default function ( selector, context ) {
-    const testFunc = compileToken ( 
+export default function query ( selector, context ) {
+	if ( /^:\w+|::selection$/i.test ( selector ) ) {
+		selector = `*${ selector }`;
+	}
+
+    const testFunc = compileToken (
     	parseSelector ( selector ),
     	context
     );
-
-	return ( testFunc ( context ) ? [ context ] : [] ).concat ( findNode ( testFunc, context.children ) );
+	
+	return ( context.nodeType === 1 && testFunc ( context ) ? [ context ] : [] )
+	.concat ( findNode ( testFunc, context.children ) );
 }

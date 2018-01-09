@@ -22,7 +22,7 @@ describe ( "Promise =>", () => {
 
 		promise.then ( () => {
 			done ();
-		} )
+		} );
 
 		expect ( timerCallback ).not.toHaveBeenCalled ();
 		jasmine.clock ().tick ( 101 );

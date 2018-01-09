@@ -48,22 +48,22 @@ const
 	};
 
 //unescape function taken from https://github.com/jquery/sizzle/blob/master/src/sizzle.js#L139
-function funescape ( _, escaped, escapedWhitespace ) {
-	const high = "0x" + escaped - 0x10000;
+// function funescape ( _, escaped, escapedWhitespace ) {
+// 	const high = "0x" + escaped - 0x10000;
 
-	// NaN means non-codepoint
-	// Support: Firefox
-	// Workaround erroneous numeric interpretation of +"0x"
-	return high !== high || escapedWhitespace ?
-		escaped :
+// 	// NaN means non-codepoint
+// 	// Support: Firefox
+// 	// Workaround erroneous numeric interpretation of +"0x"
+// 	return high !== high || escapedWhitespace ?
+// 		escaped :
 
-		// BMP codepoint
-		high < 0 ?
-			String.fromCharCode ( high + 0x10000 ) :
+// 		// BMP codepoint
+// 		high < 0 ?
+// 			String.fromCharCode ( high + 0x10000 ) :
 
-			// Supplemental Plane codepoint (surrogate pair)
-			String.fromCharCode( high >> 10 | 0xD800, high & 0x3FF | 0xDC00 );
-}
+// 			// Supplemental Plane codepoint (surrogate pair)
+// 			String.fromCharCode( high >> 10 | 0xD800, high & 0x3FF | 0xDC00 );
+// }
 
 function unescapeCSS ( str ) {
 	return str.replace ( rEscape, ( _, escaped, escapedWhitespace ) => {
@@ -72,7 +72,7 @@ function unescapeCSS ( str ) {
 		// NaN means non-codepoint
 		// Support: Firefox
 		// Workaround erroneous numeric interpretation of +"0x"
-		return high !== high || escapedWhitespace ?
+		return escapedWhitespace ?
 			escaped :
 
 			// BMP codepoint
@@ -80,7 +80,7 @@ function unescapeCSS ( str ) {
 				String.fromCharCode ( high + 0x10000 ) :
 
 				// Supplemental Plane codepoint (surrogate pair)
-				String.fromCharCode( high >> 10 | 0xD800, high & 0x3FF | 0xDC00 );
+				String.fromCharCode ( high >> 10 | 0xD800, high & 0x3FF | 0xDC00 );		// eslint-disable-line
 	} );
 }
 
@@ -291,7 +291,6 @@ function addToken ( subselects, tokens ) {
 
 export default function parseSelector ( selector ) {
 	const subselects = [];
-
 	selector = actionToParseSelector ( subselects, selector + "" );
 
 	if ( selector !== "" ) {

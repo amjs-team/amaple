@@ -10,7 +10,7 @@ describe ( "class =>", () => {
 				bb : 2
 			},
 			cc () {
-				console.log(this.aa);
+				console.log ( this.aa );
 			}
 		} );
 
@@ -43,7 +43,7 @@ describe ( "class =>", () => {
 			}
 		} );
 
-		let g = new G ()
+		let g = new G ();
 		expect ( g instanceof P ).toBeTruthy ( true );
 		expect ( g.handCount ).toBe ( 2 );
 		expect ( g.headCount ).toBe ( 1 );
