@@ -1,5 +1,8 @@
+import { foreach } from "../../func/util";
 import cache from "../../cache/core";
 import check from "../../check";
+import pluginBuilder from "./core";
+import Loader from "../../require/Loader";
 
 /**
 	install ( plugin: Object )
@@ -24,7 +27,24 @@ export default function install ( plugin ) {
 	check ( plugin.build ).type ( "function" )
 	.ifNot ( "plugin.build", "plugin安装对象必须包含build方法" )
 	.do ();
-	
-	const deps = cache.getDependentPlugin ( plugin.build );
-    cache.pushPlugin ( plugin.name, plugin.build.apply ( this, deps ) );
+
+	function savePlugin () {
+		const deps = cache.getDependentPlugin ( plugin.build );
+		cache.pushPlugin ( plugin.name, plugin.build.apply ( this, deps ) );
+	}
+
+	const path = Loader.getCurrentPath ();
+	let find = false;
+	foreach ( pluginBuilder.buildings, building => {
+		if ( building.url === path ) {
+			building.install = savePlugin;
+			find = true;
+		}
+	} );
+
+	// 没有找到需安装插件时直接安装此插件
+	// 用于普通模式下安装插件
+	if ( !find ) {
+		savePlugin ();
+	}
 }

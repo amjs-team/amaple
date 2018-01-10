@@ -7,7 +7,7 @@ import cache from "../cache/core";
 
 
 /**
-	require ( deps: Object, factory: Function, moduleType )
+	require ( deps: Object, factory: Function, moduleType, callbacks: Object )
 
 	Return Type:
 	void
@@ -15,11 +15,12 @@ import cache from "../cache/core";
 	Description:
 	依赖处理方法
 	此方法主要实现了deps的动态加载并依赖注入到factory中
+	callbacks中的回调函数为对应的url下，script的onload事件需调用的回调函数
 
 	URL doc:
 	http://icejs.org/######
 */
-export default function require ( deps, factory, moduleType ) {
+export default function require ( deps, factory, moduleType, callbacks ) {
 	Loader.isRequiring = true;
 
 	// 正在加载的依赖数
@@ -67,8 +68,11 @@ export default function require ( deps, factory, moduleType ) {
 			script.src 	= depStr + Loader.suffix;
 			attr ( script, Loader.depName, depStr );
 			attr ( script, Loader.loaderID, nguid );
-
-			appendScript ( script, Loader.onScriptLoaded );
+			
+			appendScript ( script, e => {
+				( callbacks [ depStr ] || noop ) ( e );
+				Loader.onScriptLoaded ( e );
+			} );
 
 			loadingCount ++;
 		}

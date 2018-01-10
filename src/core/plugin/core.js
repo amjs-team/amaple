@@ -1,25 +1,58 @@
-import { type, foreach } from "../../func/util";
+import { foreach, type } from "../../func/util";
 import { pluginErr } from "../../error";
+import cache from "../../cache/core";
+import amd from "./format/amd";
+import iife from "./format/iife";
+
+// 支持的插件规范
+const formats = { amd, iife };
 
 export default {
 	buildings: [],
-	save ( plugins ) {
-		foreach ( plugins, plugin => {
-			const t = type ( plugin );
-			if ( t === "string" ) {
-				this.buildings ( {
-					
-				} )
-			}
-			else if ( t === "object" ) {
+	save ( pluginDef ) {
+		let ret;
 
+		if ( type ( pluginDef ) === "string" ) {
+			this.buildings.push ( {
+				url: pluginDef
+			} );
+		}
+		else if ( type ( pluginDef ) === "object" ) {
+			if ( pluginDef.build ) {
+
+				// ice规范的插件对象
+				this.buildings.push ( {
+					plugin: pluginDef;
+				} );
 			}
 			else {
-				throw pluginErr ( "type", "plugin的构建对象类型只能为string或object，当string时一定为plugin的加载相对路径，当object时为构建对象或amd/iife格式的plugin的加载信息" );
-			}
-		} );
-	},
-	install () {
+				if ( !pluginDef.name ) {
+					throw pluginErr ( "name", "必须指定name属性以表示此插件的名称，且不能与已有插件名称重复" );
+				}
 
+				// 外部插件对象
+				const formatFn = formats [ pluginDef.format.toLowerCase () ];
+				if ( formatFn ) {
+					ret = formatFn ( pluginDef, this.buildings );
+				}
+				else {
+					throw pluginErr ( "format", `对于外部的js库，ice.js目前支持${ Object.keys ( formats ).join ( "、" ) }规范` );
+				}
+			}
+		}
+		else {
+			throw pluginErr ( "type", `plugin的构建对象类型只能为string或object，当string时一定为plugin的加载相对路径，当object时为构建对象或${ Object.keys ( formats ).join ( "/" ) }规范的plugin的加载信息` );
+		}
+
+		return ret;
+	},
+	build () {
+		foreach ( this.buildings, building => {
+			building.install ();
+		} );
+
+		if ( window.define ) {
+			delete window.define;
+		}
 	}
 };

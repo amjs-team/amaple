@@ -96,22 +96,46 @@ export default function startRouter ( routerConfig ) {
 	configuration ( routerConfig );
 	
 	// 初始化插件列表
-	const pluginBaseURL = configuration.getConfigure ( "baseURL" ).plugin;
+	const 
+		rexternalURL = /^http(?:s)?:\/\//,
+		pluginBaseURL = configuration.getConfigure ( "baseURL" ).plugin;
+		callbacks = {};
 	if ( type ( plugin ) === "array" ) {
-		pluginBuilder.save ( plugin );
 		foreach ( plugin, pluginItem => {
-
-			let pluginURL = "";
 			if ( type ( pluginItem ) === "string" ) {
-				pluginURL = pluginBaseURL + pluginItem;
-				loadPlugins.push ( pluginURL );
+
+				// 去除请求url的首尾空格
+				pluginItem = pluginItem.trim ();
+
+				// plugin构建格式为ice规范时
+				pluginItem = rexternalURL.test ( pluginItem ) ? pluginItem : pluginBaseURL + pluginItem;
+				loadPlugins.push ( pluginItem );
+			}
+			else if ( type ( pluginItem ) === "object" && type ( pluginItem.url ) === "string" ) {
+
+				// 去除请求url的首尾空格
+				pluginItem.url = pluginItem.url.trim ();
+
+				// plugin构建格式为amd/iife规范时
+				pluginItem.url = rexternalURL.test ( pluginItem.url ) ? pluginItem.url : pluginBaseURL + pluginItem.url;
+				loadPlugins.push ( pluginItem.url );
 			}
 			
+			// 此回调函数用于在iife规范下获取window对象的全局属性
+			// 返回的回调函数将会在对应的script的onload函数中执行
+			const callback = pluginBuilder.save ( pluginItem );
+			if ( callback ) {
+				callbacks [ pluginItem.url ] = callback;
+			}
 		} );
 	}
 
 	// 如果存在需加载的插件则待插件加载完成后再执行模块更新操作
 	require ( loadPlugins, () => {
+
+		// 插件加载完成后构建插件
+		pluginBuilder.build ();
+
     	const 
     		param = {},
     		path = iceHistory.history.getPathname (),
@@ -132,5 +156,5 @@ export default function startRouter ( routerConfig ) {
 
     	// 根据更新后的页面结构体渲染新视图
     	Structure.currentPage.render ( location, location.nextStructure.copy () );
-	}, TYPE_PLUGIN );
+	}, TYPE_PLUGIN, callbacks );
 }
