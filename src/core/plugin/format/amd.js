@@ -25,7 +25,7 @@ function define ( deps, callback ) {
 }
 define.amd = {};
 
-export default amd ( pluginDef, buildings ) {
+export default function amd ( pluginDef, buildings ) {
 	if ( !window.define ) {
 		window.define = define;
 	}

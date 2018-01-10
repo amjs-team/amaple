@@ -10,7 +10,7 @@ function getGlobal ( globalName ) {
 	return globalObj;
 }
 
-export default iife ( pluginDef, buildings ) {
+export default function iife ( pluginDef, buildings ) {
 
 	const building = {};
 	buildings.push ( building );
@@ -21,5 +21,5 @@ export default iife ( pluginDef, buildings ) {
 		building.install = () => {
 			cache.pushPlugin ( pluginDef.name, pluginObj );
 		};
-	}
+	};
 }

@@ -22,7 +22,7 @@ export default {
 
 				// ice规范的插件对象
 				this.buildings.push ( {
-					plugin: pluginDef;
+					plugin: pluginDef
 				} );
 			}
 			else {
