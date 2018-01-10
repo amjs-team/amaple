@@ -1,4 +1,4 @@
-import hashHistory from "src/single/history/hashHistory";
+import hashHistory from "src/router/history/hashHistory";
 
 describe ( "hashHistory =>", () => {
 

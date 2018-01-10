@@ -1,8 +1,8 @@
 import { attr } from "../../../func/node";
 import { foreach, type, guid } from "../../../func/util";
 import slice from "../../../var/slice";
-import VTextNode from "../../vnode/VTextNode";
-import VFragment from "../../vnode/VFragment";
+import VTextNode from "../../../core/vnode/VTextNode";
+import VFragment from "../../../core/vnode/VFragment";
 
 export default {
 	name : "if",

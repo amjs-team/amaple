@@ -1,5 +1,5 @@
 import { type, foreach } from "../../../func/util";
-import VTextNode from "../../vnode/VTextNode";
+import VTextNode from "../../../core/vnode/VTextNode";
 
 export default {
 	

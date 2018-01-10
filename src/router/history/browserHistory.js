@@ -1,7 +1,7 @@
 import { envErr } from "../../error";
 import event from "../../event/core";
-import Structure from "../../core/tmpl/Structure";
-import Router from "../../router/core";
+import Structure from "../Structure";
+import Router from "../Router";
 
 export default {
 	

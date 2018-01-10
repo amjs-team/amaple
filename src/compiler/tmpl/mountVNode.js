@@ -2,8 +2,30 @@ import { foreach } from "../../func/util";
 import { transformCompName, getFunctionName } from "../../func/private";
 import { rexpr } from "../../var/const";
 import { runtimeErr, directiveErr } from "../../error";
-import Tmpl from "./Tmpl";
-import { getGlobal } from "../component/core";
+import directivePrefix from "./directivePrefix";
+import { getGlobal } from "../../core/component/core";
+import attrExpr from "./directive/attrExpr";
+import cache from "./directive/cache";
+import _for from "./directive/for";
+import _if from "./directive/if";
+import model from "./directive/model";
+import module from "./directive/module";
+import on from "./directive/on";
+import ref from "./directive/ref";
+import textExpr from "./directive/textExpr";
+
+// 指令集
+const directives = {
+    attrExpr,
+    cache,
+    for : _for,
+    if : _if,
+    model,
+    module,
+    on,
+    ref,
+    textExpr
+};
 
 /**
     preTreat ( vnode: Object )
@@ -22,9 +44,9 @@ import { getGlobal } from "../component/core";
 function preTreat ( vnode ) {
 
     const
-        _if = Tmpl.directivePrefix + "if",
-        _elseif = Tmpl.directivePrefix + "else-if",
-        _else = Tmpl.directivePrefix + "else";
+        _if = directivePrefix + "if",
+        _elseif = directivePrefix + "else-if",
+        _else = directivePrefix + "else";
 
     let condition = vnode.attr ( _if );
 
@@ -116,11 +138,11 @@ export default function mountVNode ( vnode, tmpl, mountModule, isRoot = true ) {
 			// 处理:on
 			// 处理:model
 			vnode = preTreat ( vnode );
-			if ( forOrIfExpr = vnode.attr ( Tmpl.directivePrefix + "for" ) ) {
-				compileHandlers.watchers.push ( { handler : Tmpl.directives.for, targetNode : vnode, expr : forOrIfExpr } );
+			if ( forOrIfExpr = vnode.attr ( directivePrefix + "for" ) ) {
+				compileHandlers.watchers.push ( { handler : directives.for, targetNode : vnode, expr : forOrIfExpr } );
 			}
-			else if ( forOrIfExpr = vnode.attr ( Tmpl.directivePrefix + "if" ) ) {
-				compileHandlers.watchers.push ( { handler : Tmpl.directives.if, targetNode : vnode, expr : forOrIfExpr } );
+			else if ( forOrIfExpr = vnode.attr ( directivePrefix + "if" ) ) {
+				compileHandlers.watchers.push ( { handler : directives.if, targetNode : vnode, expr : forOrIfExpr } );
 			}
 			else {
 				if ( vnode.nodeName === "TEMPLATE" ) {
@@ -140,8 +162,8 @@ export default function mountVNode ( vnode, tmpl, mountModule, isRoot = true ) {
 				}
 			   
 				foreach ( vnode.attrs, ( attr, name ) => {
-					if ( new RegExp ( `^${ Tmpl.directivePrefix }(?:else-if|else)$` ).test ( name ) ) {
-						throw directiveErr ( name, `这个指令必须与'${ Tmpl.directivePrefix }if'一同使用` );
+					if ( new RegExp ( `^${ directivePrefix }(?:else-if|else)$` ).test ( name ) ) {
+						throw directiveErr ( name, `这个指令必须与'${ directivePrefix }if'一同使用` );
 					}
 
 					directive = rattr.exec ( name );
@@ -150,14 +172,14 @@ export default function mountVNode ( vnode, tmpl, mountModule, isRoot = true ) {
 						if ( /^on/.test ( directive ) ) {
 
 							// 事件绑定
-							handler = Tmpl.directives.on;
+							handler = directives.on;
 							targetNode = vnode,
 							expr = `${ directive.slice ( 2 ) }:${ attr }`;
 						}
-						else if ( Tmpl.directives [ directive ] ) {
+						else if ( directives [ directive ] ) {
 
 							// 模板属性绑定
-							handler = Tmpl.directives [ directive ];
+							handler = directives [ directive ];
 							targetNode = vnode;
 							expr = attr;
 						}
@@ -173,7 +195,7 @@ export default function mountVNode ( vnode, tmpl, mountModule, isRoot = true ) {
 
 						// 属性值表达式绑定
 						// 需排除组件上的属性表达式，因为它们会组件在组件初始化内处理
-						compileHandlers.watchers.push ( { handler: Tmpl.directives.attrExpr, targetNode : vnode, expr : `${ name }:${ attr }` } );
+						compileHandlers.watchers.push ( { handler: directives.attrExpr, targetNode : vnode, expr : `${ name }:${ attr }` } );
 					}
 				} );
 			}
@@ -182,7 +204,7 @@ export default function mountVNode ( vnode, tmpl, mountModule, isRoot = true ) {
 
 			// 文本节点表达式绑定
 			if ( rexpr.test ( vnode.nodeValue ) ) {
-				compileHandlers.watchers.push ( { handler : Tmpl.directives.textExpr, targetNode : vnode, expr : vnode.nodeValue } );
+				compileHandlers.watchers.push ( { handler : directives.textExpr, targetNode : vnode, expr : vnode.nodeValue } );
 			}
 		}
 

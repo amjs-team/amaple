@@ -1,5 +1,5 @@
 import { attr } from "src/func/node";
-import Tmpl from "core/tmpl/Tmpl";
+import Tmpl from "src/compiler/tmpl/core";
 import ViewModel from "core/ViewModel";
 import event from "src/event/core";
 import VElement from "core/vnode/VElement";

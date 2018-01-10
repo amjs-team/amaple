@@ -1,5 +1,5 @@
 import event from "../../event/core";
-import Structure from "../../core/tmpl/Structure";
+import Structure from "../Structure";
 import Router from "../../router/core";
 
 

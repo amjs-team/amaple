@@ -1,8 +1,8 @@
-import { extend, foreach, type } from "../../func/util";
-import ModuleLoader from "../../single/ModuleLoader";
-import requestEventHandler from "../../single/requestEventHandler";
-import iceAttr from "../../single/iceAttr";
-import iceHistory from "../../single/history/iceHistory";
+import { extend, foreach, type } from "../func/util";
+import ModuleLoader from "./ModuleLoader";
+import requestEventHandler from "./requestEventHandler";
+import { iceAttr } from "../var/const";
+import iceHistory from "./history/core";
 
 /**
     unmountStructure ( structure: Object )

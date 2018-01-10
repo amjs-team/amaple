@@ -1,4 +1,4 @@
-import Router from "src/router/core";
+import Router from "src/router/Router";
 
 describe ( "router =>", () => {
 

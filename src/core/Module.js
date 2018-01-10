@@ -7,10 +7,10 @@ import cache from "../cache/core";
 import { newClassCheck } from "../Class.js";
 import { argErr } from "../error.js";
 import ViewModel from "./ViewModel";
-import Tmpl from "./tmpl/Tmpl";
+import Tmpl from "../compiler/tmpl/core";
 import iceAttr from "../single/iceAttr";
 import check from "../check";
-import Structure from "./tmpl/Structure";
+import Structure from "../router/Structure";
 import VNode from "./vnode/VNode";
 import NodeTransaction from "./vnode/NodeTransaction";
 

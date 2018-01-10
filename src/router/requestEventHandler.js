@@ -1,8 +1,8 @@
 import { serialize } from "../func/node";
-import Router from "../router/core";
+import Router from "../router/Router";
 import http from "../http/core";
-import iceHistory from "./history/iceHistory";
-import Structure from "../core/tmpl/Structure";
+import iceHistory from "./history/core";
+import Structure from "./Structure";
 
 /**
     requestEventHandler ( pathResolver: Object, method: String, post: Object )

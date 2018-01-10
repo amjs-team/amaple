@@ -1,17 +1,9 @@
 import { extend, foreach, noop } from "../../func/util";
 import { defineReactiveProperty, getFunctionName } from "../../func/private";
-import ViewWatcher from "../ViewWatcher";
+import ViewWatcher from "../../core/ViewWatcher";
 import mountVNode from "./mountVNode";
-import ViewModel from "../ViewModel";
-import attrExpr from "./directive/attrExpr";
-import cache from "./directive/cache";
-import _for from "./directive/for";
-import _if from "./directive/if";
-import model from "./directive/model";
-import module from "./directive/module";
-import on from "./directive/on";
-import ref from "./directive/ref";
-import textExpr from "./directive/textExpr";
+import ViewModel from "../../core/ViewModel";
+
 
 /**
     Plugin Tmpl
@@ -120,22 +112,6 @@ extend ( Tmpl.prototype, {
 } );
 
 extend ( Tmpl, {
-	
-	// 指令前缀
-    directivePrefix : ":",
-
-    // 指令集
-    directives : {
-        attrExpr,
-        cache,
-        for : _for,
-        if : _if,
-        model,
-        module,
-        on,
-        ref,
-        textExpr
-    },
 	
 	/**
     	defineScoped ( scopedDefinition: Object, scopedVNode: Object, isStatic: Object )

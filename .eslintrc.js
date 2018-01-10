@@ -1,4 +1,4 @@
-// 查询相关eslint rules => https://eslint.org/docs/rules/
+// 查询相关eslint rules => http://eslint.cn/docs/rules/
 module.exports = {
     "env": {
         "browser": true,

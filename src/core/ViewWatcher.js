@@ -2,7 +2,7 @@ import { extend, type, foreach, noop } from "../func/util";
 import { runtimeErr } from "../error";
 import slice from "../var/slice";
 import Subscriber from "./Subscriber";
-import Tmpl from "./tmpl/Tmpl";
+import directivePrefix from "../compiler/tmpl/directivePrefix";
 import NodeTransaction from "./vnode/NodeTransaction";
 
 
@@ -68,7 +68,7 @@ export default function ViewWatcher ( directive, node, expr, tmpl, scoped ) {
 	// 移除相关属性指令表达式
 	// 当属性指令表达式与指令名称不同的时候可将对应表达式赋值给this.attrExpr
 	if ( node.nodeType === 1 ) {
-		node.attr ( Tmpl.directivePrefix + ( this.attrExpr || directive.name ), null );
+		node.attr ( directivePrefix + ( this.attrExpr || directive.name ), null );
 	}
 	
 	let val = this.expr;

@@ -7,7 +7,7 @@ import slice from "../../var/slice";
 import check from "../../check";
 import ViewModel from "../ViewModel";
 import componentConstructor from "./componentConstructor";
-import Tmpl from "../tmpl/Tmpl";
+import Tmpl from "../../compiler/tmpl/core";
 import cache from "../../cache/core";
 import NodeTransaction from "../vnode/NodeTransaction";
 

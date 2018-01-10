@@ -1,9 +1,9 @@
 import { foreach, guid, noop, type } from "../../../func/util";
 import { walkVDOM } from "../../../func/private";
 import { directiveErr } from "../../../error";
-import Tmpl from "../Tmpl";
-import VTextNode from "../../vnode/VTextNode";
-import VFragment from "../../vnode/VFragment";
+import Tmpl from "../core";
+import VTextNode from "../../../core/vnode/VTextNode";
+import VFragment from "../../../core/vnode/VFragment";
 
 function createVNode ( watcher, arg, index ) {
     const 

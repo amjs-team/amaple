@@ -1,5 +1,5 @@
 import { type } from "../../../func/util";
-import Structure from "../Structure";
+import Structure from "../../../router/Structure";
 
 export default {
 	name : "module",

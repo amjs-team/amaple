@@ -1,4 +1,4 @@
-import Tmpl from "core/tmpl/Tmpl";
+import Tmpl from "src/compiler/tmpl/core";
 import { attr } from "src/func/node";
 import ViewModel from "core/ViewModel";
 import VElement from "core/vnode/VElement";
