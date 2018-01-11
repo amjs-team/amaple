@@ -2,7 +2,7 @@ import ice from "ice";
 
 describe ( "ice test =>", () => {
 
-	it ( "load a simple ice module", () => {
+	it ( "load a simple ice module", done => {
 		document.body.innerHTML = `<div :module></div><div :module="tips"></div>`;
 
 		window.ice = ice;
@@ -21,6 +21,7 @@ describe ( "ice test =>", () => {
 					url: "demo3"
 				},
 				{ name: "demo4", build ( demo1, demo2, demo3 ) {
+					done ();
 					expect ( this ).toBe ( ice );
 					expect ( demo1.o ).toBe ( "demo1" );
 					expect ( demo2.o ).toBe ( "demo2" );
