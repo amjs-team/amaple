@@ -1,7 +1,8 @@
 import { foreach } from "../../../func/util";
+import { buildPlugin } from "../../../func/private";
 import correctParam from "../../../correctParam";
 import pluginBuilder from "../core";
-import Loader from "../../require/Loader";
+import Loader from "../../../require/Loader";
 
 function getGlobal ( globalName ) {
 	const globalObj = window [ globalName ];
@@ -19,7 +20,12 @@ export default function iife ( pluginDef, buildings ) {
 	return () => {
 		const pluginObj = getGlobal ( pluginDef.global || pluginDef.name );
 		building.install = () => {
-			cache.pushPlugin ( pluginDef.name, pluginObj );
+			buildPlugin ( {
+				name: pluginDef.name, 
+				build () {
+					return pluginObj;
+				}
+			}, {} );
 		};
 	};
 }

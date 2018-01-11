@@ -1,8 +1,7 @@
 import { isEmpty, foreach } from "../../func/util";
 import { transformCompName, stringToScopedVNode } from "../../func/private";
-import { TYPE_COMPONENT } from "../../var/const";
+import { TYPE_COMPONENT, iceAttr } from "../../var/const";
 import { moduleErr } from "../../error";
-import iceAttr from "../../single/iceAttr";
 import check from "../../check";
 import configuration from "../../core/configuration/core";
 

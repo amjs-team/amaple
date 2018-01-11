@@ -8,13 +8,34 @@ describe ( "ice test =>", () => {
 		window.ice = ice;
 		ice.startRouter ( {
 			history : ice.BROWSER,
-			plugin : [ "demoPlugin" ],
+			plugin : [
+				"demo1", 
+				{
+					format: "amd",
+					name: "demo2",
+					url: "demo2"
+				},
+				{
+					format: "iife",
+					name: "demo3",
+					url: "demo3"
+				},
+				{ name: "demo4", build ( demo1, demo2, demo3 ) {
+					expect ( this ).toBe ( ice );
+					expect ( demo1.o ).toBe ( "demo1" );
+					expect ( demo2.o ).toBe ( "demo2" );
+					expect ( demo2.ext ).toBe ( "demo1" );
+					expect ( demo3.o ).toBe ( "demo3" );
+
+					return {o: "demo4"};
+				} },
+			],
 			baseURL : {
 				module : "module",
 				component : "component",
 				plugin : "plugin"
 			},
-			routes : function ( router ) {
+			routes ( router ) {
 
 				// default模块路由设置
 				router.module ()

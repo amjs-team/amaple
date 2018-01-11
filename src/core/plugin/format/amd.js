@@ -1,7 +1,8 @@
 import { foreach } from "../../../func/util";
+import { buildPlugin } from "../../../func/private";
 import correctParam from "../../../correctParam";
 import pluginBuilder from "../core";
-import Loader from "../../require/Loader";
+import Loader from "../../../require/Loader";
 
 function define ( deps, callback ) {
 	correctParam ( deps, callback ).to ( "array", "function" ).done ( function () {
@@ -13,12 +14,10 @@ function define ( deps, callback ) {
 	foreach ( pluginBuilder.buildings, building => {
 		if ( building.url === path ) {
 			building.install = () => {
-
-				// 如果amd库依赖其他库，则需先获取
-				deps.map ( dep => {
-					return cache.getPlugin ( dep );
-				} );
-				cache.pushPlugin ( building.name, callback.apply ( {}, deps ) );
+				buildPlugin ( {
+					name: building.name, 
+					build: callback
+				}, {}, deps );
 			};
 		}
 	} );

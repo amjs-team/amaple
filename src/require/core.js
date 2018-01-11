@@ -70,7 +70,7 @@ export default function require ( deps, factory, moduleType, callbacks ) {
 			attr ( script, Loader.loaderID, nguid );
 			
 			appendScript ( script, e => {
-				( callbacks [ depStr ] || noop ) ( e );
+				( callbacks && callbacks [ depStr ] || noop ) ( e );
 				Loader.onScriptLoaded ( e );
 			} );
 

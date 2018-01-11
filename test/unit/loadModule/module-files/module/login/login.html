@@ -42,8 +42,8 @@
 				return {
 					luserName : "用户名",
 					lpwd : "密码",
-					userName 	: "fff",
-					password 	: "a",
+					userName 	: "",
+					password 	: "",
 					btnOpts 	: {
 						btnText : "提交"
 					},
@@ -83,8 +83,9 @@
 				console.log( "login queryUpdated" );
 			},
 
-			mounted : function () {
-				
+			mounted : function ( demo1, demo4 ) {
+				this.state.userName = demo1.o;
+				this.state.password = demo4.o;
 			},
 
 			unmount : function () {

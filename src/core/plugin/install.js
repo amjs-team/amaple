@@ -1,8 +1,10 @@
 import { foreach } from "../../func/util";
 import cache from "../../cache/core";
+import { buildPlugin } from "../../func/private";
 import check from "../../check";
 import pluginBuilder from "./core";
 import Loader from "../../require/Loader";
+import core from "../core";
 
 /**
 	install ( plugin: Object )
@@ -18,26 +20,23 @@ import Loader from "../../require/Loader";
 	URL doc:
 	http://icejs.org/######
 */
-export default function install ( plugin ) {
-	check ( plugin.name ).type ( "string" ).notBe ( "" )
-	.check ( cache.hasPlugin ( plugin.name ) ).be ( false )
+export default function install ( pluginDef ) {
+	check ( pluginDef.name ).type ( "string" ).notBe ( "" )
+	.check ( cache.hasPlugin ( pluginDef.name ) ).be ( false )
 	.ifNot ( "plugin.name", "plugin安装对象必须定义name属性以表示此插件的名称，且不能与已有插件名称重复" )
 	.do ();
 
-	check ( plugin.build ).type ( "function" )
+	check ( pluginDef.build ).type ( "function" )
 	.ifNot ( "plugin.build", "plugin安装对象必须包含build方法" )
 	.do ();
-
-	function savePlugin () {
-		const deps = cache.getDependentPlugin ( plugin.build );
-		cache.pushPlugin ( plugin.name, plugin.build.apply ( this, deps ) );
-	}
 
 	const path = Loader.getCurrentPath ();
 	let find = false;
 	foreach ( pluginBuilder.buildings, building => {
 		if ( building.url === path ) {
-			building.install = savePlugin;
+			building.install = () => {
+				buildPlugin ( pluginDef, core );
+			};
 			find = true;
 		}
 	} );
@@ -45,6 +44,6 @@ export default function install ( plugin ) {
 	// 没有找到需安装插件时直接安装此插件
 	// 用于普通模式下安装插件
 	if ( !find ) {
-		savePlugin ();
+		buildPlugin ( pluginDef, core );
 	}
 }

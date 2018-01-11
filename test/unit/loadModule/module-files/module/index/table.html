@@ -88,8 +88,8 @@
 				};
 			},
 
-			mounted : function ( demoPlugin ) {
-				this.state.pluginData = JSON.stringify ( demoPlugin );
+			mounted : function ( demo1, demo3 ) {
+				this.state.pluginData = JSON.stringify ( demo1 ) + JSON.stringify ( demo3 );
 				console.log( "table mounted" );
 			},
 

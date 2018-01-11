@@ -98,7 +98,7 @@ export default function startRouter ( routerConfig ) {
 	// 初始化插件列表
 	const 
 		rexternalURL = /^http(?:s)?:\/\//,
-		pluginBaseURL = configuration.getConfigure ( "baseURL" ).plugin;
+		pluginBaseURL = configuration.getConfigure ( "baseURL" ).plugin,
 		callbacks = {};
 	if ( type ( plugin ) === "array" ) {
 		foreach ( plugin, pluginItem => {

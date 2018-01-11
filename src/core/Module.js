@@ -1,14 +1,13 @@
 import { noop, guid, extend, type, foreach, isEmpty } from "../func/util";
 import { parseGetQuery, queryModuleNode, getReference } from "../func/private";
 import { clear } from "../func/node";
-import { DEVELOP_COMMON, DEVELOP_SINGLE } from "../var/const";
+import { DEVELOP_COMMON, DEVELOP_SINGLE, iceAttr } from "../var/const";
 import slice from "../var/slice";
 import cache from "../cache/core";
 import { newClassCheck } from "../Class.js";
 import { argErr } from "../error.js";
 import ViewModel from "./ViewModel";
 import Tmpl from "../compiler/tmpl/core";
-import iceAttr from "../single/iceAttr";
 import check from "../check";
 import Structure from "../router/Structure";
 import VNode from "./vnode/VNode";

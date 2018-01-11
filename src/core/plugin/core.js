@@ -1,6 +1,6 @@
 import { foreach, type } from "../../func/util";
 import { pluginErr } from "../../error";
-import cache from "../../cache/core";
+import install from "./install";
 import amd from "./format/amd";
 import iife from "./format/iife";
 
@@ -22,7 +22,9 @@ export default {
 
 				// ice规范的插件对象
 				this.buildings.push ( {
-					plugin: pluginDef
+					install () {
+						install ( pluginDef );
+					}
 				} );
 			}
 			else {

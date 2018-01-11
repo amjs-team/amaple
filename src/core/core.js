@@ -1,7 +1,7 @@
-import { AUTO, HASH, BROWSER } from "../single/history/historyMode";
+import { AUTO, HASH, BROWSER } from "../router/history/historyMode";
 import Class from "../Class";
 import startRouter from "../router/core";
-import install from "./plugin/core";
+import install from "./plugin/install";
 import Module from "./Module";
 import Component from "./component/core";
 

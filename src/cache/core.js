@@ -1,8 +1,9 @@
+import { pluginErr } from "../error";
+import { type } from "../func/util";
 import plugin from "./plugin";
 import module from "./module";
 import component from "./component";
 import event from "./event";
-import { pluginErr } from "../error";
 
 /**
 	Plugin cache
@@ -20,11 +21,13 @@ import { pluginErr } from "../error";
 export default {
 
 	/**
-		getDependentPlugin ( fn: Function )
+		getDependentPlugin ( deps: Function|String )
 	
 		Return Type:
 		Array
-		函数依赖的插件对象数组
+		获取依赖插件对象以数组形式返回
+		如果deps为function，则会解析此function中传入的参数作为插件名称进行查找
+		如果deps为含有插件名的array，则直接遍历获取插件对象
 	
 		Description:
 		获取函数依赖的插件对象数组
@@ -32,19 +35,20 @@ export default {
 		URL doc:
 		http://icejs.org/######
 	*/
-	getDependentPlugin ( fn ) {
-		const fnString = fn.toString ();
-		let plugin;
-
-		return ( ( /^function(?:\s+\w+)?\s*\((.*)\)\s*/.exec ( fnString ) 
-				|| /^\(?(.*?)\)?\s*=>/.exec ( fnString ) 
-				|| /^\S+\s*\((.*?)\)/.exec ( fnString ) 
-				|| [] ) [ 1 ] || "" )
-		.split ( "," )
-		.filter ( item => !!item )
-		.map ( pluginName => {
+	getDependentPlugin ( deps ) {
+		if ( type ( deps ) === "function" ) {
+			const fnString = deps.toString ();
+			deps = ( ( /^function(?:\s+\w+)?\s*\((.*)\)\s*/.exec ( fnString ) 
+					|| /^\(?(.*?)\)?\s*=>/.exec ( fnString ) 
+					|| /^\S+\s*\((.*?)\)/.exec ( fnString ) 
+					|| [] ) [ 1 ] || "" )
+			.split ( "," )
+			.filter ( item => !!item );
+		}
+		
+		return deps.map ( pluginName => {
 			pluginName = pluginName.trim ();
-			plugin = this.getPlugin ( pluginName );
+			const plugin = this.getPlugin ( pluginName );
 			if ( !plugin ) {
 				throw pluginErr ( "inject", `没有找到名为'${ pluginName }'的插件` );
 			}

@@ -1,14 +1,12 @@
 import { foreach, type, isEmpty, guid } from "./util";
 import { attr } from "./node";
-import { componentErr } from "../error";
-import slice from "../var/slice";
-import { identifierPrefix } from "../var/const";
-import iceAttr from "../single/iceAttr";
+import { identifierPrefix, iceAttr } from "../var/const";
 import VElement from "../core/vnode/VElement";
 import VTextNode from "../core/vnode/VTextNode";
 import VFragment from "../core/vnode/VFragment";
 import parseHTML from "../compiler/htmlParser/parseHTML";
 import query from "../compiler/cssParser/core";
+import cache from "../cache/core";
 
 
 /**
@@ -232,4 +230,21 @@ export function stringToScopedVNode ( htmlString, styles ) {
 	vf.appendChild ( vstyle );
 
 	return vf;
+}
+
+/**
+	buildPlugin ( pluginDef: Object, context: Object )
+
+	Return Type:
+	void
+
+	Description:
+	构建插件对象并保存到缓存中
+
+	URL doc:
+	http://icejs.org/######
+*/
+export function buildPlugin ( pluginDef, context, deps ) {
+	deps = cache.getDependentPlugin ( deps || pluginDef.build );
+	cache.pushPlugin ( pluginDef.name, pluginDef.build.apply ( context, deps ) );
 }
