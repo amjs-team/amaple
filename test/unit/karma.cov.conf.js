@@ -97,8 +97,8 @@ module.exports = function ( config ) {
         // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
         // 需安装phantomjs: http://phantomjs.org/download.html
         // 并配置该phantomjs下的bin文件夹路径为环境变量
-        // browsers: ["PhantomJS"],
-        browsers: ["Firefox"],
+        browsers: ["PhantomJS"],
+        // browsers: ["Firefox"],
 
 
         // Continuous Integration mode

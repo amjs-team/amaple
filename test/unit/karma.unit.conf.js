@@ -1,8 +1,9 @@
-const path = require ( "path" );
+const 
+    path = require ( "path" ),
+    singleRun = process.argv [ 4 ] === "single-run";
 
 // Karma configuration
 // Generated on Fri Jun 23 2017 23:26:20 GMT+0800 (CST)
-
 module.exports = function ( config ) {
     config.set ( {
 
@@ -92,7 +93,7 @@ module.exports = function ( config ) {
 
         // Continuous Integration mode
         // if true, Karma captures browsers, runs the tests and exits
-        singleRun: false,
+        singleRun,
 
         // Concurrency level
         // how many browser should be started simultaneous
