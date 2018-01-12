@@ -1,9 +1,10 @@
-const  
+const 
+    singleRun = !( process.argv [ 5 ] === "no-single-run" ),
 
     // 浏览器及版本名为saucelabs的固定写法，无法使用驼峰式
     /*eslint-disable */
 	customLaunchers = {
-        ies: {
+        ie: {
             sl_ie_9: {
                 base: "SauceLabs",
                 browserName: "internet explorer",
@@ -35,7 +36,7 @@ const
                 version: "15"
             },
         },
-        firefoxs: {
+        firefox: {
             sl_firefox_7: {
                 base: "SauceLabs",
                 browserName: "Firefox",
@@ -67,7 +68,7 @@ const
                 version: "56"
             },
         },
-        chromes: {
+        chrome: {
             sl_chrome_26: {
                 base: "SauceLabs",
                 browserName: "chrome",
@@ -99,7 +100,7 @@ const
                 version: "beta"
             },
         },
-        safaris: {
+        safari: {
             sl_safari_8: {
                 base: "SauceLabs",
                 browserName: "safari",
@@ -113,7 +114,7 @@ const
                 version: "10"
             },
         },
-        mobiles: {
+        mobile: {
             sl_ios: {
                 base: "SauceLabs",
                 browserName: "iphone",
@@ -243,7 +244,7 @@ module.exports = function ( config ) {
 
         // Continuous Integration mode
         // if true, Karma captures browsers, runs the tests and exits
-        singleRun: true,
+        singleRun,
 
         // Concurrency level
         // how many browser should be started simultaneous

@@ -14,7 +14,6 @@ install:
 
 script:
 - npm run lint
-- npm run test:unit single-run
 - npm run test:sauce
 - npm run test:cov
 

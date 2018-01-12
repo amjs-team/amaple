@@ -1,6 +1,6 @@
 const 
     path = require ( "path" ),
-    singleRun = process.argv [ 4 ] === "single-run";
+    singleRun = !( process.argv [ 4 ] === "no-single-run" );
 
 // Karma configuration
 // Generated on Fri Jun 23 2017 23:26:20 GMT+0800 (CST)
@@ -88,6 +88,7 @@ module.exports = function ( config ) {
         // browsers: ["Safari"],
         browsers: ["Chrome"],
         // browsers: ["IE"],
+        // browsers: ["PhantomJS"],
         // browsers: ["Chrome", "Safari", "Firefox"],
 
 

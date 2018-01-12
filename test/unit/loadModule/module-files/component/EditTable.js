@@ -1,5 +1,5 @@
 ice.class ( "EditTable" ).extends ( ice.Component ) ( {
-	init () {
+	init: function () {
 		this.propsType ( {
 			post: Object
 		} );
@@ -10,7 +10,7 @@ ice.class ( "EditTable" ).extends ( ice.Component ) ( {
 			desc : "this is a EditTable component"
 		};
 	},
-	render () {
+	render: function () {
 		this.template ( "<span :if='show'>{{ desc }}</span><span :else>error</span><div>{{ postStr }}</div>" ).
 		style ( {
 			span : { color : "blue" }

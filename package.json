@@ -20,7 +20,12 @@
     "dev": "rollup -w -c scripts/dev.js",
     "test:unit": "karma start test/unit/karma.unit.conf.js",
     "test:cov": "karma start test/unit/karma.cov.conf.js",
-    "test:sauce": "karma start test/unit/karma.sauce.conf.js firefoxs && karma start test/unit/karma.sauce.conf.js chromes && karma start test/unit/karma.sauce.conf.js ies && karma start test/unit/karma.sauce.conf.js safaris && karma start test/unit/karma.sauce.conf.js mobiles",
+    "test:sauce-firefox": "karma start test/unit/karma.sauce.conf.js firefox",
+    "test:sauce-chrome": "karma start test/unit/karma.sauce.conf.js chrome",
+    "test:sauce-ie": "karma start test/unit/karma.sauce.conf.js ie",
+    "test:sauce-safari": "karma start test/unit/karma.sauce.conf.js safari",
+    "test:sauce-mobile": "karma start test/unit/karma.sauce.conf.js mobile",
+    "test:sauce": "karma start test/unit/karma.sauce.conf.js firefox && karma start test/unit/karma.sauce.conf.js chrome && karma start test/unit/karma.sauce.conf.js ie && karma start test/unit/karma.sauce.conf.js safari && karma start test/unit/karma.sauce.conf.js mobile",
     "commit": "git-cz",
     "lint": "eslint src scripts test",
     "init": "npm install && node scripts/hooks.js"

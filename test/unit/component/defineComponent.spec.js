@@ -54,10 +54,9 @@ describe ( "define component =>", () => {
 		expect ( realDOM.firstChild.firstChild.nodeValue ).toBe ( "test-btn" );
 
 		tc.action.print ( "hello icejs" );
-		const scopedAttr = Object.keys ( realDOM.firstChild.nextElementSibling.dataset ) [ 0 ];
 		expect ( fragment.children [ 0 ].templateNodes [ 1 ].children [ 0 ].nodeValue ).toBe ( "hello icejs" );
 		expect ( realDOM.firstChild.nextElementSibling.firstChild.nodeValue ).toBe ( "hello icejs" );
-		expect ( realDOM.lastChild.firstChild.nodeValue ).toBe ( `.console[data-${ scopedAttr }]{color:#00aae6;}` );
+		expect ( realDOM.lastChild.firstChild.nodeValue ).toMatch ( /^\.console\[data-no-\d+\]{color:#00aae6;}$/ );
 	} );
 
 	it ( "validate component props without vm data", () => {

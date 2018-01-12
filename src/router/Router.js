@@ -184,7 +184,7 @@ extend ( Router, {
     errorPaths: {},
 
     /**
-        getError ()
+        getError ( errorCode: Number )
     
         Return Type:
         Object
@@ -197,7 +197,7 @@ extend ( Router, {
         http://icejs.org/######
     */
     getError ( errorCode ) {
-        return this.errorPaths [ "error" + errorCode ];
+        return this.errorPaths [ `error${ errorCode }` ];
     },
 
     /**

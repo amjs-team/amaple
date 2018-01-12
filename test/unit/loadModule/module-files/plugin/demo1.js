@@ -1,6 +1,6 @@
 ice.install ( {
 	name : "demo1",
-	build () {
+	build : function () {
 		return {o:"demo1"};
 	}
 } );

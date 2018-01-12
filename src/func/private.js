@@ -71,7 +71,9 @@ export function parseGetQuery ( getString ) {
 	http://icejs.org/######
 */
 export function getFunctionName ( fn ) {
-	return fn.name || ( ( fn.toString ().match ( /^function\s+([\w_]+)/ ) || [] ) [ 1 ] );
+	return type ( fn ) === "function" 
+	? fn.name || ( ( fn.toString ().match ( /^function\s+([\w_]+)/ ) || [] ) [ 1 ] )
+	: "";
 }
 
 /**
