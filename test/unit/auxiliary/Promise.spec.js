@@ -1,4 +1,4 @@
-import Promise from "src/promise/Promise";
+import Promise from "src/promise/core";
 
 describe ( "Promise =>", () => {
 

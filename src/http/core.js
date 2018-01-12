@@ -2,7 +2,7 @@ import { extend, type, foreach, isPlainObject } from "../func/util";
 import { attr, serialize } from "../func/node";
 import event from "../event/core";
 import correctParam from "../correctParam";
-import Promise from "../promise/Promise";
+import Promise from "../promise/core";
 import ICEXMLHttpRequest from "./ICEXMLHttpRequest";
 import xhr from "./transport/xhr";
 import script from "./transport/script";

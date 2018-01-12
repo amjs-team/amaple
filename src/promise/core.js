@@ -1,5 +1,6 @@
 import { type, foreach, extend, noop } from "../func/util";
 import check from "../check";
+import { PENDING, FULFILLED, REJECTED } from "./status";
 
 
 /**
@@ -76,7 +77,7 @@ export default function Promise ( resolver ) {
 	let
 		resolveArgs,
 		rejectArgs,
-		state = Promise.PENDING,
+		state = PENDING,
 		handlers = [];
 
 	/**
@@ -94,8 +95,8 @@ export default function Promise ( resolver ) {
 		http://icejs.org/######
 	*/
 	function resolve ( ...args ) {
-		if ( state === Promise.PENDING ) {
-			state = Promise.FULFILLED;
+		if ( state === PENDING ) {
+			state = FULFILLED;
 			resolveArgs = args;
 			
 			foreach ( handlers,  handler => {
@@ -120,8 +121,8 @@ export default function Promise ( resolver ) {
 	*/
 	function reject ( ...args ) {
 
-		if ( state === Promise.PENDING ) {
-			state = Promise.REJECTED;
+		if ( state === PENDING ) {
+			state = REJECTED;
 			rejectArgs = args;
 
 			foreach ( handlers, handler => {
@@ -146,13 +147,13 @@ export default function Promise ( resolver ) {
 		http://icejs.org/######
 	*/
 	this.handle = handler => {
-		if ( state === Promise.PENDING ) {
+		if ( state === PENDING ) {
 			handlers.push ( handler );
 		}
-		else if ( state === Promise.FULFILLED ) {
+		else if ( state === FULFILLED ) {
 			( handler.onFulfilled || noop ).apply ( null, resolveArgs );
 		}
-		else if ( state === Promise.REJECTED ) {
+		else if ( state === REJECTED ) {
 			( handler.onRejected || noop ).apply ( null, rejectArgs );
 		}
 	};
@@ -264,11 +265,6 @@ extend ( Promise.prototype, {
 
 
 extend ( Promise, {
-	
-	// Promise的三种状态定义
-	PENDING : 0,
-	FULFILLED : 1,
-	REJECTED : 2,
 
 	/**
 		when ( promise1: Object, promise2?: Object, promise3?: Object ... )
