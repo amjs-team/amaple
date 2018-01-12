@@ -4,3 +4,4 @@ node_modules
 dist
 demo
 test/coverage
+.coveralls.yml

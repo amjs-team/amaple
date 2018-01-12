@@ -1,11 +1,11 @@
 import cache from "./cache/core";
-import { type, foreach, isEmpty, isPlainObject, guid, timestamp } from "./func/util";
+import { type, foreach, isEmpty, isPlainObject, guid } from "./func/util";
 import event from "./event/core";
 import http from "./http/core";
 import Promise from "./promise/Promise";
 
 // 创建插件
-cache.pushPlugin ( "util", { type, foreach, isEmpty, isPlainObject, guid, timestamp } );
+cache.pushPlugin ( "util", { type, foreach, isEmpty, isPlainObject, guid } );
 cache.pushPlugin ( "event", {
 	on ( types, listener, once ) {
 		event.on ( undefined, types, listener, false, once );

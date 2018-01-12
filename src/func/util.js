@@ -219,20 +219,3 @@ export function isPlainObject ( object ) {
 export function guid () {
 	return setTimeout ( noop, 1 ) + "";
 }
-
-/**
-	timestamp ()
-
-	Return Type:
-	Number
-	当前时间戳
-
-	Description:
-	获取当前时间戳
-
-	URL doc:
-	http://icejs.org/######
-*/
-export function timestamp () {
-	return Math.floor ( Date.now () / 1000 );
-}

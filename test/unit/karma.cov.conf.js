@@ -40,7 +40,13 @@ module.exports = function ( config ) {
             },
             module: {
                 rules: [
-                    { test: /\.js/, exclude: /node_modules/, loader: "babel-loader" }
+                    { test: /\.js/, exclude: /node_modules/, loader: "babel-loader", options: 
+                        {
+                            "plugins": [
+                                "istanbul"
+                            ]
+                        }
+                    }
                 ]
             },
             devtool: "inline-source-map"
@@ -54,19 +60,21 @@ module.exports = function ( config ) {
         // preprocess matching files before serving them to the browser
         // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
         preprocessors: {
-            "context.js": ["webpack", "sourcemap", "coverage"]
+            "context.js": ["webpack", "sourcemap"]
         },
 
 
         // test results reporter to use
         // possible values: "dots", "progress"
         // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-        reporters: ["coverage"],
+        reporters: ["dots", "coverage"],
 
         coverageReporter: {
-			type : "html",
-			dir : "../coverage/"
-		},
+            reporters: [
+                { type: "lcov", dir: "../coverage", subdir: "." },
+                { type: "text-summary", dir: "../coverage", subdir: "." }
+            ]
+        },
 
         // web server port
         port: 9876,
@@ -87,11 +95,10 @@ module.exports = function ( config ) {
 
         // start these browsers
         // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-        // browsers: ["Firefox"],
-        // browsers: ["Safari"],
-        browsers: ["Chrome"],
-        // browsers: ["IE"],
-        // browsers: ["Chrome", "Safari", "Firefox"],
+        // 需安装phantomjs: http://phantomjs.org/download.html
+        // 并配置该phantomjs下的bin文件夹路径为环境变量
+        // browsers: ["PhantomJS"],
+        browsers: ["Firefox"],
 
 
         // Continuous Integration mode
