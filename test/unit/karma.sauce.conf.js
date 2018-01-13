@@ -195,7 +195,7 @@ module.exports = function ( config ) {
         	testName: "icejs test" + ( process.argv [ 4 ] ? " on " + process.argv [ 4 ] : "" ),
         	recordScreenshots: false,
             recordVideo: false,
-        	build: "build-" + Date.now ()
+        	build: `build-${ Date.now () }-${ testLaunchers }`
         },
         retryLimit: 10,
         customLaunchers: testLaunchers,
