@@ -11,7 +11,7 @@ import cache from "../cache/core";
 import http from "../http/core";
 import event from "../event/core";
 import { identifierName, getIdentifier } from "../core/Module";
-import Router from "../router/core";
+import Router from "../router/Router";
 import Structure from "./Structure";
 import Tmpl from "../compiler/tmpl/core";
 import VNode from "../core/vnode/VNode";

@@ -14,7 +14,11 @@ install:
 
 script:
 - npm run lint
-- npm run test:sauce
+- karma start test/unit/karma.sauce.conf.js firefox && 
+  karma start test/unit/karma.sauce.conf.js chrome && 
+  karma start test/unit/karma.sauce.conf.js ie && 
+  karma start test/unit/karma.sauce.conf.js safari && 
+  karma start test/unit/karma.sauce.conf.js mobile
 - npm run test:cov
 
 after_success:

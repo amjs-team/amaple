@@ -201,7 +201,7 @@ function parseScript ( moduleString, scriptPaths, scriptNames, parses ) {
 
 	const 
 		rscript = /<script(?:.*?)>([\s\S]+)<\/script>/i,
-		rscriptComment = /\/\/(.*?)\n|\/\*([\s\S]*?)\*\//g,
+		rscriptComment = /\/\/(.*?)\r?\n|\/\*([\s\S]*?)\*\//g,
 		rimport = /\s*(?:(?:(?:var|let|const)\s+)?(.+?)\s*=\s*)?import\s*\(\s*["'](.*?)["']\s*\)(?:\s*[,;])?/g,
 		rcomponent = /\s*(?:(?:(?:var|let|const)\s+)?(.+?)\s*=\s*)?ice\s*\.\s*class\s*\(\s*["'`].+?["'`]\s*\)\s*\.\s*extends\s*\(\s*ice\s*\.\s*Component\s*\)/,
 		rhtmlComment = /<!--(.*?)-->/g,

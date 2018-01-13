@@ -183,18 +183,20 @@ extend ( Loader, {
 	            	else {
 
 	                	// IE9
-	                	const scripts = slice.call ( document.querySelectorAll ( "script" ) );
-	                	for ( let i = scripts.length - 1, script; script = scripts [ i-- ]; ) {
-	                    	if ( script.readyState === "interative" ) {
+	                	const scripts = slice.call ( document.head.querySelectorAll ( "script" ) );
+	                	foreach ( scripts, script => {
+	                    	if ( script.readyState === "interactive" ) {
 	                        	anchor.href = script.src;
-	                        	break;
+	                        	return false;
 	                        }
-	                    }
+	                    } );
 	                }
 				}
 	        }
 
-	        return ( anchor.pathname.match ( /^(.*?).js$/ ) || [ "", "" ] ) [ 1 ];
+	        // IE下的a标签的pathname属性开头没有"/"
+	        const pathname = ( anchor.pathname.match ( /^(.*?).js$/ ) || [ "", "" ] ) [ 1 ];
+	        return ( pathname.substr ( 0, 1 ) === "/"  ? "" : "/" ) + pathname;
 		},
 
 	/**

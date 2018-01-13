@@ -25,7 +25,6 @@
     "test:sauce-ie": "karma start test/unit/karma.sauce.conf.js ie",
     "test:sauce-safari": "karma start test/unit/karma.sauce.conf.js safari",
     "test:sauce-mobile": "karma start test/unit/karma.sauce.conf.js mobile",
-    "test:sauce": "karma start test/unit/karma.sauce.conf.js firefox && karma start test/unit/karma.sauce.conf.js chrome && karma start test/unit/karma.sauce.conf.js ie && karma start test/unit/karma.sauce.conf.js safari && karma start test/unit/karma.sauce.conf.js mobile",
     "commit": "git-cz",
     "lint": "eslint src scripts test",
     "init": "npm install && node scripts/hooks.js"

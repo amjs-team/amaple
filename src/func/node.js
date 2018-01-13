@@ -48,12 +48,12 @@ export function appendScript ( node, success = noop, error = noop ) {
 		script.async = true;
 
 		// 绑定加载事件，加载完成后移除此元素
+		// IE下将会触发readystatechange和load事件，所以会执行两次，但只有readyState === "loaded"时会执行语句
 		event.on ( script, "load readystatechange", function ( event ) {
-			if ( !this.readyState || this.readyState === "loaded" || this.raeadyState === "complete" ) {
+			if ( !this.readyState || this.readyState === "loaded" || this.readyState === "complete" ) {
 				success ( event );
+				script.parentNode.removeChild ( script );
 			}
-
-			script.parentNode.removeChild ( script );
 		} );
 
 		event.on ( script, "error", () => {
