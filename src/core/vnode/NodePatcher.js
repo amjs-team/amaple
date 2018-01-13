@@ -15,7 +15,7 @@ import event from "../../event/core";
 	回调函数为每项遍历的处理回调函数
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 function walkTemplateNodes ( templateNodes, callback ) {
 	foreach ( templateNodes, vnode => {
@@ -44,7 +44,7 @@ extend ( NodePatcher.prototype, {
 		记录需增加或移动节点的信息
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	addNode ( item, index ) {
 		this.patches.push ( { type : NodePatcher.NODE_REORDER, item, index } );
@@ -60,7 +60,7 @@ extend ( NodePatcher.prototype, {
 		记录需增加或移动节点的信息
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	moveNode ( item, index ) {
 		this.patches.push ( { type : NodePatcher.NODE_REORDER, item, index, isMove : true } );
@@ -76,7 +76,7 @@ extend ( NodePatcher.prototype, {
 		记录替换节点的信息
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	replaceNode ( item, replaceNode ) {
 		this.patches.push ( { type : NodePatcher.NODE_REPLACE, item, replaceNode } );
@@ -92,7 +92,7 @@ extend ( NodePatcher.prototype, {
 		记录移除节点的信息
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	removeNode ( item ) {
 		this.patches.push ( { type : NodePatcher.NODE_REMOVE, item } );
@@ -108,7 +108,7 @@ extend ( NodePatcher.prototype, {
 		记录修改文本节点的信息
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	replaceTextNode ( item, replaceNode ) {
 		this.patches.push ( { type : NodePatcher.TEXTNODE, item, replaceNode } );
@@ -124,7 +124,7 @@ extend ( NodePatcher.prototype, {
 		记录重设或增加节点属性的信息
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	reorderAttr ( item, name, val ) {
 		this.patches.push ( { type : NodePatcher.ATTR_REORDER, item, name, val } );
@@ -140,7 +140,7 @@ extend ( NodePatcher.prototype, {
 		记录移除节点属性的记录
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	removeAttr ( item, name ) {
 		this.patches.push ( { type : NodePatcher.ATTR_REMOVE, item, name } );
@@ -156,7 +156,7 @@ extend ( NodePatcher.prototype, {
 		记录事件绑定的记录
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	addEvents ( item, eventType, handlers ) {
 		this.patches.push ( { type : NodePatcher.EVENTS_ADD, item, eventType, handlers } );
@@ -172,7 +172,7 @@ extend ( NodePatcher.prototype, {
 		合并NodePatcher内的diff步骤
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	concat ( nodePatcher ) {
     	this.patches = this.patches.concat ( nodePatcher.patches );
@@ -188,7 +188,7 @@ extend ( NodePatcher.prototype, {
 		根据虚拟节点差异更新视图
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	patch () {
 		let p;

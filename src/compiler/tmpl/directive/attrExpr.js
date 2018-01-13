@@ -16,7 +16,7 @@ export default {
         此方法只会在初始化挂载数据时调用一次
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
 	before () {
         const exprMatch = this.expr.match ( /^(.*?):(.*)$/ );
@@ -48,7 +48,7 @@ export default {
         初始化挂载数据时和对应数据更新时将会被调用
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
 	update ( val ) {
         const 

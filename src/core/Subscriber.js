@@ -12,7 +12,7 @@ import ViewWatcher from "./ViewWatcher";
     ViewModel会为每个监听属性创建一个Subscriber对象用于保存该属性对应监听视图的更新
 
     URL doc:
-    http://icejs.org/######
+    http://amaple.org/######
 */
 export default function Subscriber () {
 	this.watchers = [];
@@ -30,7 +30,7 @@ extend ( Subscriber.prototype, {
         订阅监听视图
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
 	subscribe () {
     	if ( type ( Subscriber.watcher ) === "object" ) {
@@ -61,7 +61,7 @@ extend ( Subscriber.prototype, {
         通知所有监听视图进行更新
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
 	notify () {
     	foreach ( this.watchers, watcher => {

@@ -18,7 +18,7 @@ extend ( NodeTransaction.prototype, {
 		开启当前的事物对象
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	start () {
 		NodeTransaction.acting = this;
@@ -35,7 +35,7 @@ extend ( NodeTransaction.prototype, {
 		收集对比的新旧虚拟节点
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	collect ( moduleNode ) {
 		if ( !this.transactions ) {
@@ -53,7 +53,7 @@ extend ( NodeTransaction.prototype, {
 		提交事物更新关闭已开启的事物
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	commit () {
 		if ( this.transactions ) {

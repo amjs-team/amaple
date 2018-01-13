@@ -16,7 +16,7 @@ import NodeTransaction from "./vnode/NodeTransaction";
 	当一个状态数据为数组或对象时，它也需要被转换为监听数据
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 function convertSubState ( value, subs, context ) {
 	if ( value && isPlainObject ( value ) ) {
@@ -39,7 +39,7 @@ function convertSubState ( value, subs, context ) {
 	初始化绑定事件
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 function initMethod ( methods, context ) {
 	foreach ( methods, ( method, key ) => {
@@ -63,7 +63,7 @@ function initMethod ( methods, context ) {
 	初始化监听属性
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 function initState ( states, context ) {
 	foreach ( states, ( state, key ) => {
@@ -123,7 +123,7 @@ function initState ( states, context ) {
 	初始化监听计算属性
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 function initComputed ( computeds, context ) {
 	foreach ( computeds, function ( computed, key ) {
@@ -181,7 +181,7 @@ function initComputed ( computeds, context ) {
 	初始化监听数组
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 function initArray ( array, subs, context ) {
 
@@ -227,10 +227,10 @@ function initArray ( array, subs, context ) {
 
 	Description:
 	ViewModel数据监听类
-	ice.init方法返回的需被监听的数据都使用此类进行实例化
+	am.init方法返回的需被监听的数据都使用此类进行实例化
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 export default function ViewModel ( vmData, isRoot = true ) {
 

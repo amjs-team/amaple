@@ -1,6 +1,6 @@
 import { foreach, type, isEmpty, guid } from "./util";
 import { attr } from "./node";
-import { identifierPrefix, iceAttr } from "../var/const";
+import { identifierPrefix, amAttr } from "../var/const";
 import VElement from "../core/vnode/VElement";
 import VTextNode from "../core/vnode/VTextNode";
 import VFragment from "../core/vnode/VFragment";
@@ -19,7 +19,7 @@ import cache from "../cache/core";
 	转换存取器属性
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 export function defineReactiveProperty ( key, getter, setter, target ) {
 	Object.defineProperty ( target, key, {
@@ -41,7 +41,7 @@ export function defineReactiveProperty ( key, getter, setter, target ) {
 	将形如“?a=1&b=2”的get参数解析为参数对象
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 export function parseGetQuery ( getString ) {
 	const getObject = {};
@@ -68,7 +68,7 @@ export function parseGetQuery ( getString ) {
 	es6下可通过name属性获取类名
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 export function getFunctionName ( fn ) {
 	return type ( fn ) === "function" 
@@ -87,7 +87,7 @@ export function getFunctionName ( fn ) {
 	mode为true时，将驼峰式风格的组件名转换为中划线的组件名
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 export function transformCompName ( compName, mode ) {
 	return ( mode !== true ? 
@@ -108,7 +108,7 @@ export function transformCompName ( compName, mode ) {
 	extra为额外的参数，传入的额外参数将会在第一个遍历项中传入，但不会传入之后遍历的子项中
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 export function walkVDOM ( vdom, callback, ...extra ) {
 	let vnode = vdom;
@@ -132,14 +132,14 @@ export function walkVDOM ( vdom, callback, ...extra ) {
 	遍历节点及子节点查询对应名称的节点
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 export function queryModuleNode ( moduleName, context ) {
 	let node = context || document.body,
 		targetNode;
 
 	do {
-		if ( node.nodeType === 1 && attr ( node, iceAttr.module ) === moduleName ) {
+		if ( node.nodeType === 1 && attr ( node, amAttr.module ) === moduleName ) {
 			targetNode = node;
 
 			break;
@@ -167,7 +167,7 @@ export function queryModuleNode ( moduleName, context ) {
 	当组件不可见时返回undefined
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 export function getReference ( references, refName ) {
 	let reference = references [ refName ];
@@ -244,7 +244,7 @@ export function stringToScopedVNode ( htmlString, styles ) {
 	构建插件对象并保存到缓存中
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 export function buildPlugin ( pluginDef, context, deps ) {
 	deps = cache.getDependentPlugin ( deps || pluginDef.build );

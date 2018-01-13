@@ -28,7 +28,7 @@ let	expando = "eventExpando" + Date.now (),
 	将根据事件触发DOM和事件类型调用相应真实的回调
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 function handler ( e ) {
 	let _listeners = isPlainObject ( this )  
@@ -54,7 +54,7 @@ function handler ( e ) {
 	常规事件一般在交互过程中触发，自定义事件需调用event.emit(elem, type)手动触发
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 export default {
 
@@ -69,7 +69,7 @@ export default {
 		判断元素是否支持指定事件
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	support ( eventType, elem = document.createElement ( "div" ) ) {
 		let support;
@@ -104,7 +104,7 @@ export default {
 		当在节点上绑定事件时，节点只绑定调用函数，而所有的事件绑定则存储在events私有对象上，节点对象上将保存对事件key的引用
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	on ( elem, types, listener, useCapture, once ) {
 
@@ -170,7 +170,7 @@ export default {
 		以兼容模式解绑事件，可一次解绑多个类型的事件
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	remove ( elem, types, listener, useCapture ) {
 
@@ -230,7 +230,7 @@ export default {
 		触发事件
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	emit ( elem, types ) {
 

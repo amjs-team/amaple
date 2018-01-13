@@ -18,7 +18,7 @@ import cache from "../cache/core";
 	callbacks中的回调函数为对应的url下，script的onload事件需调用的回调函数
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 export default function require ( deps, factory, moduleType, callbacks ) {
 	Loader.isRequiring = true;

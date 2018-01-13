@@ -58,7 +58,7 @@ export default {
 		对history.replaceState方法的封装
 		
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	replace ( state, url ) {
 		if ( this.entity.pushState ) {
@@ -80,7 +80,7 @@ export default {
 		对history.pushState方法的封装
 		
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	push ( state, url ) {
     	if ( this.entity.pushState ) {
@@ -107,7 +107,7 @@ export default {
 		保存状态记录
 		
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	saveState ( state, pathname ) {
 		this.states [ pathname ] = state;
@@ -123,7 +123,7 @@ export default {
 		获取对应记录
 		
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	getState ( pathname ) {
 		return this.states [ pathname || window.location.pathname ];
@@ -143,7 +143,7 @@ export default {
     	构建规则与普通跳转的构建相同，当新path以“/”开头时则从原url的根目录开始替换，当新path不以“/”老头时，以原url最后一个“/”开始替换
 
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	buildURL ( path ) {
     	const pathAnchor = document.createElement ( "a" );
@@ -171,7 +171,7 @@ export default {
 	获取pathname
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 	getPathname () {
 		return window.location.pathname;
@@ -188,7 +188,7 @@ export default {
 		获取get请求参数
 
     	URL doc:
-    	http://icejs.org/######
+    	http://amaple.org/######
     */
 	getQuery ( path ) {
 		return path && ( path.match ( /\?(.*)$/ ) || [ "" ] ) [ 0 ] || window.location.search;

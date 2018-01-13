@@ -16,7 +16,7 @@ export default {
         将引用元素/组件保存到对应的模块中
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
 	update ( refName ) {
     	const 

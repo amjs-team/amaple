@@ -14,7 +14,7 @@ export default {
 		添加页面模块缓存
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	push ( name, module ) {
 		this.modules [ name ] = module;
@@ -31,7 +31,7 @@ export default {
 		获取页面模块缓存，没有找到则返回null
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	get ( name ) {
 		return this.modules [ name ] || null;

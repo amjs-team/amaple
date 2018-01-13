@@ -3,10 +3,10 @@ import { query, attr } from "../func/node";
 import { queryModuleNode, parseGetQuery } from "../func/private";
 import require from "../require/core";
 import { envErr, moduleErr } from "../error";
-import iceHistory from "./history/core";
+import amHistory from "./history/core";
 import compileModule from "../compiler/moduleCompiler/compileModule";
 import configuration from "../core/configuration/core";
-import ice from "../core/core";
+import am from "../core/core";
 import cache from "../cache/core";
 import http from "../http/core";
 import event from "../event/core";
@@ -28,7 +28,7 @@ import NodeTransaction from "../core/vnode/NodeTransaction";
 	对比新旧参数数组中是否存在改变的参数，有则返回true，没有则返回false
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 function compareArgs ( newArgs, originalArgs ) {
 	const len = Object.keys ( newArgs ).length;
@@ -62,7 +62,7 @@ function compareArgs ( newArgs, originalArgs ) {
 	页面模块加载器
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 export default function ModuleLoader ( nextStructure, param, get, post ) {
 
@@ -101,7 +101,7 @@ extend ( ModuleLoader.prototype, {
 		将等待加载完成的页面模块名放入context.waiting中
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	addWaiting ( name ) {
 		this.waiting.push ( name );
@@ -118,7 +118,7 @@ extend ( ModuleLoader.prototype, {
 		如果等待队列已空则立即刷新模块
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	delWaiting ( name ) {
 		const pointer = this.waiting.indexOf ( name );
@@ -143,7 +143,7 @@ extend ( ModuleLoader.prototype, {
 		标题按模块从上到下，从外到内的顺序遍历获取第一个有标题的模块进行更新
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	updateTitle ( title ) {
 		if ( !this.title ) {
@@ -163,7 +163,7 @@ extend ( ModuleLoader.prototype, {
 		根据structure对象来加载更新模块
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	load ( structure, param ) {
 		structure = structure || this.nextStructure.entity;
@@ -252,14 +252,14 @@ extend ( ModuleLoader.prototype, {
 		调用已加载完成的模块更新函数执行更新操作
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	flush () {
 		if ( this.moduleError ) {
 
 			// 加载模块遇到错误，直接处理错误信息
 		   	const 
-		   		pathResolver = iceHistory.history.buildURL ( this.moduleError ),
+		   		pathResolver = amHistory.history.buildURL ( this.moduleError ),
 		   		param = {},
 		   		nextStructure = Router.matchRoutes ( pathResolver.pathname, param ),
 		   		nextStructureBackup = nextStructure.copy (),
@@ -305,7 +305,7 @@ extend ( ModuleLoader, {
 		data为post参数，直接提交给http的data
 
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	actionLoad ( currentStructure, moduleNode, param, args, data, method, timeout, before = noop, success = noop, error = noop, abort = noop ) {
 
@@ -370,11 +370,11 @@ extend ( ModuleLoader, {
                 if ( !moduleNode [ identifierName ] ) {
                 	moduleNode [ identifierName ] = moduleIdentifier;
 
-                	// 调用render将添加的ice-identifier同步到实际node上
+                	// 调用render将添加的am-identifier同步到实际node上
                 	moduleNode.render ();
                 }
 
-	        	historyModule.updateFn ( ice, { moduleNode, moduleFragment: historyModule.updateFn.moduleFragment.clone (), NodeTransaction, require, signCurrentRender, flushChildren : flushChildren ( this ) } );
+	        	historyModule.updateFn ( am, { moduleNode, moduleFragment: historyModule.updateFn.moduleFragment.clone (), NodeTransaction, require, signCurrentRender, flushChildren : flushChildren ( this ) } );
 	        };
 
 	        // 获取模块更新函数完成后在等待队列中移除
@@ -421,7 +421,7 @@ extend ( ModuleLoader, {
 	                	moduleNode [ identifierName ] = moduleIdentifier;
 	                }
 
-	        		updateFn ( ice, { moduleNode, moduleFragment: updateFn.moduleFragment.clone (), NodeTransaction, require, signCurrentRender, flushChildren : flushChildren ( this ) } );
+	        		updateFn ( am, { moduleNode, moduleFragment: updateFn.moduleFragment.clone (), NodeTransaction, require, signCurrentRender, flushChildren : flushChildren ( this ) } );
 
 	            	// 调用success回调
 					success ( moduleNode );
@@ -429,7 +429,7 @@ extend ( ModuleLoader, {
 
 	            // 获取模块更新函数完成后在等待队列中移除
 	    		this.delWaiting ( moduleIdentifier );
-			} ).fail ( ( iceXHR, errorCode ) => {
+			} ).fail ( ( amXHR, errorCode ) => {
 
 				// 保存错误信息并立即刷新
 	        	this.moduleError = Router.getError ( errorCode );

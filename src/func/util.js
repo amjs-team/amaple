@@ -12,7 +12,7 @@ import slice from "../var/slice";
  	获取传入的参数的变量类型，与typeof关键字不同的是，当参数为Array时返回"array"，当变量为null时返回"null"
  
  	URL doc:
- 	http://icejs.org/######
+ 	http://amaple.org/######
  */
 export function type ( arg ) {
 	return arg !== null 
@@ -31,7 +31,7 @@ export function type ( arg ) {
 	用于函数调用兼容处理
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 export function noop () {}
 
@@ -49,7 +49,7 @@ export function noop () {}
     回调函数中返回false跳出此循环，且此返回值会在foreach中返回，在需跳出多层循环时return foreach (...)实现
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 export function foreach ( target, callback ) {
 
@@ -101,7 +101,7 @@ export function foreach ( target, callback ) {
 	判断对象或数组是否为空对象或空数组
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 export function isEmpty ( object ) {
 	const tobj = type ( object );
@@ -146,7 +146,7 @@ export function isEmpty ( object ) {
 	合并后的obj为{a: 1, b: 2, c: 4, d: 5, e: 6}
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 export function extend ( ...args ) {
 
@@ -198,7 +198,7 @@ export function extend ( ...args ) {
 	兼容性处理：IE10及一下的对象上没有__proto__原型引用，而constructor是直接在object上
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 export function isPlainObject ( object ) {
 	return object.constructor === Object;
@@ -214,7 +214,7 @@ export function isPlainObject ( object ) {
 	获取唯一标识
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 export function guid () {
 	return setTimeout ( noop, 1 ) + "";

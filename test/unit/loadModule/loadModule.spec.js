@@ -1,13 +1,13 @@
-import ice from "ice";
+import am from "am";
 
-describe ( "ice test =>", () => {
+describe ( "am test =>", () => {
 
-	it ( "load a simple ice module", () => {
+	it ( "load a simple am module", () => {
 		document.body.innerHTML = `<div :module></div><div :module="tips"></div>`;
 
-		window.ice = ice;
-		ice.startRouter ( {
-			history : ice.BROWSER,
+		window.am = am;
+		am.startRouter ( {
+			history : am.BROWSER,
 			plugin : [
 				"demo1", 
 				{
@@ -22,7 +22,7 @@ describe ( "ice test =>", () => {
 				},
 				{ 
 					name: "demo4", build ( demo1, demo2, demo3 ) {
-						expect ( this ).toBe ( ice );
+						expect ( this ).toBe ( am );
 						expect ( demo1.o ).toBe ( "demo1" );
 						expect ( demo2.o ).toBe ( "demo2" );
 						expect ( demo2.ext ).toBe ( "demo1" );

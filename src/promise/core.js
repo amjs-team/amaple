@@ -66,7 +66,7 @@ import { PENDING, FULFILLED, REJECTED } from "./status";
 	以此类推第三重、第四重...
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 export default function Promise ( resolver ) {
 
@@ -92,7 +92,7 @@ export default function Promise ( resolver ) {
 		see Promise注释
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	function resolve ( ...args ) {
 		if ( state === PENDING ) {
@@ -117,7 +117,7 @@ export default function Promise ( resolver ) {
 		see Promise注释
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	function reject ( ...args ) {
 
@@ -144,7 +144,7 @@ export default function Promise ( resolver ) {
 		当状态为Rejected时，执行onRejected方法
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	this.handle = handler => {
 		if ( state === PENDING ) {
@@ -176,7 +176,7 @@ extend ( Promise.prototype, {
 		see Promise注释
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	then ( onFulfilled, onRejected ) {
 		return new Promise ( ( resolve, reject ) => {
@@ -214,7 +214,7 @@ extend ( Promise.prototype, {
 		成功时的回调函数绑定
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	done ( onFulfilled ) {
 		this.handle ( { onFulfilled } );
@@ -232,7 +232,7 @@ extend ( Promise.prototype, {
 		失败时的回调函数绑定
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	fail ( onRejected ) {
 		this.handle ( { onRejected } );
@@ -250,7 +250,7 @@ extend ( Promise.prototype, {
 		绑定执行函数成功或失败时的回调函数，即不管执行函数成功与失败，都将调用此方法绑定的回调函数
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	always ( callback ) {
 		this.handle ( {
@@ -278,7 +278,7 @@ extend ( Promise, {
 		传入参数为不定个数Promise的对象
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	when () {
 
@@ -295,7 +295,7 @@ extend ( Promise, {
 		用于判断对象是否为thenable对象（即是否包含then方法）
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	isThenable ( value ) {
 		const t = type ( value );

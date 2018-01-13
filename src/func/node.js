@@ -14,7 +14,7 @@ import correctParam from "../correctParam";
 	获取元素对象#!/usr/bin/env 
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 export function query ( selector, context, all ) {
 	let elem = ( context || document ) [ all ? "querySelectorAll" : "querySelector" ] ( selector );
@@ -31,7 +31,7 @@ export function query ( selector, context, all ) {
 	异步动态加载js文件
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 export function appendScript ( node, success = noop, error = noop ) {
 	let script 	= document.createElement ( "script" );
@@ -83,7 +83,7 @@ export function appendScript ( node, success = noop, error = noop ) {
 	如果参数是script标签或javascript代码，则直接执行
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 export function scriptEval ( code, callback = noop ) {
 	check ( code ).type ( "string", "array" ).or ().prior ( ( _this ) => {
@@ -141,7 +141,7 @@ export function scriptEval ( code, callback = noop ) {
 	如果node内有script元素则会在插入元素后执行包含的script
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 export function append ( context, node, callback ) {
 	check ( context.nodeType ).be ( 1 ).ifNot ( "fn append:context", "context必须为DOM节点" ).do ();
@@ -200,7 +200,7 @@ export function append ( context, node, callback ) {
 	清空节点元素内的所有内容
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 export function clear ( context ) {
 	
@@ -227,7 +227,7 @@ export function clear ( context ) {
 	如果node内有script元素则会在插入元素后执行包含的script
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 export function html ( context, node, callback = noop ) {
 	context = clear ( context );
@@ -246,7 +246,7 @@ export function html ( context, node, callback = noop ) {
 	获取、设置（单个或批量）、移除元素属性
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 export function attr ( context, name, val ) {
 	correctParam ( name, val ).to ( "string", [ "string", "object", null ] ).done ( function () {
@@ -282,7 +282,7 @@ export function attr ( context, name, val ) {
 	当serializePrivate为false时表示不序列化私有信息表单(如password)
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 export function serialize ( form, serializePrivate ) {
 	if ( !form.nodeName || form.nodeName.toUpperCase () !== "FORM" ) {

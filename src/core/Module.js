@@ -1,7 +1,7 @@
 import { noop, guid, extend, type, foreach, isEmpty } from "../func/util";
 import { parseGetQuery, queryModuleNode, getReference } from "../func/private";
 import { clear } from "../func/node";
-import { DEVELOP_COMMON, DEVELOP_SINGLE, iceAttr } from "../var/const";
+import { DEVELOP_COMMON, DEVELOP_SINGLE } from "../var/const";
 import slice from "../var/slice";
 import cache from "../cache/core";
 import { newClassCheck } from "../Class.js";
@@ -28,7 +28,7 @@ export const identifierName = "moduleIdentifier";
 	用于区分不同模块
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 export function getIdentifier () {
 	return "module" + guid ();
@@ -46,7 +46,7 @@ export function getIdentifier () {
 	获取父模块的vm对象
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 function findParentVm ( elem ) {
 
@@ -73,7 +73,7 @@ function findParentVm ( elem ) {
     初始化模块对象的生命周期
     
     URL doc:
-    http://icejs.org/######
+    http://amaple.org/######
 */
 function initModuleLifeCycle ( module, vmData ) {
 
@@ -102,7 +102,7 @@ function initModuleLifeCycle ( module, vmData ) {
 	2、虚拟dom，只有单页模式时会传入此类参数
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 export default function Module ( moduleElem, vmData ) {
 	vmData = vmData || {
@@ -212,7 +212,7 @@ extend ( Module.prototype, {
 		当组件不可见时返回undefined
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	refs ( ref ) {
 		return getReference ( this.references, ref );
@@ -229,7 +229,7 @@ extend ( Module.prototype, {
 		当url更新时该模块未重新渲染且query参数更改时调用
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
     queryUpdated () {            
 		const nt = new NodeTransaction ().start ();
@@ -251,7 +251,7 @@ extend ( Module.prototype, {
 		当url更新时该模块未重新渲染且param参数更改时调用
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
     paramUpdated () {
     	const nt = new NodeTransaction ().start ();
@@ -270,7 +270,7 @@ extend ( Module.prototype, {
 		当该模块卸载时调用
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
     unmount () {
     	if ( !isEmpty ( this.components ) ) {

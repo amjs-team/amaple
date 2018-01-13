@@ -12,7 +12,7 @@ export default {
 		查看是否存在指定插件
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	has ( name ) {
 		return !!this.plugins [ name ];
@@ -28,7 +28,7 @@ export default {
 		添加插件
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	push ( name, plugin ) {
 		this.plugins [ name ] = plugin;
@@ -45,7 +45,7 @@ export default {
 		获取插件，没有找打则返回null
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	get ( name ) {
 		return this.plugins [ name ] || null;

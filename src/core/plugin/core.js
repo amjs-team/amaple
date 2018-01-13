@@ -20,7 +20,7 @@ export default {
 		else if ( type ( pluginDef ) === "object" ) {
 			if ( pluginDef.build ) {
 
-				// ice规范的插件对象
+				// amaple规范的插件对象
 				this.buildings.push ( {
 					install () {
 						install ( pluginDef );
@@ -38,7 +38,7 @@ export default {
 					ret = formatFn ( pluginDef, this.buildings );
 				}
 				else {
-					throw pluginErr ( "format", `对于外部的js库，ice.js目前支持${ Object.keys ( formats ).join ( "、" ) }规范` );
+					throw pluginErr ( "format", `对于外部的js库，amaple.js目前支持${ Object.keys ( formats ).join ( "、" ) }规范` );
 				}
 			}
 		}

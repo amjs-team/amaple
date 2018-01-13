@@ -3,13 +3,13 @@ import { extend, noop } from "../func/util";
 const rheader = /^(.*?):[ \t]*([^\r\n]*)$/mg;
 
 
-export default function ICEXMLHttpRequest () {
+export default function AmXMLHttpRequest () {
 
 	// 请求传送器，根据不同的请求类型来选择不同的传送器进行请求
 	this.transport = null;
 }
 
-extend ( ICEXMLHttpRequest.prototype, {
+extend ( AmXMLHttpRequest.prototype, {
 
 	/**
 		setRequestHeader ( header: String, value: String )
@@ -21,7 +21,7 @@ extend ( ICEXMLHttpRequest.prototype, {
 		设置请求头
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	setRequestHeader ( header, value ) {
 		if ( !this.transport.completed ) {
@@ -41,7 +41,7 @@ extend ( ICEXMLHttpRequest.prototype, {
 		获取返回头信息
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	getResponseHeader ( header ) {
 
@@ -72,7 +72,7 @@ extend ( ICEXMLHttpRequest.prototype, {
 		获取所有返回头信息
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	getAllResponseHeaders () {
 		return this.transport.completed ? this.transport.responseHeadersString : null;
@@ -88,7 +88,7 @@ extend ( ICEXMLHttpRequest.prototype, {
 		设置mimeType
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	overrideMimeType ( mimetype ) {
 		if ( !this.transport.completed ) {
@@ -106,7 +106,7 @@ extend ( ICEXMLHttpRequest.prototype, {
 		触发请求中断
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	abort ( statusText ) {
         if ( this.transport ) {
@@ -125,7 +125,7 @@ extend ( ICEXMLHttpRequest.prototype, {
 		绑定xhr回调事件
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	addEventListener ( type, callback ) {
 		if ( !this.transport.completed ) {

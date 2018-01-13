@@ -13,7 +13,7 @@ import ViewModel from "../../core/ViewModel";
     解析模板
 
     URL doc:
-    http://icejs.org/######
+    http://amaple.org/######
 */
 export default function Tmpl ( vm, components, module ) {
     this.vm = vm;
@@ -37,7 +37,7 @@ extend ( Tmpl.prototype, {
         使用vm对象挂载并动态绑定数据到模板
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
 	mount ( vnode, mountModule, scoped ) {
         if ( !this.moduleNode ) {
@@ -87,7 +87,7 @@ extend ( Tmpl.prototype, {
         获取当前挂载模块的vm
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
     getViewModel () {
         return this.vm;
@@ -104,7 +104,7 @@ extend ( Tmpl.prototype, {
         获取当前挂载模块依赖的Component衍生类
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
 	getComponent ( name ) {
     	return this.components [ name ];
@@ -128,14 +128,14 @@ extend ( Tmpl, {
         局部变量vm将保存在当前挂载的vnode上，可直接修改此局部变量修改模板内容
     
     	URL doc:
-    	http://icejs.org/######
+    	http://amaple.org/######
     */
     defineScoped ( scopedDefinition, scopedVNode, isStatic ) {
 
 		const
             scopedVars = {},
             scoped = {
-            	prefix : "ICE_FOR_" + Date.now () + "_",
+            	prefix : "AM_FOR_" + Date.now () + "_",
                 scopedMounts : [],
                 scopedUnmounts : [],
             },
@@ -198,7 +198,7 @@ extend ( Tmpl, {
         指令对象必须包含”name“属性和”update“方法，”before“方法为可选项
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
 	defineDirective ( directive ) {
     	this.directives [ directive.name ] = directive;

@@ -17,7 +17,7 @@ const
 	检查一个类不能被当做函数调用，否则会抛出错误
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 export function newClassCheck ( object, constructor ) {
 	if ( !( object instanceof constructor ) ) {
@@ -35,7 +35,7 @@ export function newClassCheck ( object, constructor ) {
 	为一个类添加原型方法和静态变量
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 function defineMemberFunction ( constructor, proto ) {
 	foreach ( proto, ( prop, name ) => {
@@ -108,7 +108,7 @@ function defineSuper ( subInstance, superConstructor, superReturn ) {
 	} );
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 export default function Class ( clsName ) {
 	let _superClass;

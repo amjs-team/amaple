@@ -6,7 +6,7 @@ import script from "./converter/script";
 const ajaxConverters  = { text, json, script };
 
 /**
-    complete ( iceXHR: Object )
+    complete ( amXHR: Object )
 
     Return Type:
     void
@@ -15,11 +15,11 @@ const ajaxConverters  = { text, json, script };
     请求回调调用
 
     URL doc:
-    http://icejs.org/######
+    http://amaple.org/######
 */
-export default function complete ( iceXHR ) {
+export default function complete ( amXHR ) {
 
-	let transport = iceXHR.transport;
+	let transport = amXHR.transport;
 
 	if ( transport.completed ) {
 		return;
@@ -45,14 +45,14 @@ export default function complete ( iceXHR ) {
 
 	// 请求成功，调用成功回调，dataType为script时不执行成功回调
 	if ( ( ( transport.status >= 200 && transport.status < 300 ) || transport.status === 304 ) && transport.dataType !== "script" ) {
-		transport.callbacks.success ( transport.response, transport.status, transport.statusText, iceXHR );
+		transport.callbacks.success ( transport.response, transport.status, transport.statusText, amXHR );
 	}
 
 	// 请求错误调用error回调
 	else if ( transport.status === 404 || transport.status === 500 ) {
-		transport.callbacks.error ( iceXHR, transport.status, transport.statusText );
+		transport.callbacks.error ( amXHR, transport.status, transport.statusText );
 	}
 
 	// 调用complete回调
-	transport.callbacks.complete ( iceXHR, transport.statusText );
+	transport.callbacks.complete ( amXHR, transport.statusText );
 }

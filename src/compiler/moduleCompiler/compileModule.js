@@ -1,6 +1,6 @@
 import { isEmpty, foreach } from "../../func/util";
 import { transformCompName, stringToScopedVNode } from "../../func/private";
-import { TYPE_COMPONENT, iceAttr } from "../../var/const";
+import { TYPE_COMPONENT, amAttr } from "../../var/const";
 import { moduleErr } from "../../error";
 import check from "../../check";
 import configuration from "../../core/configuration/core";
@@ -17,7 +17,7 @@ import configuration from "../../core/configuration/core";
 	解析出模板根节点的属性值
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 function parseModuleAttr ( moduleString, parses ) {
 	const
@@ -55,7 +55,7 @@ function parseModuleAttr ( moduleString, parses ) {
 	解析出模板内容
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 function parseTemplate ( moduleString, parses ) {
 	const 
@@ -95,7 +95,7 @@ function parseTemplate ( moduleString, parses ) {
 	移除css空白符
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 function removeCssBlank ( css ) {
 	const rstyleblank = /(>\s*|\s*[{:;}]\s*|\s*<)/g;
@@ -114,7 +114,7 @@ function removeCssBlank ( css ) {
 	解析出模板样式
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 function parseStyle ( moduleString, parses ) {
 
@@ -195,7 +195,7 @@ function parseStyle ( moduleString, parses ) {
 	解析出模板脚本
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 function parseScript ( moduleString, scriptPaths, scriptNames, parses ) {
 
@@ -203,9 +203,9 @@ function parseScript ( moduleString, scriptPaths, scriptNames, parses ) {
 		rscript = /<script(?:.*?)>([\s\S]+)<\/script>/i,
 		rscriptComment = /\/\/(.*?)\r?\n|\/\*([\s\S]*?)\*\//g,
 		rimport = /\s*(?:(?:(?:var|let|const)\s+)?(.+?)\s*=\s*)?import\s*\(\s*["'](.*?)["']\s*\)(?:\s*[,;])?/g,
-		rcomponent = /\s*(?:(?:(?:var|let|const)\s+)?(.+?)\s*=\s*)?ice\s*\.\s*class\s*\(\s*["'`].+?["'`]\s*\)\s*\.\s*extends\s*\(\s*ice\s*\.\s*Component\s*\)/,
+		rcomponent = /\s*(?:(?:(?:var|let|const)\s+)?(.+?)\s*=\s*)?am\s*\.\s*class\s*\(\s*["'`].+?["'`]\s*\)\s*\.\s*extends\s*\(\s*am\s*\.\s*Component\s*\)/,
 		rhtmlComment = /<!--(.*?)-->/g,
-		rmoduleDef 	= /new\s*ice\s*\.\s*Module\s*\(/,
+		rmoduleDef 	= /new\s*am\s*\.\s*Module\s*\(/,
 		raddComponents = new RegExp ( rmoduleDef.source + "\\s*\\{" ),
 
 		scriptMatch = rscript.exec ( moduleString ),
@@ -231,7 +231,7 @@ function parseScript ( moduleString, scriptPaths, scriptNames, parses ) {
 			return match.replace ( rep, `${ rep }=window.${ rep }` );
 		} );
 
-		// 如果有引入组件则将组件传入new ice.Module中
+		// 如果有引入组件则将组件传入new am.Module中
 		const allScriptNames = scriptNames.native.concat ( scriptNames.import );
     	if ( !isEmpty ( allScriptNames ) ) {
 
@@ -272,7 +272,7 @@ function parseScript ( moduleString, scriptPaths, scriptNames, parses ) {
 	编译模块为可执行的编译函数
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 export default function compileModule ( moduleString ) {
 
@@ -292,7 +292,7 @@ export default function compileModule ( moduleString ) {
 
 		// 解析模板
 		moduleString = parseTemplate ( moduleString, parses );
-		title = parses.attrs [ iceAttr.title ] || "";
+		title = parses.attrs [ amAttr.title ] || "";
 
 		// 解析样式
 		moduleString = parseStyle ( moduleString, parses );
@@ -359,7 +359,7 @@ export default function compileModule ( moduleString ) {
 		}
 	}
 
-	const updateFn = new Function ( "ice", "args", moduleString );
+	const updateFn = new Function ( "am", "args", moduleString );
 	updateFn.moduleFragment = moduleFragment;
 	return { updateFn, title };
 }

@@ -5,7 +5,7 @@ import install from "./plugin/install";
 import Module from "./Module";
 import Component from "./component/core";
 
-const ice = {
+const am = {
 
 	// 路由模式，启动路由时可进行模式配置
 	// 默认为自动选择路由模式，即在支持html5 history API时使用新特性，不支持的情况下自动回退到hash模式
@@ -35,4 +35,4 @@ const ice = {
  	install
 };
 
-export default ice;
+export default am;

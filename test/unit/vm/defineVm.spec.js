@@ -19,7 +19,7 @@ describe ( "define vm => ", () => {
 				},
 				comp2 : {
 					get: function () {
-						return this.str + " ice";
+						return this.str + " amaple";
 					},
 					set: function (val) {
 						this.str = val;
@@ -60,7 +60,7 @@ describe ( "define vm => ", () => {
 		expect ( vm.comp1 ).toBe ( "hel world" );
 
 		vm.comp2 = "123";
-		expect ( vm.comp2 ).toBe ( "123 ice" );
+		expect ( vm.comp2 ).toBe ( "123 amaple" );
 		expect ( vm.str ).toBe ( "123" );
 	} );
 

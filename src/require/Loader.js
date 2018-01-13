@@ -14,7 +14,7 @@ import cache from "../cache/core";
 	依赖加载器
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 export default function Loader ( load ) {
 
@@ -40,7 +40,7 @@ extend ( Loader.prototype, {
 		将等待加载完成的依赖名放入context.waiting中
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	putWaiting ( name ) {
 		this.waiting.push ( name );
@@ -56,7 +56,7 @@ extend ( Loader.prototype, {
 		将已加载完成的依赖从等待列表中移除
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	dropWaiting ( name ) {
 		const pointer = this.waiting.indexOf ( name );
@@ -77,7 +77,7 @@ extend ( Loader.prototype, {
 		依赖注入方法实现
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	inject () {
 		const deps = [];
@@ -101,7 +101,7 @@ extend ( Loader.prototype, {
 		触发依赖工厂方法
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	fire ( factory ) {
 		factory ();
@@ -138,7 +138,7 @@ extend ( Loader, {
 		创建Loader对象保存于Loader.LoaderMap中
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	create ( guid, loadDep ) {
 		return Loader.loaderMap [ guid ] = new Loader ( loadDep );
@@ -155,7 +155,7 @@ extend ( Loader, {
 		 	此方法使用报错的方式获取错误所在路径，使用正则表达式解析出对应依赖信息
 		
 			URL doc:
-			http://icejs.org/######
+			http://amaple.org/######
 		*/
 		getCurrentPath () {
 			const anchor = document.createElement ( "a" );
@@ -210,7 +210,7 @@ extend ( Loader, {
 		此函数不是直接在其他地方调用，而是赋值给script的onload事件的，所以函数里的this都需要使用Loader来替代
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	onScriptLoaded ( e ) {
 

@@ -8,7 +8,7 @@ export default function () {
 	return {
 
 		/**
-			send ( options: Object, iceXHR: Object )
+			send ( options: Object, amXHR: Object )
 		
 			Return Type:
 			void
@@ -17,9 +17,9 @@ export default function () {
 			ajax请求前设置参数，并发送请求
 		
 			URL doc:
-			http://icejs.org/######
+			http://amaple.org/######
 		*/
-		send ( options, iceXHR ) {
+		send ( options, amXHR ) {
 
 			let i, 
 				self = this,
@@ -58,9 +58,9 @@ export default function () {
             if ( event.support ( "error", xhr ) ) {
             	xhr.onload = xhr.onerror = function ( e ) {
 
-					iceXHR.transport.status = xhr.status === 1223 ? 204 : xhr.status;
+					amXHR.transport.status = xhr.status === 1223 ? 204 : xhr.status;
 
-            		self.done ( iceXHR );
+            		self.done ( amXHR );
             	};
             }
             else {
@@ -68,9 +68,9 @@ export default function () {
             		if ( xhr.readyState === XMLHttpRequest.DONE ) {
 
             			// 兼容IE有时将204状态变为1223的问题
-            			iceXHR.transport.status = xhr.status === 1223 ? 204 : xhr.status;
+            			amXHR.transport.status = xhr.status === 1223 ? 204 : xhr.status;
 
-            			self.done ( iceXHR );
+            			self.done ( amXHR );
 
             		}
             	};
@@ -86,7 +86,7 @@ export default function () {
 		},
 
 		/**
-			done ( iceXHR: Object )
+			done ( amXHR: Object )
 		
 			Return Type:
 			void
@@ -95,9 +95,9 @@ export default function () {
 			ajax请求完成后的处理
 		
 			URL doc:
-			http://icejs.org/######
+			http://amaple.org/######
 		*/
-		done ( iceXHR ) {
+		done ( amXHR ) {
 
 			const xhr = this.xhr;
 
@@ -110,7 +110,7 @@ export default function () {
 			this.statusText 	= xhr.statusText;
 			this.response 		= xhr.responseText;
 
-			complete ( iceXHR );
+			complete ( amXHR );
 		},
 
 		/**
@@ -123,7 +123,7 @@ export default function () {
 			ajax请求中断
 		
 			URL doc:
-			http://icejs.org/######
+			http://amaple.org/######
 		*/
 		abort () {
 			this.status 	= 0;

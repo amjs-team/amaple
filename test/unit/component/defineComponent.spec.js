@@ -1,4 +1,4 @@
-import ice from "ice";
+import am from "am";
 import ViewModel from "src/core/ViewModel";
 import { attr } from "src/func/node";
 import VElement from "core/vnode/VElement";
@@ -6,7 +6,7 @@ import VFragment from "core/vnode/VFragment";
 
 describe ( "define component =>", () => {
 	it ( "use the function Class to define a component derivative", () => {
-		const TestComp = ice.class ( "TestComp" ).extends ( ice.Component ) ( {
+		const TestComp = am.class ( "TestComp" ).extends ( am.Component ) ( {
 			init () {
 				return {
 			    	btnText : "test-btn",
@@ -53,14 +53,14 @@ describe ( "define component =>", () => {
 		expect ( realDOM.firstChild.nodeName ).toBe ( "BUTTON" );
 		expect ( realDOM.firstChild.firstChild.nodeValue ).toBe ( "test-btn" );
 
-		tc.action.print ( "hello icejs" );
-		expect ( fragment.children [ 0 ].templateNodes [ 1 ].children [ 0 ].nodeValue ).toBe ( "hello icejs" );
-		expect ( realDOM.firstChild.nextElementSibling.firstChild.nodeValue ).toBe ( "hello icejs" );
+		tc.action.print ( "hello amjs" );
+		expect ( fragment.children [ 0 ].templateNodes [ 1 ].children [ 0 ].nodeValue ).toBe ( "hello amjs" );
+		expect ( realDOM.firstChild.nextElementSibling.firstChild.nodeValue ).toBe ( "hello amjs" );
 		expect ( realDOM.lastChild.firstChild.nodeValue ).toMatch ( /^\.console\[data-no-\d+\]{color:#00aae6;}$/ );
 	} );
 
 	it ( "validate component props without vm data", () => {
-		const TestComp = ice.class ( "TestComp" ).extends ( ice.Component ) ( {
+		const TestComp = am.class ( "TestComp" ).extends ( am.Component ) ( {
 			init () {
 				this.propsType ( {
 					text : {
@@ -118,15 +118,15 @@ describe ( "define component =>", () => {
 		expect ( function () {
 			tc.__init__ ( div, {} );
 		} ).toThrow ();
-		div.attr ( "suffix", ".ice" );
+		div.attr ( "suffix", ".am" );
 		tc.__init__ ( div, {} );
 
 
-		expect ( fragment.children [ 0 ].templateNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( "default button.ice" );
+		expect ( fragment.children [ 0 ].templateNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( "default button.am" );
 		expect ( fragment.children [ 0 ].templateNodes [ 0 ].attr ( "href" ) ).toBe ( "javascript:;" );
 		expect ( fragment.children [ 0 ].templateNodes [ 0 ].attr ( "class" ) ).toBe ( "" );
 		fragment.diff ( fBackup ).patch ();
-		expect ( realDOM.firstChild.firstChild.nodeValue ).toBe ( "default button.ice" );
+		expect ( realDOM.firstChild.firstChild.nodeValue ).toBe ( "default button.am" );
 		expect ( realDOM.firstChild.href ).toBe ( "javascript:;" );
 		expect ( realDOM.firstChild.className ).toBe ( "" );
 		
@@ -137,7 +137,7 @@ describe ( "define component =>", () => {
 		fragment = VFragment ();
 		div = VElement ( "div" );
 		div.attr ( "text", "external button" );
-		div.attr ( "suffix", ".ice" );
+		div.attr ( "suffix", ".am" );
 
 		fragment.appendChild ( div );
 		realDOM = fragment.render ();
@@ -155,10 +155,10 @@ describe ( "define component =>", () => {
 		div.attr ( "link", "/a/b/c" );
 		tc.__init__ ( div, {} );
 
-		expect ( fragment.children [ 0 ].templateNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( "external button.ice" );
+		expect ( fragment.children [ 0 ].templateNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( "external button.am" );
 		expect ( fragment.children [ 0 ].templateNodes [ 0 ].attr ( "href" ) ).toBe ( "/a/b/c" );
 		fragment.diff ( fBackup ).patch ();
-		expect ( realDOM.firstChild.firstChild.nodeValue ).toBe ( "external button.ice" );
+		expect ( realDOM.firstChild.firstChild.nodeValue ).toBe ( "external button.am" );
 
 		// IE下的a标签的pathname属性开头没有"/"
 		expect ( ( realDOM.firstChild.pathname.substr ( 0, 1 ) === "/" ? "" : "/" ) + realDOM.firstChild.pathname ).toBe ( "/a/b/c" );
@@ -170,7 +170,7 @@ describe ( "define component =>", () => {
 		tc = new TestComp ();
 		fragment = VFragment ();
 		div = VElement ( "div" );
-		div.attr ( "suffix", ".ice" );
+		div.attr ( "suffix", ".am" );
 
 		fragment.appendChild ( div );
 		realDOM = fragment.render ();
@@ -190,7 +190,7 @@ describe ( "define component =>", () => {
 	} );
 
 	it ( "validate the Two-way binding props of component with vm data", () => {
-		const TestComp = ice.class ( "TestComp" ).extends ( ice.Component ) ( {
+		const TestComp = am.class ( "TestComp" ).extends ( am.Component ) ( {
 			init () {
 				const self = this;
 				return {

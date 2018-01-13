@@ -1,14 +1,14 @@
-import ice from "ice";
+import am from "am";
 
 describe ( "directive ref => ", () => {
 	it ( "directive :ref in common element", () => {
         const d = document.createElement ( "div" );
         d.innerHTML = `<p :ref="ref_p">{{ text }}</p>`;
 
-        const module = new ice.Module ( d, {
+        const module = new am.Module ( d, {
             init () {
                 return {
-                    text: "hello icejs"
+                    text: "hello amaplejs"
                 };
             }
         } );
@@ -20,11 +20,11 @@ describe ( "directive ref => ", () => {
         const d = document.createElement ( "div" );
         d.innerHTML = `<p :ref="ref_p" :if="show">{{ text }}</p>`;
 
-        const module = new ice.Module ( d, {
+        const module = new am.Module ( d, {
             init () {
                 return {
                     show: 0,
-                    text: "hello icejs"
+                    text: "hello amaplejs"
                 };
             }
         } );
@@ -38,7 +38,7 @@ describe ( "directive ref => ", () => {
         const d = document.createElement ( "div" );
         d.innerHTML = `<p :ref="ref_p" :for="i in list">{{ i }}</p>`;
 
-        const module = new ice.Module ( d, {
+        const module = new am.Module ( d, {
             init () {
                 return {
                     list: [ "a", "b", "c" ]
@@ -67,7 +67,7 @@ describe ( "directive ref => ", () => {
 
     it ( "directive :ref in component element and sub component", () => {
         const 
-            SubComp = ice.class ( "SubComp" ).extends ( ice.Component ) ( {
+            SubComp = am.class ( "SubComp" ).extends ( am.Component ) ( {
                 init () {
                     return {};
                 },
@@ -75,7 +75,7 @@ describe ( "directive ref => ", () => {
                     this.template ( "<span>SubComp</span>" );
                 }
             } ),
-            TestComp = ice.class ( "TestComp" ).extends ( ice.Component ) ( {
+            TestComp = am.class ( "TestComp" ).extends ( am.Component ) ( {
                 constructor () {
                     this.__super ();
                     this.depComponents = [ SubComp ];
@@ -111,7 +111,7 @@ describe ( "directive ref => ", () => {
         const d = document.createElement ( "div" );
         d.innerHTML = `<test-comp :ref="ref_comp"></test-comp>`;
 
-        const module = new ice.Module ( d, {
+        const module = new am.Module ( d, {
             init () {
                 return {
                     text: ""
@@ -124,7 +124,7 @@ describe ( "directive ref => ", () => {
     } );
 
     it ( "directive :ref in component element with :if", () => {
-        const TestComp = ice.class ( "TestComp" ).extends ( ice.Component ) ( {
+        const TestComp = am.class ( "TestComp" ).extends ( am.Component ) ( {
             init () {
                 return {
                     btnText : "test-btn",
@@ -153,7 +153,7 @@ describe ( "directive ref => ", () => {
         const d = document.createElement ( "div" );
         d.innerHTML = `<test-comp :ref="ref_comp" :if="show"></test-comp>`;
 
-        const module = new ice.Module ( d, {
+        const module = new am.Module ( d, {
             init () {
                 return {
                     show: 0
@@ -171,7 +171,7 @@ describe ( "directive ref => ", () => {
     it ( "directive :ref in component element with :for", () => {
         const 
             unmountSpy = jasmine.createSpy ( "unmountSpy" ),
-            TestComp = ice.class ( "TestComp" ).extends ( ice.Component ) ( {
+            TestComp = am.class ( "TestComp" ).extends ( am.Component ) ( {
                 init () {
                     return {
                         btnText : "test-btn",
@@ -204,7 +204,7 @@ describe ( "directive ref => ", () => {
 
         d.innerHTML = `<test-comp :ref="ref_comp" :for="i in list"></test-comp>`;
 
-        const module = new ice.Module ( d, {
+        const module = new am.Module ( d, {
             init () {
                 return {
                     list: [ "a", "b", "c" ]

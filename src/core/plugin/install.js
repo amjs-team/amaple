@@ -18,7 +18,7 @@ import core from "../core";
 	若插件安装后会返回一个对象，则可在模块或组件的生命周期钩子函数中直接使用插件名引入，框架会自动注入对应插件
 	
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 export default function install ( pluginDef ) {
 	check ( pluginDef.name ).type ( "string" ).notBe ( "" )

@@ -1,10 +1,10 @@
 import { attr } from "../func/node";
 import { type, foreach, noop } from "../func/util";
-import { TYPE_PLUGIN, iceAttr } from "../var/const";
+import { TYPE_PLUGIN, amAttr } from "../var/const";
 import { AUTO, HASH, BROWSER } from "./history/historyMode";
 import check from "../check";
 import Router from "./Router";
-import iceHistory from "./history/core";
+import amHistory from "./history/core";
 import event from "../event/core";
 import requestEventHandler from "./requestEventHandler";
 import configuration from "../core/configuration/core";
@@ -19,14 +19,14 @@ import Structure from "./Structure";
 	void
 	
 	Description:
-	启动ice路由
+	启动am路由
 	表示启动单页模式
 	
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 export default function startRouter ( routerConfig ) {
-	check ( routerConfig ).type ( "object" ).ifNot ( "ice.startRouter", "当routerConfig传入参数时，必须为object类型" ).do ();
+	check ( routerConfig ).type ( "object" ).ifNot ( "am.startRouter", "当routerConfig传入参数时，必须为object类型" ).do ();
 
 	// 执行routes配置路由
 	( routerConfig.routes || noop ) ( new Router ( Router.routeTree ) );
@@ -34,7 +34,7 @@ export default function startRouter ( routerConfig ) {
 	
 	routerConfig.history = routerConfig.history || AUTO;
 	if ( routerConfig.history === AUTO ) {
-    	if ( iceHistory.supportNewApi () ) {
+    	if ( amHistory.supportNewApi () ) {
             routerConfig.history = BROWSER;
         }
         else {
@@ -42,7 +42,7 @@ export default function startRouter ( routerConfig ) {
         }
     }
 	
-	iceHistory.initHistory ( routerConfig.history );
+	amHistory.initHistory ( routerConfig.history );
 	
 	// 当使用hash模式时纠正路径
 	const 
@@ -63,13 +63,13 @@ export default function startRouter ( routerConfig ) {
 
     	const
         	target = e.target,
-       		path = attr ( target, e.type.toLowerCase () === "submit" ? iceAttr.action : iceAttr.href );
+       		path = attr ( target, e.type.toLowerCase () === "submit" ? amAttr.action : amAttr.href );
 
         if ( path && !/#/.test ( path ) ) {
 
         	const 
         		method = e.type.toLowerCase () === "submit" ? attr ( target, "method" ).toUpperCase () : "GET",
-        		buildedPath = iceHistory.history.buildURL ( path );
+        		buildedPath = amHistory.history.buildURL ( path );
 
         	if ( window.location.host === buildedPath.host ) {
         		if ( buildedPath.pathname === window.location.pathname && buildedPath.search === window.location.search ) {
@@ -107,7 +107,7 @@ export default function startRouter ( routerConfig ) {
 				// 去除请求url的首尾空格
 				pluginItem = pluginItem.trim ();
 
-				// plugin构建格式为ice规范时
+				// plugin构建格式为am规范时
 				pluginItem = rexternalURL.test ( pluginItem ) ? pluginItem : pluginBaseURL + pluginItem;
 				loadPlugins.push ( pluginItem );
 			}
@@ -138,13 +138,13 @@ export default function startRouter ( routerConfig ) {
 
     	const 
     		param = {},
-    		path = iceHistory.history.getPathname (),
+    		path = amHistory.history.getPathname (),
     		
     		location = {
 	        	path,
 	        	nextStructure : Router.matchRoutes ( path, param ),
 	        	param,
-	        	get : iceHistory.history.getQuery (),
+	        	get : amHistory.history.getQuery (),
 	        	post : {},
 	        	method : "GET",
 	        	action : "NONE"

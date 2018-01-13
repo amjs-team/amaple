@@ -14,7 +14,7 @@ import Subscriber from "./Subscriber";
 	当监听属性发生变化时，这些对象负责更新对应的计算属性值
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 export default function ValueWatcher ( updateFn, getter ) {
 
@@ -39,7 +39,7 @@ extend ( ValueWatcher.prototype, {
 		更新视图
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	update () {
     	this.updateFn ( this.getter () );

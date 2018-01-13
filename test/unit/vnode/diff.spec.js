@@ -15,12 +15,12 @@ describe ( "diff vnode => ", () => {
 	it ( "Diff two vnodes that have different attributes", () => {
 		vnode1.attr ( {
 			id : "the-div", 
-			"ice-module": "root"
+			"am-module": "root"
 		} );
 
 		vnode2.attr ( {
 			id : "the-div2", 
-			"ice-module2": "root2" 
+			"am-module2": "root2" 
 		} );
 		
 		const patcher = vnode2.diff ( vnode1 );
@@ -29,21 +29,21 @@ describe ( "diff vnode => ", () => {
 		expect ( patcher.patches [ 0 ].name ).toBe ( "id" );
 		expect ( patcher.patches [ 0 ].val ).toBe ( "the-div2" );
 		expect ( patcher.patches [ 1 ].type ).toBe ( NodePatcher.ATTR_REORDER );
-		expect ( patcher.patches [ 1 ].name ).toBe ( "ice-module2" );
+		expect ( patcher.patches [ 1 ].name ).toBe ( "am-module2" );
 		expect ( patcher.patches [ 1 ].val ).toBe ( "root2" );
 		expect ( patcher.patches [ 2 ].type ).toBe ( NodePatcher.ATTR_REMOVE );
-		expect ( patcher.patches [ 2 ].name ).toBe ( "ice-module" );
+		expect ( patcher.patches [ 2 ].name ).toBe ( "am-module" );
 	} );
 
 	it ( "Diff a vnode which contains a different text node", () => {
-		vnode1.appendChild ( VTextNode ( "hello icejs" ) );
-		vnode2.appendChild ( VTextNode ( "hello icejs2" ) );
+		vnode1.appendChild ( VTextNode ( "hello amaplejs" ) );
+		vnode2.appendChild ( VTextNode ( "hello amaplejs2" ) );
 
 		const patcher = vnode2.diff ( vnode1 );
 		expect ( patcher.patches.length ).toBe ( 1 );
 		expect ( patcher.patches [ 0 ].type ).toBe ( NodePatcher.TEXTNODE );
-		expect ( patcher.patches [ 0 ].replaceNode.nodeValue ).toBe ( "hello icejs" );
-		expect ( patcher.patches [ 0 ].item.nodeValue ).toBe ( "hello icejs2" );
+		expect ( patcher.patches [ 0 ].replaceNode.nodeValue ).toBe ( "hello amaplejs" );
+		expect ( patcher.patches [ 0 ].item.nodeValue ).toBe ( "hello amaplejs2" );
 	} );
 
 	it ( "Diff two different vnode", () => {
@@ -127,7 +127,7 @@ describe ( "diff vnode => ", () => {
 		childNode = VElement ( "div" );
 		vnode1.appendChild ( childNode );
 
-		childNode = VElement ( "div", { id: "icejs-666" } );
+		childNode = VElement ( "div", { id: "amaplejs-666" } );
 		vnode2.appendChild ( childNode );
 		childNode = VElement ( "div" );
 		vnode2.appendChild ( childNode );
@@ -140,7 +140,7 @@ describe ( "diff vnode => ", () => {
 		expect ( patcher.patches [ 0 ].type ).toBe ( NodePatcher.ATTR_REORDER );
 		expect ( patcher.patches [ 0 ].item.nodeName ).toBe ( "DIV" );
 		expect ( patcher.patches [ 0 ].name ).toBe ( "id" );
-		expect ( patcher.patches [ 0 ].val ).toBe ( "icejs-666" );
+		expect ( patcher.patches [ 0 ].val ).toBe ( "amaplejs-666" );
 		expect ( patcher.patches [ 1 ].type ).toBe ( NodePatcher.ATTR_REMOVE );
 		expect ( patcher.patches [ 1 ].name ).toBe ( "class" );
 		expect ( patcher.patches [ 2 ].type ).toBe ( NodePatcher.NODE_REPLACE );
@@ -159,7 +159,7 @@ describe ( "diff vnode => ", () => {
 		childNode = VElement ( "div" );
 		vnode1.appendChild ( childNode );
 
-		childNode = VElement ( "div", { id: "icejs-666" } );
+		childNode = VElement ( "div", { id: "amaplejs-666" } );
 		vnode2.appendChild ( childNode );
 		childNode = VElement ( "div" );
 		vnode2.appendChild ( childNode );
@@ -176,7 +176,7 @@ describe ( "diff vnode => ", () => {
 		expect ( patcher.patches [ 0 ].type ).toBe ( NodePatcher.ATTR_REORDER );
 		expect ( patcher.patches [ 0 ].item.nodeName ).toBe ( "DIV" );
 		expect ( patcher.patches [ 0 ].name ).toBe ( "id" );
-		expect ( patcher.patches [ 0 ].val ).toBe ( "icejs-666" );
+		expect ( patcher.patches [ 0 ].val ).toBe ( "amaplejs-666" );
 		expect ( patcher.patches [ 1 ].type ).toBe ( NodePatcher.ATTR_REMOVE );
 		expect ( patcher.patches [ 1 ].name ).toBe ( "class" );
 		expect ( patcher.patches [ 2 ].type ).toBe ( NodePatcher.NODE_REPLACE );

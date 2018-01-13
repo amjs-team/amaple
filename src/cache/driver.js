@@ -14,7 +14,7 @@ export default {
 		添加组件
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	push ( name, component ) {
     	this.components [ name ] = component;
@@ -31,7 +31,7 @@ export default {
 		获取元素驱动器，没有找打则返回null
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	get ( name ) {
 		return this.components [ name ] || null;

@@ -1,4 +1,4 @@
-ice.class ( "PageCtrl" ).extends ( ice.Component ) ( {
+am.class ( "PageCtrl" ).extends ( am.Component ) ( {
 	constructor : function () {
 		this.__super ();
 		this.depComponents = [ Num ];

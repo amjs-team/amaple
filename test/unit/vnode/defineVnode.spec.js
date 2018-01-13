@@ -5,7 +5,7 @@ import VFragment from "core/vnode/VFragment";
 
 describe ( "define vnode => ", () => {
 	it ( "Define a basic velement", () => {
-		const vnode1 = VElement ( "div", { id: "the-div", "ice-module": "root" } );
+		const vnode1 = VElement ( "div", { id: "the-div", "am-module": "root" } );
 
 		expect ( vnode1.nodeName ).toBe ( "DIV" );
 		expect ( vnode1.nodeType ).toBe ( 1 );
@@ -16,10 +16,10 @@ describe ( "define vnode => ", () => {
 	} );
 
 	it ( "Define a basic vtextnode", () => {
-		const vtext = VTextNode ( "hello icejs" );
+		const vtext = VTextNode ( "hello amaplejs" );
 
 		expect ( vtext.nodeType ).toBe ( 3 );
-		expect ( vtext.nodeValue ).toBe ( "hello icejs" );
+		expect ( vtext.nodeValue ).toBe ( "hello amaplejs" );
 		expect ( vtext.key ).toBeUndefined ();
 	} );
 
@@ -30,7 +30,7 @@ describe ( "define vnode => ", () => {
 		expect ( vfragment.children ).toEqual ( [] );
 
 		// ----------------
-		vfragment = VFragment ( [ VElement ( "div", { id: "the-div", "ice-module": "root" } ) ] );
+		vfragment = VFragment ( [ VElement ( "div", { id: "the-div", "am-module": "root" } ) ] );
 
 		expect ( vfragment.children.length ).toBe ( 1 );
 		expect ( vfragment.children [ 0 ].nodeName ).toBe ( "DIV" );

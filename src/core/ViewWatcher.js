@@ -17,7 +17,7 @@ import NodeTransaction from "./vnode/NodeTransaction";
 	通过解析代码获取的对应vm属性值的方法
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 function makeFn ( code ) {
 	return new Function ( "runtimeErr", 
@@ -48,7 +48,7 @@ function makeFn ( code ) {
 	当数据发生变化时，这些对象负责更新视图
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 export default function ViewWatcher ( directive, node, expr, tmpl, scoped ) {
 
@@ -102,7 +102,7 @@ extend ( ViewWatcher.prototype, {
 		最后更新视图
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	update () {
 
@@ -130,7 +130,7 @@ extend ( ViewWatcher.prototype, {
 		为vm增加局部变量
     
     	URL doc:
-    	http://icejs.org/######
+    	http://amaple.org/######
     */
 	addScoped () {
     	
@@ -151,7 +151,7 @@ extend ( ViewWatcher.prototype, {
 		移除vm中的局部变量
     
     	URL doc:
-    	http://icejs.org/######
+    	http://amaple.org/######
     */
 	removeScoped () {
 
@@ -172,7 +172,7 @@ extend ( ViewWatcher.prototype, {
     	当被绑定元素在DOM树上移除后，对应vm属性对此元素的订阅也需移除
     
     	URL doc:
-    	http://icejs.org/######
+    	http://amaple.org/######
     */
     unmount ( subscribe ) {
     	const index = subscribe.watchers.indexOf ( this );

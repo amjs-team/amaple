@@ -9,7 +9,7 @@ export default function ( options ) {
 	return {
 
 		/**
-			send ( options: Object, iceXHR: Object )
+			send ( options: Object, amXHR: Object )
 		
 			Return Type:
 			void
@@ -18,9 +18,9 @@ export default function ( options ) {
 			动态执行javascript
 		
 			URL doc:
-			http://icejs.org/######
+			http://amaple.org/######
 		*/
-		send ( options, iceXHR ) {
+		send ( options, amXHR ) {
 			let self 	= this;
 
 			script 		= document.createElement ( "script" );
@@ -41,14 +41,14 @@ export default function ( options ) {
 					this.status 		= 500;
 					this.statusText 	= "error";
 				}
-				self.done ( iceXHR );
+				self.done ( amXHR );
 			} );
 
 			document.head.appendChild ( script );
 		},
 
 		/**
-			done ( iceXHR: Object )
+			done ( amXHR: Object )
 		
 			Return Type:
 			void
@@ -57,9 +57,9 @@ export default function ( options ) {
 			完成或中断后的处理
 		
 			URL doc:
-			http://icejs.org/######
+			http://amaple.org/######
 		*/
-		done ( iceXHR ) {
+		done ( amXHR ) {
 
 			if ( options.dataType === "JSONP" ) {
 
@@ -76,7 +76,7 @@ export default function ( options ) {
 				}
 			}
 
-			complete ( iceXHR );
+			complete ( amXHR );
 		},
 
 		/**
@@ -89,7 +89,7 @@ export default function ( options ) {
 			请求中断处理
 		
 			URL doc:
-			http://icejs.org/######
+			http://amaple.org/######
 		*/
 		abort () {
 			if ( script.parentNode ) {

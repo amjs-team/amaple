@@ -23,7 +23,7 @@ const dataType = [ String, Number, Function, Boolean, Object ];
     验证属性值，验证成功返回true，否则返回false
 
     URL doc:
-    http://icejs.org/######
+    http://amaple.org/######
 */
 function validateProp ( prop, validate ) {
     let isPass = false;
@@ -76,7 +76,7 @@ export default {
         获取并初始化属性对象
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
     initProps ( componentNode, moduleVm, propsValidator ) {
         let props = {}, match;
@@ -134,7 +134,7 @@ export default {
         验证props
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
     validateProps ( props, propsValidator ) {
         foreach ( props, ( val, name ) => {
@@ -173,7 +173,7 @@ export default {
         初始化组件对象的生命周期
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
     initLifeCycle ( component, componentVNode, moduleObj ) {
         const lifeCycleHook = {
@@ -210,7 +210,7 @@ export default {
         为模板DOM结构添加样式
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
     initTemplate ( template, scopedStyle ) {
         const 
@@ -250,7 +250,7 @@ export default {
         获取组件子元素并打包成局部vm的数据对象
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
     initSubElements ( componentVNode, subElementNames ) {
         const _subElements = {
@@ -299,7 +299,7 @@ export default {
         初始化组件行为
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
     initAction ( component, actions ) {
         component.action = {};

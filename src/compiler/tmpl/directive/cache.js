@@ -23,7 +23,7 @@ export default {
         此时的isCache参数将会在getter方法中转换为实际的boolean值
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
 	update ( isCache ) {
     	this.node.cache = isCache === "true" ? true : false;

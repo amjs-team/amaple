@@ -39,7 +39,7 @@ const directives = {
     主要对“:if”、“:for”两个指令的特殊处理
 
     URL doc:
-    http://icejs.org/######
+    http://amaple.org/######
 */
 function preTreat ( vnode ) {
 
@@ -93,7 +93,7 @@ function preTreat ( vnode ) {
     合并compileHandlers
 
     URL doc:
-    http://icejs.org/######
+    http://amaple.org/######
 */
 function concatHandler ( target, source ) {
 	const concats = {};
@@ -117,7 +117,7 @@ function concatHandler ( target, source ) {
     通过遍历获取需监听元素，需渲染组件及需转换的template
 
     URL doc:
-    http://icejs.org/######
+    http://amaple.org/######
 */
 export default function mountVNode ( vnode, tmpl, mountModule, isRoot = true ) {
 	const rattr = /^:([\$\w]+)$/;

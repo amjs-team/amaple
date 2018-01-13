@@ -14,12 +14,12 @@ export default function ( options ) {
 	options.data += ( ( options.data ? "&" : "" ) + "callback=" + jsonpCallback );
 
 	return {
-		send ( options, iceXHR ) {
-			scriptExtend.send ( options, iceXHR );
+		send ( options, amXHR ) {
+			scriptExtend.send ( options, amXHR );
 		},
 
-		done ( iceXHR ) {
-			scriptExtend.done ( iceXHR );
+		done ( amXHR ) {
+			scriptExtend.done ( amXHR );
 		},
 
 		abort () {

@@ -34,7 +34,7 @@ module.exports = function ( config ) {
                     src: path.resolve ( __dirname, "../../src" ),
                     func: path.resolve ( __dirname, "../../src/func" ),
                     core: path.resolve ( __dirname, "../../src/core" ),
-                    ice: path.resolve ( __dirname, "../../src/core/core" ),
+                    am: path.resolve ( __dirname, "../../src/core/core" ),
 
                 }
             },

@@ -11,7 +11,7 @@ import { foreach } from "../../func/util";
     主要优化为子节点的移动步骤优化
 
     URL doc:
-    http://icejs.org/######
+    http://amaple.org/######
 */
 export default function optimizeSteps ( patches ) {
     let i = 0;

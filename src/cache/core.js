@@ -16,7 +16,7 @@ import event from "./event";
 	3. 页面跳转与状态切换时的缓存，开启缓存后，页面跳转数据将会被缓存，再次调用相同地址时将使用缓存更新页面以提高响应速度，实时性较高的页面建议关闭缓存。
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 export default {
 
@@ -33,7 +33,7 @@ export default {
 		获取函数依赖的插件对象数组
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	getDependentPlugin ( deps ) {
 		if ( type ( deps ) === "function" ) {

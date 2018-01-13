@@ -23,7 +23,7 @@ import NodePatcher from "./NodePatcher";
     nodeType为1或11时才能操作子节点
 
     URL doc:
-    http://icejs.org/######
+    http://amaple.org/######
 */
 function supportCheck ( nodeType, method ) {
 	if ( nodeType !== 1 && nodeType !== 11 ) {
@@ -43,7 +43,7 @@ function supportCheck ( nodeType, method ) {
     如果此子节点已有父节点则将此子节点从父节点中移除
 
     URL doc:
-    http://icejs.org/######
+    http://amaple.org/######
 */
 export function updateParent ( childVNode, parent ) {
     if ( childVNode && parent && childVNode.parent !== parent ) {
@@ -67,7 +67,7 @@ export function updateParent ( childVNode, parent ) {
     虚拟DOM类
 
     URL doc:
-    http://icejs.org/######
+    http://amaple.org/######
 */
 export default function VNode ( nodeType, parent, node ) {
 	newClassCheck ( this, VNode );
@@ -97,7 +97,7 @@ extend ( VNode.prototype, {
         在此vnode的children末尾添加一个子vnode
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
 	appendChild ( childVNode ) {
     	supportCheck ( this.nodeType, "appendChild" );
@@ -130,7 +130,7 @@ extend ( VNode.prototype, {
         在此vnode下移除一个子vnode
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
 	removeChild ( childVNode ) {
     	supportCheck ( this.nodeType, "removeChild" );
@@ -176,7 +176,7 @@ extend ( VNode.prototype, {
         在existingVNode前插入一个vnode
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
 	insertBefore ( newVNode, existingVNode ) {
     	supportCheck ( this.nodeType, "insertBefore" );
@@ -210,7 +210,7 @@ extend ( VNode.prototype, {
         将此vnode下的内容替换为vnode
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
     html ( vnode ) {
     	supportCheck ( this.nodeType, "html" );
@@ -229,7 +229,7 @@ extend ( VNode.prototype, {
         清空子元素
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
     clear () {
         foreach ( this.children, child => {
@@ -249,7 +249,7 @@ extend ( VNode.prototype, {
         获取此vnode的下一个vnode
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
 	nextSibling () {
     	if ( this.parent ) {
@@ -267,7 +267,7 @@ extend ( VNode.prototype, {
         获取此vnode的下一个element vnode
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
     nextElementSibling () {
         if ( this.parent ) {
@@ -292,7 +292,7 @@ extend ( VNode.prototype, {
         获取此vnode的下一个vnode
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
     prevSibling () {
         if ( this.parent ) {
@@ -310,7 +310,7 @@ extend ( VNode.prototype, {
         获取、设置（单个或批量）、移除vnode属性
 
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
     attr ( name, val ) {
     	supportCheck ( this.nodeType, "attr" );
@@ -347,7 +347,7 @@ extend ( VNode.prototype, {
         将此vnode渲染为实际DOM
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
     render () {
     	
@@ -482,7 +482,7 @@ extend ( VNode.prototype, {
         如果参数isQuoteDOM为false时，则此vnode不会引用任何node
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
     clone ( isQuoteDOM ) {
         let vnode, 
@@ -548,7 +548,7 @@ extend ( VNode.prototype, {
         为此vnode绑定事件
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
     bindEvent ( type, listener ) {
     	this.events = this.events || {};
@@ -568,7 +568,7 @@ extend ( VNode.prototype, {
         此vnode与参数oldVNode进行对比，并计算出差异
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
     diff ( oldVNode ) {
         const nodePatcher = new NodePatcher ();
@@ -639,7 +639,7 @@ extend ( VNode.prototype, {
         触发事件
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
     emit ( type ) {
         if ( this.node ) {
@@ -661,7 +661,7 @@ extend ( VNode, {
         将实际DOM或DOM String转换为vnode对象
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
 	domToVNode ( dom ) {
     	if ( type ( dom ) === "string" ) {

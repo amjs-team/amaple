@@ -26,7 +26,7 @@ const globalClass = {};
     通过组件类名获取对应的组件类
 
     URL doc:
-    http://icejs.org/######
+    http://amaple.org/######
 */
 export function getGlobal ( name ) {
     return globalClass [ name ];
@@ -54,7 +54,7 @@ extend ( Component.prototype, {
         初始化一个对应的组件对象
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
 	__init__ ( componentVNode, moduleObj ) {
     	
@@ -165,7 +165,7 @@ extend ( Component.prototype, {
         当该模块位置更新时时调用
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
     __update__ () {
         const nt = new NodeTransaction ().start ();
@@ -184,7 +184,7 @@ extend ( Component.prototype, {
         当该模块卸载时时调用
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
     __unmount__ () {
         if ( !isEmpty ( this.components ) ) {
@@ -208,7 +208,7 @@ extend ( Component.prototype, {
         当组件不可见时返回undefined
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
     refs ( ref ) {
         return getReference ( this.references, ref );
@@ -228,7 +228,7 @@ extend ( Component, {
         组件对象必须为一个方法(或一个类)
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
 	defineGlobal ( componentDerivative ) {
         check ( getFunctionName ( componentDerivative.constructor ) ).be ( "Component" ).ifNot ( "Component.defineGlobal", "参数componentDerivative必须为继承ice.Component的组件衍生类" );

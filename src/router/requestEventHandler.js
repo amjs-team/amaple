@@ -1,7 +1,7 @@
 import { serialize } from "../func/node";
 import Router from "../router/Router";
 import http from "../http/core";
-import iceHistory from "./history/core";
+import amHistory from "./history/core";
 import Structure from "./Structure";
 
 /**
@@ -15,7 +15,7 @@ import Structure from "./Structure";
     参数post为post请求时的数据
 
     url doc:
-    http://icejs.org/######
+    http://amaple.org/######
 */
 export default function requestEventHandler ( pathResolver, method, post ) {
 
@@ -54,7 +54,7 @@ export default function requestEventHandler ( pathResolver, method, post ) {
         // post提交数据
         http.post ( pathResolver.pathname + pathResolver.search, post, ( redirectPath ) => {
             if ( redirectPath ) {
-                requestEventHandler ( iceHistory.history.buildURL ( redirectPath ), "GET", post );
+                requestEventHandler ( amHistory.history.buildURL ( redirectPath ), "GET", post );
             }
         } );
     }

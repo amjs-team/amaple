@@ -15,7 +15,7 @@ import optimizeSteps from "./optimizeSteps";
     当list中的信息为oldChildren中的信息时，如果移动节点内部也有更新dom就会导致更新无法看见
 
     URL doc:
-    http://icejs.org/######
+    http://amaple.org/######
 */
 function createChildrenList ( oldChildren, newChildren ) {
     const list = [];
@@ -49,7 +49,7 @@ function createChildrenList ( oldChildren, newChildren ) {
     因为插入前的元素中可能有组件元素，组件元素渲染为对应实际dom时可能有多个，所以需判断前面的组件元素，并加上他们的模板元素数量
 
     URL doc:
-    http://icejs.org/######
+    http://amaple.org/######
 */
 export function getInsertIndex ( index, children ) {
     let insertIndex = 0;
@@ -76,7 +76,7 @@ export function getInsertIndex ( index, children ) {
     对比新旧vnode的属性，将差异存入nodePatcher中
 
     URL doc:
-    http://icejs.org/######
+    http://amaple.org/######
 */
 export function diffAttrs ( newVNode, oldVNode, nodePatcher ) {
 	foreach ( newVNode.attrs, ( attr, name ) => {
@@ -106,7 +106,7 @@ export function diffAttrs ( newVNode, oldVNode, nodePatcher ) {
     ！！！场景需要，暂不实现卸载事件的功能
 
     URL doc:
-    http://icejs.org/######
+    http://amaple.org/######
 */
 export function diffEvents ( newVNode, oldVNode, nodePatcher ) {
 
@@ -152,7 +152,7 @@ export function diffEvents ( newVNode, oldVNode, nodePatcher ) {
     获取查找的node在children数组中的位置，如果没有找打则返回-1
 
     URL doc:
-    http://icejs.org/######
+    http://amaple.org/######
 */
 function indexOf ( children, searchNode ) {
 	let index = -1;
@@ -176,7 +176,7 @@ function indexOf ( children, searchNode ) {
     比较新旧节点的子节点，将差异存入nodePatcher中
 
     URL doc:
-    http://icejs.org/######
+    http://amaple.org/######
 */
 export function diffChildren ( newChildren, oldChildren, nodePatcher ) {
 

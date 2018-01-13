@@ -14,7 +14,7 @@ let paramStore = null;
 	处理并存储配置参数
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 export default function configuration ( params ) {
 
@@ -58,7 +58,7 @@ extend ( configuration, {
 		根据配置名获取配置数据
 
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	getConfigure ( param ) {
 		return paramStore [ param ];

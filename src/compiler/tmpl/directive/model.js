@@ -18,7 +18,7 @@ export default {
         此方法只会在初始化挂载数据时调用一次
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
 	before () {
         const 
@@ -104,7 +104,7 @@ export default {
         表单元素双向绑定方法
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
 	update ( val ) {
     	const

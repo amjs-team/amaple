@@ -32,7 +32,7 @@ export default {
 		检查是否支持history新特性
 		
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	supportNewApi () {
 		return !!window.history.pushState;
@@ -48,7 +48,7 @@ export default {
 		对history.replaceState方法的封装
 		
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	replace ( state, url ) {
 		if ( this.history ) {
@@ -66,7 +66,7 @@ export default {
 		对history.pushState方法的封装
 		
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	push ( state, url ) {
     	if ( this.history ) {
@@ -84,7 +84,7 @@ export default {
 		保存pathname下的状态
 		
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	saveState ( state, pathname ) {
 		this.history.saveState ( state, pathname );
@@ -100,7 +100,7 @@ export default {
 		获取对应记录
 		
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	getState ( pathname ) {
 		return this.history.getState ( pathname );

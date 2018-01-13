@@ -1,4 +1,4 @@
-ice.class ( "EditTable" ).extends ( ice.Component ) ( {
+am.class ( "EditTable" ).extends ( am.Component ) ( {
 	init: function () {
 		this.propsType ( {
 			post: Object

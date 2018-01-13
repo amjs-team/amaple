@@ -33,7 +33,7 @@
 		var EditTable = import ( "EditTable" );
 		const PageCtrl = import ( "PageCtrl" );
 
-		var Num = ice.class ( "Num" ).extends ( ice.Component ) ( {
+		var Num = am.class ( "Num" ).extends ( am.Component ) ( {
 			constructor : function () {
 				this.__super ();
 				this.depComponent = [ Num ];
@@ -54,7 +54,7 @@
 			}
 		} );
 
-		var table = new ice.Module ( {
+		var table = new am.Module ( {
 			init : function () {
 				console.log( "table init" );
 

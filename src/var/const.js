@@ -31,7 +31,7 @@ export const noUnitHook = [ "z-index" ];
 // 直接赋值的元素属性，如果不在此的属性将会使用setAttribute设置属性
 export const attrAssignmentHook = [ "value", "checked" ];
 
-export const iceAttr = {
+export const amAttr = {
 	module : ":module",
 	title : ":title",
 

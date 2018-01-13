@@ -14,7 +14,7 @@ export default {
 		添加非元素事件缓存
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	push ( type, listener ) {
 		this.events [ type ] = this.events [ type ] || [];
@@ -32,7 +32,7 @@ export default {
 		获取事件缓存，没有找打则返回null
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	get ( type ) {
 		return this.events [ type ] || null;
@@ -49,7 +49,7 @@ export default {
 		获取所有非元素事件
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	getAll () {
 		return this.events;

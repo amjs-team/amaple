@@ -21,7 +21,7 @@ extend ( Router.prototype, {
         指定当前配置的模块节点
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
 	module ( moduleName = "default" ) {
     	check ( moduleName ).type ( "string" ).notBe ( "" ).ifNot ( "Router.module", "模块名必须为不为空的字符串，不传入模块名默认为'default'" ).do ();
@@ -49,7 +49,7 @@ extend ( Router.prototype, {
         为一个模块节点配置渲染模块路径
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
 	route ( pathExpr, modulePath, childDefineFn ) {
         check ( pathExpr ).type ( "string", "array" ).ifNot ( "Router.route", "pathExpr参数必须为字符串或数组" );
@@ -83,7 +83,7 @@ extend ( Router.prototype, {
         为一个模块节点配置路由路径为""时的渲染模块路径
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
 	defaultRoute ( modulePath, childDefineFn ) {
     	this.route ( "", modulePath, childDefineFn );
@@ -101,7 +101,7 @@ extend ( Router.prototype, {
         在当前模块目录层次定义重定向
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
 	redirect ( from, to ) {
     	let redirect;
@@ -137,7 +137,7 @@ extend ( Router.prototype, {
         调用此函数后，部分匹配相同路由的模块也会强制重新渲染
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
 	forcedRender () {
     	this.routeItem.forcedRender = null;
@@ -155,7 +155,7 @@ extend ( Router.prototype, {
         页面跳转时如果有任何一个模块未找到对应模块文件则会重定向到404路径并重新匹配路由来更新模块。
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
     error404 ( path404 ) {
         Router.errorPaths.error404 = path404;
@@ -172,7 +172,7 @@ extend ( Router.prototype, {
         页面跳转时如果有任何一个模块处理出现500错误，则会匹配500路径进行跳转
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
     error500 ( path500 ) {
         Router.errorPaths.error500 = path500;
@@ -194,7 +194,7 @@ extend ( Router, {
         获取错误路径
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
     getError ( errorCode ) {
         return this.errorPaths [ `error${ errorCode }` ];
@@ -213,7 +213,7 @@ extend ( Router, {
         // /settings => /\/settings/、/settings/:page => /\/settings/([^\\/]+?)/、/settings/:page(\d+)
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
     pathToRegexp ( pathExpr, from ) {
         const 
@@ -265,7 +265,7 @@ extend ( Router, {
         [ { module: "...", modulePath: "...", parent: ..., param: {}, children: [ {...}, {...} ] } ]
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
 	matchRoutes ( path, param, routeTree = this.routeTree, parent = null, matchError404 ) {
         let routes = [];

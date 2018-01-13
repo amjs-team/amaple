@@ -3,7 +3,7 @@ import { attr, serialize } from "../func/node";
 import event from "../event/core";
 import correctParam from "../correctParam";
 import Promise from "../promise/core";
-import ICEXMLHttpRequest from "./ICEXMLHttpRequest";
+import AmXMLHttpRequest from "./AmXMLHttpRequest";
 import xhr from "./transport/xhr";
 import script from "./transport/script";
 import jsonp from "./transport/jsonp";
@@ -29,7 +29,7 @@ import upload from "./transport/upload";
 	此外层包裹方法定义了许多仅供ajax函数使用的内部固定变量，只需编译一次且只能由ajax函数访问即可，所以使用了外层包裹的方式来设计此函数，http中的request、get、post方法调用此外层包裹方法并传入不同参数来获取对应的ajax函数
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 function request ( method ) {
 
@@ -125,7 +125,7 @@ function request ( method ) {
 		ajax异步请求方法实现
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	return ( ...args ) => {
 
@@ -134,7 +134,7 @@ function request ( method ) {
             data = options.data,
 
 			// 自定义xhr对象，用于统一处理兼容问题
-			iceXHR = new ICEXMLHttpRequest ();
+			amXHR = new AmXMLHttpRequest ();
 
 
 		// 如果传入的data参数为数据对象，则将{k1: v1, k2: v2}转为以k1=v1&k2=v2
@@ -235,10 +235,10 @@ function request ( method ) {
 			}
 			
 			// 获取传送器对象，当没有匹配到传送器时统一使用xhr
-			iceXHR.transport = ( ajaxTransports [ transportName ] ||  ajaxTransports.xhr  ) ( options );
+			amXHR.transport = ( ajaxTransports [ transportName ] ||  ajaxTransports.xhr  ) ( options );
 
 			// 小写dataType
-			iceXHR.transport.dataType = options.dataType.toLowerCase ();
+			amXHR.transport.dataType = options.dataType.toLowerCase ();
 
 			// 当请求为GET或HEAD时，拼接参数和cache为false时的时间戳
 			if ( !options.hasContent ) {
@@ -262,23 +262,23 @@ function request ( method ) {
 
 			// 设置Content-Type
 	        if ( options.contentType ) {
-	            iceXHR.setRequestHeader ( "Content-Type", options.contentType );
+	            amXHR.setRequestHeader ( "Content-Type", options.contentType );
 	        }
 
 	        // 设置Accept
-	        iceXHR.setRequestHeader ( "Accept", accepts [ iceXHR.transport.dataType ] ? accepts [ iceXHR.transport.dataType ] + ", */*; q=0.01" : accepts [ "*" ] );
+	        amXHR.setRequestHeader ( "Accept", accepts [ amXHR.transport.dataType ] ? accepts [ amXHR.transport.dataType ] + ", */*; q=0.01" : accepts [ "*" ] );
 
 	        // haders里面的首部
 	        foreach ( options.headers, ( header, key ) => {
-	            iceXHR.setRequestHeader ( key, header );
+	            amXHR.setRequestHeader ( key, header );
 	        } );
 
 	        // 调用请求前回调函数
 	        if ( type ( options.beforeSend ) === "function" ) {
-	        	options.beforeSend ( iceXHR, options );
+	        	options.beforeSend ( amXHR, options );
 	        }
 
-	        // 将事件绑定在iceXHR中
+	        // 将事件绑定在amXHR中
 			foreach ( [ "complete", "success", "error" ], callbackName => {
 
 				// 如果是success或error回调，则使用resolve或reject代替
@@ -289,17 +289,17 @@ function request ( method ) {
 					options [ callbackName ] = options [ callbackName ] || reject;
 				}
 
-				iceXHR.addEventListener ( callbackName, options [ callbackName ] );
+				amXHR.addEventListener ( callbackName, options [ callbackName ] );
 			} );
 
 			// 处理超时
 	        if ( options.async && options.timeout > 0 ) {
-	            iceXHR.transport.timeoutID = setTimeout ( () => {
-	                iceXHR.abort ( "timeout" );
+	            amXHR.transport.timeoutID = setTimeout ( () => {
+	                amXHR.abort ( "timeout" );
 	            }, options.timeout );
 	        }
 
-			iceXHR.transport.send ( options, iceXHR );
+			amXHR.transport.send ( options, amXHR );
 		} );
 	};
 }
@@ -321,7 +321,7 @@ export default {
 		ajax GET请求，内部调用request方法实现
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	get : request ( "GET" ),
 
@@ -336,7 +336,7 @@ export default {
 		ajax POST请求，内部调用request方法实现
 	
 		URL doc:
-		http://icejs.org/######
+		http://amaple.org/######
 	*/
 	post : request ( "POST" ),
 	

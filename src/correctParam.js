@@ -17,7 +17,7 @@ export default function correctParam ( ...params ) {
             通过后向匹配纠正参数位置
         
             URL doc:
-            http://icejs.org/######
+            http://amaple.org/######
         */
     	to ( ...condition ) {
         	let offset = 0,
@@ -74,7 +74,7 @@ export default function correctParam ( ...params ) {
             如果开发者没有传入回调函数参数，则通过this对象的$1、$2、$3...去按顺序获取纠正后的参数
         
             URL doc:
-            http://icejs.org/######
+            http://amaple.org/######
         */
         done ( callback ) {
             let args = ( /^function\s*\((.*?)\)/.exec ( callback.toString () ) || /^\(?(.*?)\)?\s*=>/.exec ( callback.toString () ) ) [ 1 ],

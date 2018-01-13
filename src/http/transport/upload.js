@@ -21,7 +21,7 @@ export default function () {
 	return {
 
 		/**
-			send ( options: Object, iceXHR: Object )
+			send ( options: Object, amXHR: Object )
 		
 			Return Type:
 			void
@@ -31,9 +31,9 @@ export default function () {
 		 	此方法使用iframe来模拟异步上传
 		
 			URL doc:
-			http://icejs.org/######
+			http://amaple.org/######
 		*/
-		send ( options, iceXHR ) {
+		send ( options, amXHR ) {
 			let self = this,
 
 				// 备份上传form元素的原有属性，当form提交后再使用备份还原属性
@@ -46,7 +46,7 @@ export default function () {
 
 			// 绑定回调
 			event.on ( uploadFrame, "load", function () {
-				self.done ( iceXHR );
+				self.done ( amXHR );
 			}, false, true );
 
 			// 设置form的上传属性
@@ -77,7 +77,7 @@ export default function () {
 		},
 
 		/**
-			done ( iceXHR: Object )
+			done ( amXHR: Object )
 		
 			Return Type:
 			void
@@ -86,9 +86,9 @@ export default function () {
 			上传完成的处理，主要工作是获取返回数据，移除iframe
 		
 			URL doc:
-			http://icejs.org/######
+			http://amaple.org/######
 		*/
-		done ( iceXHR ) {
+		done ( amXHR ) {
 
 			// 获取返回数据
 			let child, entity,
@@ -121,7 +121,7 @@ export default function () {
 				}
 			}
 
-			complete ( iceXHR );
+			complete ( amXHR );
 
 			// 移除iframe
 			uploadFrame.parentNode.removeChild (uploadFrame);
@@ -137,7 +137,7 @@ export default function () {
 			请求中断处理，此时无法中断
 		
 			URL doc:
-			http://icejs.org/######
+			http://amaple.org/######
 		*/
 		abort () {}
 	};

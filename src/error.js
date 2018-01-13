@@ -17,13 +17,13 @@
 	如果没有传入moduleName或moduleName为空，则在使用此错误生成器时在中括号内不会显示模块名称，而是直接显示错误的code，紧接着跟错误内容。
 
 	URL doc:
-	http://icejs.org/######
+	http://amaple.org/######
 */
 function error ( errorType ) {
 	return function ( errorCode, errorText ) {
 
 		// 打印的错误信息
-		let errMsg = "[ice:" + ( errorType ? errorType + "-" : "" ) + errorCode + "] " + errorText;
+		let errMsg = `[amaple:${ ( errorType ? errorType + "-" : "" ) }${ errorCode }]${ errorText }`;
 		return new Error ( errMsg );
 	};
 }

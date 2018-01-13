@@ -12,7 +12,7 @@ import { type, extend, foreach } from "./func/util";
     如果错误则抛出error
 
     URL doc:
-    http://icejs.org/######
+    http://amaple.org/######
 */
 export default function check ( variable ) {
     if ( this ) {
@@ -38,7 +38,7 @@ extend ( check.prototype, {
         "||"条件连接符（默认为"&"条件连接符）
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
     or () {
       	if ( /^\|\|$/.test ( this.condition [ this.condition.length - 1 ] ) ) {
@@ -59,7 +59,7 @@ extend ( check.prototype, {
         优先判断的条件，相当于“()”
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
 	prior ( priorCb ) {
     	let conditionBackup = this.condition;
@@ -83,7 +83,7 @@ extend ( check.prototype, {
         设置条件不成立时抛出的错误信息
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
     ifNot ( code, text ) {
         this.code = code;
@@ -102,7 +102,7 @@ extend ( check.prototype, {
         改变条件判断变量
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
     check ( variable ) {
         this.target = variable;
@@ -121,7 +121,7 @@ extend ( check.prototype, {
         如果判断不通过则抛出ifNot设置的提示
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
     do () {
         
@@ -141,7 +141,7 @@ extend ( check.prototype, {
         增加 "===" 条件
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
     be ( ...vars ) {
         check.compare.call ( this, vars, ( target, _var ) => {
@@ -161,7 +161,7 @@ extend ( check.prototype, {
         增加 "!==" 条件
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
     notBe ( ...vars ) {
         check.compare.call ( this, vars, ( target, _var ) => {
@@ -181,7 +181,7 @@ extend ( check.prototype, {
         增加变量类型相等条件
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
     type ( ...strs ) {
         check.compare.call ( this, strs, ( target, str ) => {
@@ -201,7 +201,7 @@ extend ( check.prototype, {
         增加变量类型不相等条件
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
     notType ( ...strs ) {
         check.compare.call ( this, strs, ( target, str ) => {

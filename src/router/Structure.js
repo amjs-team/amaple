@@ -1,8 +1,8 @@
 import { extend, foreach, type } from "../func/util";
 import ModuleLoader from "./ModuleLoader";
 import requestEventHandler from "./requestEventHandler";
-import { iceAttr } from "../var/const";
-import iceHistory from "./history/core";
+import { amAttr } from "../var/const";
+import amHistory from "./history/core";
 
 /**
     unmountStructure ( structure: Object )
@@ -16,7 +16,7 @@ import iceHistory from "./history/core";
     需将不显示的解雇卸载
 
     URL doc:
-    http://icejs.org/######
+    http://amaple.org/######
 */
 function unmountStructure ( structure ) {
     foreach ( structure, unmountItem => {
@@ -42,7 +42,7 @@ function unmountStructure ( structure ) {
     如果结构改变则记录到readyToUnmountz数组中即将卸载
 
     URL doc:
-    http://icejs.org/######
+    http://amaple.org/######
 */  
 function diffStructure ( newEntity, oldEntity, readyToUnmount ) {
     let oldItem;
@@ -109,7 +109,7 @@ extend ( Structure.prototype, {
         判断此结构对象是否为空
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
     isEmpty () {
         let empty = true;
@@ -134,7 +134,7 @@ extend ( Structure.prototype, {
         拷贝一个Structure对象
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
     copy ( entity = this.entity, parent = null ) {
         const copyEntity = [];
@@ -170,7 +170,7 @@ extend ( Structure.prototype, {
         根据location对象渲染出对应的模块
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
 	render ( location, nextStructureBackup ) {
 
@@ -192,15 +192,15 @@ extend ( Structure.prototype, {
 
         switch ( location.action ) {
             case "PUSH":
-                iceHistory.push ( locationGuide, location.path );
+                amHistory.push ( locationGuide, location.path );
                 
                 break;
             case "REPLACE":
-                iceHistory.replace ( locationGuide, location.path );
+                amHistory.replace ( locationGuide, location.path );
                 
                 break;
             case "NONE":
-                iceHistory.saveState ( locationGuide, location.path );
+                amHistory.saveState ( locationGuide, location.path );
 
                 break;
             case "POP":
@@ -222,7 +222,7 @@ extend ( Structure, {
         这样可以使创建Module对象时获取父级的vm，和保存扫描到的moduleNode
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
     signCurrentRender ( structureItem, param, args, data ) {
         structureItem.param = param;
@@ -242,7 +242,7 @@ extend ( Structure, {
         获取当前正在渲染的页面结构项
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
     getCurrentRender () {
         return Structure.currentRender;
@@ -258,11 +258,11 @@ extend ( Structure, {
         保存扫描到的模块节点对象以便下次使用时直接获取
     
         URL doc:
-        http://icejs.org/######
+        http://amaple.org/######
     */
     saveSubModuleNode ( vnode ) {
         foreach ( Structure.currentRender.children, child => {
-            if ( child.name === ( vnode.attr ( iceAttr.module ) || "default" ) && !child.moduleNode ) {
+            if ( child.name === ( vnode.attr ( amAttr.module ) || "default" ) && !child.moduleNode ) {
                 child.moduleNode = vnode;
                 return false;
             }
