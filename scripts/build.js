@@ -4,7 +4,7 @@ const
 	path = require ( "path" ),
 	banner = `/**
  * AmapleJS v${version}
- * (c) 2017-${ new Date ().getFullYear () } JOU http://amaple.org
+ * (c) 2018-${ new Date ().getFullYear () } JOU http://amaple.org
  * License: MIT
  */`;
 
@@ -13,7 +13,7 @@ module.exports = {
 	output: {
 		file: path.resolve ( __dirname, `../dist/${ name }.${ version }.js` ),
 		format: "umd",
-		name,
+		name: "am",
 		banner,
 	},
 	plugins: [

@@ -113,7 +113,7 @@ export default function Module ( moduleElem, vmData ) {
 
 	newClassCheck ( this, Module );
 	
-	const developMode = moduleElem instanceof VNode ? DEVELOP_SINGLE : DEVELOP_COMMON;
+	const devMode = moduleElem instanceof VNode ? DEVELOP_SINGLE : DEVELOP_COMMON;
 	let parent, moduleElemBackup;
       	
 	// 检查参数
@@ -122,12 +122,17 @@ export default function Module ( moduleElem, vmData ) {
 		check ( vmData ).type ( "object" ).check ( vmData.init ).type ( "function" ).ifNot ( "Module", "vmData参数必须为带有init方法的的object" ).do ();
 	}
 	else {
-		throw argErr ( "Module", "module参数可传入模块元素的:module属性值或直接传入需挂在模块元素" );
+		if ( devMode === DEVELOP_COMMON ) {
+			throw argErr ( "Module", "没有指定moduleElem参数，你可直接传入需挂载的模块DOM元素" );
+		}
+		else if ( devMode === DEVELOP_SINGLE ) {
+			throw argErr ( "Module", "没有指定moduleElem参数" );
+		}
 	}
   	
   	/////////////////////////////////
   	/////////////////////////////////
-	if ( developMode === DEVELOP_SINGLE && Structure.currentPage ) {
+	if ( devMode === DEVELOP_SINGLE && Structure.currentPage ) {
 		
     	// 只有单页模式时Structure.currentPage会有值
 		// 单页模式时，使用Structure.getCurrentRender().parent.module.state获取父级的vm
@@ -189,7 +194,7 @@ export default function Module ( moduleElem, vmData ) {
 
 	/////////////////////////////////
   	/////////////////////////////////
-	if ( developMode === DEVELOP_COMMON ) {
+	if ( devMode === DEVELOP_COMMON ) {
 
 		// 普通模式下才会在Module内对比新旧vnode计算出差异
 		// 并根据差异更新到实际dom中
