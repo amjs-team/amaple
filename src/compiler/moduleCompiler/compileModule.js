@@ -31,7 +31,7 @@ function parseModuleAttr ( moduleString, parses ) {
 	// 匹配出module标签内的属性
 	while ( !rend.test ( moduleString ) ) {
 		attrMatch = rmoduleAttr.exec ( moduleString );
-		if ( attrMatch ) {
+		if ( attrMatch && attrMatch [ 2 ] ) {
 			parses.attrs [ attrMatch [ 2 ] ] = attrMatch [ 3 ] || attrMatch [ 4 ] || "";
 			moduleString = moduleString.substr ( attrMatch [ 0 ].length );
 		}

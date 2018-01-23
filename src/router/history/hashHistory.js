@@ -1,6 +1,6 @@
 import event from "../../event/core";
 import Structure from "../Structure";
-import Router from "../../router/core";
+import Router from "../Router";
 
 
 export default {
