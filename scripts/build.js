@@ -11,14 +11,14 @@ const
 module.exports = {
 	input: path.resolve ( __dirname, "../src/core/core.js" ),
 	output: {
-		file: path.resolve ( __dirname, `../dist/${ name }.${ version }.js` ),
+		file: path.resolve ( __dirname, `../dist/${ name }.umd.js` ),
 		format: "umd",
 		name: "am",
 		banner,
 	},
 	plugins: [
 		babel ( {
-    		exclude: "node_modules/**" // 仅仅转译我们的源码
+    		exclude: "node_modules/**"
     	} ),
 	]
 	// sourceMap: true,
