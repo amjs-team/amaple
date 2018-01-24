@@ -1,7 +1,6 @@
 import { extend, foreach, type } from "../func/util";
 import ModuleLoader from "./ModuleLoader";
 import requestEventHandler from "./requestEventHandler";
-import { amAttr } from "../var/const";
 import amHistory from "./history/core";
 
 /**
@@ -249,7 +248,7 @@ extend ( Structure, {
     },
 
     /**
-        saveSubModuleNode ( vnode: Object )
+        saveSubModuleNode ( vnode: Object, moduleName: String )
     
         Return Type:
         void
@@ -260,9 +259,9 @@ extend ( Structure, {
         URL doc:
         http://amaple.org/######
     */
-    saveSubModuleNode ( vnode ) {
+    saveSubModuleNode ( vnode, moduleName ) {
         foreach ( Structure.currentRender.children, child => {
-            if ( child.name === ( vnode.attr ( amAttr.module ) || "default" ) && !child.moduleNode ) {
+            if ( child.name === ( moduleName || "default" ) && !child.moduleNode ) {
                 child.moduleNode = vnode;
                 return false;
             }

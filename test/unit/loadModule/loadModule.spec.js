@@ -43,7 +43,7 @@ describe ( "am test =>", () => {
 				router.module ()
 				.route ( [ "/debug", "/table" ], "index/table" )
 				.route ( "/login", "login/login", childRouter => {
-					childRouter.module ().route ( ":sub_sera", "login/sub_sera" );
+					childRouter.module ("child").route ( ":sub_sera", "login/sub_sera" );
 				} )
 				.route ( "/forget_pwd", "index/forget_pwd" )
 				.route ( "/error404", "error/404" );

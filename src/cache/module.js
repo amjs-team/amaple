@@ -1,5 +1,3 @@
-import { type, foreach } from "../func/util";
-
 export default {
 
 	modules : {},

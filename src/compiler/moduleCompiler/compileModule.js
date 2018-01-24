@@ -173,7 +173,7 @@ function parseStyle ( moduleString, parses ) {
 		else {
 
 			// 去除所有标签间的空格
-        	style = removeCssBlank ( styleMatch [ 1 ] );
+        	parses.style = removeCssBlank ( styleMatch [ 1 ] ).trim ();
         }
 	}
 	else {
