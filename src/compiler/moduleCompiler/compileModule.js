@@ -205,9 +205,14 @@ function parseScript ( moduleString, scriptPaths, scriptNames, parses ) {
 		rimport = /\s*(?:(?:(?:var|let|const)\s+)?(.+?)\s*=\s*)?import\s*\(\s*["'](.*?)["']\s*\)(?:\s*[,;])?/g,
 		rcomponent = /\s*(?:(?:(?:var|let|const)\s+)?(.+?)\s*=\s*)?am\s*\.\s*class\s*\(\s*["'`].+?["'`]\s*\)\s*\.\s*extends\s*\(\s*am\s*\.\s*Component\s*\)/,
 		rhtmlComment = /<!--(.*?)-->/g,
-		rmoduleDef 	= /new\s*am\s*\.\s*Module\s*\(/,
-		raddComponents = new RegExp ( rmoduleDef.source + "\\s*\\{" ),
+		rnewModule = /new\s*am\s*\.\s*Module\s*\(/,
+		rmoduleDef = new RegExp ( rnewModule.source + "\\s*([^\\s)]+)?" ),
 
+		// 匹配模块生命周期对象为实体
+		rlifeCycleEntity = new RegExp ( rnewModule.source + "\\s*{" ),
+
+		// 匹配模块生命周期对象为一个变量或为空
+		rlifeCycleVarOrEmpty = new RegExp ( rnewModule.source + "\\s*(.*)?\\s*\\)" ),
 		scriptMatch = rscript.exec ( moduleString ),
 		scripts = {};
 
@@ -248,11 +253,36 @@ function parseScript ( moduleString, scriptPaths, scriptNames, parses ) {
 
     		// 需要组件时才将组件添加到对应模块中
     		if ( !isEmpty ( deps ) ) {
-    			parses.script = parses.script.replace ( raddComponents, match => match + `depComponents:[${ deps.join ( "," ) }],` );
+    			const depString = `depComponents:[${ deps.join ( "," ) }]`;
+    			let lifeCycleMatch;
+    			if ( lifeCycleMatch = parses.script.match ( rlifeCycleEntity ) ) {
+    				parses.script = parses.script.replace ( lifeCycleMatch [ 0 ], match => match + depString + "," );
+    			}
+    			else if ( lifeCycleMatch = parses.script.match ( rlifeCycleVarOrEmpty ) ) {
+    				if ( lifeCycleMatch [ 1 ] ) {
+    					parses.script = parses.script.replace ( rlifeCycleVarOrEmpty, ( match, rep ) => {
+    						return match.replace ( rep, `args.extend(${ rep }, {${ depString }})` );
+    					} );
+    				}
+    				else {
+    					parses.script = parses.script.replace ( rnewModule, match => `${ match }{${ depString }}` );
+    				}
+    			}
     		}
     	}
 
-		parses.script = parses.script.replace ( rmoduleDef, match => `${ match }args.moduleNode,` );
+		parses.script = parses.script.replace ( rmoduleDef, ( match, rep ) => {
+			if ( rep ) {
+
+				// 适用于“new am.Module ( {...} )”的moduleNode增加
+				return match.replace ( rep, `args.moduleNode,${ rep }` );
+			}
+			else {
+
+				// 适用于“new am.Module ()”的moduleNode增加
+				return `${ match }args.moduleNode`;
+			}
+		} );
 	}
 	else {
 		parses.script = "";

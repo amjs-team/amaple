@@ -374,7 +374,15 @@ extend ( ModuleLoader, {
                 	moduleNode.render ();
                 }
 
-	        	historyModule.updateFn ( am, { moduleNode, moduleFragment: historyModule.updateFn.moduleFragment.clone (), NodeTransaction, require, signCurrentRender, flushChildren : flushChildren ( this ) } );
+	        	historyModule.updateFn ( am, {
+	        		moduleNode, 
+	        		moduleFragment: historyModule.updateFn.moduleFragment.clone (), 
+	        		NodeTransaction, 
+	        		require, 
+	        		signCurrentRender, 
+	        		flushChildren : flushChildren ( this ),
+	        		extend
+	        	} );
 	        };
 
 	        // 获取模块更新函数完成后在等待队列中移除
@@ -421,7 +429,15 @@ extend ( ModuleLoader, {
 	                	moduleNode [ identifierName ] = moduleIdentifier;
 	                }
 
-	        		updateFn ( am, { moduleNode, moduleFragment: updateFn.moduleFragment.clone (), NodeTransaction, require, signCurrentRender, flushChildren : flushChildren ( this ) } );
+	        		updateFn ( am, {
+	        			moduleNode, 
+	        			moduleFragment: updateFn.moduleFragment.clone (), 
+	        			NodeTransaction, 
+	        			require, 
+	        			signCurrentRender, 
+	        			flushChildren : flushChildren ( this ),
+	        			extend
+	        		} );
 
 	            	// 调用success回调
 					success ( moduleNode );

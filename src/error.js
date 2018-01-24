@@ -23,7 +23,7 @@ function error ( errorType ) {
 	return function ( errorCode, errorText ) {
 
 		// 打印的错误信息
-		let errMsg = `[amaple:${ ( errorType ? errorType + "-" : "" ) }${ errorCode }]${ errorText }`;
+		let errMsg = `[Amaple:${ ( errorType ? errorType + "-" : "" ) }${ errorCode }]${ errorText }`;
 		return new Error ( errMsg );
 	};
 }

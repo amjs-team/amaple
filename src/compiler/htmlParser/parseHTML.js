@@ -423,7 +423,7 @@ export default function parseHTML ( html ) {
 			// Close all the open elements, up the stack
 			for ( let i = stack.length - 1; i >= pos; i -- ) {
 				if ( ( i > pos || !tagName ) ) {
-					throw htmlParserErr ( "", `tag <${ stack [ i ].nodeName }> has no matching end tag.` );
+					throw htmlParserErr ( "endTag", `tag <${ stack [ i ].nodeName }> has no matching end tag.` );
 				}
 				
 				endHandler ( stack );

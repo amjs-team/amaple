@@ -178,7 +178,7 @@ export default function Class ( clsName ) {
 		}
     	
     	// 单页模式下将会临时保存Loader
-		if ( Loader.isRequiring ) {
+		if ( Loader.isRequiring.length > 0 ) {
 			Loader.currentLoaded = classFn;
 			cache.pushComponent ( Loader.getCurrentPath (), classFn );
 		}

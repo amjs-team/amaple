@@ -41,7 +41,9 @@ describe ( "am test =>", () => {
 
 				// default模块路由设置
 				router.module ()
-				.route ( [ "/debug", "/table" ], "index/table" )
+				.route ( [ "/debug", "/table" ], "index/table", childRouter => {
+					childRouter.module ().route ( ".html", "index/simple" );
+				} )
 				.route ( "/login", "login/login", childRouter => {
 					childRouter.module ("child").route ( ":sub_sera", "login/sub_sera" );
 				} )

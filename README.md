@@ -74,6 +74,6 @@ npm install amaple --save
 
 
 ## Amaple技术交流
-- 提交一个issue
+- [提交一个issue](https://github.com/amjs-team/amaple/issues)
 - Amaple官方QQ群：674036951
 - Email：jou@amaple.org

@@ -104,13 +104,7 @@ function initModuleLifeCycle ( module, vmData ) {
 	URL doc:
 	http://amaple.org/######
 */
-export default function Module ( moduleElem, vmData ) {
-	vmData = vmData || {
-		init: function () {
-			return {};
-		}
-	};
-
+export default function Module ( moduleElem, vmData = {} ) {
 	newClassCheck ( this, Module );
 	
 	const devMode = moduleElem instanceof VNode ? DEVELOP_SINGLE : DEVELOP_COMMON;
@@ -119,7 +113,6 @@ export default function Module ( moduleElem, vmData ) {
 	// 检查参数
 	if ( moduleElem ) {
 		check ( moduleElem.nodeType ).be ( 1, 3, 11 ).ifNot ( "Module", "module参数可传入模块元素的:module属性值或直接传入需挂在模块元素" ).do ();
-		check ( vmData ).type ( "object" ).check ( vmData.init ).type ( "function" ).ifNot ( "Module", "vmData参数必须为带有init方法的的object" ).do ();
 	}
 	else {
 		if ( devMode === DEVELOP_COMMON ) {
@@ -175,7 +168,7 @@ export default function Module ( moduleElem, vmData ) {
     const
 		// 获取后初始化vm的init方法
 		// 对数据模型进行转换
-		vm = new ViewModel ( vmData.init.apply ( this, cache.getDependentPlugin ( vmData.init ) ) || {} ),
+		vm = new ViewModel ( ( vmData.init || noop ).apply ( this, cache.getDependentPlugin ( vmData.init || noop ) ) || {} ),
 
 		// 使用vm解析模板
 		tmpl = new Tmpl ( vm, vmData.depComponents || [], this );

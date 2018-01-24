@@ -21,7 +21,7 @@ import cache from "../cache/core";
 	http://amaple.org/######
 */
 export default function require ( deps, factory, moduleType, callbacks ) {
-	Loader.isRequiring = true;
+	Loader.isRequiring.push ( factory );
 
 	// 正在加载的依赖数
 	let	loadingCount = 0,

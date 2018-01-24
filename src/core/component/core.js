@@ -38,7 +38,6 @@ export default function Component () {
     }
 
 	// check
-	check ( this.init ).type ( "function" ).ifNot ( "component:" + getFunctionName ( this.constructor ), "component derivative必须定义init方法" ).do ();
     check ( this.render ).type ( "function" ).ifNot ( "component:" + getFunctionName ( this.constructor ), "component derivative必须定义render方法，因为组件必须存在组件模板HTML" ).do ();
 }
 
@@ -68,7 +67,7 @@ extend ( Component.prototype, {
             componentConstructor.validateProps ( this.props, validator || {} );
         };
 
-		const componentVm = new ViewModel ( this.init.apply ( this, cache.getDependentPlugin ( this.init ) ) );
+		const componentVm = new ViewModel ( ( this.init || noop ).apply ( this, cache.getDependentPlugin ( this.init || noop ) ) );
         this.state = componentVm;
 
         delete this.propsType;

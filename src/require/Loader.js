@@ -105,7 +105,7 @@ extend ( Loader.prototype, {
 	*/
 	fire ( factory ) {
 		factory ();
-		Loader.isRequiring = false;
+		Loader.isRequiring.splice ( Loader.isRequiring.indexOf ( this.load.factory ), 1 );
 	},
 } );
 
@@ -113,8 +113,8 @@ extend ( Loader.prototype, {
 
 extend ( Loader, {
 
-	// 是否正在加载依赖组件
-	isRequiring : false,
+	// 正在加载依赖组件的模块
+	isRequiring : [],
 
 	// 文件后缀
 	suffix : ".js",
