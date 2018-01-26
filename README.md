@@ -40,30 +40,26 @@
 
 
 
-## 开发模式介绍
-
+## **开发模式介绍**
 ### \# 普通开发模式
+普通开发模式适合对Nodejs构建工具不熟悉的初级开发者使用， [**Amaple**](https://github.com/amjs-team/amaple) 自身的代码模块化管理将会使你摆脱代码缠绕的困扰。此外，Web单页应用需使用 **http**协议进行模块的请求与跳转，为解决这个问题，我们特地提供了可快速启动一个本地Web服务器的，具有一定文件结构的 [**Amaple**](https://github.com/amjs-team/amaple) 开发包，开发者只需下载并按以下操作即可完成启动。
 
-普通开发模式适合对Nodejs构建工具不熟悉的初级开发者使用，Amaple自身的代码模块化管理将会使你摆脱代码缠绕的困扰。此外，Web单页应用需使用 **http** 协议进行模块的请求与跳转，为解决这个问题，我们特地提供了可快速启动一个本地Web服务器的，具有一定文件结构的Amaple开发包，开发者只需下载并按以下操作即可完成启动。
-
-- [ 1 ]. 本地Web服务器依赖 **Nodejs** ，如没有安装请[**【点此下载Nodejs】**](http://nodejs.cn/download/)并安装。
-- [ 2 ]. 下载Amaple开发包[**【点此下载Amaple开发包】**](https://github.com/amjs-team/amaple-dev-pkg/archive/1.3.1.zip)。
-- [ 3 ]. 解压并进入到开发包中，直接执行启动程序即可自动启动本地Web服务器（windows系统运行 **start_win.bat** ，macOS系统运行 **start_macOS** ，程序会自动安装所需依赖包并启动一个本地Web服务器）。
+- [ 1 ]. 本地Web服务器依赖 **Nodejs**，如没有安装请[**【点此下载Nodejs】**](http://nodejs.cn/download/)并安装。
+- [ 2 ]. 下载 [**Amaple**](https://github.com/amjs-team/amaple) 开发包[**【点此下载Amaple开发包】**](https://github.com/amjs-team/amaple-dev-pkg/archive/1.4.2.zip)。
+- [ 3 ]. 解压并进入到开发包中，直接执行启动程序即可自动启动本地Web服务器（windows系统运行 **start_win.bat**，macOS系统运行 **start_macOS**，程序会自动安装所需依赖包并启动一个本地Web服务器）。
 - [ 4 ]. 此时就可以在开发包的`src`目录下进行开发，将对应类型的代码文件保存到对应文件夹。
-> 此后每次启动本地Web服务器时，只需执行第[ 2 ]步描述的程序即可。等到开发完成后直接将`src`目录下的代码拷贝到生产环境即可。
-
-
+> 【注意】1、开发者每次打开的启动程序来启动本地Web服务器，等到开发完成后直接将`src`目录下的代码拷贝到生产环境即可；
+2、**windows 8以上用户** 运行启动程序时请右键 **以管理员身份运行** 打开，否则可能会导致环境变量错误的问题；
+3、开发包并不是必须的，如果开发者使用带有本地Web服务器的IDE进行开发，也可自行搭建项目，此时可通过 **[https://unpkg.com/amaple](https://unpkg.com/amaple)** 获取最新版本的Amaple.js文件。
 
 ### \# Nodejs构建开发模式
-
-对于熟悉Nodejs构建工具的中高端开发者，可使用npm安装Amaple。
-
+对于熟悉Nodejs构建工具的中高端开发者，可使用npm安装 [**Amaple**](https://github.com/amjs-team/amaple) 。
 ```bash
 npm install amaple --save
 ```
-
-
-## 准备好了吗？请看Amaple教程：
+Nodejs环境下的构建教程即将推出，敬请期待...
+## **准备好了吗？开始学习Amaple：**
+**阅读教程时需特别关注代码中的注释文字，它一般是这个功能的具体使用方法。**
 - [**【Amaple教程】1. 启动路由**](https://segmentfault.com/a/1190000012966350)
 - [【Amaple教程】2. 模块](https://segmentfault.com/a/1190000012966430)
 - [【Amaple教程】3. 模板指令与状态数据（state）](https://segmentfault.com/a/1190000012966497)
@@ -71,9 +67,8 @@ npm install amaple --save
 - [【Amaple教程】5. 插件](https://segmentfault.com/a/1190000012966591)
 - [【Amaple教程】6. 路由配置](https://segmentfault.com/a/1190000012966646)
 
-
-
-## Amaple技术交流
+## **Amaple技术交流**
+如果你对 **Amaple** 有任何评价、建议或问题，可通过以下方式提交，我们将会在最快的速度进行回复。
 - [提交一个issue](https://github.com/amjs-team/amaple/issues)
 - Amaple官方QQ群：674036951
-- Email：jou@amaple.org
+- Email：[jou@amaple.org](mailto://jou@amaple.org)
