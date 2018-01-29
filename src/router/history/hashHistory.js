@@ -196,5 +196,31 @@ export default {
     */
 	getQuery ( path ) {
 		return ( ( path || window.location.hash ).match ( /\?(.*)$/ ) || [ "" ] ) [ 0 ];
+    },
+
+    /**
+    	correctLocation ( location: Object )
+
+    	Return Type:
+    	String
+    	修正后的完整路径
+
+    	Description:
+		修正路径为HASH模式下的可用路径
+
+    	URL doc:
+    	http://amaple.org/######
+    */
+    correctLocation ( location ) {
+    	let path = location.protocol + "//" + location.host + "/#",
+
+    		// IE下的pathname属性开头没有"/"
+    		pathname = ( location.pathname.substr ( 0, 1 ) === "/" ? "" : "/" ) + location.pathname;
+
+    	if ( location.search ) {
+    		pathname += pathname.indexOf ( "?" ) > -1 ? location.search.replace ( "?", "&" ) : location.search;
+    	}
+
+    	return path + pathname;
     }
 };

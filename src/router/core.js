@@ -45,16 +45,15 @@ export default function startRouter ( routerConfig ) {
 	amHistory.initHistory ( routerConfig.history );
 	
 	// 当使用hash模式时纠正路径
+	// 这一般会在AUTO模式下起作用，后台设置了跳转映射并在低版本浏览器中访问时有效
 	const 
     	href = window.location.href,
 		host = window.location.protocol + "//" + window.location.host + "/";
-	
 	if ( routerConfig.history === HASH && href !== host && href.indexOf ( host + "#" ) === -1 ) {
-    	if ( window.location.hash ) {
-    		window.location.hash = "";
-        }
-        
-        window.location.replace ( href.replace ( host, host + "#/" ) );
+        window.location.replace ( amHistory.history.correctLocation ( window.location ) );
+
+        // 改变了地址后浏览器会重新请求新地址
+        return;
     }
     delete routerConfig.history;
 

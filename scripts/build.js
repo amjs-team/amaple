@@ -4,7 +4,7 @@ const
 	path = require ( "path" ),
 	banner = `/**
  * AmapleJS v${version}
- * (c) 2018-${ new Date ().getFullYear () } JOU http://amaple.org
+ * (c) 2018-${ new Date ().getFullYear () } JOU https://amaple.org
  * License: MIT
  */`;
 
