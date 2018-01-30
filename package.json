@@ -36,7 +36,8 @@
     "test:sauce-mobile": "karma start test/unit/karma.sauce.conf.js mobile",
     "commit": "git-cz",
     "lint": "eslint src scripts test",
-    "init": "npm install && node scripts/hooks.js"
+    "init": "npm install && node scripts/hooks.js",
+    "release": "sh ./scripts/release.sh"
   },
   "devDependencies": {
     "babel-core": "^6.25.0",

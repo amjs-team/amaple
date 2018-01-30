@@ -5,4 +5,5 @@ dist
 demo
 test/coverage
 .coveralls.yml
-demo
+CHANGELOG/*
+npm-debug.log
