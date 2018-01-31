@@ -8,7 +8,7 @@ conventionalChangelog ( {
 	preset: "angular",
 	pkg: {
 		transform ( pkg ) {
-			// pkg.version = `v${ version }`;
+			pkg.version = `v${ version }`;
 			return pkg;
 		}
 	}

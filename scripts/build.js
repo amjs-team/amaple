@@ -1,8 +1,10 @@
 const 
 	babel = require ( "rollup-plugin-babel" ),
-	{ name, version } = require ( "../package.json" ),
-	path = require ( "path" ),
-	banner = `/**
+	path = require ( "path" );
+let { name, version } = require ( "../package.json" );
+
+version = process.env.VERSION || version;
+const banner = `/**
  * AmapleJS v${version}
  * (c) 2018-${ new Date ().getFullYear () } JOU https://amaple.org
  * License: MIT

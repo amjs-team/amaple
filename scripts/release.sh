@@ -28,7 +28,7 @@ if [[ $version =~ ^[0-9]\.[0-9]\.[0-9]$ ]]; then
 	# 发布到npm
 	git push --tag
 	git push origin master
-	# npm publish
+	npm publish
 
 	# 生成版本信息
 	node ./scripts/createReleaseMsg.js $version
