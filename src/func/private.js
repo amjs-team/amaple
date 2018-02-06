@@ -250,3 +250,46 @@ export function buildPlugin ( pluginDef, context, deps ) {
 	deps = cache.getDependentPlugin ( deps || pluginDef.build );
 	cache.pushPlugin ( pluginDef.name, pluginDef.build.apply ( context, deps ) );
 }
+
+/**
+	trimHTML ( htmlString: String )
+
+	Return Type:
+	String
+	去除空格后的html字符串
+
+	Description:
+	去除html标签间的空格与回车
+	<pre>内的标签不会被处理
+
+	URL doc:
+	http://amaple.org/######
+*/
+export function trimHTML ( htmlString ) {
+
+	// 表达式1：匹配<pre>/</pre>标签来确定是否在<pre>标签内
+	// 表达式2：匹配两个标签间的空格
+	const rpreAndBlank = /\s*(\/\s*)?pre\s*|>(\s+)</ig;
+	let inPreNum = 0;
+
+	return htmlString.replace ( rpreAndBlank, ( match, rep1, rep2 ) => {
+		if ( match.indexOf ( "pre" ) > -1 ) {
+			if ( rep1 === undefined ) {
+				inPreNum ++;
+				return match;
+			}
+			else if ( rep1.substr ( 0, 1 ) === "/" && inPreNum > 0 ) {
+				inPreNum --;
+				return match;
+			}
+		}
+		else {
+			if ( inPreNum > 0 ) {
+				return match;
+			}
+			else {
+				return match.replace ( rep2, "" );
+			}
+		}
+	} );
+}

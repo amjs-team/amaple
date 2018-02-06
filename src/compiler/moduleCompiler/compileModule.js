@@ -1,5 +1,5 @@
 import { isEmpty, foreach } from "../../func/util";
-import { transformCompName, stringToScopedVNode } from "../../func/private";
+import { transformCompName, stringToScopedVNode, trimHTML } from "../../func/private";
 import { TYPE_COMPONENT, amAttr } from "../../var/const";
 import { moduleErr } from "../../error";
 import check from "../../check";
@@ -60,10 +60,6 @@ function parseModuleAttr ( moduleString, parses ) {
 function parseTemplate ( moduleString, parses ) {
 	const 
 		rtemplate = /<template>([\s\S]+)<\/template>/i,
-		rblank = />(\s+)</g,
-		rtext = /"/g,
-		rwrap = /\r?\n\s*/g,
-
 		viewMatch = rtemplate.exec ( moduleString );
 
 	let view;
@@ -71,14 +67,8 @@ function parseTemplate ( moduleString, parses ) {
 		moduleString = moduleString.replace ( viewMatch [ 0 ], "" );
 		view = ( viewMatch [ 1 ] || "" ).trim ();
 
-		// 去除所有标签间的空格，并将"转换为'符号
-		view = view
-		.replace ( rblank, ( match, rep ) => match
-			.replace ( rep, "" ) )
-		.replace ( rtext, match => "'" )
-		.replace ( rwrap, match => "" );
-
-		parses.view = view;
+		// 去除所有标签间的空格
+		parses.view = trimHTML ( view );
 	}
 
 	return moduleString;

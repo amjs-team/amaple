@@ -1,5 +1,6 @@
 import { type, foreach } from "../../../func/util";
 import VTextNode from "../../../core/vnode/VTextNode";
+import VFragment from "../../../core/vnode/VFragment";
 
 export default {
 	
@@ -37,7 +38,7 @@ export default {
             this.expr = `(function(arr){
                 var arr=arr,tempArr=[],ret=[];
                 for(var i=0;i<arr.length;i++){
-                    if(!arr[i].nodeType){
+                    if(!arr[i]||!arr[i].nodeType){
                         tempArr.push(arr[i]);
                     }
                     else{
@@ -81,13 +82,17 @@ export default {
             }
         }
         else {
-            const p = node.parent;
-            p.clear ();
-
+            const f = VFragment ();
             foreach ( val, item => {
-                item = item.nodeType ? item : VTextNode ( item );
-                p.appendChild ( item );
+                if ( item.nodeType ) {
+                    f.appendChild ( item );
+                }
+                else if ( type ( item ) === "string" && item.trim () ) {
+                    f.appendChild ( VTextNode ( item ) );
+                }
             } );
+
+            node.parent.replaceChild ( f, node );
         }
     }
 };

@@ -1,7 +1,7 @@
 import slice from "../../var/slice";
 import { foreach, noop, type, isPlainObject } from "../../func/util";
 import cache from "../../cache/core";
-import { defineReactiveProperty, transformCompName, stringToScopedVNode } from "../../func/private";
+import { defineReactiveProperty, transformCompName, stringToScopedVNode, trimHTML } from "../../func/private";
 import { rexpr, rvar, noUnitHook } from "../../var/const";
 import { componentErr } from "../../error";
 import Subscriber from "../Subscriber";
@@ -213,15 +213,9 @@ export default {
         http://amaple.org/######
     */
     initTemplate ( template, scopedStyle ) {
-        const 
-            rblank = />(\s+)</g,
-            rwrap = /\r?\n\s*/g;
         
-        // 去除所有标签间的空格，并转义"和'符号
-        template = template
-        .replace ( rblank, ( match, rep ) => match
-            .replace ( rep, "" ) )
-        .replace ( rwrap, match => "" );
+        // 去除所有标签间的空格
+        template = trimHTML ( template.trim () );
 
         // 为对应元素添加内嵌样式
         let num, styleString;
