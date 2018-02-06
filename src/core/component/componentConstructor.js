@@ -229,8 +229,8 @@ export default {
         foreach ( scopedStyle, ( styles, selector ) => {
             styleString = "";
             foreach ( styles, ( val, styleName ) => {
-                num = parseInt ( val );
-                styleString += `${ styleName }:${ val + ( type ( num ) === "number" && ( num >= 0 || num <= 0 ) && noUnitHook.indexOf ( styleName ) === -1 ? "px" : "" ) };`;
+                num = window.parseInt ( val );
+                styleString += `${ styleName }:${ val + ( type ( num ) === "number" && ( num >= 0 || num <= 0 ) && num.toString () === val.toString () && noUnitHook.indexOf ( styleName ) === -1 ? "px" : "" ) };`;
             } );
 
             styleObject.push ( { selector, content: styleString } );

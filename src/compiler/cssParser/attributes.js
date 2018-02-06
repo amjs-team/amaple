@@ -22,7 +22,7 @@ export const rules = {
 		}
 
 		return elem => {
-			return elem.attr ( name ) === value && next ( elem );
+			return elem.nodeType === 1 && elem.attr ( name ) === value && next ( elem );
 		};
 	},
 	hyphen ( next, data ) {
@@ -35,7 +35,7 @@ export const rules = {
 			value = value.toLowerCase ();
 
 			return elem => {
-				const attr = elem.attr ( name );
+				const attr = elem.nodeType === 1 && elem.attr ( name );
 				return attr !== undefined &&
 						( attr.length === len || attr.charAt ( len ) === "-" ) &&
 						attr.substr ( 0, len ).toLowerCase () === value &&
@@ -44,7 +44,7 @@ export const rules = {
 		}
 
 		return elem => {
-			const attr = elem.attr ( name );
+			const attr = elem.nodeType === 1 && elem.attr ( name );
 			return attr !== undefined &&
 					attr.substr ( 0, len ) === value &&
 					( attr.length === len || attr.charAt ( len ) === "-" ) &&
@@ -67,14 +67,14 @@ export const rules = {
 		    regex = new RegExp ( pattern, flags );
 
 		return elem => {
-			const attr = elem.attr ( name );
+			const attr = elem.nodeType === 1 && elem.attr ( name ) || undefined;
 			return attr !== undefined && regex.test ( attr ) && next ( elem );
 		};
 	},
 	exists ( next, data ) {
 		const name = data.name;
 		return elem => {
-			return elem.attrs.hasOwnProperty ( name ) && next ( elem );
+			return elem.nodeType === 1 && elem.attrs.hasOwnProperty ( name ) && next ( elem );
 		};
 	},
 	start ( next, data ) {
@@ -91,13 +91,13 @@ export const rules = {
 			value = value.toLowerCase ();
 
 			return elem => {
-				const attr = elem.attr ( name );
+				const attr = elem.nodeType === 1 && elem.attr ( name );
 				return attr !== undefined && attr.substr ( 0, len ).toLowerCase () === value && next ( elem );
 			};
 		}
 
 		return elem => {
-			const attr = elem.attr ( name );
+			const attr = elem.nodeType === 1 && elem.attr ( name );
 			return attr !== undefined && attr.substr ( 0, len ) === value && next ( elem );
 		};
 	},
@@ -115,13 +115,13 @@ export const rules = {
 			value = value.toLowerCase ();
 
 			return elem => {
-				const attr = elem.attr ( name );
+				const attr = elem.nodeType === 1 && elem.attr ( name );
 				return attr !== undefined && attr.substr ( len ).toLowerCase () === value && next ( elem );
 			};
 		}
 
 		return elem => {
-			const attr = elem.attr ( name );
+			const attr = elem.nodeType === 1 && elem.attr ( name );
 			return attr !== undefined && attr.substr ( len ) === value && next ( elem );
 		};
 	},
@@ -137,13 +137,13 @@ export const rules = {
 			const regex = new RegExp ( value.replace ( rChars, "\\$&" ), "i" );
 
 			return elem => {
-				const attr = elem.attr ( name );
+				const attr = elem.nodeType === 1 && elem.attr ( name );
 				return attr !== undefined && regex.test ( attr ) && next ( elem );
 			};
 		}
 
 		return elem => {
-			const attr = elem.attr ( name );
+			const attr = elem.nodeType === 1 && elem.attr ( name );
 			return attr !== undefined && attr.indexOf ( value ) >= 0 && next ( elem );
 		};
 	},
@@ -153,20 +153,20 @@ export const rules = {
 
 		if ( value === "" ) {
 			return elem => {
-				return !!elem.attr ( name ) && next ( elem );
+				return elem.nodeType === 1 && !!elem.attr ( name ) && next ( elem );
 			};
 		}
 		else if ( data.ignoreCase ) {
 			value = value.toLowerCase ();
 
 			return elem => {
-				const attr = elem.attr ( name );
+				const attr = elem.nodeType === 1 && elem.attr ( name );
 				return attr !== undefined && attr.toLowerCase () !== value && next ( elem );
 			};
 		}
 
 		return elem => {
-			return elem.attr ( name ) !== value && next ( elem );
+			return elem.nodeType === 1 && elem.attr ( name ) !== value && next ( elem );
 		};
 	}
 };
