@@ -1,6 +1,6 @@
 import { noop, guid, extend, type, foreach, isEmpty } from "../func/util";
-import { parseGetQuery, queryModuleNode, getReference } from "../func/private";
-import { clear } from "../func/node";
+import { parseGetQuery, getReference, walkVDOM } from "../func/private";
+import { clear, attr } from "../func/node";
 import { DEVELOP_COMMON, DEVELOP_SINGLE } from "../var/const";
 import slice from "../var/slice";
 import cache from "../cache/core";
@@ -12,6 +12,7 @@ import check from "../check";
 import Structure from "../router/Structure";
 import VNode from "./vnode/VNode";
 import NodeTransaction from "./vnode/NodeTransaction";
+import routingHandler from "../router/routingHandler";
 
 // 模块标识名
 export const identifierName = "moduleIdentifier";
@@ -49,7 +50,6 @@ export function getIdentifier () {
 	http://amaple.org/######
 */
 function findParentVm ( elem ) {
-
 	let parentVm = null;
 	while ( elem.parentNode ) {
 		if ( elem.__module__ ) {
@@ -86,6 +86,8 @@ function initModuleLifeCycle ( module, vmData ) {
         delete vmData [ cycleItem ];
     } );
 }
+
+
 
 /**
 	Module ( moduleName: String|DOMObject|Object, vmData: Object )
@@ -165,7 +167,7 @@ export default function Module ( moduleElem, vmData = {} ) {
 	
 	initModuleLifeCycle ( this, vmData );
 
-    const
+    const 
 		// 获取后初始化vm的init方法
 		// 对数据模型进行转换
 		vm = new ViewModel ( ( vmData.init || noop ).apply ( this, cache.getDependentPlugin ( vmData.init || noop ) ) || {} ),
@@ -193,6 +195,12 @@ export default function Module ( moduleElem, vmData = {} ) {
 		// 并根据差异更新到实际dom中
 		// 单页模式将会在compileModule编译的函数中对比更新dom
 		moduleElem.diff ( moduleElemBackup ).patch ();
+	}
+	else {
+
+		// 为带有href属性的vnode绑定点击事件
+		// 此函数只有在单页模式下才会被调用
+		walkVDOM ( moduleElem, routingHandler );
 	}
 }
 

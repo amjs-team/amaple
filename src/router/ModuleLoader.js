@@ -309,7 +309,17 @@ extend ( ModuleLoader, {
 	*/
 	actionLoad ( currentStructure, moduleNode, param, args, data, method, timeout, before = noop, success = noop, error = noop, abort = noop ) {
 
-		let path = currentStructure.modulePath;
+		// 给模块元素添加编号属性，此编号是用于模块加载时的模块识别
+		let moduleIdentifier = ( historyModule && historyModule.moduleIdentifier ) 
+			|| ( moduleNode && moduleNode.nodeType === 1 && moduleNode.attr ( identifierName ) ),
+			path = currentStructure.modulePath;
+
+		if ( !moduleIdentifier ) {
+			moduleIdentifier = getIdentifier ();
+		}
+
+		// 加入等待加载队列
+		this.addWaiting ( moduleIdentifier );
 
 		// path为null时表示此模块为空
 		// 此时只需删除模块内元素
@@ -321,7 +331,13 @@ extend ( ModuleLoader, {
 				moduleNode.diff ( diffBackup ).patch ();
 			};
 
-			return;
+		    // 获取模块更新函数完成后在等待队列中移除
+		    // 此操作需异步，否则将会实时更新模块
+			setTimeout ( () => {
+				this.delWaiting ( moduleIdentifier );
+			} );
+
+			return false;
 		}
 
 		//////////////////////////////////////////////////
@@ -338,7 +354,7 @@ extend ( ModuleLoader, {
 			signCurrentRender = () => {
 				Structure.signCurrentRender ( currentStructure, param, args, data );
 			},
-			flushChildren = ( route ) => {
+			flushChildren = route => {
 				return () => {
 					if ( type ( route.children ) === "array" ) {
 						foreach ( route.children, child => {
@@ -350,16 +366,6 @@ extend ( ModuleLoader, {
 					}
 				};
 			};
-
-		// 给模块元素添加编号属性，此编号是用于模块加载时的模块识别
-		let moduleIdentifier = ( historyModule && historyModule.moduleIdentifier ) || 
-							( moduleNode && moduleNode.nodeType === 1 && moduleNode.attr ( identifierName ) );
-		if ( !moduleIdentifier ) {
-			moduleIdentifier = getIdentifier ();
-		}
-
-		// 加入等待加载队列
-		this.addWaiting ( moduleIdentifier );
 
 		// 请求不为post
 		// 并且已有缓存

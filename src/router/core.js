@@ -1,12 +1,10 @@
-import { attr } from "../func/node";
 import { type, foreach, noop } from "../func/util";
-import { TYPE_PLUGIN, amAttr } from "../var/const";
+import { TYPE_PLUGIN } from "../var/const";
 import { AUTO, HASH, BROWSER } from "./history/historyMode";
 import check from "../check";
 import Router from "./Router";
 import amHistory from "./history/core";
 import event from "../event/core";
-import requestEventHandler from "./requestEventHandler";
 import configuration from "../core/configuration/core";
 import pluginBuilder from "../core/plugin/core";
 import require from "../require/core";
@@ -56,35 +54,7 @@ export default function startRouter ( routerConfig ) {
         return;
     }
     delete routerConfig.history;
-
-    // 绑定元素请求或提交表单的事件到body元素上
-    event.on ( document.body, "click submit", ( e ) => {
-
-    	const
-        	target = e.target,
-       		path = attr ( target, e.type.toLowerCase () === "submit" ? amAttr.action : amAttr.href );
-
-        if ( path && !/#/.test ( path ) ) {
-
-        	const 
-        		method = e.type.toLowerCase () === "submit" ? attr ( target, "method" ).toUpperCase () : "GET",
-        		buildedPath = amHistory.history.buildURL ( path );
-
-        	if ( window.location.host === buildedPath.host ) {
-        		if ( buildedPath.pathname === window.location.pathname && buildedPath.search === window.location.search ) {
-
-        			e.preventDefault ();
-        		}
-        		else if ( requestEventHandler ( 
-        				buildedPath, 
-        				method, 
-        				method.toLowerCase () === "post" ? target : {} 
-        			) !== false ) {
-        			e.preventDefault ();
-        		}
-        	}
-        }
-    } );
+    
 
     const 
     	plugin = routerConfig.plugin,

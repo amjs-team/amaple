@@ -9,7 +9,7 @@ am.class ( "PageCtrl" ).extends ( am.Component ) ( {
 		};
 	},
 	render : function () {
-		this.template ( "<span>{{ desc }}</span><num></num>" ).
+		this.template ( "<span>{{ desc }}</span><num></num><a href='abc'>PageCtrl Btn</a>" ).
 		style ( {
 			span : { color : "pink" }
 		} );

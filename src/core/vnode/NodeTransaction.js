@@ -1,5 +1,4 @@
 import { extend, foreach } from "../../func/util";
-import { walkVDOM } from "../../func/private";
 
 export default function NodeTransaction () {
 	this.transactions = null;

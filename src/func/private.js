@@ -113,7 +113,9 @@ export function transformCompName ( compName, mode ) {
 export function walkVDOM ( vdom, callback, ...extra ) {
 	let vnode = vdom;
 	do {
-		callback.apply ( null, [ vnode ].concat ( extra ) );
+
+		// apply不能传递null或undefined，因为在低版本IE下会函数会被普通形式调用
+		callback.apply ( {}, [ vnode ].concat ( extra ) );
 
 		if ( vnode.children && vnode.children [ 0 ] ) {
 			walkVDOM ( vnode.children [ 0 ], callback );
@@ -123,7 +125,7 @@ export function walkVDOM ( vdom, callback, ...extra ) {
 }
 
 /**
-	queryModuleNode ( moduleAttr: String, moduleName: String, context?: DOMObject )
+	queryModuleNode ( moduleName: String, context?: DOMObject )
 
 	Return Type:
 	DOMObject
@@ -190,6 +192,20 @@ export function getReference ( references, refName ) {
 	return reference;
 }
 
+/**
+	stringToScopedVNode ( htmlString: String, styles: Object )
+
+	Return Type:
+	Object
+	转换后的VFragment Object
+
+	Description:
+	转换html字符串为vnodes
+	并根据局部css选择器为对应vnode添加局部属性
+
+	URL doc:
+	http://amaple.org/######
+*/
 export function stringToScopedVNode ( htmlString, styles ) {
 	const vstyle = VElement ( "style" );
 

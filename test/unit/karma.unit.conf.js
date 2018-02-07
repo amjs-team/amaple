@@ -105,7 +105,8 @@ module.exports = function ( config ) {
         	"/plugin/" : "/base/loadModule/module-files/plugin/",
             "/module/" : "/base/loadModule/module-files/module/",
             "/component/" : "/base/loadModule/module-files/component/",
-            "/post/" : "/base/loadModule/post/"
+            "/post/" : "/base/loadModule/post/",
+            "/asset/" : "/base/loadModule/asset/"
         }
     } );
 };

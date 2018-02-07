@@ -1,6 +1,5 @@
 import { extend, foreach, type } from "../func/util";
 import ModuleLoader from "./ModuleLoader";
-import requestEventHandler from "./requestEventHandler";
 import amHistory from "./history/core";
 
 /**

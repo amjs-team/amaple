@@ -45,7 +45,7 @@ describe ( "plugin define =>", () => {
 				expect ( util.type ( util ) ).toBe ( "object" );
 			}
 		} );
-
+		
 		div.querySelector ( "button" ).click ();
 		expect ( caller.calls.count () ).toBe ( 5 );
 	} );
