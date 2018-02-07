@@ -54,7 +54,7 @@ describe ( "event.on-emit =>", () => {
 			done ();
 		} );
 
-		event.emit ( undefined, "click", "param1", "param2" );
+		event.emit ( undefined, "click", [ "param1", "param2" ] );
 	} );
 
 	it ( "Non element listener remove", () => {

@@ -215,7 +215,7 @@ export default {
 		URL doc:
 		http://amaple.org/######
 	*/
-	emit ( elem, types, ...param ) {
+	emit ( elem, types, param ) {
 		if ( elem ) {
 			check ( elem.nodeType ).notBe ( 3 ).notBe ( 8 ).ifNot ( "function event.emit:elem", "elem参数不能为文本节点或注释节点" ).do ();
 		}

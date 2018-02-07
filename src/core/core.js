@@ -19,8 +19,8 @@ cache.pushPlugin ( "event", {
 	remove ( types, listener ) {
 		event.remove ( undefined, types, listener, false );
 	},
-	emit ( types ) {
-		event.emit ( undefined, types );
+	emit ( types, ...params ) {
+		event.emit ( undefined, types, params );
 	}
 } );
 cache.pushPlugin ( "http", http );
