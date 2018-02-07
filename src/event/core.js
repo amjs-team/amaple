@@ -109,7 +109,7 @@ export default {
 	on ( elem, types, listener, useCapture, once ) {
 
 		// 纠正参数
-		correctParam ( elem, types, listener, useCapture ).to ( "object", "string" ).done ( function () {
+		correctParam ( elem, types, listener, useCapture ).to ( [ "object", "undefined" ], "string" ).done ( function () {
 			elem = this.$1;
 			types = this.$2;
 			listener = this.$3;
@@ -175,7 +175,7 @@ export default {
 	remove ( elem, types, listener, useCapture ) {
 
 		// 纠正参数
-		correctParam ( elem, types, listener, useCapture ).to ( "object", "string" ).done ( args => {
+		correctParam ( elem, types, listener, useCapture ).to ( [ "object", "undefined" ], "string" ).done ( args => {
 			elem = args [ 0 ];
 			types = args [ 1 ];
 			listener = args [ 2 ];
@@ -235,7 +235,7 @@ export default {
 	emit ( elem, types ) {
 
 		// 纠正参数
-		let args = correctParam ( elem, types ).to ( "object", "string" ).done ( function () {
+		let args = correctParam ( elem, types ).to ( [ "object", "undefined" ], "string" ).done ( function () {
 			elem = this.$1;
 			types = this.$2;
 		} );
