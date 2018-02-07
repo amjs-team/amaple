@@ -4,7 +4,6 @@ import { type, foreach, guid, isEmpty, isPlainObject } from "../func/util";
 import { attr } from "../func/node";
 import { rword } from "../var/const";
 import check from "../check";
-import correctParam from "../correctParam";
 
 let	expando = "eventExpando" + Date.now (),
 
@@ -30,13 +29,14 @@ let	expando = "eventExpando" + Date.now (),
 	URL doc:
 	http://amaple.org/######
 */
-function handler ( e ) {
-	let _listeners = isPlainObject ( this )  
+function handler ( e, param ) {
+	const isNode = !isPlainObject ( this );
+	let _listeners = !isNode
 		? cache.getEvent ( e.type )
 		: this [ expando ] ? this [ expando ] [ e.type ] : [];
 
 	foreach ( _listeners || [], listener => {
-		listener.call ( this, e );
+		isNode ? listener.call ( this, e ) : listener.apply ( this, param );
 
 		// 如果该回调函数只执行一次则移除
 		if ( listener.once === true ) {
@@ -107,15 +107,6 @@ export default {
 		http://amaple.org/######
 	*/
 	on ( elem, types, listener, useCapture, once ) {
-
-		// 纠正参数
-		correctParam ( elem, types, listener, useCapture ).to ( [ "object", "undefined" ], "string" ).done ( function () {
-			elem = this.$1;
-			types = this.$2;
-			listener = this.$3;
-			useCapture = this.$4;
-		} );
-
 		check ( types ).type ( "string" ).ifNot ( "function event.on:types", "types参数类型必须为string" ).do ();
 		check ( listener ).type ( "function" ).ifNot ( "function event.on:listener", "listener参数类型必须为function" ).do ();
 		if ( elem ) {
@@ -173,15 +164,6 @@ export default {
 		http://amaple.org/######
 	*/
 	remove ( elem, types, listener, useCapture ) {
-
-		// 纠正参数
-		correctParam ( elem, types, listener, useCapture ).to ( [ "object", "undefined" ], "string" ).done ( args => {
-			elem = args [ 0 ];
-			types = args [ 1 ];
-			listener = args [ 2 ];
-			useCapture = args [ 3 ];
-		} );
-
 		if ( elem ) {
 			check ( elem.nodeType ).notBe ( 3 ).notBe ( 8 ).ifNot ( "function event.on:elem", "elem参数不能为文本节点或注释节点" ).do ();			
 		}
@@ -221,25 +203,19 @@ export default {
 	},
 
 	/**
-		emit ( elem?: DOMObject, types: String )
+		emit ( elem?: DOMObject, types: String, param: Array )
 	
 		Return Type:
 		void
 	
 		Description:
 		触发事件
+		并且在无elem下触发可传递额外参数
 	
 		URL doc:
 		http://amaple.org/######
 	*/
-	emit ( elem, types ) {
-
-		// 纠正参数
-		let args = correctParam ( elem, types ).to ( [ "object", "undefined" ], "string" ).done ( function () {
-			elem = this.$1;
-			types = this.$2;
-		} );
-
+	emit ( elem, types, ...param ) {
 		if ( elem ) {
 			check ( elem.nodeType ).notBe ( 3 ).notBe ( 8 ).ifNot ( "function event.emit:elem", "elem参数不能为文本节点或注释节点" ).do ();
 		}
@@ -266,7 +242,7 @@ export default {
 				handler.event = this;
 
 				// IE9下的call调用传入非引用类型的值时，函数内的this指针无效
-				handler.call ( {}, { type: t } );
+				handler.call ( {}, { type: t }, param );
 			}
 		} );
 	}

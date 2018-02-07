@@ -11,7 +11,7 @@ describe ( "Function trimHTML =>", () => {
 			</ul>
 		</div>`;
 
-		expect ( p.trimHTML ( html ) ).toBe ( "<div><span>hello Amaple</span><ul><li>1<li><li>2<li><li>3<li></ul></div>" )
+		expect ( p.trimHTML ( html ) ).toBe ( "<div><span>hello Amaple</span><ul><li>1<li><li>2<li><li>3<li></ul></div>" );
 	} );
 
 	it ( "Function trimHTML do not trim blank in <pre>", () => {

@@ -39,21 +39,30 @@ describe ( "event.on-emit =>", () => {
 	} );
 
 	it ( "Non element listener bind and emit", done => {
-		event.on ( "click", e => {
-			expect ( e.type ).toBe ( "click" );
+		event.on ( undefined, "click", () => {
 			done ();
 		} );
 		expect ( cache.getEvent ( "click" ).length ).toBe ( 1 );
 
-		event.emit ( "click" );
+		event.emit ( undefined, "click" );
+	} );
+
+	it ( "Non element listener bind and emit with params", done => {
+		event.on ( undefined, "click", ( a, b ) => {
+			expect ( a ).toBe ( "param1" );
+			expect ( b ).toBe ( "param2" );
+			done ();
+		} );
+
+		event.emit ( undefined, "click", "param1", "param2" );
 	} );
 
 	it ( "Non element listener remove", () => {
 		function listener () {};
-		event.on ( "trig", listener );
+		event.on ( undefined, "trig", listener );
 		expect ( cache.getEvent ( "trig" ).length ).toBe ( 1 );
 
-		event.remove ( "trig", listener );
+		event.remove ( undefined, "trig", listener );
 		expect ( cache.getEvent ( "trig" ).length ).toBe ( 0 );
 	} );
 } );

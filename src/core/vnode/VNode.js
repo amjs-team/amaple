@@ -31,6 +31,19 @@ function supportCheck ( nodeType, method ) {
     }
 }
 
+const 
+    entitySymbol = {
+        lt: "<", 
+        gt: ">",
+        amp: "&",
+        quot: "\"", 
+        reg: "®",
+        copy: "©",
+        trade: "™",
+        nbsp: " "
+    },
+    rentitySymbol = new RegExp ( `&(${ Object.keys ( entitySymbol ).join ( "|" ) }|#[0-9]+);`, "g" );
+
 
 /**
     updateParent ( childVNode: Object, parent: Object )
@@ -432,8 +445,28 @@ extend ( VNode.prototype, {
             	
             	break;
         	case 3:
+
+                // 如果nodeValue为string时需将实体符号转换为符号
+                if ( type ( this.nodeValue ) === "string" ) {
+                    this.nodeValue = this.nodeValue.replace ( rentitySymbol, ( match, rep ) => {
+                        let symbol = entitySymbol [ rep ];
+
+                        // 当实体符号为&#123、&#125之类的unicode编码组成时
+                        if ( !symbol ) {
+                            if ( rep.substr ( 0, 1 ) === "#" ) {
+                                symbol = String.fromCharCode ( rep.substr ( 1 ) ) || match;
+                            }
+                            else {
+                                symbol = match;
+                            }
+                        }
+                        
+                        return symbol;
+                    } );
+                }
+
             	if ( !this.node ) {
-        			this.node = document.createTextNode ( this.nodeValue || "" );
+        			this.node = document.createTextNode ( this.nodeValue );
                 }
                 else {
                     if ( this.node.nodeValue !== this.nodeValue ) {
