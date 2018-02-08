@@ -193,7 +193,7 @@ export function getReference ( references, refName ) {
 }
 
 /**
-	stringToScopedVNode ( htmlString: String, styles: Object )
+	stringToVNode ( htmlString: String, styles: Object )
 
 	Return Type:
 	Object
@@ -206,11 +206,13 @@ export function getReference ( references, refName ) {
 	URL doc:
 	http://amaple.org/######
 */
-export function stringToScopedVNode ( htmlString, styles ) {
+export function stringToVNode ( htmlString, styles ) {
 	const vstyle = VElement ( "style" );
 
 	let vf = parseHTML ( htmlString ),
 		styleString = styles;
+
+	// 将解析的vnode转换为VFragment
 	vf = vf.nodeType === 11 ? vf : VFragment ( [ vf ] );
 	if ( type ( styles ) === "array" ) {
 		styleString = "";
@@ -244,8 +246,10 @@ export function stringToScopedVNode ( htmlString, styles ) {
 		vstyle.attr ( "scoped", "" );
 	}
 
-	vstyle.appendChild ( VTextNode ( styleString ) );
-	vf.appendChild ( vstyle );
+	if ( styleString.trim () ) {
+		vstyle.appendChild ( VTextNode ( styleString ) );
+		vf.appendChild ( vstyle );
+	}
 
 	return vf;
 }

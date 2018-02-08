@@ -325,7 +325,7 @@ extend ( Router, {
 
                     param [ route.name ] = { data : {} };
                     foreach ( pathReg.path.param, ( i, paramName ) => {
-                        param [ route.name ].data [ paramName ] = matchPath [ i ];
+                        param [ route.name ].data [ paramName ] = matchPath [ i ] || "";
                     } );
 
                     routes.push ( entityItem );

@@ -1,7 +1,7 @@
 import slice from "../../var/slice";
 import { foreach, noop, type, isPlainObject } from "../../func/util";
 import cache from "../../cache/core";
-import { defineReactiveProperty, transformCompName, stringToScopedVNode, trimHTML } from "../../func/private";
+import { defineReactiveProperty, transformCompName, stringToVNode, trimHTML } from "../../func/private";
 import { rexpr, rvar, noUnitHook } from "../../var/const";
 import { componentErr } from "../../error";
 import Subscriber from "../Subscriber";
@@ -230,7 +230,7 @@ export default {
             styleObject.push ( { selector, content: styleString } );
         } );
         
-        return stringToScopedVNode ( template, styleObject );
+        return stringToVNode ( template, styleObject );
     },
     
     /**

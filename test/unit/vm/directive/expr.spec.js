@@ -116,4 +116,30 @@ describe ( "directive expr => ", () => {
         expect ( realDOM.firstChild.style.color ).toBe ( "white" );
         expect ( realDOM.firstChild.style.fontSize ).toBe ( "20px" );
     } );
+
+    it ( "Directive expression with calculation", () => {
+        d.appendChild ( VElement ( "span", { id: "{{ expr ? 'new' : 'old' }}_id" }, null, [ VTextNode ( "{{ expr + ' amaple' }}" ) ] ) );
+        d.appendChild ( VElement ( "span", {}, null, [ VTextNode ( "123{{ expr === 'hello' ? 'a' : 'b' }}" ) ] ) );
+        d.appendChild ( VElement ( "span", {}, null, [ VTextNode ( "{{ expr !== 'hello' && 'a' || 'b' }}456" ) ] ) );
+        d.appendChild ( VElement ( "span", {}, null, [ VTextNode ( "123{{ expr.substr ( 2 ) }}456" ) ] ) );
+        const realDOM = d.render ();
+
+        let dBackup = d.clone (),
+            vm = new ViewModel ( {
+                expr : "hello",
+            } ),
+            t = new Tmpl ( vm, [], {} );
+        t.mount ( d, true );
+        expect ( d.children [ 0 ].children [ 0 ].nodeValue ).toBe ( "hello amaple" );
+        expect ( d.children [ 0 ].attrs.id ).toBe ( "new_id" );
+        expect ( d.children [ 1 ].children [ 0 ].nodeValue ).toBe ( "123a" );
+        expect ( d.children [ 2 ].children [ 0 ].nodeValue ).toBe ( "b456" );
+        expect ( d.children [ 3 ].children [ 0 ].nodeValue ).toBe ( "123llo456" );
+        // 比较最小更新步骤并渲染到实际dom
+        d.diff ( dBackup ).patch ();
+        expect ( realDOM.childNodes.item ( 0 ).childNodes.item ( 0 ).nodeValue ).toBe ( "hello amaple" );
+        expect ( realDOM.childNodes.item ( 1 ).childNodes.item ( 0 ).nodeValue ).toBe ( "123a" );
+        expect ( realDOM.childNodes.item ( 2 ).childNodes.item ( 0 ).nodeValue ).toBe ( "b456" );
+        expect ( realDOM.childNodes.item ( 3 ).childNodes.item ( 0 ).nodeValue ).toBe ( "123llo456" );
+    } );
 } );

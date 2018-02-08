@@ -1,5 +1,5 @@
 import { isEmpty, foreach } from "../../func/util";
-import { transformCompName, stringToScopedVNode, trimHTML } from "../../func/private";
+import { transformCompName, stringToVNode, trimHTML } from "../../func/private";
 import { TYPE_COMPONENT, amAttr } from "../../var/const";
 import { moduleErr } from "../../error";
 import check from "../../check";
@@ -337,7 +337,7 @@ export default function compileModule ( moduleString ) {
 		////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////
 		/// 编译局部样式
-		moduleFragment = stringToScopedVNode ( parses.view, parses.style );
+		moduleFragment = stringToVNode ( parses.view, parses.style );
 
 		////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////

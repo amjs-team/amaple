@@ -17,7 +17,7 @@ export default {
 	tag ( next, data ) {
 		const name = data.name;
 		return elem => {
-			return elem.nodeName.toLowerCase () === name && next ( elem );
+			return elem.nodeType === 1 && elem.nodeName.toLowerCase () === name && next ( elem );
 		};
 	},
 
