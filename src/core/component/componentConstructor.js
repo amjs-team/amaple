@@ -212,7 +212,7 @@ export default {
         URL doc:
         http://amaple.org/######
     */
-    initTemplate ( template, scopedStyle ) {
+    initTemplate ( template, scopedStyle, scopedCssObject ) {
         
         // 去除所有标签间的空格
         template = trimHTML ( template.trim () );
@@ -230,7 +230,7 @@ export default {
             styleObject.push ( { selector, content: styleString } );
         } );
         
-        return stringToVNode ( template, styleObject );
+        return stringToVNode ( template, styleObject, scopedCssObject );
     },
     
     /**

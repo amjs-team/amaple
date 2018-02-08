@@ -2,17 +2,25 @@ import { foreach } from "../../func/util";
 import parseSelector from "./parseSelector";
 import compileToken from "./compileToken";
 
-function findNode ( test, targetChildren ) {
+function findNode ( test, targetChildren, isWatchCond ) {
 	let result = [];
 	foreach ( targetChildren, child => {
-		if ( child.nodeType !== 1 ) {
-			return true;
-		}
-		if ( test ( child ) ) {
+		if ( child.nodeType === 1 && test ( child ) ) {
 			result.push ( child );
 		}
 
-		if ( child.children.length > 0 ) {
+		if ( child.conditionElems && child.conditionElems.length > 0 && isWatchCond !== false ) {
+
+			// 复制一份数组并移除当前vnode
+			const 
+				walkElems = child.conditionElems.concat (),
+				index = walkElems.indexOf ( child );
+			if ( index > -1 ) {
+				walkElems.splice ( index, 1 );
+			}
+			result = result.concat ( findNode ( test, walkElems, false ) );
+		}
+		if ( child.nodeType === 1 && child.children.length > 0 ) {
 			result = result.concat ( findNode ( test, child.children ) );
 		}
 	} );

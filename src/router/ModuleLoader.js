@@ -351,8 +351,10 @@ extend ( ModuleLoader, {
 
 		const 
 			historyModule = cache.getModule ( path ),
-			signCurrentRender = () => {
-				Structure.signCurrentRender ( currentStructure, param, args, data );
+			signCurrentRender = scopedCssObject => {
+				return () => {
+					Structure.signCurrentRender ( currentStructure, param, args, data, scopedCssObject );
+				};
 			},
 			flushChildren = route => {
 				return () => {
@@ -385,7 +387,7 @@ extend ( ModuleLoader, {
 	        		moduleFragment: historyModule.updateFn.moduleFragment.clone (), 
 	        		NodeTransaction, 
 	        		require, 
-	        		signCurrentRender, 
+	        		signCurrentRender: signCurrentRender ( historyModule.scopedCssObject ),
 	        		flushChildren : flushChildren ( this ),
 	        		extend
 	        	} );
@@ -418,7 +420,8 @@ extend ( ModuleLoader, {
 				/////////////////////////////////////////////////////////
 	        	// 编译module为可执行函数
 				// 将请求的html替换到module模块中
-	            const { updateFn, title } = compileModule ( moduleString );
+				// scopedCssObject函数中包含需设置范围属性的选择器和范围属性名，它将在Module中被设置
+	            const { updateFn, title, scopedCssObject } = compileModule ( moduleString );
 	            this.updateTitle ( title );
 	        	
 	        	currentStructure.updateFn = function () {
@@ -428,7 +431,8 @@ extend ( ModuleLoader, {
 		            cache.pushModule ( path, {
 		            	title,
 		            	updateFn, 
-		            	moduleIdentifier
+		            	moduleIdentifier,
+		            	scopedCssObject
 		            } );
 
 	                if ( !moduleNode [ identifierName ] ) {
@@ -440,7 +444,7 @@ extend ( ModuleLoader, {
 	        			moduleFragment: updateFn.moduleFragment.clone (), 
 	        			NodeTransaction, 
 	        			require, 
-	        			signCurrentRender, 
+	        			signCurrentRender: signCurrentRender ( scopedCssObject ), 
 	        			flushChildren : flushChildren ( this ),
 	        			extend
 	        		} );

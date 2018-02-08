@@ -193,7 +193,7 @@ export function getReference ( references, refName ) {
 }
 
 /**
-	stringToVNode ( htmlString: String, styles: Object )
+	stringToVNode ( htmlString: String, styles: Object, scopedCssObject: Object )
 
 	Return Type:
 	Object
@@ -202,11 +202,13 @@ export function getReference ( references, refName ) {
 	Description:
 	转换html字符串为vnodes
 	并根据局部css选择器为对应vnode添加局部属性
+	对应的模块标识会保存到scopedCssObject.identifier中
 
 	URL doc:
 	http://amaple.org/######
 */
-export function stringToVNode ( htmlString, styles ) {
+export function stringToVNode ( htmlString, styles, scopedCssObject ) {
+	scopedCssObject = scopedCssObject || {};
 	const vstyle = VElement ( "style" );
 
 	let vf = parseHTML ( htmlString ),
@@ -217,18 +219,16 @@ export function stringToVNode ( htmlString, styles ) {
 	if ( type ( styles ) === "array" ) {
 		styleString = "";
 
-		const scopedCssIdentifier = identifierPrefix + guid ();
+		const scopedCssIdentifier = scopedCssObject.identifier = identifierPrefix + guid ();
+		scopedCssObject.selectors = [];
 		foreach ( styles, styleItem => {
+
+			// 为css选择器添加范围属性限制
+			// 但需排除如@keyframes的项
 			if ( styleItem.selector.substr ( 0, 1 ) !== "@" ) {
-
-				// 为范围样式添加范围属性限制
-				foreach ( query ( styleItem.selector, vf ), velem => {
-					velem.attr ( scopedCssIdentifier, "" );
-				} );
-
-				// 为css选择器添加范围属性限制
 				let selectorArray = [];
-				foreach ( styleItem.selector.split ( "," ), selector => {
+				foreach ( styleItem.selector.split ( "," ).map ( item => item.trim () ), selector => {
+					scopedCssObject.selectors.push ( selector );
 					const pseudoMatch = selector.match ( /:[\w-()\s]+|::selection/i );
 					if ( pseudoMatch ) {
 						selectorArray.push ( selector.replace ( pseudoMatch [ 0 ], `[${ scopedCssIdentifier }]${ pseudoMatch [ 0 ] }` ) );
@@ -252,6 +252,14 @@ export function stringToVNode ( htmlString, styles ) {
 	}
 
 	return vf;
+}
+
+export function appendScopedAttr ( vnode, selectors, identifier ) {
+	foreach ( selectors, selector => {
+	    foreach ( query ( selector, vnode ), velem => {
+	        velem.attr ( identifier, "" );
+	    } );
+	} );
 }
 
 /**

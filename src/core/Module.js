@@ -1,5 +1,5 @@
 import { noop, guid, extend, type, foreach, isEmpty } from "../func/util";
-import { parseGetQuery, getReference, walkVDOM } from "../func/private";
+import { parseGetQuery, getReference, walkVDOM, appendScopedAttr } from "../func/private";
 import { clear, attr } from "../func/node";
 import { DEVELOP_COMMON, DEVELOP_SINGLE } from "../var/const";
 import slice from "../var/slice";
@@ -13,6 +13,7 @@ import Structure from "../router/Structure";
 import VNode from "./vnode/VNode";
 import NodeTransaction from "./vnode/NodeTransaction";
 import routingHandler from "../router/routingHandler";
+
 
 // 模块标识名
 export const identifierName = "moduleIdentifier";
@@ -197,6 +198,8 @@ export default function Module ( moduleElem, vmData = {} ) {
 		moduleElem.diff ( moduleElemBackup ).patch ();
 	}
 	else {
+		const scopedCssObject = ( Structure.getCurrentRender () ).scopedCssObject;
+		appendScopedAttr ( moduleElem, scopedCssObject.selectors, scopedCssObject.identifier );
 
 		// 为带有href属性的vnode绑定点击事件
 		// 此函数只有在单页模式下才会被调用

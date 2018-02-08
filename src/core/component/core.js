@@ -1,6 +1,6 @@
 import { extend, foreach, noop, type, isEmpty } from "../../func/util";
 import { clear } from "../../func/node";
-import { transformCompName, getFunctionName, getReference } from "../../func/private";
+import { transformCompName, getFunctionName, getReference, appendScopedAttr } from "../../func/private";
 import { rcomponentName } from "../../var/const";
 import { componentErr } from "../../error";
 import slice from "../../var/slice";
@@ -118,7 +118,8 @@ extend ( Component.prototype, {
 
 		// 处理模块并挂载数据
 		const 
-            vfragment = componentConstructor.initTemplate ( componentString, scopedStyle ),
+            scopedCssObject = {},
+            vfragment = componentConstructor.initTemplate ( componentString, scopedStyle, scopedCssObject ),
             subElements = componentConstructor.initSubElements ( componentVNode, subElementNames ),
             tmpl = new Tmpl ( componentVm, this.depComponents, this );
 
@@ -130,6 +131,9 @@ extend ( Component.prototype, {
         // 解析组件并挂载数据
         this.references = {};
         tmpl.mount ( vfragment, false, Tmpl.defineScoped ( subElements, componentVNode, false ) );
+
+        // 追加局部属性
+        appendScopedAttr ( vfragment, scopedCssObject.selectors, scopedCssObject.identifier );
 
         // 保存组件对象和结构
         componentVNode.component = this;

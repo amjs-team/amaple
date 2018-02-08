@@ -297,7 +297,10 @@ function parseScript ( moduleString, scriptPaths, scriptNames, parses ) {
 export default function compileModule ( moduleString ) {
 
 	// 模块编译正则表达式
-	const rmodule = /^<module[\s\S]+<\/module>/i;
+	const 
+		rmodule = /^<module[\s\S]+<\/module>/i,
+		scopedCssObject = {};
+
 	let title = "",
 		moduleFragment;
 	if ( rmodule.test ( moduleString ) ) {
@@ -337,7 +340,7 @@ export default function compileModule ( moduleString ) {
 		////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////
 		/// 编译局部样式
-		moduleFragment = stringToVNode ( parses.view, parses.style );
+		moduleFragment = stringToVNode ( parses.view, parses.style, scopedCssObject );
 
 		////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////
@@ -381,5 +384,5 @@ export default function compileModule ( moduleString ) {
 
 	const updateFn = new Function ( "am", "args", moduleString );
 	updateFn.moduleFragment = moduleFragment;
-	return { updateFn, title };
+	return { updateFn, title, scopedCssObject };
 }

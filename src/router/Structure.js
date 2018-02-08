@@ -210,7 +210,7 @@ extend ( Structure.prototype, {
 extend ( Structure, {
 
     /**
-        signCurrentRender ( structureItem: Object, param: Object, args: String, data: Object )
+        signCurrentRender ( structureItem: Object, param: Object, args: String, data: Object, scopedCssObject: Object )
         
         Return Type:
         void
@@ -222,10 +222,11 @@ extend ( Structure, {
         URL doc:
         http://amaple.org/######
     */
-    signCurrentRender ( structureItem, param, args, data ) {
+    signCurrentRender ( structureItem, param, args, data, scopedCssObject ) {
         structureItem.param = param;
         structureItem.get = args;
         structureItem.post = data;
+        structureItem.scopedCssObject = scopedCssObject;
         Structure.currentRender = structureItem;
     },
     
