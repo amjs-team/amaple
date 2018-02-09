@@ -260,14 +260,14 @@ extend ( ModuleLoader.prototype, {
 			// 加载模块遇到错误，直接处理错误信息
 		   	const 
 		   		pathResolver = amHistory.history.buildURL ( this.moduleError ),
-		   		param = {},
-		   		nextStructure = Router.matchRoutes ( pathResolver.pathname, param ),
+		   		extra = {},
+		   		nextStructure = Router.matchRoutes ( pathResolver.pathname, extra ),
 		   		nextStructureBackup = nextStructure.copy (),
 
 		   		location = {
 			       	path : this.moduleError,
 			       	nextStructure,
-			       	param,
+			       	param: extra.param,
 			       	get : pathResolver.search,
 			       	post : {},
 			       	action : "REPLACE" // 暂不确定是不是为"PUSH"???

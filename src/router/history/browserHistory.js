@@ -15,12 +15,12 @@ export default {
     	    if ( !locationGuide ) {
 	    	    const 
 	    	    	path = window.location.pathname,
-	    	    	param = {},
-	    			structure = Router.matchRoutes ( path, param );
+	    	    	extra = {},
+	    			structure = Router.matchRoutes ( path, extra );
 
 	    		locationGuide = {
 	    			structure,
-	    			param,
+	    			param: extra.param,
 	    			get : window.location.search,
 	    			post : {}
 	    		};

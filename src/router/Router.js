@@ -267,12 +267,19 @@ extend ( Router, {
         URL doc:
         http://amaple.org/######
     */
-	matchRoutes ( path, param, routeTree = this.routeTree, parent = null, matchError404 ) {
+	matchRoutes ( path, extra, routeTree = this.routeTree, parent = null, matchError404 ) {
+        if ( parent === null ) {
+
+            // 初始化
+            extra.param = {};
+            extra.path = path;
+        }
+
         let routes = [];
-    	
     	foreach ( routeTree, route => {
         	if ( route.hasOwnProperty ( "redirect" ) ) {
-                let isContinue = true;
+                let isContinue = true,
+                    pathBackup = path;
                 
                 foreach ( route.redirect, redirect => {
                 	
@@ -286,6 +293,14 @@ extend ( Router, {
           				
           				return to;
                 	} );
+
+                    // 更新extra.path
+                    if ( pathBackup ) {
+                        extra.path = extra.path.replace ( pathBackup, path );
+                    }
+                    else {
+                        extra.path += ( ( extra.path.substr ( -1 ) === "/" ? "" : "/" ) + path );
+                    }
       				
       				return isContinue;
                 } );
@@ -323,9 +338,9 @@ extend ( Router, {
                     isMatch = true;
                     entityItem.modulePath = pathReg.modulePath;
 
-                    param [ route.name ] = { data : {} };
+                    extra.param [ route.name ] = { data : {} };
                     foreach ( pathReg.path.param, ( i, paramName ) => {
-                        param [ route.name ].data [ paramName ] = matchPath [ i ] || "";
+                        extra.param [ route.name ].data [ paramName ] = matchPath [ i ] || "";
                     } );
 
                     routes.push ( entityItem );
@@ -333,8 +348,9 @@ extend ( Router, {
             	
             	if ( type ( pathReg.children ) === "array" ) {
                     const 
-                        _param = {},
-                        children = this.matchRoutes ( matchPath ? path.replace ( matchPath [ 0 ], "" ) : path, _param, pathReg.children, entityItem );
+                        _extra = { param: {}, path: extra.path },
+                        children = this.matchRoutes ( matchPath ? path.replace ( matchPath [ 0 ], "" ) : path, _extra, pathReg.children, entityItem );
+                        extra.path = _extra.path;
                 	
                     // 如果父路由没有匹配到，但子路由有匹配到也需将父路由添加到匹配项中
                 	if ( !isEmpty ( children ) ) {
@@ -343,11 +359,11 @@ extend ( Router, {
                             
                             entityItem.modulePath = pathReg.modulePath;
                     		routes.push ( entityItem );
-                            param [ route.name ] = { data: {} };
+                            extra.param [ route.name ] = { data: {} };
                         }
 
                         entityItem.children = children;
-                        param [ route.name ].children = _param;
+                        extra.param [ route.name ].children = _extra.param;
                     }
                 }
             	

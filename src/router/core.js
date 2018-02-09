@@ -106,18 +106,22 @@ export default function startRouter ( routerConfig ) {
 		pluginBuilder.build ();
 
     	const 
-    		param = {},
+    		extra = {},
     		path = amHistory.history.getPathname (),
-    		
     		location = {
-	        	path,
-	        	nextStructure : Router.matchRoutes ( path, param ),
-	        	param,
+	        	nextStructure : Router.matchRoutes ( path, extra ),
+	        	path: extra.path,
+	        	param: extra.param,
 	        	get : amHistory.history.getQuery (),
 	        	post : {},
 	        	method : "GET",
 	        	action : "NONE"
 	        };
+
+	    // 当路由被重定向后需使用replace的方式修改当前的url
+	    if ( path !== location.path ) {
+	    	location.action = "REPLACE";
+	    }
 
     	// Router.matchRoutes()匹配当前路径需要更新的模块
 		// 因路由刚启动，故将nextStructure直接赋值给currentPage

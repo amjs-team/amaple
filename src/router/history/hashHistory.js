@@ -18,12 +18,12 @@ export default {
     	    if ( !locationGuide ) {
 	    	    const 
 	    	    	path = this.getPathname (),
-	    	    	param = {},
-	    			structure = Router.matchRoutes ( path, param );
+	    	    	extra = {},
+	    			structure = Router.matchRoutes ( path, extra );
 
 	    		locationGuide = {
 	    			structure,
-	    			param,
+	    			param: extra.param,
 	    			get : this.getQuery (),
 	    			post : {}
 	    		};

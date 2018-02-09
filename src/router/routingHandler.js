@@ -23,15 +23,16 @@ import Structure from "./Structure";
 function requestToRouting ( pathResolver, method, post ) {
     if ( method === "GET" ) {
         const 
-            param = {},
-        	nextStructure = Router.matchRoutes ( pathResolver.pathname, param ),
+            extra = {},
+        	nextStructure = Router.matchRoutes ( pathResolver.pathname, extra ),
             nextStructureBackup = nextStructure.copy ();
 
+        pathResolver.pathname = extra.path;
     	if ( !nextStructure.isEmpty () ) {
             const location = {
                 path : pathResolver.pathname + pathResolver.search,
                 nextStructure,
-                param,
+                param: extra.param,
                 get : pathResolver.search,
                 post : post.nodeType ? serialize ( post, false ) : post,
                 method,

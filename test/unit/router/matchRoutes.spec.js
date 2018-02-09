@@ -10,6 +10,7 @@ describe ( "router =>", () => {
 
     	router.module ().route ( "/settings", "setting", function ( childRouter ) {
 			childRouter.redirect ( "", "profile" );
+			childRouter.redirect ( "redirect", "profile" );
 			childRouter.module ( "menu" ).defaultRoute ( "menu1" ).route ( ":page", "menu" );
 			// 或者可写成 childRouter.module ( "menu" ).route ( [ "profile", "admin", "keys" ... ], menu );
         	
@@ -23,9 +24,12 @@ describe ( "router =>", () => {
 	} );
 
 	it ( "matches a path that contains root route and sub route", () => {
-		let param = {},
-			structure = Router.matchRoutes ( "/settings/profile", param, routeTree ),
+		let extra = {},
+			structure = Router.matchRoutes ( "/settings", extra, routeTree ),
 			routes = structure.entity;
+
+		// path已被重定向
+		expect ( extra.path ).toBe ( "/settings/profile" );
 
 		expect ( routes.length ).toBe ( 2 );
 		expect ( routes [ 0 ].name ).toBe ( "default" );
@@ -36,11 +40,15 @@ describe ( "router =>", () => {
 		expect ( routes [ 0 ].children [ 2 ] ).toEqual ( { name: "footer", modulePath: "footer", moduleNode: null, module: null, parent: routes [ 0 ] } );
 		expect ( routes [ 1 ].name ).toBe ( "table" );
 		expect ( routes [ 1 ].modulePath ).toBeNull ();
+
+
+		structure = Router.matchRoutes ( "/settings/redirect", extra, routeTree ),
+		expect ( extra.path ).toBe ( "/settings/profile" );
 	} );
 
 	it ( "matches a path that contains sub route but not contain root route", () => {
-		let param = {},
-			structure = Router.matchRoutes ( "/admin", param, routeTree ),
+		let extra = {},
+			structure = Router.matchRoutes ( "/admin", extra, routeTree ),
 			routes = structure.entity;
 
 		expect ( routes.length ).toBe ( 2 );
@@ -53,8 +61,8 @@ describe ( "router =>", () => {
 	} );
 
 	it ( "matches a path that contains root route and empty sub route", () => {
-		let param = {},
-			structure = Router.matchRoutes ( "/settings/", param, routeTree ),
+		let extra = {},
+			structure = Router.matchRoutes ( "/settings/", extra, routeTree ),
 			routes = structure.entity;
 
 		expect ( routes.length ).toBe ( 2 );
@@ -69,9 +77,10 @@ describe ( "router =>", () => {
 	} );
 
 	it ( "matches a path that has params", () => {
-		let param = {},
-			structure = Router.matchRoutes ( "/settings/testpage", param, routeTree ),
-			routes = structure.entity;
+		let extra = {},
+			structure = Router.matchRoutes ( "/settings/testpage", extra, routeTree ),
+			routes = structure.entity,
+			param = extra.param;
 
 		expect ( Object.keys ( param ).length ).toBe ( 1 );
 		expect ( Object.keys ( param.default.data ).length ).toBe ( 0 );
@@ -79,7 +88,8 @@ describe ( "router =>", () => {
 		expect ( Object.keys ( param.default.children.menu.data ).length ).toBe ( 1 );
 		expect ( param.default.children.menu.data.page ).toBe ( "testpage" );
 
-		structure = Router.matchRoutes ( "/settings/account/name", param, routeTree ),
+		structure = Router.matchRoutes ( "/settings/account/name", extra, routeTree ),
+		param = extra.param;
 		routes = structure.entity;
 		
 		expect ( Object.keys ( param ).length ).toBe ( 1 );
@@ -92,8 +102,8 @@ describe ( "router =>", () => {
 	} );
 
 	it ( "matches a path that can not match routes", () => {
-		let param = {},
-			structure = Router.matchRoutes ( "/edit/edit_tr", param, routeTree ),
+		let extra = {},
+			structure = Router.matchRoutes ( "/edit/edit_tr", extra, routeTree ),
 			routes = structure.entity;
 
 		expect ( routes.length ).toBe ( 2 );
