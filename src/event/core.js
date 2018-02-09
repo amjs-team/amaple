@@ -4,6 +4,7 @@ import { type, foreach, guid, isEmpty, isPlainObject } from "../func/util";
 import { attr } from "../func/node";
 import { rword } from "../var/const";
 import check from "../check";
+import NodeTransaction from "../core/vnode/NodeTransaction";
 
 let	expando = "eventExpando" + Date.now (),
 
@@ -221,6 +222,7 @@ export default {
 		}
 		check ( types ).type ( "string" ).ifNot ( "function event.emit:types", "types参数类型必须为string" ).do ();
 
+		const nt = new NodeTransaction ().start ();
 		( types || "" ).replace ( rword, t => {
 			if ( elem && this.support ( t, elem ) ) {
 				if ( document.createEvent ) {
@@ -245,5 +247,6 @@ export default {
 				handler.call ( {}, { type: t }, param );
 			}
 		} );
+		nt.commit ();
 	}
 };
