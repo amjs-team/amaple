@@ -12,7 +12,10 @@ describe ( "directive for => ", () => {
 	
 	it ( "directive :for in element attribute", () => {
         d.appendChild ( VElement ( "p", { ":for" : "item in list" }, null, [
-            VTextNode ( "{{ item }}" )
+            VTextNode ( "{{ item }}_1" )
+        ] ) );
+        d.appendChild ( VElement ( "p", { ":for" : "item in list" }, null, [
+            VTextNode ( "{{ item }}_2" )
         ] ) );
         const realDOM = d.render ();
 
@@ -26,15 +29,28 @@ describe ( "directive for => ", () => {
 
         children = d.children;
 
-        // 带有startNode、endNode两个标识节点，所以children为5
-        expect ( children.length ).toBe ( 5 );
-        expect ( children [ 1 ].children [ 0 ].nodeValue ).toBe ( "a" );
-        expect ( children [ 2 ].children [ 0 ].nodeValue ).toBe ( "b" );
-        expect ( children [ 3 ].children [ 0 ].nodeValue ).toBe ( "c" );
+        // 每个循环都带有startNode、endNode两个标识节点，所以children为10
+        expect ( children.length ).toBe ( 10 );
+        expect ( children [ 1 ].children [ 0 ].nodeValue ).toBe ( "a_1" );
+        expect ( children [ 2 ].children [ 0 ].nodeValue ).toBe ( "b_1" );
+        expect ( children [ 3 ].children [ 0 ].nodeValue ).toBe ( "c_1" );
+        expect ( children [ 6 ].children [ 0 ].nodeValue ).toBe ( "a_2" );
+        expect ( children [ 7 ].children [ 0 ].nodeValue ).toBe ( "b_2" );
+        expect ( children [ 8 ].children [ 0 ].nodeValue ).toBe ( "c_2" );
         d.diff ( dBackup ).patch ();
-        expect ( realDOM.childNodes.item ( 1 ).childNodes.item ( 0 ).nodeValue ).toBe ( "a" );
-        expect ( realDOM.childNodes.item ( 2 ).childNodes.item ( 0 ).nodeValue ).toBe ( "b" );
-        expect ( realDOM.childNodes.item ( 3 ).childNodes.item ( 0 ).nodeValue ).toBe ( "c" );
+        expect ( realDOM.childNodes.item ( 1 ).childNodes.item ( 0 ).nodeValue ).toBe ( "a_1" );
+        expect ( realDOM.childNodes.item ( 2 ).childNodes.item ( 0 ).nodeValue ).toBe ( "b_1" );
+        expect ( realDOM.childNodes.item ( 3 ).childNodes.item ( 0 ).nodeValue ).toBe ( "c_1" );
+        expect ( realDOM.childNodes.item ( 6 ).childNodes.item ( 0 ).nodeValue ).toBe ( "a_2" );
+        expect ( realDOM.childNodes.item ( 7 ).childNodes.item ( 0 ).nodeValue ).toBe ( "b_2" );
+        expect ( realDOM.childNodes.item ( 8 ).childNodes.item ( 0 ).nodeValue ).toBe ( "c_2" );
+
+        vm.list.push ( "d" );
+        children = d.children;
+        expect ( children [ 4 ].children [ 0 ].nodeValue ).toBe ( "d_1" );
+        expect ( children [ 10 ].children [ 0 ].nodeValue ).toBe ( "d_2" );
+        expect ( realDOM.childNodes.item ( 4 ).childNodes.item ( 0 ).nodeValue ).toBe ( "d_1" );
+        expect ( realDOM.childNodes.item ( 10 ).childNodes.item ( 0 ).nodeValue ).toBe ( "d_2" );
     } );
 
     it ( "directive :for in element attribute with :key", () => {

@@ -9,6 +9,7 @@ import configuration from "../core/configuration/core";
 import pluginBuilder from "../core/plugin/core";
 import require from "../require/core";
 import Structure from "./Structure";
+import routingHandler from "./routingHandler";
 
 /**
 	start ( routerConfig: Object )
@@ -54,7 +55,7 @@ export default function startRouter ( routerConfig ) {
         return;
     }
     delete routerConfig.history;
-    
+    event.on ( document.body, "click", routingHandler );
 
     const 
     	plugin = routerConfig.plugin,

@@ -164,6 +164,13 @@ export default {
     	
         // 初始化视图时将模板元素替换为挂载后元素
         if ( elem.parent ) {
+            if ( !iterator.nodeMaps ) {
+
+                // 创建数组的映射vnodes maps
+                Object.defineProperty ( iterator, "nodeMaps", { value : [], writable : true, configurable : true, enumeratable : false } );
+                iterator.nodeMaps.index = 0;
+            }
+
             fragment.appendChild ( this.startNode );
 
             const nodeMap = [];
@@ -178,13 +185,16 @@ export default {
             fragment.appendChild ( this.endNode );
             elem.parent.replaceChild ( fragment, elem );
 
-            // 创建数组的映射vnodes map
-            Object.defineProperty ( iterator, "nodeMap", { value : nodeMap, writable : true, configurable : true, enumeratable : false } );
+            iterator.nodeMaps.push ( nodeMap );
         }
     	else {
+            const nodeMap = iterator.nodeMaps [ iterator.nodeMaps.index++ ];
+
+            // 循环更新结束后需重置index，以便下次更新时可通过index再次循环更新
+            iterator.nodeMaps.index = iterator.nodeMaps.index < iterator.nodeMaps.length ? iterator.nodeMaps.index : 0;
 
             // 改变数据后更新视图
-        	foreach ( iterator.nodeMap, ( val, index ) => {
+        	foreach ( nodeMap, ( val, index ) => {
                 let itemNode;
 
                 // 在映射数组中找到对应项时，使用该项的key创建vnode
@@ -214,7 +224,7 @@ export default {
                 }
                 else {
                     itemNode = createVNode ( this, val, index, {} );
-                    iterator.nodeMap.splice ( index, 1, itemNode );
+                    nodeMap.splice ( index, 1, itemNode );
                 }
 
     			fragment.appendChild ( itemNode );

@@ -203,7 +203,7 @@ export default function Module ( moduleElem, vmData = {} ) {
 
 		// 为带有href属性的vnode绑定点击事件
 		// 此函数只有在单页模式下才会被调用
-		walkVDOM ( moduleElem, routingHandler );
+		// walkVDOM ( moduleElem, routingHandler );
 	}
 }
 

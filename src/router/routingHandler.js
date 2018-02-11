@@ -62,6 +62,18 @@ function requestToRouting ( pathResolver, method, post ) {
     }
 }
 
+function getRoutingPath ( elem, rootElem ) {
+    let path = null;
+    do {
+        path = attr ( elem, amAttr.href ) || attr ( elem, amAttr.action );
+        if ( path ) {
+            break;
+        }
+    } while ( ( elem = elem.parentNode ) !== rootElem );
+
+    return path;
+}
+
 /**
     routing ( e: Object )
     
@@ -74,14 +86,17 @@ function requestToRouting ( pathResolver, method, post ) {
     URL doc:
     http://amaple.org/######
 */
-function routing ( e ) {
-    const path = attr ( this, e.type.toLowerCase () === "submit" ? amAttr.action : amAttr.href );
+export default function routing ( e ) {
+    const path = getRoutingPath ( e.target, e.currentTarget );
+        // path = attr ( target, e.type.toLowerCase () === "submit" ? amAttr.action : amAttr.href );
+    e.preventDefault ();
+    return;
     if ( path && !/#/.test ( path ) ) {
 
         const 
-            method = e.type.toLowerCase () === "submit" ? attr ( this, "method" ).toUpperCase () : "GET",
+            method = e.type.toLowerCase () === "submit" ? attr ( target, "method" ).toUpperCase () : "GET",
             buildedPath = amHistory.history.buildURL ( path ),
-            target = attr ( this, "target" ) || "_self";
+            target = attr ( target, "target" ) || "_self";
 
         if ( window.location.host === buildedPath.host && target === "_self" ) {
 
@@ -92,7 +107,7 @@ function routing ( e ) {
             else if ( requestToRouting (
                     buildedPath, 
                     method, 
-                    method.toLowerCase () === "post" ? this : {} 
+                    method.toLowerCase () === "post" ? target : {}
                 ) !== false ) {
                 e.preventDefault ();
             }
@@ -112,7 +127,7 @@ function routing ( e ) {
     URL doc:
     http://amaple.org/######
 */
-export default function routingHandler ( vnode ) {
+function routingHandler ( vnode ) {
     if ( !vnode.isComponent ) {
         if ( vnode.nodeType === 1 ) {
             if ( vnode.attr ( amAttr.href ) ) {

@@ -17,7 +17,9 @@
 		<div class="abc">{{ title }} {{ content }}</div>
 		<a href="/login/aa?a=1&b899=2">{{ btn }}{{ pluginData }}</a>
 		<button :onclick="changeData">Change</button>
-		<a href="/forget_pwd">{{ btn }}_404</a>
+		<a href="/forget_pwd">
+			<span>{{ btn }}_404</span>
+		</a>
 		<ul id="a87">
 			<li :for="(t, k) in title">{{ t }}_{{ k }}
 			</li>

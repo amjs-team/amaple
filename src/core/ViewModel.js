@@ -96,8 +96,16 @@ function initState ( states, context ) {
 					else if ( type ( newVal ) === "array" ) {
 						const newValBackup = newVal;
 						newVal = initArray ( newVal, subs, context );
-						if ( state.nodeMap ) {
-							newVal.nodeMap = newValBackup;
+						if ( state.nodeMaps ) {
+							Object.defineProperty ( newVal, "nodeMaps", { value : [], writable : true, configurable : true, enumeratable : false } );
+							newVal.nodeMaps.index = 0;
+							
+							foreach ( state.nodeMaps, () => {
+
+								// 需复制不同的多份相同数组
+								// 以便对它们的操作都是独立的
+								newVal.nodeMaps.push ( newValBackup.concat () );
+							} );
 						}
 					}
 
@@ -201,8 +209,10 @@ function initArray ( array, subs, context ) {
         		const res = nativeMethod.apply ( this, args );
 
         		// 如果此数组映射了dom元素，则也需对此映射数组做出改变
-        		if ( this.nodeMap ) {
-        			nativeMethod.apply ( this.nodeMap, args );
+        		if ( this.nodeMaps ) {
+        			foreach ( this.nodeMaps, nodeMap => {
+        				nativeMethod.apply ( nodeMap, args );
+        			} );
         		}
               	
               	// 更新视图
