@@ -302,7 +302,9 @@ export function trimHTML ( htmlString ) {
 
 	return htmlString.replace ( rpreAndBlank, ( match, rep1, rep2 ) => {
 		if ( match.indexOf ( "pre" ) > -1 ) {
-			if ( rep1 === undefined ) {
+
+			// firefox稍低版本下没有匹配括号内容时为""
+			if ( rep1 === undefined || rep1 === "" ) {
 				inPreNum ++;
 				return match;
 			}
