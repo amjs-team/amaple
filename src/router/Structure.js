@@ -226,7 +226,9 @@ extend ( Structure.prototype, {
                 delete structure.updateFn;
             }
 
-            if ( structure.children && structure.children.length > 0 ) {
+            // 如果当前structure有updateFn时，它的子结构updateFn将会在它的updateFn内被调用
+            // 如果当前structure没有updateFn时，需遍历它的子结构查看是否有updateFn
+            else if ( structure.children && structure.children.length > 0 ) {
                 self.flush ( structure.children );
             }
         } );
