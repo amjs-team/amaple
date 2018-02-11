@@ -205,6 +205,32 @@ extend ( Structure.prototype, {
                 // do nothing
         }
     },
+
+    /**
+        flush ( structures: Array )
+    
+        Return Type:
+        void
+    
+        Description:
+        刷新更新后的结构到视图层
+    
+        URL doc:
+        http://amaple.org/######
+    */
+    flush ( structures ) {
+        const self = this;
+        foreach ( structures || this.entity, structure => {
+            if ( structure.updateFn ) {
+                structure.updateFn ();
+                delete structure.updateFn;
+            }
+
+            if ( structure.children && structure.children.length > 0 ) {
+                self.flush ( structure.children );
+            }
+        } );
+    }
 } );
 
 extend ( Structure, {

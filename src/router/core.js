@@ -55,7 +55,7 @@ export default function startRouter ( routerConfig ) {
         return;
     }
     delete routerConfig.history;
-    event.on ( document.body, "click", routingHandler );
+    event.on ( document.body, "click submit", routingHandler );
 
     const 
     	plugin = routerConfig.plugin,

@@ -1,7 +1,7 @@
 import { extend, foreach } from "../../func/util";
 
 export default function NodeTransaction () {
-	this.transactions = null;
+	this.transactions = [];
 }
 
 extend ( NodeTransaction.prototype, {
@@ -37,8 +37,18 @@ extend ( NodeTransaction.prototype, {
 		http://amaple.org/######
 	*/
 	collect ( moduleNode ) {
-		if ( !this.transactions ) {
-			this.transactions = [ moduleNode, moduleNode.clone () ];
+		let find = false;
+
+		// 可能在一个生命周期函数中会有多个模块的视图更新
+		foreach ( this.transactions, transaction => {
+			if ( transaction [ 0 ] === moduleNode ) {
+				find = true;
+				return false;
+			}
+		} );
+
+		if ( !find ) {
+			this.transactions.push ( [ moduleNode, moduleNode.clone () ] );
 		}
 	},
 
@@ -55,9 +65,9 @@ extend ( NodeTransaction.prototype, {
 		http://amaple.org/######
 	*/
 	commit () {
-		if ( this.transactions ) {
-			this.transactions [ 0 ].diff ( this.transactions [ 1 ] ).patch ();
-		}
+		foreach ( this.transactions, transaction => {
+			transaction [ 0 ].diff ( transaction [ 1 ] ).patch ();
+		} );
 		NodeTransaction.acting = undefined;
 	}
 } );

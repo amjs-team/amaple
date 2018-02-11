@@ -29,6 +29,34 @@ function convertSubState ( value, subs, context ) {
   	return value;
 }
 
+function cloneNodeMaps ( originVal, newVal, newValBackup ) {
+	if ( !originVal ) {
+		return;
+	}
+	if ( originVal.nodeMaps ) {
+		Object.defineProperty ( newVal, "nodeMaps", {
+			value : [], 
+			writable : true, 
+			configurable : true, 
+			enumeratable : false
+		} );
+		newVal.nodeMaps.index = 0;
+		
+		foreach ( originVal.nodeMaps, () => {
+
+			// 需复制不同的多份相同数组
+			// 以便对它们的操作都是独立的
+			newVal.nodeMaps.push ( newValBackup.concat () );
+		} );
+	}
+
+	foreach ( newValBackup, ( item, i ) => {
+		if ( /object|array/.test ( type ( item ) ) ) {
+			cloneNodeMaps ( originVal [ i ], newVal [ i ], item );
+		}
+	} );
+}
+
 /**
 	initMethod ( methods: Array, context: Object )
 
@@ -96,17 +124,7 @@ function initState ( states, context ) {
 					else if ( type ( newVal ) === "array" ) {
 						const newValBackup = newVal;
 						newVal = initArray ( newVal, subs, context );
-						if ( state.nodeMaps ) {
-							Object.defineProperty ( newVal, "nodeMaps", { value : [], writable : true, configurable : true, enumeratable : false } );
-							newVal.nodeMaps.index = 0;
-							
-							foreach ( state.nodeMaps, () => {
-
-								// 需复制不同的多份相同数组
-								// 以便对它们的操作都是独立的
-								newVal.nodeMaps.push ( newValBackup.concat () );
-							} );
-						}
+						cloneNodeMaps ( state, newVal, newValBackup );
 					}
 
 					oldVal = state;

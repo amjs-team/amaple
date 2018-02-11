@@ -279,13 +279,7 @@ extend ( ModuleLoader.prototype, {
 		   	.render ( location, nextStructureBackup );
 		}
 		else {
-
-			foreach ( this.nextStructure.entity, structure => {
-				if ( structure.updateFn ) {
-					structure.updateFn ();
-					delete structure.updateFn;
-				}
-			} );
+			this.nextStructure.flush ();
 		}
 	}
 } );

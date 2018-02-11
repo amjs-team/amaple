@@ -103,7 +103,7 @@ export default {
     */
 	before () {
     	const 
-            forExpr = /^\s*([$\w(),\s]+)\s+in\s+([$\w.]+)\s*$/,
+            forExpr = /^\s*([$\w(),\s]+)\s+in\s+([$\w.\[\]\s]+)\s*$/,
             keyExpr = /^\(\s*([$\w]+)\s*,\s*([$\w]+)\s*\)$/;
 
         if ( !forExpr.test ( this.expr ) ) {
@@ -144,21 +144,24 @@ export default {
     */
 	update ( iterator ) {
 
-		const
+		const 
+            titerator = type ( iterator ),
         	elem = this.node,
             fragment = VFragment ();
-      
         let itemNode, f;
 
+        if ( !/^array|object|number|string$/.test ( titerator ) ) {
+            throw directiveErr ( "for", "for指令只允许绑定Array、Object、Number和String四种类型的值" );
+        }
         // 如果迭代变量为number或string时需将它转换为array
-        if ( type ( iterator ) === "number" ) {
+        if ( titerator === "number" ) {
             const num = iterator;
             iterator = [];
             for ( let i = 0; i < num; i++ ) {
                 iterator.push ( i );
             }
         }
-        else if ( type ( iterator ) === "string" ) {
+        else if ( titerator === "string" ) {
             iterator = iterator.split ( "" );
         }
     	

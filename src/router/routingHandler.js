@@ -62,16 +62,17 @@ function requestToRouting ( pathResolver, method, post ) {
     }
 }
 
-function getRoutingPath ( elem, rootElem ) {
+function getRoutingElem ( elem, rootElem, eventType ) {
     let path = null;
+    const pathAttr = eventType === "submit" ? amAttr.action : amAttr.href;
     do {
-        path = attr ( elem, amAttr.href ) || attr ( elem, amAttr.action );
+        path = attr ( elem, pathAttr );
         if ( path ) {
             break;
         }
     } while ( ( elem = elem.parentNode ) !== rootElem );
 
-    return path;
+    return { elem, path };
 }
 
 /**
@@ -87,27 +88,26 @@ function getRoutingPath ( elem, rootElem ) {
     http://amaple.org/######
 */
 export default function routing ( e ) {
-    const path = getRoutingPath ( e.target, e.currentTarget );
-        // path = attr ( target, e.type.toLowerCase () === "submit" ? amAttr.action : amAttr.href );
-    e.preventDefault ();
-    return;
+    const 
+        eventType = e.type.toLowerCase (),
+        { elem, path } = getRoutingElem ( e.target, this, eventType );
     if ( path && !/#/.test ( path ) ) {
 
         const 
-            method = e.type.toLowerCase () === "submit" ? attr ( target, "method" ).toUpperCase () : "GET",
+            method = eventType === "submit" ? ( attr ( elem, "method" ) || "POST" ).toUpperCase () : "GET",
             buildedPath = amHistory.history.buildURL ( path ),
-            target = attr ( target, "target" ) || "_self";
+            target = attr ( elem, "target" ) || "_self";
 
         if ( window.location.host === buildedPath.host && target === "_self" ) {
 
             // 如果url相同则不做任何事
-            if ( buildedPath.pathname === window.location.pathname && buildedPath.search === window.location.search ) {
+            if ( buildedPath.pathname === amHistory.history.getPathname && buildedPath.search === amHistory.history.getQuery ) {
                 e.preventDefault ();
             }
             else if ( requestToRouting (
                     buildedPath, 
                     method, 
-                    method.toLowerCase () === "post" ? target : {}
+                    method === "POST" ? elem : {}
                 ) !== false ) {
                 e.preventDefault ();
             }
