@@ -1,5 +1,5 @@
 import { foreach, guid, noop, type } from "../../../func/util";
-import { walkVDOM } from "../../../func/private";
+import { walkVDOM, appendScopedAttr } from "../../../func/private";
 import { directiveErr } from "../../../error";
 import Tmpl from "../core";
 import VTextNode from "../../../core/vnode/VTextNode";
@@ -227,6 +227,11 @@ export default {
                 }
                 else {
                     itemNode = createVNode ( this, val, index, {} );
+
+                    const scopedCssObject = this.tmpl.module.scopedCssObject;
+                    if ( scopedCssObject ) {
+                        appendScopedAttr ( itemNode, scopedCssObject.selectors, scopedCssObject.identifier );
+                    }
                     nodeMap.splice ( index, 1, itemNode );
                 }
 

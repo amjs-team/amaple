@@ -138,11 +138,13 @@ export default function Module ( moduleElem, vmData = {} ) {
         this.param = currentRender.param;
         this.get = parseGetQuery ( currentRender.get );
         this.post = currentRender.post;
+        this.scopedCssObject = currentRender.scopedCssObject;
     	
      	// 参数传递过来后可移除，以免与下一次传递的参数混淆
     	delete currentRender.param;
         delete currentRender.get;
         delete currentRender.post;
+        delete currentRender.scopedCssObject;
 
         // 将此Module对象保存到页面结构体的对应位置中
         currentRender.module = this;
@@ -198,7 +200,7 @@ export default function Module ( moduleElem, vmData = {} ) {
 		moduleElem.diff ( moduleElemBackup ).patch ();
 	}
 	else {
-		const scopedCssObject = ( Structure.getCurrentRender () ).scopedCssObject;
+		const scopedCssObject = this.scopedCssObject;
 		appendScopedAttr ( moduleElem, scopedCssObject.selectors, scopedCssObject.identifier );
 
 		// 为带有href属性的vnode绑定点击事件

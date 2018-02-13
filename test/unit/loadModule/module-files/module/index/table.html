@@ -17,6 +17,7 @@
 		<div class="abc">{{ title }} {{ content }}</div>
 		<a href="/login/aa?a=1&b899=2">{{ btn }}{{ pluginData }}</a>
 		<button :onclick="changeData">Change</button>
+		<button :onclick="addData">addData</button>
 		<a href="/forget_pwd">
 			<span>{{ btn }}_404</span>
 		</a>
@@ -89,7 +90,10 @@
 	                	// this.title.unshift ( "666" );
 	                	// this.show ++;
 	                	this.title.reverse ();
-	                }
+	                },
+	                addData : function () {
+	                	this.title.push ( "Password" );
+	                },
 				};
 			},
 
@@ -144,6 +148,7 @@
 		}
 		#a87 li {
 			border: solid 1px #888;
+			color: rebeccapurple;
 		}
 		::selection {
 			color: green;
