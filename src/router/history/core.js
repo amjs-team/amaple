@@ -11,6 +11,7 @@ export default {
 
 	initHistory ( historyMode ) {
     	if ( !this.history ) {
+    		this.mode = historyMode;
 
     		this.history = 
     		( historyMode === HASH

@@ -140,27 +140,31 @@ export default {
 		http://amaple.org/######
 	*/
 	buildURL ( path, mode ) {
+		const rquery = /\?.*?$/;
 		let host = window.location.host,
+			pathname = window.location.hash.replace ( rquery, "" ),
 			search = "";
 		path = path.replace ( /\s*http(?:s)?:\/\/(.+?\/|.+)/, ( match, rep ) => {
 			host = rep;
 			return "";
 		} )
-		.replace ( /\?.*?$/, match => {
+		.replace ( rquery, match => {
 			search = match;
 			return "";
 		} );
 
-		const pathname = ( window.location.hash || "#/" ).replace ( 
-			path.substr ( 0, 1 ) === "/" ? /#(.*)$/ : /\/([^\/]*)$/, 
-			( match, rep ) => {
-				return match.replace ( rep, "" ) + path;
-			} );
+		if ( path !== "" ) {
+			pathname = ( pathname || "#/" ).replace (
+				path.substr ( 0, 1 ) === "/" ? /#(.*)$/ : /\/([^\/]*)$/, 
+				( match, rep ) => {
+					return match.replace ( rep, "" ) + path;
+				} );
+		}
     
     	return {
     		host,
     		search,
-    		pathname : pathname.substr ( 1 )
+    		pathname : pathname.substr ( 0, 1 ) === "#" ? pathname.substr ( 1 ) : pathname
     	};
 	},
 	

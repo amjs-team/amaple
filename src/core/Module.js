@@ -202,10 +202,6 @@ export default function Module ( moduleElem, vmData = {} ) {
 	else {
 		const scopedCssObject = this.scopedCssObject;
 		appendScopedAttr ( moduleElem, scopedCssObject.selectors, scopedCssObject.identifier );
-
-		// 为带有href属性的vnode绑定点击事件
-		// 此函数只有在单页模式下才会被调用
-		// walkVDOM ( moduleElem, routingHandler );
 	}
 }
 

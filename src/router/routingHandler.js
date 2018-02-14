@@ -1,7 +1,9 @@
+import { runtimeErr } from "../error";
 import { foreach } from "../func/util";
 import { serialize, attr } from "../func/node";
 import { walkVDOM } from "../func/private";
 import { amAttr } from "../var/const";
+import { HASH } from "./history/historyMode";
 import Router from "../router/Router";
 import http from "../http/core";
 import amHistory from "./history/core";
@@ -87,11 +89,11 @@ function getRoutingElem ( elem, rootElem, eventType ) {
     URL doc:
     http://amaple.org/######
 */
-export default function routing ( e ) {
+export default function routingHandler ( e ) {
     const 
         eventType = e.type.toLowerCase (),
         { elem, path } = getRoutingElem ( e.target, this, eventType );
-    if ( path && !/#/.test ( path ) ) {
+    if ( path && !/http(?:s)?:\/\/|mailto:|#/i.test ( path ) ) {
 
         const 
             method = eventType === "submit" ? ( attr ( elem, "method" ) || "POST" ).toUpperCase () : "GET",
@@ -113,34 +115,8 @@ export default function routing ( e ) {
             }
         }
     }
-}
-
-/**
-    routingHandler ( vnode: Object )
-    
-    Return Type:
-    void
-    
-    Description:
-    为非组件vnode、组件的视图vnodes绑定路由跳转事件(click或submit)
-    
-    URL doc:
-    http://amaple.org/######
-*/
-function routingHandler ( vnode ) {
-    if ( !vnode.isComponent ) {
-        if ( vnode.nodeType === 1 ) {
-            if ( vnode.attr ( amAttr.href ) ) {
-                vnode.bindEvent ( "click", routing );
-            }
-            else if ( vnode.attr ( amAttr.action ) && vnode.nodeName === "FORM" ) {
-                vnode.bindEvent ( "submit", routing );
-            }
-        }
-    }
-    else {
-        foreach ( vnode.templateNodes, childVNode => {
-            walkVDOM ( childVNode, routingHandler );
-        } );
+    else if ( /^#/.test ( path ) && amHistory.mode === HASH ) {
+        e.preventDefault ();
+        throw runtimeErr ( "redirect", "hash模式下不可使用形如'#...'的锚链接作为href的值" );
     }
 }
