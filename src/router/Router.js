@@ -221,8 +221,9 @@ extend ( Router, {
             texpr = type ( pathExpr );
         let i = 1,
 			
-            // 如果path为redirect中的from，则不需加结尾的“/”匹配式
-            endRegexp = from === "redirect" ? "" : "(?:\\/)?";
+            // 如果path为redirect中的from，则直接添加结束符号
+            // ”/doc“可重定向到”/doc/first“，但”/doc/zero“不能重定向，否则可能重定向为”/doc/first/zero“而导致错误
+            endRegexp = from === "redirect" ? "$" : "(?:\\/)?";
 
         // 如果pathExpr为数组，则需预处理
         if ( texpr === "array" ) {
@@ -240,7 +241,7 @@ extend ( Router, {
         else if ( texpr === "string" ) {
 
             // 如果路径表达式为""时需在结尾增加"$"符号才能正常匹配到
-            endRegexp += pathExpr === "" || pathExpr === "/" ? "$" : "";
+            endRegexp += ( pathExpr === "" || pathExpr === "/" ? "$" : "" );
         }
 
         pathObj.regexp = new RegExp ( "^" + pathExpr.replace ( "/", "\\/" ).replace ( /:([\w$]+)(?:(\(.*?\)))?/g, ( match, rep1, rep2 ) => {
@@ -326,7 +327,8 @@ extend ( Router, {
             let isMatch = false;
 
             foreach ( route.routes, pathReg => {
-            	let matchPath,
+            	let matchPath, 
+                    modulePath = pathReg.modulePath,
                     isContinue = true;
             	
             	if ( route.hasOwnProperty ( "forcedRender" ) ) {
@@ -336,12 +338,15 @@ extend ( Router, {
                 if ( matchPath = path.match ( pathReg.path.regexp ) ) {
                 	isContinue = false;
                     isMatch = true;
-                    entityItem.modulePath = pathReg.modulePath;
 
                     extra.param [ route.name ] = { data : {} };
                     foreach ( pathReg.path.param, ( i, paramName ) => {
-                        extra.param [ route.name ].data [ paramName ] = matchPath [ i ] || "";
+                        const data = matchPath [ i ] || "";
+                        modulePath = modulePath.replace ( new RegExp ( `:${ paramName }`, "g" ), data );
+
+                        extra.param [ route.name ].data [ paramName ] = data;
                     } );
+                    entityItem.modulePath = modulePath;
 
                     routes.push ( entityItem );
                 }
