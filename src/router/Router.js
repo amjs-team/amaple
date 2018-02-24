@@ -223,14 +223,15 @@ extend ( Router, {
 			
             // 如果path为redirect中的from，则直接添加结束符号
             // ”/doc“可重定向到”/doc/first“，但”/doc/zero“不能重定向，否则可能重定向为”/doc/first/zero“而导致错误
-            endRegexp = from === "redirect" ? "$" : "(?:\\/)?";
+            endRegexp = "(?:\\/)?" + ( from === "redirect" ? "$" : "" );
 
         // 如果pathExpr为数组，则需预处理
         if ( texpr === "array" ) {
 
             // 如果路径表达式为""时需在结尾增加"$"符号才能正常匹配到
             foreach ( pathExpr, ( exprItem, i ) => {
-                if ( exprItem === "" || exprItem === "/" ) {
+                exprItem = exprItem.substr ( -1 ) === "/" ? exprItem.substr ( 0, exprItem.length - 1 ) : exprItem;
+                if ( exprItem === "" && from !== "redirect" ) {
                     pathExpr [ i ] += "$";
                 }
             } );
@@ -239,9 +240,10 @@ extend ( Router, {
             i ++;
         }
         else if ( texpr === "string" ) {
+            pathExpr = pathExpr.substr ( -1 ) === "/" ? pathExpr.substr ( 0, pathExpr.length - 1 ) : pathExpr;
 
             // 如果路径表达式为""时需在结尾增加"$"符号才能正常匹配到
-            endRegexp += ( pathExpr === "" || pathExpr === "/" ? "$" : "" );
+            endRegexp += ( pathExpr === "" && from !== "redirect" ? "$" : "" );
         }
 
         pathObj.regexp = new RegExp ( "^" + pathExpr.replace ( "/", "\\/" ).replace ( /:([\w$]+)(?:(\(.*?\)))?/g, ( match, rep1, rep2 ) => {
