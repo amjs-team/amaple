@@ -1,6 +1,6 @@
 import { type, extend, foreach, noop, isPlainObject, isEmpty } from "../func/util";
 import { query, attr } from "../func/node";
-import { queryModuleNode, parseGetQuery } from "../func/private";
+import { queryModuleNode, parseGetQuery, scrollTop } from "../func/private";
 import require from "../require/core";
 import { envErr, moduleErr } from "../error";
 import amHistory from "./history/core";
@@ -71,11 +71,19 @@ export default function ModuleLoader ( nextStructure, param, get, post ) {
 	this.get = get;
 	this.post = post;
 
-	// 等待加载完成的页面模块，每加载完成一个页面模块都会将此页面模块在waiting对象上移除，当waiting为空时则表示相关页面模块已全部加载完成
+	// 等待加载完成的页面模块
+	// 每加载完成一个页面模块都会将此页面模块在waiting数组上移除
+	// 当waiting为空时则表示相关页面模块已全部加载完成
 	this.waiting = [];
 
+	// 等待更新完成的页面模块
+	// 每更新完成一个页面模块都会将此页面模块在updated数组上移除
+	// 当updated为空时则表示相关页面模块已全部更新完成
+	// 此时可做一些模块更新完成的操作
+	this.updated = [];
+
 	// 模块更新函数上下文
-	this.moduleUpdateContext = [];
+	// this.moduleUpdateContext = [];
 
 	// 加载错误时会将错误信息保存在此
 	this.moduleError = null;
@@ -129,6 +137,22 @@ extend ( ModuleLoader.prototype, {
 		// 如果等待队列已空则立即刷新模块
 		if ( isEmpty ( this.waiting ) ) {
 			this.flush ();
+		}
+	},
+
+	addUpdated ( name ) {
+		this.updated.push ( name );
+	},
+
+	delUpdated ( name ) {
+		const pointer = this.updated.indexOf ( name );
+		if ( pointer !== -1 ) {
+			this.updated.splice ( pointer, 1 );
+		}
+
+		// 如果等待队列已空则立即刷新模块
+		if ( isEmpty ( this.updated ) ) {
+			ModuleLoader.finish ();
 		}
 	},
 
@@ -338,6 +362,7 @@ extend ( ModuleLoader, {
 		//////////////////////////////////////////////////
 		//////////////////////////////////////////////////
 		const 
+			thisLoader = this,
 			baseURL = configuration.getConfigure ( "baseURL" ).module,
 			suffix = configuration.getConfigure ( "moduleSuffix" );
 		path = path.substr ( 0, 1 ) === "/" ? baseURL.substr ( 0, baseURL.length - 1 ) : baseURL + path;
@@ -350,8 +375,10 @@ extend ( ModuleLoader, {
 					Structure.signCurrentRender ( currentStructure, param, args, data, scopedCssObject );
 				};
 			},
-			flushChildren = route => {
+			end = route => {
 				return () => {
+
+					// 调用子模块的视图更新函数
 					if ( type ( route.children ) === "array" ) {
 						foreach ( route.children, child => {
 							if ( child.updateFn ) {
@@ -360,6 +387,10 @@ extend ( ModuleLoader, {
 							}
 						} );
 					}
+
+					// 移除已更新的模块
+					// 这将用于所有视图更新完成后的操作
+					thisLoader.delUpdated ( moduleIdentifier );
 				};
 			};
 
@@ -371,9 +402,6 @@ extend ( ModuleLoader, {
         		moduleNode = type ( moduleNode ) === "function" ? moduleNode () : moduleNode;
                 if ( !moduleNode [ identifierName ] ) {
                 	moduleNode [ identifierName ] = moduleIdentifier;
-
-                	// 调用render将添加的am-identifier同步到实际node上
-                	moduleNode.render ();
                 }
 
 	        	historyModule.updateFn ( am, {
@@ -382,7 +410,10 @@ extend ( ModuleLoader, {
 	        		NodeTransaction, 
 	        		require, 
 	        		signCurrentRender: signCurrentRender ( historyModule.scopedCssObject ),
-	        		flushChildren : flushChildren ( this ),
+	        		start : () => {
+	        			thisLoader.addUpdated ( moduleIdentifier );
+	        		},
+	        		end : end ( this ),
 	        		extend
 	        	} );
 	        };
@@ -439,7 +470,10 @@ extend ( ModuleLoader, {
 	        			NodeTransaction, 
 	        			require, 
 	        			signCurrentRender: signCurrentRender ( scopedCssObject ), 
-	        			flushChildren : flushChildren ( this ),
+	        			start : () => {
+	        				thisLoader.addUpdated ( moduleIdentifier );
+	        			},
+	        			end : end ( this ),
 	        			extend
 	        		} );
 
@@ -457,5 +491,21 @@ extend ( ModuleLoader, {
 	        	error ( moduleNode, error );
 			} );
 		}
+	},
+
+	/**
+		finish ()
+
+		Return Type:
+		void
+
+		Description:
+		所有模块视图更新完成后调用
+
+		URL doc:
+		http://amaple.org/######
+	*/
+	finish () {
+		scrollTop ( 0 );
 	}
 } );

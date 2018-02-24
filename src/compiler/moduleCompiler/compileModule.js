@@ -349,7 +349,7 @@ export default function compileModule ( moduleString ) {
 			var nt=new args.NodeTransaction().start ();
 			nt.collect(args.moduleNode);
 			args.moduleNode.html(args.moduleFragment);`;
-		moduleString = "";
+		moduleString = "args.start();";
 		if ( !isEmpty ( scriptPaths ) ) {
 			let addToWindow = "",
 				delFromWindow = "";
@@ -370,13 +370,13 @@ export default function compileModule ( moduleString ) {
 				${ buildView }
 				${ parses.script };
 				${ delFromWindow }
-				args.flushChildren();
+				args.end();
 			},${ TYPE_COMPONENT });`;
 		}
 		else {
 			moduleString += `${ buildView }
 			${ parses.script };
-			args.flushChildren();`;
+			args.end();`;
 		}
 	}
 
