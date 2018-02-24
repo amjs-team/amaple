@@ -123,11 +123,6 @@ extend ( Component.prototype, {
             subElements = componentConstructor.initSubElements ( componentVNode, subElementNames ),
             tmpl = new Tmpl ( componentVm, this.depComponents, this );
 
-        // 先清空后再添加上去进行对比
-        // 避免造成if、else-if、for指令在对比时出错
-        // vfragmentBackup.clear ();
-        // clear ( vfragmentBackup.node );
-
         // 解析组件并挂载数据
         this.references = {};
         tmpl.mount ( vfragment, false, Tmpl.defineScoped ( subElements, componentVNode, false ) );
@@ -154,7 +149,6 @@ extend ( Component.prototype, {
 
         // 初始化生命周期
         componentConstructor.initLifeCycle ( this, componentVNode, moduleObj );
-        // vfragment.diff ( vfragmentBackup ).patch ();
     },
 
     /**

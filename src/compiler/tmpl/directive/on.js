@@ -1,5 +1,6 @@
 import event from "../../../event/core";
 import { attr } from "../../../func/node";
+import NodeTransaction from "../../../core/vnode/NodeTransaction";
 
 export default {
 	name : "on",
@@ -35,7 +36,7 @@ export default {
         
         this.type = exprMatch [ 1 ];
     	this.attrExpr = "on" + this.type;
-    	this.expr = `function ( ${ event } ) {
+    	this.expr = `function (${ event }) {
             self.addScoped ();
 			${ listener };
             self.removeScoped ();
@@ -55,6 +56,10 @@ export default {
         http://amaple.org/######
     */
 	update ( listener ) {
-        this.node.bindEvent ( this.type, listener );
+        this.node.bindEvent ( this.type, e => {
+            const nt = new NodeTransaction ().start ();
+            listener ( e );
+            nt.commit ();
+        } );
     }
 };

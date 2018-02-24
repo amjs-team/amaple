@@ -72,14 +72,7 @@ function cloneNodeMaps ( originVal, newVal, newValBackup ) {
 function initMethod ( methods, context ) {
 	foreach ( methods, ( method, key ) => {
 		context [ key ] = function ( ...args ) {
-			const 
-				nt = new NodeTransaction ().start (),
-				ret = method.apply ( context, args );
-
-			// 提交节点更新事物，更新所有已更改的vnode进行对比
-			nt.commit ();
-
-			return ret;
+			return method.apply ( context, args );
 		};
 	} );
 }

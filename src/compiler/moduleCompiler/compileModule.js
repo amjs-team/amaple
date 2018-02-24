@@ -370,14 +370,12 @@ export default function compileModule ( moduleString ) {
 				${ buildView }
 				${ parses.script };
 				${ delFromWindow }
-				nt.commit();
 				args.flushChildren();
 			},${ TYPE_COMPONENT });`;
 		}
 		else {
 			moduleString += `${ buildView }
 			${ parses.script };
-			nt.commit();
 			args.flushChildren();`;
 		}
 	}

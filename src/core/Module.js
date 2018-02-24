@@ -79,7 +79,7 @@ function findParentVm ( elem ) {
 function initModuleLifeCycle ( module, vmData ) {
 
 	// Module生命周期
-    const lifeCycle = [ "queryUpdated", "paramUpdated", "unmount" ];
+    const lifeCycle = [ "mounted", "queryUpdated", "paramUpdated", "unmount" ];
 
     module.lifeCycle = {};
     foreach ( lifeCycle, cycleItem => {
@@ -88,7 +88,27 @@ function initModuleLifeCycle ( module, vmData ) {
     } );
 }
 
+/**
+    fireModuleLifeCycle ( cycleFunc )
+    
+    Return Type:
+    void
+    
+    Description:
+    调用模块对象的生命周期函数
+    该函数主要为封装虚拟DOM更新事物的提交操作
+    
+    URL doc:
+    http://amaple.org/######
+*/
+function fireModuleLifeCycle ( module, cycleName ) {
+	const nt = new NodeTransaction ().start ();
+    module.lifeCycle [ cycleName ].apply ( module, cache.getDependentPlugin ( module.lifeCycle [ cycleName ] ) );
 
+    // 提交节点更新事物，更新所有已更改的vnode进行对比
+    // 对比新旧vnode计算出差异并根据差异更新到实际dom中
+    nt.commit ();
+}
 
 /**
 	Module ( moduleName: String|DOMObject|Object, vmData: Object )
@@ -186,23 +206,27 @@ export default function Module ( moduleElem, vmData = {} ) {
 	// 单页模式下未挂载的模块元素将会在ModuleLoader.load完成挂载
 	// 普通模式下，如果parent为对象时表示此模块不是最上层模块，不需挂载
 	tmpl.mount ( moduleElem, Structure.currentPage ? false : !parent );
-	
-	// 调用mounted钩子函数
-	( vmData.mounted || noop ).apply ( this, cache.getDependentPlugin ( vmData.mounted || noop ) );
 
 	/////////////////////////////////
   	/////////////////////////////////
-	if ( devMode === DEVELOP_COMMON ) {
+	if ( devMode === DEVELOP_SINGLE ) {
 
-		// 普通模式下才会在Module内对比新旧vnode计算出差异
-		// 并根据差异更新到实际dom中
-		// 单页模式将会在compileModule编译的函数中对比更新dom
-		moduleElem.diff ( moduleElemBackup ).patch ();
-	}
-	else {
+		// 单页模式下对模块内的元素添加局部样式
+		// 此操作必须在tmpl.mounted()后执行
+		// 以避免"{{ ... }}"作用于class、id等属性上导致无法添加局部属性的错误
 		const scopedCssObject = this.scopedCssObject;
 		appendScopedAttr ( moduleElem, scopedCssObject.selectors, scopedCssObject.identifier );
+
+		NodeTransaction.acting && NodeTransaction.acting.commit ();
 	}
+	else {
+
+		// Module内对比新旧vnode计算出差异，并根据差异更新到实际dom中
+		moduleElem.diff ( moduleElemBackup ).patch ();
+	}
+
+	// 调用mounted钩子函数
+	this.mounted ();
 }
 
 extend ( Module.prototype, {
@@ -226,6 +250,23 @@ extend ( Module.prototype, {
     },
 
     /**
+		mounted ()
+	
+		Return Type:
+		void
+	
+		Description:
+		模块生命周期hook
+		模块完成挂载并更新实际dom后调用
+	
+		URL doc:
+		http://amaple.org/######
+	*/
+    mounted () {
+	    fireModuleLifeCycle ( this, "mounted" );
+    },
+
+    /**
 		queryUpdated ()
 	
 		Return Type:
@@ -239,12 +280,7 @@ extend ( Module.prototype, {
 		http://amaple.org/######
 	*/
     queryUpdated () {            
-		const nt = new NodeTransaction ().start ();
-	    this.lifeCycle.queryUpdated.apply ( this, cache.getDependentPlugin ( this.lifeCycle.queryUpdated ) );
-
-	    // 提交节点更新事物，更新所有已更改的vnode进行对比
-	    // 对比新旧vnode计算出差异并根据差异更新到实际dom中
-	    nt.commit ();
+		fireModuleLifeCycle ( this, "queryUpdated" );
     },
 
     /**
@@ -261,9 +297,7 @@ extend ( Module.prototype, {
 		http://amaple.org/######
 	*/
     paramUpdated () {
-    	const nt = new NodeTransaction ().start ();
-	    this.lifeCycle.paramUpdated.apply ( this, cache.getDependentPlugin ( this.lifeCycle.paramUpdated ) );
-	    nt.commit ();
+    	fireModuleLifeCycle ( this, "paramUpdated" );
     },
 
     /**
