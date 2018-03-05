@@ -1,6 +1,6 @@
 import { type, extend, foreach, noop, isPlainObject, isEmpty } from "../func/util";
 import { query, attr } from "../func/node";
-import { queryModuleNode, parseGetQuery, scrollTop } from "../func/private";
+import { queryModuleNode, parseGetQuery } from "../func/private";
 import require from "../require/core";
 import { envErr, moduleErr } from "../error";
 import amHistory from "./history/core";
@@ -16,6 +16,7 @@ import Structure from "./Structure";
 import Tmpl from "../compiler/tmpl/core";
 import VNode from "../core/vnode/VNode";
 import NodeTransaction from "../core/vnode/NodeTransaction";
+import scrollTo, { executeScrollStatus, flushScroll } from "../scrollTo/core.js";
 
 /**
 	compareArgs ( newArgs: Array, originalArgs: Array )
@@ -106,58 +107,50 @@ extend ( ModuleLoader.prototype, {
 		void
 	
 		Description:
-		将等待加载完成的页面模块名放入context.waiting中
+		将等待的页面模块名放入context.waiting和context.updated中
+		context.waiting为等待加载的队列
+		context.updated为等待更新的队列
 	
 		URL doc:
 		http://amaple.org/######
 	*/
 	addWaiting ( name ) {
 		this.waiting.push ( name );
+		this.updated.push ( name );
 	},
 
 	/**
-		delWaiting ( name: String )
+		delWaiting ( name: String, isWaitLoad )
 	
 		Return Type:
 		void
 	
 		Description:
-		将已加载完成的页面模块从等待列表中移除
+		将已加载或更新完成的页面模块从等待列表中移除
 		如果等待队列已空则立即刷新模块
+
+		isWaitLoad为true时表示处理等待加载的队列
+		否则表示处理等待更新的队列
 	
 		URL doc:
 		http://amaple.org/######
 	*/
-	delWaiting ( name ) {
-		const pointer = this.waiting.indexOf ( name );
+	delWaiting ( name, isWaitLoad ) {
+		const 
+			waitingType = isWaitLoad ? "waiting" : "updated",
+			pointer = this [ waitingType ].indexOf ( name );
 		if ( pointer !== -1 ) {
-			this.waiting.splice ( pointer, 1 );
+			this [ waitingType ].splice ( pointer, 1 );
 		}
 
 		// 如果等待队列已空则立即刷新模块
-		if ( isEmpty ( this.waiting ) ) {
-			this.flush ();
-		}
-	},
-
-	addUpdated ( name ) {
-		this.updated.push ( name );
-	},
-
-	delUpdated ( name ) {
-		const pointer = this.updated.indexOf ( name );
-		if ( pointer !== -1 ) {
-			this.updated.splice ( pointer, 1 );
-		}
-
-		// 如果等待队列已空则立即刷新模块
-		if ( isEmpty ( this.updated ) ) {
-			ModuleLoader.finish ();
+		if ( isEmpty ( this [ waitingType ] ) ) {
+			isWaitLoad ? this.flush () : ModuleLoader.finish ();
 		}
 	},
 
 	/**
-		update ( title: String )
+		updateTitle ( title: String )
 	
 		Return Type:
 		void
@@ -303,6 +296,7 @@ extend ( ModuleLoader.prototype, {
 		   	.render ( location, nextStructureBackup );
 		}
 		else {
+			executeScrollStatus ();
 			this.nextStructure.flush ();
 		}
 	}
@@ -352,7 +346,7 @@ extend ( ModuleLoader, {
 		    // 获取模块更新函数完成后在等待队列中移除
 		    // 此操作需异步，否则将会实时更新模块
 			setTimeout ( () => {
-				this.delWaiting ( moduleIdentifier );
+				this.delWaiting ( moduleIdentifier, true );
 			} );
 
 			return false;
@@ -390,7 +384,7 @@ extend ( ModuleLoader, {
 
 					// 移除已更新的模块
 					// 这将用于所有视图更新完成后的操作
-					thisLoader.delUpdated ( moduleIdentifier );
+					thisLoader.delWaiting ( moduleIdentifier, false );
 				};
 			};
 
@@ -410,9 +404,6 @@ extend ( ModuleLoader, {
 	        		NodeTransaction, 
 	        		require, 
 	        		signCurrentRender: signCurrentRender ( historyModule.scopedCssObject ),
-	        		start : () => {
-	        			thisLoader.addUpdated ( moduleIdentifier );
-	        		},
 	        		end : end ( this ),
 	        		extend
 	        	} );
@@ -421,7 +412,7 @@ extend ( ModuleLoader, {
 	        // 获取模块更新函数完成后在等待队列中移除
 	        // 此操作需异步，否则将会实时更新模块
 	    	setTimeout ( () => {
-	    		this.delWaiting ( moduleIdentifier );
+	    		this.delWaiting ( moduleIdentifier, true );
 	    	} );
 		}
 		else {
@@ -470,9 +461,6 @@ extend ( ModuleLoader, {
 	        			NodeTransaction, 
 	        			require, 
 	        			signCurrentRender: signCurrentRender ( scopedCssObject ), 
-	        			start : () => {
-	        				thisLoader.addUpdated ( moduleIdentifier );
-	        			},
 	        			end : end ( this ),
 	        			extend
 	        		} );
@@ -482,7 +470,7 @@ extend ( ModuleLoader, {
 	            };
 
 	            // 获取模块更新函数完成后在等待队列中移除
-	    		this.delWaiting ( moduleIdentifier );
+	    		this.delWaiting ( moduleIdentifier, true );
 			} ).fail ( ( amXHR, errorCode ) => {
 
 				// 保存错误信息并立即刷新
@@ -506,6 +494,7 @@ extend ( ModuleLoader, {
 		http://amaple.org/######
 	*/
 	finish () {
-		scrollTop ( 0 );
+		scrollTo ( 0 );
+		flushScroll ();
 	}
 } );

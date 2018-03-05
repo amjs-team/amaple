@@ -9,6 +9,7 @@ import { type, foreach, isEmpty, isPlainObject, guid } from "../func/util";
 import event from "../event/core";
 import http from "../http/core";
 import Promise from "../promise/core";
+import scrollTo from "../scrollTo/core";
 
 // 创建插件
 cache.pushPlugin ( "util", { type, foreach, isEmpty, isPlainObject, guid } );
@@ -25,6 +26,7 @@ cache.pushPlugin ( "event", {
 } );
 cache.pushPlugin ( "http", http );
 cache.pushPlugin ( "Promise", Promise );
+cache.pushPlugin ( "scrollTo", scrollTo );
 
 
 // 导出amaple主对象

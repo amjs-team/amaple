@@ -323,21 +323,3 @@ export function trimHTML ( htmlString ) {
 		}
 	} );
 }
-
-/**
-	scrollTop ( position: Number )
-
-	Return Type:
-	void
-
-	Description:
-	设置窗口位置
-
-	URL doc:
-	http://amaple.org/######
-*/
-export function scrollTop ( position ) {
-	position = window.parseInt ( position ) || 0;
-	document.documentElement.scrollTop = position;
-	document.body.scrollTop = position;
-}

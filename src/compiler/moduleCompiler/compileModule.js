@@ -349,7 +349,7 @@ export default function compileModule ( moduleString ) {
 			var nt=new args.NodeTransaction().start ();
 			nt.collect(args.moduleNode);
 			args.moduleNode.html(args.moduleFragment);`;
-		moduleString = "args.start();";
+		moduleString = "";
 		if ( !isEmpty ( scriptPaths ) ) {
 			let addToWindow = "",
 				delFromWindow = "";
