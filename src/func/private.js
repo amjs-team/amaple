@@ -192,6 +192,44 @@ export function getReference ( references, refName ) {
 	return reference;
 }
 
+function buildScopedCss ( styles, scopedCssIdentifier, selectors ) {
+	let styleString = "";
+	foreach ( styles, styleItem => {
+
+		// 为css选择器添加范围属性限制
+		// 但需排除如@keyframes的项
+		if ( styleItem.selector.substr ( 0, 1 ) !== "@" ) {
+			let selectorArray = [];
+			foreach ( styleItem.selector.split ( "," ).map ( item => item.trim () ), selector => {
+
+				// 避免重复css选择器
+				if ( selectors.indexOf ( selector ) <= -1 ) {
+					selectors.push ( selector );
+				}
+				const pseudoMatch = selector.match ( /:[\w-()\s]+|::selection/i );
+
+				// 如果有设置伪类，则需在伪类前面添加范围样式
+				if ( pseudoMatch ) {
+					selectorArray.push ( selector.replace ( pseudoMatch [ 0 ], `[${ scopedCssIdentifier }]${ pseudoMatch [ 0 ] }` ) );
+				}
+				else {
+					selectorArray.push ( `${ selector.trim () }[${ scopedCssIdentifier }]` );
+				}
+			} );
+			styleItem.selector = selectorArray.join ( "," );
+		}
+
+		// 当选择器为@media时 表示它内部也是css项，需要去递归调用buildScopedCss函数
+		if ( /^@media/.test ( styleItem.selector ) && type ( styleItem.content ) === "array" ) {
+			styleItem.content = buildScopedCss ( styleItem.content, scopedCssIdentifier, selectors );
+		}
+
+		styleString += `${ styleItem.selector }{${ styleItem.content }}`;
+	} );
+
+	return styleString;
+}
+
 /**
 	stringToVNode ( htmlString: String, styles: Object, scopedCssObject: Object )
 
@@ -217,31 +255,9 @@ export function stringToVNode ( htmlString, styles, scopedCssObject ) {
 	// 将解析的vnode转换为VFragment
 	vf = vf.nodeType === 11 ? vf : VFragment ( [ vf ] );
 	if ( type ( styles ) === "array" ) {
-		styleString = "";
-
 		const scopedCssIdentifier = scopedCssObject.identifier = identifierPrefix + guid ();
 		scopedCssObject.selectors = [];
-		foreach ( styles, styleItem => {
-
-			// 为css选择器添加范围属性限制
-			// 但需排除如@keyframes的项
-			if ( styleItem.selector.substr ( 0, 1 ) !== "@" ) {
-				let selectorArray = [];
-				foreach ( styleItem.selector.split ( "," ).map ( item => item.trim () ), selector => {
-					scopedCssObject.selectors.push ( selector );
-					const pseudoMatch = selector.match ( /:[\w-()\s]+|::selection/i );
-					if ( pseudoMatch ) {
-						selectorArray.push ( selector.replace ( pseudoMatch [ 0 ], `[${ scopedCssIdentifier }]${ pseudoMatch [ 0 ] }` ) );
-					}
-					else {
-						selectorArray.push ( `${ selector.trim () }[${ scopedCssIdentifier }]` );
-					}
-				} );
-				styleItem.selector = selectorArray.join ( "," );
-			}
-
-			styleString += `${ styleItem.selector }{${ styleItem.content }}`;
-		} );
+		styleString = buildScopedCss ( styles, scopedCssIdentifier, scopedCssObject.selectors );
 
 		vstyle.attr ( "scoped", "" );
 	}

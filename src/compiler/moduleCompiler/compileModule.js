@@ -1,10 +1,14 @@
-import { isEmpty, foreach } from "../../func/util";
+import { isEmpty, foreach, noop } from "../../func/util";
 import { transformCompName, stringToVNode, trimHTML } from "../../func/private";
 import { TYPE_COMPONENT, amAttr } from "../../var/const";
 import { moduleErr } from "../../error";
 import check from "../../check";
 import configuration from "../../core/configuration/core";
 
+
+function isEnd ( match ) {
+	return /^}/.test ( match );
+}
 
 /**
 	parseModuleAttr ( moduleStrng: String, parses: Object )
@@ -92,6 +96,89 @@ function removeCssBlank ( css ) {
 	return css.replace ( rstyleblank, match => match.replace ( /\s+/g, "" ) );
 }
 
+/**
+	parseSiblingCss ( css: String )
+
+	Return Type:
+	Array
+	解析后的CSS AST数组
+
+	Description:
+	解析单层CSS样式
+	当碰到@media时，将会递归调用此函数
+
+	URL doc:
+	http://amaple.org/######
+*/
+
+function parseSiblingCss ( css ) {
+	const
+		styles = [],
+		rselector = /[^/@{}]+?/,
+		rkeyframes = /@(?:-\w+-)?keyframes\s+\w+/,
+		rmedia = /@media.*?/,
+		rcssparser = new RegExp ( `\\s*(?:(${ rselector.source }|${ rkeyframes.source }|${ rmedia.source })\\s*{([\\s\\S]+?)}|})`, "g" );
+
+	let selectorItem = {},
+		atContext = "",
+		hierarchy = 0;
+
+	css.replace ( rcssparser, ( match, selector, content ) => {
+		if ( !atContext ) {
+			content = content.trim ();
+
+			// css选择器为普通选择器时
+			if ( new RegExp ( `^${ rselector.source }` ).test ( selector ) ) {
+				styles.push ( {
+					selector,
+					content : removeCssBlank ( content )
+				} );
+			}
+
+			// css选择器为@keyframes或@media时
+			else {
+				if ( rkeyframes.test ( selector ) ) {
+					atContext = "keyframes";
+				}
+				else if ( rmedia.test ( selector ) ) {
+					atContext = "media";
+				}
+
+				styles.push ( selectorItem );
+				selectorItem.selector = selector;
+				selectorItem.content = removeCssBlank ( content + "}" );
+			}
+		}
+		else {
+			match = match.trim ();
+			if ( isEnd ( match ) ) {
+				if ( hierarchy > 0 ) {
+					selectorItem.content += match;
+					hierarchy --;
+				}
+				else {
+
+					// 当css项为@media时，需对它的内部选择器做范围样式的处理
+					if ( /media/.test ( atContext ) ) {
+						selectorItem.content = parseSiblingCss ( selectorItem.content );
+					}
+					atContext = "";
+					selectorItem = {};
+				}
+				return "";
+			}
+
+			// 表示层次，当层级为内层时遇到结束符将不会结束
+			if ( new RegExp ( `${ rkeyframes.source }|${ rmedia.source }` ).test ( selector ) ) {
+				hierarchy ++;
+			}
+			selectorItem.content += removeCssBlank ( match );
+		}
+	} );
+
+	return styles;
+}
+
 
 /**
 	parseStyle ( moduleString: String, parses: Object )
@@ -111,11 +198,6 @@ function parseStyle ( moduleString, parses ) {
 	const
 		rstyle = /<style(?:.*?)>([\s\S]*)<\/style>/i,
 		risScoped = /^<style(?:.*?)scoped(?:.*?)/i,
-		rselector = /[^/@{}]+?/,
-		rkeyframes = /@(?:-\w+-)?keyframes\s+\w+/,
-		rcssparser = new RegExp ( `\\s*(${ rselector.source }|${ rkeyframes.source })\\s*{([\\s\\S]+?)}`, "g" ),
-		ranimateScoped = /^(from|to|\d+%)\s*$/i,
-
 		styleMatch = rstyle.exec ( moduleString );
 
 	if ( styleMatch ) {
@@ -126,39 +208,7 @@ function parseStyle ( moduleString, parses ) {
 			style = ( styleMatch [ 1 ] || "" ).trim ();
 
 			// 解析每个css项并保存到parsers.style中
-			parses.style = [];
-			let keyframesItem;
-			style = style.replace ( rcssparser, ( match, selector, content ) => {
-				content = content.trim ();
-
-				// css选择器为普通选择器时
-				if ( new RegExp ( `^${ rselector.source }` ).test ( selector ) ) {
-					if ( ranimateScoped.test ( selector ) ) {
-						keyframesItem.content += `${ selector }{${ removeCssBlank ( content ) }}`;
-					}
-					else {
-						if ( keyframesItem ) {
-							parses.style.push ( keyframesItem );
-							keyframesItem = undefined;
-						}
-						parses.style.push ( {
-							selector,
-							content : removeCssBlank ( content )
-						} );
-					}
-				}
-
-				// css选择器为@keyframes时
-				else if ( rkeyframes.test ( selector ) ) {
-					if ( keyframesItem ) {
-						parses.style.push ( keyframesItem );
-					}
-					keyframesItem = {
-						selector, 
-						content : removeCssBlank ( content + "}" )
-					};
-				}
-			} );
+			parses.style = parseSiblingCss ( style );
         }
 		else {
 
@@ -298,7 +348,7 @@ export default function compileModule ( moduleString ) {
 
 	// 模块编译正则表达式
 	const 
-		rmodule = /^<module[\s\S]+<\/module>/i,
+		rmodule = /<module[\s\S]+<\/module>/i,
 		scopedCssObject = {};
 
 	let title = "",
