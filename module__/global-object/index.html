@@ -1,0 +1,287 @@
+<module :title="全局对象am · Amaple">
+	<template>
+		<div><h1 id="全局对象am"><a href="#全局对象am" class="headerlink" title="全局对象am"></a>全局对象<code>am</code></h1><ul>
+<li><strong>类型：</strong>Object</li>
+<li><strong>描述：</strong>am对象是此框架对外暴露的APIs。其中包括模块定义类Module、类定义方法<code>class</code>及组件基类<code>Component</code>、单页路由启动方法<code>startRouter</code>及路由模式参数<code>BROWSER_HISTORY</code>和<code>HASH_HISTORY</code>、插件安装方法<code>install</code>等强大的API。</li>
+<li><strong>APIs</strong><h2 id="am-Module-lifeCycleDefinition-Object"><a href="#am-Module-lifeCycleDefinition-Object" class="headerlink" title="am.Module(lifeCycleDefinition: Object)"></a>am.Module(lifeCycleDefinition: Object)</h2></li>
+<li><strong>类型：</strong>Class</li>
+<li><strong>描述：</strong>通过使用<code>new</code>关键字定义一个模块，<code>am.Module</code>构造函数将接收<code>param</code>、<code>get</code>、<code>post</code>请求参数，转换ViewModel数据，解析并动态绑定模块视图等工作。<code>Module</code>对象有5个阶段的生命周期，分别为<code>init</code>、<code>mounted</code>、<code>paramUpdated</code>、<code>queryUpdated</code>、<code>unmount</code>（<a href="/doc/module?target=%E6%A8%A1%E5%9D%97%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F">查看Module生命周期详解</a>）</li>
+<li><strong>参数：</strong>lifeCycleDefinition|Object：Module对象的生命周期定义对象</li>
+<li><strong>返回值：</strong><code>Module</code>对象，它包含了对模块的状态、请求参数及组件等引用</li>
+<li><p><strong>对象属性</strong></p>
+<ul>
+<li><strong>param</strong>：<code>location.pathname</code>中动态匹配路由通配符所获得的键值对，键为通配符名称，值为<code>pathname</code>中的通配符匹配值（查看匹配路由通配符）</li>
+<li><strong>get</strong>：当前url中的<code>get</code>参数字符串（即<code>location.search</code>）解析后的对象，键为<code>get</code>参数名，值为对应的<code>get</code>参数值</li>
+<li><strong>post</strong>：表单post提交时的数据对象，键为表单<code>name</code>属性值，值为对应表单值（post对象只有在post提交后跳转的模块存在值，其他情况为空对象）</li>
+<li><strong>parent</strong>：父级模块对象引用，最顶层模块的<code>parent</code>值为<code>null</code></li>
+<li><strong>state</strong>：模块视图动态绑定的状态数据，它是一个ViewModel对象，当状态数据发生改变时，相应的视图也将发生相应的改变</li>
+<li><strong>components</strong>：模块内所有已渲染的组件对象数组（注意：组件对象数组是框架内部计算模块行为时需调用组件的相应生命周期钩子函数，不推荐开发者直接获取此数组内的组件对象进行使用，而应该采用<code>:ref</code>指令来引用对应的组件，使用模块方法<code>refs</code>来获取对应的组件行为对象进行组件行为操作）</li>
+<li><strong>references</strong>：模块内使用<code>:ref</code>指令引用的dom元素或组件的引用数组<blockquote>
+<p>不推荐开发者直接获取此数组内的引用，这样可能会得到不正确色引用结果，开发者应该使用模块方法“refs”来获取引用，该方法会验证被获取dom元素或组件状态并返回正确状态的引用</p>
+</blockquote>
+</li>
+</ul>
+</li>
+<li><p><strong>成员函数</strong></p>
+<ul>
+<li><strong>refs(refName: String)</strong><ul>
+<li><strong>类型：</strong>Function</li>
+<li><strong>描述：</strong>通过传入被引用名称（使用模板指令<code>:ref</code>引用元素或组件）获取模块下被引用的dom元素或组件行为对象</li>
+<li><strong>参数：</strong><code>(refName | String)</code>模板指令<code>:ref</code>的值，表示被引用dom元素或组件的引用名称</li>
+<li>返回值：<ul>
+<li>当被引用对象为dom元素时返回此dom元素</li>
+<li>当被引用对象为组件对象时返回此组件的行为对象(<a href="#">什么是行为对象？</a>)</li>
+<li>当一个引用名称引用了多个dom元素或组件时，返回此引用集合的数组</li>
+<li>未找到对应引用时返回<code>undefined</code></li>
+<li>注意：当dom元素或组件被移除或隐藏后不存在DOM树时返回<code>undefined</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="am-class-className-String"><a href="#am-class-className-String" class="headerlink" title="am.class(className:String)"></a>am.class(className:String)</h2><ul>
+<li><strong>类型：</strong>Function</li>
+<li><p><strong>描述：</strong>ES6式的类定义函数，支持开发者以类似ES6 class的方式来定义一个类及继承基类，它一般用于通过继承<code>am.Component</code>来定义一个组件衍生类（<a href="#">组件衍生类？</a>）。在此方法传入类名字符串（类名需符合变量命名规则），它将返回一个<code>classDefiner</code>用于继承基类与定义类构造函数<code>(constructor）</code>、类成员函数及类静态函数。通过调用<code>classDefiner.extends</code>函数并传入<code>Function</code>或<code>null</code>（传入<code>null</code>时相当于未继承任何基类）来指定一个基类，<code>extends</code>函数将返回<code>classDefiner</code>本身，然后再链式调用并传入一个包含类构造函数、类成员函数或类静态函数的对象对该类进行构造，此时将会返回被构造的类。示例：</p>
+<figure class="highlight javascript"><figcaption><span>javascript</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="comment">// 定义一个基类</span></span><br><span class="line"><span class="keyword">var</span> parent = am.class(<span class="string">"parent"</span>) (&#123;</span><br><span class="line">	<span class="keyword">constructor</span>: function ()&#123;        <span class="comment">// 指定类构造器的名称为"constructor"</span></span><br><span class="line">		<span class="keyword">this</span>.memberVar = <span class="number">0</span>;          <span class="comment">// 定义成员变量</span></span><br><span class="line">	&#125;,</span><br><span class="line">	memberFn: <span class="function"><span class="keyword">function</span> (<span class="params"></span>)</span>&#123;&#125;,     	 <span class="comment">// 定义成员函数</span></span><br><span class="line">	statics: &#123;</span><br><span class="line">		staticVar: <span class="number">1</span>,                <span class="comment">// 定义类静态变量</span></span><br><span class="line">		staticFn: <span class="function"><span class="keyword">function</span> (<span class="params"></span>)</span>&#123;&#125;      <span class="comment">// 定义类静态函数</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;)</span><br><span class="line"><span class="comment">// =========================</span></span><br><span class="line"><span class="comment">// =========================</span></span><br><span class="line"><span class="comment">// 定义子类并继承基类：</span></span><br><span class="line"><span class="keyword">var</span> son = am.class(<span class="string">"son"</span>).extends(parent) (&#123;</span><br><span class="line">    <span class="keyword">constructor</span>: function () &#123;</span><br><span class="line">        <span class="keyword">this</span>.__super();          <span class="comment">// 调用基类构造函数，子类在定义成员变量时必须先调用this.__super()</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>参数：</strong><code>(className | String)</code>定义的类名</p>
+</li>
+<li><strong>返回值：</strong>类定义函数（classDefiner），通过<code>classDefiner.extends</code>函数指定继承基类，通过<code>classDefiner</code>函数本身构造一个类</li>
+</ul>
+<h2 id="am-Component-lifeCycleDefinition-Object"><a href="#am-Component-lifeCycleDefinition-Object" class="headerlink" title="am.Component(lifeCycleDefinition: Object)"></a>am.Component(lifeCycleDefinition: Object)</h2><ul>
+<li><strong>类型：</strong>Class</li>
+<li><strong>描述：</strong>所有组件衍生类的基类，<code>Component</code>只能被另一个类继承而不可直接创建对象。通过使用类定义函数<code>am.class</code>实现<code>Component</code>的继承并生成组件衍生类。组件对象有5个阶段的生命周期，分别为<code>init</code>、<code>render</code>、<code>mounted</code>、<code>updated</code>、<code>unmount</code>（<a href="#">查看Component生命周期详解</a>）</li>
+<li><strong>参数：</strong>无</li>
+<li><strong>返回值：</strong>无</li>
+<li><strong>类静态函数：</strong><ul>
+<li>defineGlobal(componentDerivative: Function)<ul>
+<li><strong>类型：</strong>Function</li>
+<li><strong>描述：</strong>定义一个全局组件衍生类，所有的<code>Module</code>和组件衍生类中在不需明确指定依赖的情况下可使用全局组件衍生类</li>
+<li><strong>参数：</strong><code>(componentDerivative | Function)</code>组件衍生类</li>
+<li><strong>返回值：</strong>无</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="am-startRouter-singlePageConfig-Object"><a href="#am-startRouter-singlePageConfig-Object" class="headerlink" title="am.startRouter(singlePageConfig: Object)"></a>am.startRouter(singlePageConfig: Object)</h2><ul>
+<li><strong>类型：</strong>Function</li>
+<li><strong>描述：</strong>启动路由并初始化单页配置，配置项如下：</li>
+<li><strong>baseURL</strong><ul>
+<li><strong>类型：</strong>Object</li>
+<li><strong>描述：</strong>定义模块、组件及插件加载的基础路径，格式为<code>{ module: &quot;...&quot;, component: &quot;...&quot;, plugin: &quot;...&quot; }</code></li>
+<li><strong>默认值：</strong><code>{ module: &quot;/&quot;, component: &quot;/&quot;, plugin: &quot;/&quot; }</code></li>
+</ul>
+</li>
+<li><strong>history：</strong><ul>
+<li><strong>类型：</strong>Number</li>
+<li><strong>描述：</strong>设置单页模式时使用的history类型，可选值：<ul>
+<li><strong>am.HASH：</strong>强制使用hash模式（即url中带有“#”锚点的模式），此模式将在当前显示pathname放在“#”之后，与普通url稍有不同，但此模式适用于包括不支持html5 history API新特性的所有浏览器。</li>
+<li><strong>am.BROWSER：</strong>强制使用html5 history API模式，此模式的url与普通url相同，但在不支持history API新特性的浏览器中不能正常使用，且需后台服务端的配置支持，当刷新浏览器时服务端需返回首页html，以防止404的出现（具体服务端配置方法）</li>
+<li><strong>am.AUTO：</strong>在支持html5 history API的浏览器下自动使用此模式，不支持的情况下将自动回退使用hash模式</li>
+</ul>
+</li>
+<li><strong>默认值：</strong>am.AUTO</li>
+</ul>
+</li>
+<li><p><strong>routes：</strong></p>
+<ul>
+<li><strong>类型：</strong>Function</li>
+<li><p><strong>描述：</strong>路由配置函数，它将接收一个Router类的对象，开发者可调用此对象来配置路由，Router类的对象介绍如下：</p>
+<ul>
+<li><strong>类型：</strong>Object</li>
+<li><strong>描述：</strong>Router类的对象用于定义路由，路由的作用在于告诉框架当前或即将跳转的pathname应该显示什么内容，从而使不同的pathname显示不同的页面内容</li>
+<li><p><strong>对象函数：</strong></p>
+<ul>
+<li><strong>module(moduleName?: String)</strong><ul>
+<li><strong>类型：</strong>Function</li>
+<li><strong>描述：</strong>在路由结构中指定一个模块，只有先指定一个模块后才可对此模块配置相应的路由。参数为模块的名称（即<code>:module</code>指令的值），当不传入模块名时为指定当前层级的default模块</li>
+<li><strong>参数：</strong>`(moduleName? | String)指定的模块名，当不传入模块名时为指定当前层级的defualt模块</li>
+<li><strong>返回值：</strong>当前对象，供链式调用</li>
+</ul>
+</li>
+<li><p><strong>route(pathExpr: String|Array, modulePath: String, childDefineFn?: Function)</strong></p>
+<ul>
+<li><strong>类型：</strong>Function</li>
+<li><p><strong>描述：</strong>定义模块路径与路由匹配表达式的映射，以及该模块下的子模块与路由匹配表达式映射。参数<code>pathExpr</code>一般顶层模块以“/”开头，嵌套层直接以目录名定义，它分为三种形式：</p>
+<ul>
+<li><strong>固定路由字符串：</strong>如<code>/setting</code>，它将匹配pathname中根目录的<code>/setting</code>部分</li>
+<li><p><strong>路由通配符字符串：</strong>通配符以“:”开头，如<code>/:type</code>，它将匹配pathname中根目录的任何字符串，并会以键值对的形式保存到param对象中供匹配模块的Module对象引用。路由通配符还支持末尾添加“(正则表达式)”来限制匹配的范围，如：<code>/:type(\\d+)</code>，表示只匹配以为或多位数字</p>
+<blockquote>
+<p>括号内的正则表达式字符串需符合new RegExp传入的正则表达式格式，<code>\</code>应该成双出现</p>
+</blockquote>
+</li>
+<li><p><strong>混合路由数组：</strong>数组内包含以上两种形式的一种或两种，只要符合数组内的任何一个路由表达式都将匹配成功。</p>
+</li>
+</ul>
+</li>
+<li><strong>参数：</strong><ul>
+<li><code>(pathExpr | String/Array)</code>路由匹配式，分为固定路由字符串、路由通配符字符串及混合路由数组三种形式</li>
+<li><code>(modulePath | String)</code>模块请求的路径，模块请求时前后将分别会拼接<code>baseURL</code>和<code>moduleSuffix</code></li>
+<li><code>(childDefineFn? | Function)</code>此模块的子模块路由定义函数，函数同样接收一个<code>Router</code>类的对象。当没有子模块时可不传此参数</li>
+</ul>
+</li>
+<li><strong>返回值：</strong>当前对象，供链式调用</li>
+</ul>
+</li>
+<li><strong>defaultRoute(modulePath: String, childDefineFn?: Function)</strong><ul>
+<li><strong>类型：</strong>Function</li>
+<li><strong>描述：</strong>定义一个路由匹配表达式为空(<code>&quot;&quot;</code>)的模块路径映射，相当于调用<code>route</code>函数时传入的<code>pathExpr</code>为<code>&quot;&quot;</code>。此函数一般用于定义子模块的路由匹配表达式映射。</li>
+<li><strong>参数：</strong><ul>
+<li><code>(modulePath | String)</code>模块请求的路径，模块请求时前后将分别会拼接<code>baseURL</code>和<code>moduleSuffix</code></li>
+<li><code>(childDefineFn? | Function)</code>此模块的子模块路由定义函数，函数同样接收一个<code>Router</code>类的对象。当没有子模块时可不传此参数</li>
+</ul>
+</li>
+<li><strong>返回值：</strong>当前对象，供链式调用</li>
+</ul>
+</li>
+<li><p><strong>redirect(from: String|Array, to: String)</strong></p>
+<ul>
+<li><strong>类型：</strong>Function</li>
+<li><p><strong>描述：</strong>定义当前层级的路由目录重定向，每个目录层级都可以设置重定向，当当前层级的路由目录与<code>from</code>参数匹配时将会重定向到<code>to</code>参数，并且使用重定向后的pathname进行路由匹配。<code>from</code>参数的值分为三种形式：</p>
+<ul>
+<li><strong>固定路由字符串：</strong>如<code>/setting</code>，它将匹配pathname中根目录的<code>/setting</code>部分</li>
+<li><p><strong>路由通配符字符串：</strong>通配符以“:”开头，如<code>/:type</code>，它将匹配pathname中根目录的任何字符串，并会以键值对的形式保存到param对象中供匹配模块的Module对象引用。路由通配符还支持末尾添加“(正则表达式)”来限制匹配的范围，如：<code>/:type(\\d+)</code>，表示只匹配以为或多位数字</p>
+<blockquote>
+<p>括号内的正则表达式字符串需符合<code>new RegExp</code>传入的正则表达式格式，<code>\</code>应该成双出现</p>
+</blockquote>
+</li>
+<li><p><strong>混合路由数组：</strong>数组内包含以上两种形式的一种或两种，只要符合数组内的任何一个路由表达式都将匹配成功。</p>
+</li>
+</ul>
+</li>
+<li><strong>参数：</strong><ul>
+<li><code>(from | String/Array)</code>重定向路由匹配式，分为固定路由字符串、路由通配符字符串及混合路由数组三种形式</li>
+<li><code>(to | String)</code>重定向的目标path</li>
+</ul>
+</li>
+<li><strong>返回值：</strong>当前对象，供链式调用</li>
+</ul>
+</li>
+<li><strong>forcedRender()</strong><ul>
+<li><strong>类型：</strong>Function</li>
+<li><strong>描述：</strong>强制渲染模块，默认情况下当无刷新跳转匹配时，部分匹配相同路由的模块不会重新渲染，只会渲染那些需更新的模块，当模块被设置为<strong>forced render</strong>后，这部分匹配相同路由的模块也会强制重新渲染。</li>
+<li><strong>参数：</strong>无</li>
+<li><strong>返回值：</strong>当前对象，供链式调用</li>
+</ul>
+</li>
+<li><strong>error404(path404: String)</strong><ul>
+<li><strong>类型：</strong>Function</li>
+<li><strong>描述：</strong>设置404页面路径，页面跳转时如果有任何一个模块未找到对应模块文件则会重定向到404路径并重新匹配路由来更新模块。</li>
+<li><strong>参数：</strong><code>(path404 | String)</code>404错误时的更新路径</li>
+<li><strong>返回值：</strong>无</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>moduleSuffix：</strong>模块文件的后缀名，Router定义路由时不需指定模块文件的后缀名，它将统一使用此变量<ul>
+<li><strong>默认值：</strong><code>.html</code></li>
+</ul>
+</li>
+<li><p><strong>plugin</strong></p>
+<ul>
+<li><strong>类型：</strong>Array</li>
+<li><p><strong>描述：</strong>定义项目中所使用的插件集合，数组内可指定插件加载路径（基于<code>baseURL</code>）或插件安装对象（存在<code>name</code>属性和<code>build</code>方法的对象），当指定插件安装对象时内部会自动调用<code>am.install</code>方法安装此插件</p>
+<blockquote>
+<p>路由启动后框架将获取当前url或即将跳转的url至上而下匹配已设置的路由，获得需更新模块的数据并按从外到内的顺序更新对应模块</p>
+</blockquote>
+</li>
+<li><p><strong>参数：</strong><code>(singlePageConfig | Object)</code>单页应用初始化配置对象</p>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="am-install-pluginDefinition-Object"><a href="#am-install-pluginDefinition-Object" class="headerlink" title="am.install(pluginDefinition: Object)"></a>am.install(pluginDefinition: Object)</h2><ul>
+<li><strong>类型：</strong>Function</li>
+<li><strong>描述：</strong>安装一个插件，<ul>
+<li><strong>构建：</strong>调用此函数并传入包含<code>name</code>属性和<code>build</code>函数的插件定义对象，<code>name</code>属性指定了插件名称，它必须符合变量命名规则，<code>build</code>为插件的构建函数，内部<code>this</code>指向<code>am</code>对象，它的返回值将作为此插件实体供开发者使用</li>
+<li><strong>使用：</strong>插件实体可在<code>Module</code>、<code>Component</code>生命周期钩子函数及插件的<code>build</code>构建函数中，指定函数接收的参数名为对应插件的名称将会自动注入对应的插件实体在该函数内使用。示例：<figure class="highlight javascript"><figcaption><span>javascript</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="keyword">new</span> am.Module (&#123;</span><br><span class="line">    init: <span class="function"><span class="keyword">function</span> (<span class="params">promise</span>) </span>&#123; ... &#125;,     <span class="comment">// init函数内将自动注入promise插件</span></span><br><span class="line">    mounted: <span class="function"><span class="keyword">function</span> (<span class="params">http</span>) </span>&#123; ... &#125;      <span class="comment">// mounted函数内将自动注入http插件</span></span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+</ul>
+</div>
+		<div id="page-nav">
+			<a class="title-color nav next" href="{{ next.path }}" :if="next.title">
+				<img src="/images/arrow.png">
+				<span class="title-color">{{ next.title }}</span>
+			</a>
+			<a class="nav prev" href="{{ prev.path }}" :if="prev.title">
+				<span class="title-color">{{ prev.title }}</span>
+				<img src="/images/arrow.png">
+			</a>
+		</div>
+	</template>
+	<script>
+		function scrollAnchor ( anchor, scrollTo ) {
+			var anchorElem = document.querySelector ( "#" + window.decodeURI ( anchor ) );
+			if ( anchorElem ) {
+				scrollTo ( anchorElem.offsetTop - 10 );
+			}
+		}
+
+		new am.Module ( {
+			init: function ( menu, checkPost ) {
+				var list = [{"tag":"全局对象am","children":[{"tag":"am.Module(lifeCycleDefinition: Object)","children":[]},{"tag":"am.class(className:String)","children":[]},{"tag":"am.Component(lifeCycleDefinition: Object)","children":[]},{"tag":"am.startRouter(singlePageConfig: Object)","children":[]},{"tag":"am.install(pluginDefinition: Object)","children":[]}]}],
+					posts = [{"title":"全局对象am","path":"global-object","index":1,"current":true},{"title":"模板引擎","path":"template-directive","index":2},{"title":"内置插件","path":"builtin-plugin","index":3}];
+
+				menu.state.list = list.length > 0 ? list : [ { children: [] } ];
+				menu.state.posts = posts;
+				menu.state.categoryName = "API";
+
+				return {
+					prev: checkPost ( {
+						title: "模板引擎",
+						path: "template-directive"
+					}, posts ),
+					next: checkPost ( {
+						title: "路由配置",
+						path: "config-router"
+					}, posts )
+				};
+			},
+			mounted: function ( scrollTo ) {
+				scrollAnchor ( this.get.target, scrollTo );
+			},
+			queryUpdated: function ( scrollTo ) {
+				scrollAnchor ( this.get.target, scrollTo );
+			}
+		} );
+	</script>
+
+	<style scoped>
+		#page-nav {
+			margin-top: 60px;
+		}
+		.nav {
+			font-size: 16px;
+			border: none;
+		}
+		.nav:hover {
+			border: none;
+		}
+		.nav img {
+			width: 18px;
+			margin: 0 5px;
+			vertical-align: middle;
+		}
+		.prev {
+			float: right;
+		}
+		.next {
+			float: left;
+		}
+		.next img {
+			transform: rotate(180deg);
+			-ms-transform: rotate(180deg);
+			-moz-transform: rotate(180deg);
+			-webkit-transform: rotate(180deg);;
+			-o-transform: rotate(180deg);
+		}
+	</style>
+</module>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="cn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+  <title>Loading...</title>
+  
+  <!-- stylesheets list from config.yml -->
+  
+    <link rel="stylesheet" href="css/reset.css">
+  
+    <link rel="stylesheet" href="css/amaple.css">
+  
+    <link rel="stylesheet" href="css/post.css">
+  
+  
+</head>
+<body>
+  <div :module="header" class="header"></div>
+  <div :module></div>
+  <div :module="footer"></div>
+</body>
+
+  <!-- scripts list from theme config.yml -->
+  
+    <script src="lib/amaple/amaple.js"></script>
+  
+
+
+<script>
+  am.startRouter ( {
+    history: am.HASH,
+    baseURL: {
+      module: "module__",
+      component: "component__"
+    },
+    routes: function ( router ) {
+      router.redirect ("/doc", "/doc/first-step");
+      router.redirect ("/api", "/api/global-object");
+
+      router.module ( "header" )
+      .route ( ["/", "/:root"], "common/header" );
+
+      router.module ()
+      .route ( ["/", "/index"], "index" )
+      .route ( "/doc", "doc", function ( childRouter ) {
+        childRouter.module ( "menu" ).route ( ["", ":menu"], "common/menu" );
+
+        childRouter.module ().route ( ":docName", ":docName/index" );
+      } )
+      .route ( "/api", "doc", function ( childRouter ) {
+        childRouter.module ( "menu" ).route ( ["", ":menu"], "common/menu" );
+        childRouter.module ().route ( ":apiName", ":apiName/index" );
+      } );
+
+      router.module ( "footer" )
+      .route ( ["/", "/:root/:docName"], "common/footer" );
+    },
+
+    plugin: [
+      {
+        name: "nav", 
+        build: function () {
+          return {"Document":"/doc/","home":"/","API":"/api"};
+        }
+      },
+      {
+        name: "menu",
+        build: function () {
+          return {};
+        }
+      },
+      {
+        name: "checkPost",
+        build: function () {
+          return function ( prevOrNext, posts ) {
+            var find = false;
+            for ( var i in posts ) {
+              if ( posts [ i ].title === prevOrNext.title ) {
+                find = true;
+
+                break;
+              }
+            }
+
+            // 如果上一篇或下一篇文章不在此分类的文章中，则返回空数据
+            return find ? prevOrNext : { title: "", path: "" };
+          };
+        }
+      }
+    ] 
+  } );
+</script>
+</html>

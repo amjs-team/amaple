@@ -1,0 +1,233 @@
+<module :title="Amaple.js">
+	<template>
+		<div class="index-hd">
+			<div class="text-am">
+				<img src="images/text-amaple.png">
+				<strong>体验优先的JavaScript单页框架</strong>
+			</div>
+			<div class="btn-wrap">
+				<ul>
+					<li>
+						<am-btn type="fill" leftBg="#fcc64a" rightBg="#fb9d41">Amaple介绍</am-btn>
+					</li>
+					<li>
+						<am-btn img="images/icon-book.png" href="/doc" imgWidth="18" type="fill" leftBg="#fb9e41" rightBg="#fb7939">我要学习</am-btn>
+					</li>
+					<li>
+						<am-btn type="stroke" imgWidth="25" href="https://github.com/amjs-team/amaple" target="_blank" leftBg="#fac5b6" img="images/icon-gh.png">GitHub</am-btn>
+					</li>
+				</ul>
+			</div>
+		</div>
+		<div class="index-bd">
+			<div id="elementary-dev">
+				<h2 class="title-color title-size">我是一个初级前端开发，能使用Amaple吗？</h2>
+				<p>Amaple除了支持webpack环境外，还专门优化了适合初级前端的普通开发环境</p>
+				<div>
+					<am-btn type="stroke" imgWidth="18" leftBg="#f8805a" img="images/arrow.png" imgPos="right">了解更多</am-btn>
+				</div>
+			</div>
+			<div id="am-feature">
+				<ul>
+					<li>
+						<h2 class="title-color title-size">低成本学习</h2>
+						<p>沿用多个常用的原生Web标准，最大化符合具有一定基础的开发者的认知范围，从而降低学习成本，清晰的学习文档让你理解起来更轻松。</p>
+					</li>
+					<li>
+						<h2  class="title-color title-size">更高性能</h2>
+						<p>使用HTML字符串解析器生成虚拟DOM，避免多次创建不必要的DOM节点，且相比其他具有虚拟DOM的功能框架，Amaple的虚拟DOM不再需要可识别的key也能自动判断可复用的DOM节点，并在移动时自动计算出最少的步骤。</p>
+					</li>
+					<li>
+						<h2  class="title-color title-size">响应式DOM</h2>
+						<p>当状态数据改变时HTML对应的dom元素将自动作出相应的更新，Amaple更简洁的动态模板引擎使你更加关注于模块内的状态数据，而不需去理会视图层的更新。</p>
+					</li>
+					<li>
+						<h2  class="title-color title-size">开放式插件</h2>
+						<p>除了可使用自身规范的插件外，还支持所有AMD IIFE规范的第三方js库，在模块打包工具流行的今天，这也意味着几乎所有的第三方js库都可以与Amaple协同运作。</p>
+					</li>
+				</ul>
+			</div>
+			<div class="border-bottom separator-visible"></div>
+			<div id="am-sample">
+				<ul>
+					<li>
+						<div class="sample-desc">
+							<h2 class="title-color title-size">编写一个简单的模块</h2>
+							<p class="post">而且允许开发者定义任意层级的任意多个模块及子模块。在 <code><\module></code> 中通过<code>:title</code>属性设置模块标题，并且使用简单的<code>{{ }}</code>对DOM数据进行动态绑定。</p>
+						</div>
+						<div class="code">
+							<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">module</span> <span class="attr">:title</span>=<span class="string">"Amaple.js"</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">template</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">span</span>&gt;</span>{{<span> </span>greet<span> </span>}}<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">template</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="undefined"></span></span><br><span class="line"><span class="javascript">    <span class="keyword">new</span> am.Module ({</span></span><br><span class="line"><span class="javascript">      init: <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span></span><br><span class="line"><span class="javascript">        <span class="keyword">return</span> { <span class="attr">greet</span>: <span class="string">"hello Amaple"</span> };</span></span><br><span class="line"><span class="undefined">      }</span></span><br><span class="line"><span class="undefined">    });</span></span><br><span class="line"><span class="undefined">  </span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">module</span>&gt;</span></span><br></pre></td></tr></table></figure>
+						</div>
+					</li>
+					<li>
+						<div class="sample-desc">
+							<h2 class="title-color title-size">编写一个简单的组件</h2>
+							<p class="post">组件是拥有特定功能的封装块，就像由一堆代码封装成的具有特定功能的函数一样，一个组件有独立的视图、行为及生命周期。<code>am.class</code>用于ES5的类构造，在ES6版本下，你完全可以使用<code>class AmComp extends am.Component</code>替代它。</p>
+						</div>
+						<div class="code">
+							<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> AmComp = am.class (<span class="string">"AmComp"</span>).extends (am.Component) ({</span><br><span class="line">  render: <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">    <span class="keyword">this</span>.template (<span class="string">`I'm Amaple`</span>)</span><br><span class="line">    .style ({</span><br><span class="line">      <span class="string">".intro"</span>: { <span class="attr">color</span>: <span class="keyword">this</span>.props.color }</span><br><span class="line">    });</span><br><span class="line">  }</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+							
+							<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="comment">&lt;!-- 在模块的template节点中使用 AmComp 组件 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">am-comp</span> <span class="attr">color</span>=<span class="string">"#FFD39B"</span>&gt;</span><span class="tag">&lt;/<span class="name">am-comp</span>&gt;</span></span><br></pre></td></tr></table></figure>
+						</div>
+					</li>
+					<li>
+						<div class="sample-desc">
+							<h2 class="title-color title-size">模块跳转与表单提交</h2>
+							<p class="post">看上去是不是非常眼熟？Amaple的模块跳转就是这么简单，只要<code>href</code>属性和<code>form元素</code>的<code>action</code>的路径能在路由配置中找到，它就会进行无刷新跳转。并且当表单中使用上传图片时，你也不需要设置<code>enctype="multipart/form-data"</code>。</p>
+						</div>
+						<div class="code">
+							<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="comment">&lt;!-- 模块跳转更新 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">a</span> <span class="attr">href</span>=<span class="string">"aboutAmjs"</span>&gt;</span>关于Amaple<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">&lt;!-- 表单提交 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">form</span> <span class="attr">action</span>=<span class="string">"save_email"</span> <span class="attr">method</span>=<span class="string">"action"</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"text"</span> <span class="attr">name</span>=<span class="string">"email"</span> /&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"file"</span> <span class="attr">name</span>=<span class="string">"photo"</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br></pre></td></tr></table></figure>
+						</div>
+					</li>
+				</ul>
+			</div>
+			<div id="try-now">
+				<h2 class="title-color title-size">有空的话，现在就试试吧！</h2>
+				<am-btn img="images/icon-book.png" href="doc" imgWidth="18" type="fill" leftBg="#fb9e41" rightBg="#fb7939">开始学习</am-btn>
+			</div>
+		</div>
+	</template>
+
+	<script>
+		var AmBtn = import ( "AmBtn" );
+		new am.Module ();
+	</script>
+
+	<style scoped>
+		.index-hd {
+			overflow: hidden;
+			height: 500px;
+			background: url(images/bg-img.png) no-repeat;
+			background-size: auto 100%;
+			background-color: #f8f8f8;
+		}
+		.index-bd {
+			width: 80%;
+			margin: 0 auto;
+		}
+		.text-am {
+			width: 28%;
+			margin: 0 auto;
+			margin-top: 200px;
+			text-align: center;
+		}
+		.text-am img {
+			width: 88%;
+			margin: 0 auto;
+			margin-bottom: 20px;
+			display: block;
+		}
+		.text-am strong {
+			color: #fbd3b7;
+			font-size: 26px;
+			font-weight: bold;
+		}
+		.btn-wrap {
+			text-align: center;
+			margin-top: 50px;
+		}
+		.btn-wrap li {
+			display: inline-block;
+			margin: 0 18px;
+		}
+		#elementary-dev {
+			text-align: center;
+			margin: 60px 20px;
+		}
+		#elementary-dev p {
+			margin-top: 15px;
+		}
+		#elementary-dev div {
+			margin-top: 35px;
+		}
+		#am-feature {
+			overflow: hidden;
+			margin: 70px 20px 0 20px;
+		}
+		#am-feature li {
+			width: 23%;
+			margin-right: 2%;
+			float: left;
+		}
+		.separator-visible {
+			display: none;
+		}
+		#am-sample {
+			margin-top: 100px;
+			overflow: hidden;
+		}
+		.sample-desc {
+			width: 35%;
+			float: left;
+			display: inline-block;
+			margin-top: 20px;
+		}
+		.code {
+			width: 60%;
+			display: inline-block;
+			margin-bottom: 15px;
+		}
+		#try-now {
+			margin-top: 85px;
+			text-align: center;
+		}
+		#try-now h2 {
+			margin-bottom: 35px;
+		}
+		@media screen and (max-width: 768px) {
+			.index-hd {
+				height: 450px;
+			}
+			.index-bd {
+				width: auto;
+			}
+			.text-am {
+				width: 100%;
+				margin-top: 125px;
+			}
+			.text-am img {
+				width: 65%;
+				margin-bottom: 20px;
+			}
+			.text-am strong {
+				color: #fbd3b7;
+				font-size: 20px;
+				font-weight: bold;
+			}
+			.btn-wrap {
+				margin-top: 70px;
+			}
+			.btn-wrap li {
+				margin: 8px;
+			}
+			#am-feature li {
+				width: auto;
+				margin-bottom: 40px;
+			}
+			.separator-visible {
+				display: block;
+			}
+			#am-sample {
+				margin-top: 15px;
+			}
+			#am-sample li {
+				margin-bottom: 40px;
+			}
+			.sample-desc {
+				width: auto;
+				display: inline-block;
+				margin: 20px;
+			}
+			.code {
+				width: auto;
+				display: block;
+			}
+			#try-now {
+				margin-top: 20px;
+			}
+			#try-now h2 {
+				margin-bottom: 15px;
+			}
+		}
+	</style>
+</module>

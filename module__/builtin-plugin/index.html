@@ -1,0 +1,273 @@
+<module :title="内置插件 · Amaple">
+	<template>
+		<div><h1 id="内置插件"><a href="#内置插件" class="headerlink" title="内置插件"></a>内置插件</h1><h2 id="util"><a href="#util" class="headerlink" title="util"></a>util</h2><ul>
+<li><strong>类型：</strong>Object</li>
+<li><strong>描述：</strong>工具包</li>
+<li><strong>对象属性：</strong><ul>
+<li><strong>type(arg: any)</strong><ul>
+<li><strong>类型：</strong>Function</li>
+<li><strong>描述：</strong>判断数据类型，与“typeof”关键字相比，它还可以判断null和Array两个数据类型</li>
+<li><strong>参数：</strong><code>(arg | any)</code>需判断类型的数据</li>
+<li><strong>返回值：</strong>传入参数的数据类型</li>
+</ul>
+</li>
+<li><strong>foreach(target: ArrayLike|Object, callback: Function)</strong><ul>
+<li><strong>类型：</strong>Function</li>
+<li><strong>描述：</strong>循环遍历一个对象，使用方法与<code>array.forEach</code>类似。但它还可以遍历类数组如<code>Node.childNodes</code>、<code>Node.attributes</code>等，且当传入的参数不可遍历时将直接返回。参数<code>callback</code>为循环遍历时的回调函数，它分别接收遍历项的值、遍历下表、遍历变量本身三个参数，当回调函数返回<code>false</code>时将<code>break</code>结束本次循环，而且此时<code>foreach</code>执行结束后也将会返回一个<code>false</code>，这在结束多层循环遍历时很有用，开发者可以通过<code>return foreach(...)</code>再次推出上层循环。</li>
+<li><strong>参数：</strong><ul>
+<li><code>(target | ArrayLike/Object)</code>循环遍历的目标变量值</li>
+<li><code>(callback | Function)</code>循环遍历时的回调函数，它分别接收遍历项的值、遍历下表、遍历变量本身三个参数，返回<code>false</code>可结束循环遍历</li>
+</ul>
+</li>
+<li><strong>返回值：</strong>无</li>
+</ul>
+</li>
+<li><strong>isEmpty(object: Array|Object)</strong><ul>
+<li><strong>类型：</strong>Function</li>
+<li><strong>描述：</strong>判断一个数组或对象是否为空，检查对象时它只会检查该对象本身的成员属性</li>
+<li><strong>参数：</strong><code>(object | Array/Object)</code>待判断的数组会对象</li>
+<li><strong>返回值：</strong>空时为<code>true</code>，不空时为<code>false</code></li>
+</ul>
+</li>
+<li><strong>isPlainObject (object: Object)</strong><ul>
+<li><strong>类型：</strong>Function</li>
+<li><strong>描述：</strong>判断一个对象是否为纯粹的<code>Object</code>数据对象</li>
+<li><strong>参数：</strong><code>(object | Object)</code>待判断对象</li>
+<li><strong>返回值：</strong>是则返回<code>true</code>，不是则返回<code>false</code></li>
+</ul>
+</li>
+<li><strong>guid()</strong><ul>
+<li><strong>类型：</strong>Function</li>
+<li><strong>描述：</strong>获取唯一标识</li>
+<li><strong>参数：</strong>无</li>
+<li><strong>返回值：</strong>唯一标识</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="http"><a href="#http" class="headerlink" title="http"></a>http</h2><ul>
+<li><strong>类型：</strong>Object</li>
+<li><strong>描述：</strong>Ajax网络请求插件，它的对象函数<code>get</code>、<code>post</code>、<code>request</code>都实现了<a href="#">Promise/A+规范</a>，在定义回调函数上，除了普通的异步回调函数传参外，还支持使用链式调用的方式来实现异步回调函数的调用，例如<code>http.get(...).done(function(result) {...}).fail(function(error){...})</code>或<code>http.get(...).then(function(result){}, function(error){...})</code>，来指定成功与失败的回调函数，如果在<code>Promise</code>对象上和回调函数传参上同时指定了回调函数，则会执行传参回调函数。成功回调函数<code>successHandler</code>将接收的参数为响应内容<code>response</code>、响应状态码<code>status</code>，响应状态内容<code>statusText</code>及自定义XHR对象<code>amXHR</code>：<ul>
+<li><strong><code>amXHR</code>对象成员函数：</strong><ul>
+<li><strong>setRequestHeader(header: String, value: String)</strong><ul>
+<li><strong>描述：</strong>设置请求头，请求执行前设置有效</li>
+<li><strong>参数：</strong><ul>
+<li><code>(header | String)</code>请求头名称</li>
+<li><code>(value | String)</code>请求头值</li>
+</ul>
+</li>
+<li><strong>返回值：</strong>无</li>
+</ul>
+</li>
+<li><strong>getResponseHeader(header: String)</strong><ul>
+<li><strong>描述：</strong>获取返回头信息，请求响应后可获取</li>
+<li><strong>参数：</strong><code>(header | String)</code>返回头名称</li>
+<li><strong>返回值：</strong>对应的返回头信息</li>
+</ul>
+</li>
+<li><strong>getAllResponseHeaders()</strong><ul>
+<li><strong>描述：</strong>获取所有返回头信息，请求响应后可获取</li>
+<li><strong>参数：</strong>无</li>
+<li><strong>返回值：</strong>所有返回头信息</li>
+</ul>
+</li>
+<li><strong>overrideMimeType(mimetype: String)</strong><ul>
+<li><strong>描述：</strong>设置mimeType，请求执行前设置有效</li>
+<li><strong>参数：</strong><code>(mimetype | String)</code>mimeType值</li>
+<li><strong>返回值：</strong>无</li>
+</ul>
+</li>
+<li><strong>abort(statusText: String)</strong><ul>
+<li><strong>描述：</strong>触发请求中断回调，在支持请求中断且请求响应前有效</li>
+<li><strong>参数：</strong><code>(statusText | String)</code>中断信息，开发者可在中断回调中的<code>statusText</code>获取到</li>
+<li><strong>返回值：</strong>无</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>对象函数：</strong></p>
+<ul>
+<li><strong>get(url: String, args?: String|Object, callback?: Function, dataType?: String)</strong><ul>
+<li>**类型：Function</li>
+<li><strong>描述：</strong>执行Ajax GET请求，它将返回一个<code>Promise</code>对象用于以链式调用的方式来实现异步回调函数</li>
+<li><strong>参数：</strong><ul>
+<li><code>(url | String)</code>请求url</li>
+<li><code>(args? | String/Object)</code>get提交的数据，此参数传入String时以<code>k1=v1&amp;k2=v2</code>的格式传入，传入<code>Object</code>时为一个数据对象</li>
+<li><code>(callback? | Function)</code>请求成功回调函数</li>
+<li><code>(dataType? | String)</code>设置响应内容的格式，可选为<code>TEXT</code>/<code>JSON</code>/<code>SCRIPT</code>/<code>JSONP</code>（可忽略大小写），默认为<code>TEXT</code></li>
+</ul>
+</li>
+<li><strong>返回值：</strong><code>Promise</code>对象</li>
+</ul>
+</li>
+<li><strong>post(url: String, args?: String|Object, callback?: Function, dataType?: String)</strong><ul>
+<li><strong>类型：</strong>Function</li>
+<li><strong>描述：</strong>执行Ajax POST请求，它将返回一个<code>Promise</code>对象用于以链式调用的方式来实现异步回调函数</li>
+<li><strong>参数：</strong><ul>
+<li><code>(url | String)</code>请求url</li>
+<li><code>(args? | String、Object)</code>post提交的数据，此参数传入String时以<code>k1=v1&amp;k2=v2</code>的格式传入，传入<code>Object</code>时为一个数据对象</li>
+<li><code>(callback? | Function)</code>请求成功回调函数，如果传入此参数则以它为回调函数执行。它将接收的参数为响应内容<code>response</code>、响应状态码<code>status</code>，响应状态内容<code>statusText</code>及自定义XHR对象<code>amXHR</code></li>
+<li><code>(dataType? | String)</code>设置响应内容的格式，可选为<code>TEXT</code>/<code>JSON</code>/<code>SCRIPT</code>/<code>JSONP</code>（可忽略大小写），默认为<code>TEXT</code></li>
+</ul>
+</li>
+<li><strong>返回值：</strong><code>Promise</code>对象</li>
+</ul>
+</li>
+<li><p><strong>request(options: Object)</strong></p>
+<ul>
+<li><strong>类型：</strong>Function</li>
+<li><strong>描述：</strong>执行Ajax请求，相比于get、post函数，它可以完成更复杂的请求操作，且此函数可直接在data属性中传入带有上传文件的form表单元素或FormData对象实现文件上传操作，当在低版本浏览器使用form表单元素上传时将自动使用隐藏<code>iframe</code>刷新的方式上传，但在支持<code>FormData</code>对象的浏览器中自动使用<code>FormData</code>对象实现文件上传</li>
+<li><p><strong>参数：</strong></p>
+<ul>
+<li><code>(options | Object)</code>可选属性详情如下：<ul>
+<li><code>(method? | String)</code>请求类型，GET或POST，大小写不敏感，默认为GET</li>
+<li><code>(url | String)</code> 请求地址</li>
+<li><code>(data? | String)</code>提交的额外参数，可选为格式为<code>k1=v1&amp;k2=v2</code>的字符串、<code>{k1:v1, k2:v2}</code>的数据对象、<code>FormData</code>对象及form表单元素对象，当data为form对象时，如果也提供了<code>src</code>参数则优先使用<code>src</code>参数当做url进行提交</li>
+<li><code>(async? | Boolean)</code>是否异步请求，默认为<code>true</code></li>
+<li><code>(cache? | Boolean)</code>请求缓存，如果为<code>false</code>，则每次都会发送请求，默认为<code>true</code></li>
+<li><code>(contentType | String)</code>请求参数编码</li>
+<li><code>(dataType? | String)</code>返回的数据类型，<code>TEXT</code>/<code>JSON</code>/<code>SCRIPT</code>/<code>JSONP</code>，大小写不敏感，默认为<code>TEXT</code></li>
+<li><code>(username? | String)</code>服务器认证用户名</li>
+<li><code>(password? | String)</code>服务器认证密码</li>
+<li><code>(mimeType? | String)</code>设置mimeType</li>
+<li><code>(headers? | Object)</code>额外的请求头信息，为一个对象</li>
+<li><code>(timeout? | Number)</code>请求超时时间</li>
+<li><code>(beforeSend? | Function)</code>请求发送前回调，函数参数为<code>amXHR</code>对象、当前配置对象<code>options</code></li>
+<li><code>(success? | Function)</code>请求成功后回调，函数参数为<code>data</code>、<code>statusText</code>、<code>amXHR</code>对象</li>
+<li><code>(error? | Function)</code>请求失败后回调，函数参数为<code>amXHR</code>对象、<code>statusText</code></li>
+<li><code>(complete? | Function)</code>请求完成后回调，函数参数为<code>amXHR</code>对象、<code>statusText</code></li>
+<li><code>(abort? | Function)</code>请求中断后回调，函数参数为<code>statusText</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>返回值：</strong><code>Promise</code>对象</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="event"><a href="#event" class="headerlink" title="event"></a>event</h2><ul>
+<li><strong>类型：</strong>Object</li>
+<li><strong>描述：</strong>自定义事件对象，支持跨模块触发事件</li>
+<li><strong>对象函数：</strong><ul>
+<li><strong>on(types: String, listener: Function, once?: Boolean)</strong><ul>
+<li><strong>类型：</strong>Function</li>
+<li><strong>描述：</strong>绑定自定义事件，参数types以空格分隔开可同时绑定一个回调函数到多个事件类型上</li>
+<li><strong>参数：</strong><ul>
+<li><code>(types | String)</code>自定义事件名称，使用空格隔开可同时绑定一个监听函数到多个事件类型上</li>
+<li><code>(listener | Function)</code>事件回调函数</li>
+<li><code>(once? | Boolean)</code>是否只能触发一次，设置为<code>true</code>时，触发一次回调后将自动解除绑定</li>
+</ul>
+</li>
+<li><strong>返回值：</strong>无</li>
+</ul>
+</li>
+<li><strong>emit(types: String)</strong><ul>
+<li><strong>类型：</strong>Function</li>
+<li><strong>描述：</strong>触发自定义事件，当一个事件有多个回调函数时触发后将顺序执行多个回调函数</li>
+<li><strong>参数：</strong><ul>
+<li><code>(types | String)</code>自定义事件名称，使用空格隔开可同时触发多个事件</li>
+</ul>
+</li>
+<li><strong>返回值：</strong>无</li>
+</ul>
+</li>
+<li><strong>remove(types: String, listener: Function)</strong><ul>
+<li><strong>类型：</strong>Function</li>
+<li><strong>描述：</strong>解绑事件，可一次解绑多个类型的事件</li>
+<li><strong>参数：</strong><ul>
+<li><code>(types | String)</code>自定义事件名称，使用空格隔开可同时解绑多个事件</li>
+<li><code>(listener | Function)</code>事件回调函数，必须与绑定事件时传入的回调函数相同才可成功解绑</li>
+</ul>
+</li>
+<li><strong>返回值：</strong>无</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+		<div id="page-nav">
+			<a class="title-color nav next" href="{{ next.path }}" :if="next.title">
+				<img src="/images/arrow.png">
+				<span class="title-color">{{ next.title }}</span>
+			</a>
+			<a class="nav prev" href="{{ prev.path }}" :if="prev.title">
+				<span class="title-color">{{ prev.title }}</span>
+				<img src="/images/arrow.png">
+			</a>
+		</div>
+	</template>
+	<script>
+		function scrollAnchor ( anchor, scrollTo ) {
+			var anchorElem = document.querySelector ( "#" + window.decodeURI ( anchor ) );
+			if ( anchorElem ) {
+				scrollTo ( anchorElem.offsetTop - 10 );
+			}
+		}
+
+		new am.Module ( {
+			init: function ( menu, checkPost ) {
+				var list = [{"tag":"内置插件","children":[{"tag":"util","children":[]},{"tag":"http","children":[]},{"tag":"event","children":[]}]}],
+					posts = [{"title":"全局对象am","path":"global-object","index":1},{"title":"模板引擎","path":"template-directive","index":2},{"title":"内置插件","path":"builtin-plugin","index":3,"current":true}];
+
+				menu.state.list = list.length > 0 ? list : [ { children: [] } ];
+				menu.state.posts = posts;
+				menu.state.categoryName = "API";
+
+				return {
+					prev: checkPost ( {
+						title: "",
+						path: ""
+					}, posts ),
+					next: checkPost ( {
+						title: "模板引擎",
+						path: "template-directive"
+					}, posts )
+				};
+			},
+			mounted: function ( scrollTo ) {
+				scrollAnchor ( this.get.target, scrollTo );
+			},
+			queryUpdated: function ( scrollTo ) {
+				scrollAnchor ( this.get.target, scrollTo );
+			}
+		} );
+	</script>
+
+	<style scoped>
+		#page-nav {
+			margin-top: 60px;
+		}
+		.nav {
+			font-size: 16px;
+			border: none;
+		}
+		.nav:hover {
+			border: none;
+		}
+		.nav img {
+			width: 18px;
+			margin: 0 5px;
+			vertical-align: middle;
+		}
+		.prev {
+			float: right;
+		}
+		.next {
+			float: left;
+		}
+		.next img {
+			transform: rotate(180deg);
+			-ms-transform: rotate(180deg);
+			-moz-transform: rotate(180deg);
+			-webkit-transform: rotate(180deg);;
+			-o-transform: rotate(180deg);
+		}
+	</style>
+</module>

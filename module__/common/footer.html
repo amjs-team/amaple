@@ -1,0 +1,55 @@
+<module>
+	<template>
+		<div class="footer-wrap{{ root ? '-other' : '' }}">
+			<a href="https://github.com/amjs-team/amaple.org/blob/master/source/_posts/{{ title }}.md" target="_blank" :if="root !== ''">教程不够清楚？点击编辑此页面</a>
+			<a href="https://github.com/amjs-team/amaple/issues">提交issue</a>
+			<a href="#">联系Amaple-Team</a>
+			<a href="https://github.com/amjs-team/amaple">贡献代码</a>
+			<div id="copyright">
+				<span>Copyright &copy; 2018-{{ new Date ().getFullYear () }} Amjs-Team</span>
+			</div>
+		</div>
+	</template>
+
+	<script>
+		new am.Module ( {
+			init: function () {
+				var self = this;
+				return {
+					root: self.param.root,
+					title: self.param.docName
+				};
+			},
+			paramUpdated: function () {
+				this.state.root = this.param.root;
+				this.state.title = this.param.docName;
+			}
+		} );
+	</script>
+
+	<style scoped>
+		.footer-wrap {
+			margin: 110px 0 50px 0;
+			text-align: center;
+		}
+		.footer-wrap-other {
+			width: 80%;
+			margin: 0 auto;
+			margin-top: 110px;
+			margin-bottom: 50px;
+			text-align: right;
+		}
+		a {
+			margin: 0 20px 0 20px;
+			color: #78808a;
+		}
+		#copyright {
+			margin-top: 10px;
+		}
+		@media screen and (max-width: 768px) {
+			.footer-wrap {
+				margin: 80px 0 50px 0;
+			}
+		}
+	</style>
+</module>

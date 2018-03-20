@@ -1,0 +1,97 @@
+<module :title="路由配置 · Amaple">
+	<template>
+		<div><h1 id="路由配置"><a href="#路由配置" class="headerlink" title="路由配置"></a>路由配置</h1><p>在<strong> 第1节《启动路由》 </strong>章节中为了能让单页应用顺利跑起来，我们提前介绍了简单的路由配置方法。我们已了解路由配置的目的是指定不同的url下对应的<strong> 模块节点（也叫做模块容器）</strong>内应该显示哪个模块的内容，它还有更多高级的用法如匹配路由通配符的配置、重定向等。</p>
+<h2 id="配置静态匹配路由"><a href="#配置静态匹配路由" class="headerlink" title="配置静态匹配路由"></a>配置静态匹配路由</h2><p>一个路由路径是具体的路径如<code>/</code>、<code>/about</code>，那么它们就属于静态路由。这里我们试着配置一个复杂点的静态匹配路由，在正常情况下，如果一个url的相对路径中存在两级目录，那么在模块结构中也有相应嵌套层数，如：<br><figure class="highlight javascript"><figcaption><span>javascript</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="comment">// 假如已知module/index.html、module/about.html中都已定义了一个不具名的嵌套模块节点</span></span><br><span class="line">am.startRouter ( &#123;</span><br><span class="line">routes: <span class="function"><span class="keyword">function</span> (<span class="params"> router </span>) </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 顶层路由路径为"/"时表示根目录，顶层模块的路由路径一般需以“/”开头</span></span><br><span class="line">        router.module ().route ( <span class="string">"/"</span>, <span class="string">"module/index"</span>, <span class="function"><span class="keyword">function</span> (<span class="params"> childRouter </span>) </span>&#123;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 子路由中目录名配置为""时表示二级目录为空，此时相对路径为“/”将会匹配到此空目录。</span></span><br><span class="line">            <span class="comment">// 配置空目录时，你也可以这样设置：childRouter.module ().defaultRoute ( "module/index/default" )</span></span><br><span class="line">            childRouter.module ().route ( <span class="string">""</span>, <span class="string">"module/index/default"</span> ).route ( <span class="string">"describe"</span>, <span class="string">"module/index/describe"</span> );</span><br><span class="line">        &#125; )</span><br><span class="line">        .route ( <span class="string">"/about"</span>, <span class="string">"module/about"</span>, <span class="function"><span class="keyword">function</span> (<span class="params"> childRouter </span>) </span>&#123;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 配置路由路径时可传入一个路径数组，这样表示访问“/about/amaplejs”或“/about/amaple”都将映射到“module/about/amaplejs”模块</span></span><br><span class="line">            childRouter.module ().route ( [ <span class="string">"amaplejs"</span>, <span class="string">"amaple"</span> ], <span class="string">"module/about/amaplejs"</span> ).route ( <span class="string">"jquery"</span>, <span class="string">"module/about/jquery"</span> );</span><br><span class="line">        &#125; );</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125; );</span><br></pre></td></tr></table></figure></p>
+<h2 id="匹配路由通配符"><a href="#匹配路由通配符" class="headerlink" title="匹配路由通配符"></a>匹配路由通配符</h2><p>实际项目中我们经常需要多个甚至所有的路由路径都匹配同一个模块，如一个文章模块，不同<code>id</code>的文章都将匹配此模块，又比如一个页面的<strong> header </strong>和<strong> footer </strong>模块总是保持原样。显然，这不可能在配置路由时使用数组列出所有的路由路径，此时我们就需要使用匹配路由通配符来解决这个问题：<br><figure class="highlight javascript"><figcaption><span>javascript</span></figcaption><table><tr><td class="code"><pre><span class="line">am.startRouter ( &#123;</span><br><span class="line">    routes: <span class="function"><span class="keyword">function</span> (<span class="params"> router </span>) </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 匹配路由通配符以“:”开头</span></span><br><span class="line">        router.module ( <span class="string">"article"</span> ).route ( <span class="string">"/article/:id"</span>, <span class="string">"module/article"</span> );</span><br><span class="line">        <span class="comment">// 这样如“/article/123”、“/article/456”、“/article/789”等都将会匹配module/article.html模块</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125; );</span><br></pre></td></tr></table></figure></p>
+<p>当url为<code>/article/123</code>时，文章模块的<code>am.Module</code>对象中将在<code>param</code>对象中创建<code>id</code>参数，你可以通过<code>id</code>的参数值获取对应的文章内容进行显示：<br><figure class="highlight javascript"><figcaption><span>javascript</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="keyword">new</span> am.Module ( &#123;</span><br><span class="line">    mounted : <span class="function"><span class="keyword">function</span> (<span class="params"> http </span>) </span>&#123;</span><br><span class="line">        <span class="keyword">var</span> _this = <span class="keyword">this</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 此时this.param.id的值为"123"，即:id通配符所匹配的字符串</span></span><br><span class="line">        <span class="comment">// 使用http预定义插件请求数据</span></span><br><span class="line">        http.get ( <span class="string">"article?id="</span> + <span class="keyword">this</span>.param.id, <span class="string">"json"</span> ).done ( <span class="function"><span class="keyword">function</span> (<span class="params"> res </span>) </span>&#123;</span><br><span class="line">            _this.state.title = res.title;</span><br><span class="line">            _this.state.content = res.content;</span><br><span class="line">        &#125; );</span><br><span class="line">    &#125;</span><br><span class="line">&#125; );</span><br></pre></td></tr></table></figure></p>
+<p>匹配路由通配符也支持在多级目录同时设置，这是会在<code>param</code>对象中创建多个对应的属性。<br><figure class="highlight javascript"><figcaption><span>javascript</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="comment">// 这是会在模块对象的param中创建date和id两个属性</span></span><br><span class="line">router.module ( <span class="string">"article"</span> ).route ( <span class="string">"/article/:date/:id"</span>, <span class="string">"module/article"</span> );</span><br></pre></td></tr></table></figure></p>
+<p>匹配路由通配符还允许你通过正则表达式限制匹配的内容。<br><figure class="highlight javascript"><figcaption><span>javascript</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="comment">// “/article/:id(\\d+)”表示id通配符只匹配一位或多位的数字</span></span><br><span class="line"><span class="comment">// 如它可匹配“/article/123”，但不能匹配“/article/a123”</span></span><br><span class="line"><span class="comment">// 正则表达式中使用“\”转义时应该成双出现</span></span><br><span class="line">router.module ( <span class="string">"article"</span> ).route ( <span class="string">"/article/:id(\\d+)"</span>, <span class="string">"module/article"</span> );</span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<p>如果url从<code>/article/123</code>跳转到<code>/article/456</code>时文章模块不会被替换，但param.id的值被更新为<code>456</code>，这时文章模块的<code>paramUpdated</code><strong> 生命周期函数 </strong>就会被调用。</p>
+</blockquote>
+<h2 id="重定向"><a href="#重定向" class="headerlink" title="重定向"></a>重定向</h2><p>通过<code>router.redirect</code>函数你可以从一个路径重定向到另一个路径，重定向的起始目录取决于当前正在匹配的路由目录：<br><figure class="highlight javascript"><figcaption><span>javascript</span></figcaption><table><tr><td class="code"><pre><span class="line">am.startRouter ( &#123;</span><br><span class="line">    routes: <span class="function"><span class="keyword">function</span> (<span class="params"> router </span>) </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 在顶层目录中将“/”重定向到“/index”</span></span><br><span class="line">        router.redirect ( <span class="string">"/"</span>, <span class="string">"/index"</span> );</span><br><span class="line">        <span class="comment">// 重定向的优先级高于匹配模块，所以router.redirect函数可在route函数前面或后面调用，都会优先重定向路径</span></span><br><span class="line"></span><br><span class="line">        router.module ().route ( <span class="string">"/index"</span>, <span class="string">"module/index"</span>, <span class="function"><span class="keyword">function</span> (<span class="params"> childRouter </span>) </span>&#123;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 重定向的匹配路径与跳转路径也可以设置通配符</span></span><br><span class="line">            childRouter.redirect ( <span class="string">"introduce/:title"</span>, <span class="string">"describe/:title"</span> );</span><br><span class="line">            <span class="comment">// 第二层的重定向起始目录为“/index/”之后的路径</span></span><br><span class="line">            <span class="comment">// 如“/index/introduce/i_am_a_title”的“introduce/i_am_a_title”部分将会被这层的重定向匹配，并重定向到“describe/i_am_a_title”</span></span><br><span class="line"></span><br><span class="line">            childRouter.module ().route ( <span class="string">""</span>, <span class="string">"module/index/default"</span> ).route ( <span class="string">"describe/:title"</span>, <span class="string">"module/index/describe"</span> );</span><br><span class="line">        &#125; );</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125; );</span><br></pre></td></tr></table></figure></p>
+<h2 id="强制重新渲染一个模块"><a href="#强制重新渲染一个模块" class="headerlink" title="强制重新渲染一个模块"></a>强制重新渲染一个模块</h2><p>我们已了解有时候更新模块时部分模块不会被替换，这些模块不会被卸载重新渲染，但你有时可能希望它们回到初始化状态，这时<code>router.forcedRender</code>函数就可以帮上忙了，它能强制让一个本来不需卸载的模块卸载并重新渲染：<br><figure class="highlight javascript"><figcaption><span>javascript</span></figcaption><table><tr><td class="code"><pre><span class="line">am.startRouter ( &#123;</span><br><span class="line">    routes: <span class="function"><span class="keyword">function</span> (<span class="params"> router </span>) </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 为“article”模块节点配置时直接调用forcedRender函数，该模块节点内渲染的模块都会强制重新渲染</span></span><br><span class="line">        router.module ( <span class="string">"article"</span> ).forcedRender ().route ( <span class="string">"/article/:id"</span>, <span class="string">"module/article"</span> );</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125; );</span><br></pre></td></tr></table></figure></p>
+<h2 id="设置404错误路径"><a href="#设置404错误路径" class="headerlink" title="设置404错误路径"></a>设置404错误路径</h2><p>当加载一个或多个模块时，任意一个模块文件未找到时将会触发<strong> 404错误 </strong>路径的模块匹配，配置<strong> 404错误 </strong>路径如下：<br><figure class="highlight javascript"><figcaption><span>javascript</span></figcaption><table><tr><td class="code"><pre><span class="line">am.startRouter ( &#123;</span><br><span class="line">    routes: <span class="function"><span class="keyword">function</span> (<span class="params"> router </span>) </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 调用router.error404函数设置404路径，此函数只能在最外层路由对象调用</span></span><br><span class="line">        <span class="comment">// 错误路径建议以“/”开始</span></span><br><span class="line">        router.error404 ( <span class="string">"/404"</span> );</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="comment">// 为404路径配置渲染模块</span></span><br><span class="line">        router.module ( <span class="string">"article"</span> ).route ( <span class="string">"/404"</span>, <span class="string">"module/404"</span> );</span><br><span class="line">        <span class="comment">// ...</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125; );</span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<p><strong> 恭喜你，已学到最后一节了，快去实际项目中练习使用吧 </strong></p>
+</blockquote>
+</div>
+		<div id="page-nav">
+			<a class="title-color nav next" href="{{ next.path }}" :if="next.title">
+				<img src="/images/arrow.png">
+				<span class="title-color">{{ next.title }}</span>
+			</a>
+			<a class="nav prev" href="{{ prev.path }}" :if="prev.title">
+				<span class="title-color">{{ prev.title }}</span>
+				<img src="/images/arrow.png">
+			</a>
+		</div>
+	</template>
+	<script>
+		function scrollAnchor ( anchor, scrollTo ) {
+			var anchorElem = document.querySelector ( "#" + window.decodeURI ( anchor ) );
+			if ( anchorElem ) {
+				scrollTo ( anchorElem.offsetTop - 10 );
+			}
+		}
+
+		new am.Module ( {
+			init: function ( menu, checkPost ) {
+				var list = [{"tag":"路由配置","children":[{"tag":"配置静态匹配路由","children":[]},{"tag":"匹配路由通配符","children":[]},{"tag":"重定向","children":[]},{"tag":"强制重新渲染一个模块","children":[]},{"tag":"设置404错误路径","children":[]}]}],
+					posts = [{"title":"开始","path":"first-step","index":1},{"title":"启动路由","path":"start-router","index":2},{"title":"模块","path":"module","index":3},{"title":"模板指令与状态数据(state)","path":"directive-and-state","index":4},{"title":"组件","path":"component","index":5},{"title":"插件","path":"plugin","index":6},{"title":"路由配置","path":"config-router","index":7,"current":true}];
+
+				menu.state.list = list.length > 0 ? list : [ { children: [] } ];
+				menu.state.posts = posts;
+				menu.state.categoryName = "基础";
+
+				return {
+					prev: checkPost ( {
+						title: "全局对象am",
+						path: "global-object"
+					}, posts ),
+					next: checkPost ( {
+						title: "插件",
+						path: "plugin"
+					}, posts )
+				};
+			},
+			mounted: function ( scrollTo ) {
+				scrollAnchor ( this.get.target, scrollTo );
+			},
+			queryUpdated: function ( scrollTo ) {
+				scrollAnchor ( this.get.target, scrollTo );
+			}
+		} );
+	</script>
+
+	<style scoped>
+		#page-nav {
+			margin-top: 60px;
+		}
+		.nav {
+			font-size: 16px;
+			border: none;
+		}
+		.nav:hover {
+			border: none;
+		}
+		.nav img {
+			width: 18px;
+			margin: 0 5px;
+			vertical-align: middle;
+		}
+		.prev {
+			float: right;
+		}
+		.next {
+			float: left;
+		}
+		.next img {
+			transform: rotate(180deg);
+			-ms-transform: rotate(180deg);
+			-moz-transform: rotate(180deg);
+			-webkit-transform: rotate(180deg);;
+			-o-transform: rotate(180deg);
+		}
+	</style>
+</module>

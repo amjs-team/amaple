@@ -1,0 +1,143 @@
+<module :title="模板引擎 · Amaple">
+	<template>
+		<div><h1 id="模板引擎"><a href="#模板引擎" class="headerlink" title="模板引擎"></a>模板引擎</h1><ul>
+<li><strong>描述：</strong>模板引擎通过遍历查找视图模板上的指令及<code>{ { ... } }</code>表达式的方式来解析视图模板，并挂载动态数据。除<code>{ { } }</code>表达式外，其他的所有指令均在dom元素的属性上使用，作用范围为该dom元素上，而<code>{ { } }</code>表达式可在属性值和html标签之间使用。开发者只需要掌握以下模板指令及<code>{ { } }</code>表达式的使用即可，模板指令分为动态指令和静态指令两种：<ul>
+<li><strong>动态指令：</strong>指令的值会当做JavaScript代码片段来执行（取值范围为当前<code>Module</code>对象或<code>Component</code>对象的ViewModel），并为使用了动态指令的dom元素创建视图依赖绑定，当依赖的状态（即ViewModel对象内的值）改变时对应绑定的dom元素也将做出同步改变。</li>
+<li><strong>静态指令：</strong>指令的值即为一个字符串，不会当做JavaScript代码片段执行，也不会为对应的dom元素创建视图依赖绑定。</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>以下为模板引擎可使用的所有指令</p>
+</blockquote>
+<h2 id="for"><a href="#for" class="headerlink" title=":for"></a>:for</h2><ul>
+<li><strong>类型：</strong>Dynamic</li>
+<li><strong>描述：</strong>遍历状态值（即ViewModel对象内的值），根据指定的状态值循环输出目标dom元素，如果目标dom元素为template则循环输出目标元素的子元素集。特定语法为<code>item in vm_value</code>或<code>(item, index) in vm_value</code>，此时在目标元素及子孙元素上可使用<code>item</code>、<code>index</code>（需使用第二种表达式指定<code>index</code>）两个局部状态，其中<code>item</code>、<code>index</code>、<code>vm_value</code>的变量名是可以随意指定的，且<code>vm_value</code>的值支持<code>Array</code>、<code>Number</code>、<code>String</code>三种类型：<ul>
+<li><strong>Array：</strong>遍历时<code>item</code>的值为此数组每项的值，<code>index</code>为遍历的下标</li>
+<li><strong>Number：</strong>遍历时<code>item</code>的值与<code>index</code>相同，都是遍历的下标</li>
+<li><strong>String：</strong>遍历时<code>item</code>的值为此字符串的单个字符，<code>index</code>为遍历的下标</li>
+</ul>
+</li>
+</ul>
+<h2 id="if"><a href="#if" class="headerlink" title=":if"></a>:if</h2><ul>
+<li><strong>类型：</strong>Dynamic</li>
+<li><strong>描述：</strong>if条件判断，其属性值作为JavaScript代码片段执行后得出的结果为<code>false</code>、<code>&quot;&quot;</code>、<code>undefined</code>、<code>null</code>、<code>0</code>时隐藏目标dom元素，其他结果则显示目标dom元素，当它用于template元素时则会显示或隐藏目标template元素的子元素。它与我们熟知的<code>if</code>、<code>else if</code>及<code>else</code>的用法相同，开发者也可以配合<code>:else-if</code>与<code>:else</code>一起使用。</li>
+</ul>
+<h2 id="else-if"><a href="#else-if" class="headerlink" title=":else-if"></a>:else-if</h2><ul>
+<li><strong>类型：</strong>Dynamic</li>
+<li><strong>描述：</strong><code>else if</code>条件判断，它的上一个兄弟元素必须使用了<code>:if</code>或<code>:else-if</code>指令</li>
+</ul>
+<h2 id="else"><a href="#else" class="headerlink" title=":else"></a>:else</h2><ul>
+<li><strong>类型：</strong>Dynamic</li>
+<li><strong>描述：</strong><code>else</code>条件判断，它的上一个兄弟元素必须使用了<code>:if</code>或<code>:else-if</code>指令，且不能有指令值</li>
+</ul>
+<h2 id="on"><a href="#on" class="headerlink" title=":on"></a>:on</h2><ul>
+<li><strong>类型：</strong>Dynamic</li>
+<li><strong>描述：</strong>事件绑定指令，所有绑定事件都可以使用指令<code>:on+事件名称</code>来进行绑定，如<code>:onclick</code>表示为目标dom元素绑定点击事件。它的值可分为n种形式：<ul>
+<li>直接绑定状态函数（即ViewModel中的函数）,如<code>:onclick=&quot;clickHandler&quot;</code>，这个状态函数的第一个参数总是<code>event</code>对象，如需要接收额外的参数可这样写<code>:onclick=&quot;clickHandler(arg1[, arg2][, arg3][...])&quot;</code>，<code>arg1</code>、<code>arg2</code>…可以为任何值，当与<code>:for</code>指令一起使用时<code>arg1</code>、<code>arg2</code>还可以传入局部变量。当在状态函数中接收额外的参数时总是从第二个开始接收，因为第一个参数总是<code>event</code>对象。</li>
+<li>JavaScript代码片段（取值范围为当前<code>Module</code>对象或<code>Component</code>对象的ViewModel），触发事件时直接执行此代码片段</li>
+</ul>
+</li>
+</ul>
+<h2 id="model"><a href="#model" class="headerlink" title=":model"></a>:model</h2><ul>
+<li><strong>类型：</strong>Dynamic</li>
+<li><strong>描述：</strong>表单dom元素双向绑定指令(<a href="#">双向绑定？</a>)，它只能用于<code>input</code>、<code>select</code>、<code>textarea</code>等所有表单dom元素。</li>
+<li><strong>特殊情况：</strong>当表单dom元素为<code>checkbox</code>时，它的绑定状态需设置为数组，数组的值为一个或多个已勾选的<code>checkbox</code>的value值</li>
+</ul>
+<h2 id="插值表达式"><a href="#插值表达式" class="headerlink" title="插值表达式"></a>插值表达式</h2><ul>
+<li><strong>类型：</strong>Dynamic</li>
+<li><strong>描述：</strong>双花括号内只能为一个状态变量名（即ViewModel中变量名），它可以在dom元素的任何属性以及html标签之间，以单个表达式、多个表达式及表达式加普通字符混合来使用，如<code>id=&quot;{ { id } }&quot;</code>、<code>id=&quot;{ { id1 } }11_{ { id2 } }22&quot;</code>。被引用的状态值将调用<code>toString</code>方法转换成字符串后再输出到对应的位置。</li>
+<li><strong>特殊情况：</strong><ul>
+<li>**当插值表达式用与<code>class</code>属性，且值为数组时，在挂载数据时会将此数组自动转换为以一个空格隔开的值</li>
+<li>**当插值表达式用于<code>style</code>属性，且值为<code>Object</code>对象时，在挂载数据时会将此Object对象自动转换为元素内联<code>style</code>所支持的格式。此<code>Object</code>对象内的css属性名以驼峰式定义，属性值如<code>fontSize</code>为数字时，在挂载时值的末尾将自动补充<code>px</code>单位</li>
+</ul>
+</li>
+</ul>
+<h2 id="ref"><a href="#ref" class="headerlink" title=":ref"></a>:ref</h2><ul>
+<li><strong>类型：</strong>Static</li>
+<li><strong>描述：</strong>指定需要被引用的dom元素或组件，通过<code>Module</code>对象的<code>refs</code>成员函数获取被引用的元素。当在普通dom元素上使用时，通过<code>refs</code>函数可获取此dom元素，如需聚焦一个表单元素时可使用这个方式来获取需聚焦的表单元素；当在组件元素上使用时，通过<code>refs</code>函数可获取此组件的行为对象(<a href="#">组件行为对象？</a>)，从而对此组件的行为进行操作。它不可用于<code>&lt;template&gt;</code>元素上</li>
+</ul>
+<h2 id="module"><a href="#module" class="headerlink" title=":module"></a>:module</h2><ul>
+<li><strong>类型：</strong>Static</li>
+<li><strong>描述：</strong>指定一个dom元素为模块元素</li>
+</ul>
+</div>
+		<div id="page-nav">
+			<a class="title-color nav next" href="{{ next.path }}" :if="next.title">
+				<img src="/images/arrow.png">
+				<span class="title-color">{{ next.title }}</span>
+			</a>
+			<a class="nav prev" href="{{ prev.path }}" :if="prev.title">
+				<span class="title-color">{{ prev.title }}</span>
+				<img src="/images/arrow.png">
+			</a>
+		</div>
+	</template>
+	<script>
+		function scrollAnchor ( anchor, scrollTo ) {
+			var anchorElem = document.querySelector ( "#" + window.decodeURI ( anchor ) );
+			if ( anchorElem ) {
+				scrollTo ( anchorElem.offsetTop - 10 );
+			}
+		}
+
+		new am.Module ( {
+			init: function ( menu, checkPost ) {
+				var list = [{"tag":"模板引擎","children":[{"tag":":for","children":[]},{"tag":":if","children":[]},{"tag":":else-if","children":[]},{"tag":":else","children":[]},{"tag":":on","children":[]},{"tag":":model","children":[]},{"tag":"插值表达式","children":[]},{"tag":":ref","children":[]},{"tag":":module","children":[]}]}],
+					posts = [{"title":"全局对象am","path":"global-object","index":1},{"title":"模板引擎","path":"template-directive","index":2,"current":true},{"title":"内置插件","path":"builtin-plugin","index":3}];
+
+				menu.state.list = list.length > 0 ? list : [ { children: [] } ];
+				menu.state.posts = posts;
+				menu.state.categoryName = "API";
+
+				return {
+					prev: checkPost ( {
+						title: "内置插件",
+						path: "builtin-plugin"
+					}, posts ),
+					next: checkPost ( {
+						title: "全局对象am",
+						path: "global-object"
+					}, posts )
+				};
+			},
+			mounted: function ( scrollTo ) {
+				scrollAnchor ( this.get.target, scrollTo );
+			},
+			queryUpdated: function ( scrollTo ) {
+				scrollAnchor ( this.get.target, scrollTo );
+			}
+		} );
+	</script>
+
+	<style scoped>
+		#page-nav {
+			margin-top: 60px;
+		}
+		.nav {
+			font-size: 16px;
+			border: none;
+		}
+		.nav:hover {
+			border: none;
+		}
+		.nav img {
+			width: 18px;
+			margin: 0 5px;
+			vertical-align: middle;
+		}
+		.prev {
+			float: right;
+		}
+		.next {
+			float: left;
+		}
+		.next img {
+			transform: rotate(180deg);
+			-ms-transform: rotate(180deg);
+			-moz-transform: rotate(180deg);
+			-webkit-transform: rotate(180deg);;
+			-o-transform: rotate(180deg);
+		}
+	</style>
+</module>

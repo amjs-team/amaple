@@ -1,0 +1,115 @@
+<module :title="开始 · Amaple">
+	<template>
+		<div><h1 id="开始"><a href="#开始" class="headerlink" title="开始"></a><strong>开始</strong></h1><p><strong>Amaple</strong> (<a href="https://github.com/amjs-team/amaple" target="_blank" rel="noopener">点此查看Github仓库</a>)是专为单页web应用而设计的基于页面模块化的JavaScript框架，它可使开发者快速开发单页web应用。 <a href="https://github.com/amjs-team/amaple" target="_blank" rel="noopener"><strong>Amaple</strong></a> 其实由<strong> “A maple”(一片枫叶) </strong>组合而成，它就像Web前端大森林中的一片枝叶，在享受这片森林呵护的同时也为森林增添一丝色彩，因此， <a href="https://github.com/amjs-team/amaple" target="_blank" rel="noopener"><strong>Amaple</strong></a> 选择了拥抱这片大森林，它的插件功能除了可使用自身规范的插件外，还支持所有 <a href="https://github.com/amdjs/amdjs-api/wiki/AMD-%28%E4%B8%AD%E6%96%87%E7%89%88%29" target="_blank" rel="noopener"><strong>AMD</strong>(点击了解详情)</a>和 <a href="https://segmentfault.com/a/1190000003985390" target="_blank" rel="noopener"><strong>IIFE</strong>(点击了解详情)</a> 规范的第三方js库，在<code>rollup</code>、<code>webpack</code>、<code>browserify</code>等模块打包工具流行的今天，这也意味着<code>lodash</code>、<code>socket.io</code>等几乎所有的第三方js库都可以与 <a href="https://github.com/amjs-team/amaple" target="_blank" rel="noopener"><strong>Amaple</strong></a> 协同运作，同时也支持旧式的IIFE格式js库。此外， <a href="https://github.com/amjs-team/amaple" target="_blank" rel="noopener"><strong>Amaple</strong></a> 还拥有 <strong>高级虚拟DOM功能、模块化、MVVM及原生Web化设计</strong> 等特性，即使初级前端开发也能顺利掌握和使用，这也充分体现了 <a href="https://github.com/amjs-team/amaple" target="_blank" rel="noopener"><strong>Amaple</strong></a> <strong>“体验优先” </strong> 的设计理念。</p>
+<h2 id="Amaple特性简介"><a href="#Amaple特性简介" class="headerlink" title="Amaple特性简介"></a><strong>Amaple特性简介</strong></h2><ul>
+<li><strong>【开放式插件】</strong>支持所有AMD和IIFE规范的第三方js库作为 <a href="https://github.com/amjs-team/amaple" target="_blank" rel="noopener"><strong>Amaple</strong></a> 的插件。</li>
+<li><strong>【高级虚拟DOM】</strong>与其他带有虚拟DOM功能的js库相比， <a href="https://github.com/amjs-team/amaple" target="_blank" rel="noopener"><strong>Amaple</strong></a> 实现了性能更好的虚拟DOM，它不再需要开发者提供可识别的<code>key</code>标志，也能自动判断可复用的DOM元素，并在重新排序的过程中自动计算出最少的移动步骤进行移动。</li>
+<li><strong>【模块化】</strong><ul>
+<li><strong>【页面模块化】</strong>单页Web应用的特点之一是将页面划分为多个模块，URL跳转时更新模块的内容。在 <a href="https://github.com/amjs-team/amaple" target="_blank" rel="noopener"><strong>Amaple</strong></a> 中存在 <strong>模块(Module)</strong> 和<strong> 组件(Component)</strong> 两种模块化单位，模块是单页Web应用更新的最小单位，它管控URL跳转时的内容替换、参数更新等一系列变化，而且允许开发者定义任意层级的任意多个模块及子模块；而组件的定位是拥有特定功能的封装块，它有自己的独立视图、状态数据和组件行为。与其他单页库相比，它们的职责更清晰，也易于理解。</li>
+<li><strong>【编写模块化】</strong> <a href="https://github.com/amjs-team/amaple" target="_blank" rel="noopener"><strong>Amaple</strong></a> 内嵌了代码模块化功能，它允许将模块文件、组件文件和插件文件单独编写并分类保存，这让不熟悉<code>nodejs</code>构建工具的开发者也能编写模块化的js代码，当然对于熟悉<code>nodejs</code>构建工具的中高端开发者，你也完全可以使用<code>webpack</code>、<code>babel</code>、<code>scss/less</code>等工具辅助开发。</li>
+</ul>
+</li>
+<li><strong>【MVVM】</strong> <a href="https://github.com/amjs-team/amaple" target="_blank" rel="noopener"><strong>Amaple</strong></a> 提供了更简洁的动态模板引擎，使开发者更加专注于对数据的处理。</li>
+<li><strong>【原生Web化设计】</strong> <a href="https://github.com/amjs-team/amaple" target="_blank" rel="noopener"><strong>Amaple</strong></a> 沿用了许多原生Web开发的标准，这样可以最大化符合具有一定基础的开发者的认知范围，如Amaple依旧使用<code>onclick</code>属性绑定点击事件，使用<code>href</code>属性进行跳转页面，使用<code>&lt;form&gt;</code>设置<code>action</code>属性提交表单，只是它们是浏览器无刷新的跳转，甚至可以创建像<strong> ShadowDOM </strong>那样的组件，在组件内使用特定子元素，看起来就像<code>&lt;video&gt;</code>和<code>&lt;source&gt;</code>、<code>&lt;select&gt;</code>和<code>&lt;option&gt;</code>的关系一样。</li>
+</ul>
+<h2 id="Amaple使用前置要求"><a href="#Amaple使用前置要求" class="headerlink" title="Amaple使用前置要求"></a><strong>Amaple使用前置要求</strong></h2><p>此框架的使用者可不需了解nodejs构建工具，但必须掌握html、js和css的基础知识。</p>
+<h2 id="Amaple技术伙伴招募"><a href="#Amaple技术伙伴招募" class="headerlink" title="Amaple技术伙伴招募"></a><strong>Amaple技术伙伴招募</strong></h2><p>如果你是一位热爱并具有丰富经验的Web前端工程师，并希望创造一款优秀的JavaScript框架或库，请加入<strong><em>Amjs Team</em></strong>，<a href="https://www.jianshu.com/p/fa7aa3a0a650" target="_blank" rel="noopener"><strong><em>点此查看伙伴招募详情</em></strong></a>。</p>
+<h2 id="开发模式介绍"><a href="#开发模式介绍" class="headerlink" title="开发模式介绍"></a><strong>开发模式介绍</strong></h2><h3 id="普通开发模式"><a href="#普通开发模式" class="headerlink" title="# 普通开发模式"></a># 普通开发模式</h3><p>普通开发模式适合对Nodejs构建工具不熟悉的初级开发者使用， <a href="https://github.com/amjs-team/amaple" target="_blank" rel="noopener"><strong>Amaple</strong></a> 自身的代码模块化管理将会使你摆脱代码缠绕的困扰。此外，Web单页应用需使用<strong> http </strong>协议进行模块的请求与跳转，为解决这个问题，我们特地提供了可快速启动一个本地Web服务器的，具有一定文件结构的 <a href="https://github.com/amjs-team/amaple" target="_blank" rel="noopener"><strong>Amaple</strong></a> 开发包，开发者只需下载并按以下操作即可完成启动。</p>
+<ul>
+<li>[ 1 ]. 本地Web服务器依赖<strong> Nodejs </strong>，如没有安装请<a href="http://nodejs.cn/download/" target="_blank" rel="noopener"><strong>【点此下载Nodejs】</strong></a>并安装。</li>
+<li>[ 2 ]. 下载 <a href="https://github.com/amjs-team/amaple" target="_blank" rel="noopener"><strong>Amaple</strong></a> 开发包<strong><a href="https://github.com/amjs-team/amaple-dev-pkg/archive/1.4.2.zip" target="_blank" rel="noopener">【点此下载Amaple开发包】</a></strong>。</li>
+<li>[ 3 ]. 解压并进入到开发包中，直接执行启动程序即可自动启动本地Web服务器（windows系统运行<strong> start_win.bat </strong>，macOS系统运行<strong> start_macOS </strong>，程序会自动安装所需依赖包并启动一个本地Web服务器）。</li>
+<li>[ 4 ]. 此时就可以在开发包的<code>src</code>目录下进行开发，将对应类型的代码文件保存到对应文件夹。<blockquote>
+<p>1、开发者每次打开的启动程序来启动本地Web服务器，等到开发完成后直接将<code>src</code>目录下的代码拷贝到生产环境即可；<br>2、<strong>windows 8以上用户</strong> 运行启动程序时请右键 <strong>以管理员身份运行</strong> 打开，否则可能会导致环境变量错误的问题；<br>3、开发包并不是必须的，如果开发者使用带有本地Web服务器的IDE进行开发，也可自行搭建项目，此时可通过 <strong><a href="https://unpkg.com/amaple" target="_blank" rel="noopener">https://unpkg.com/amaple</a></strong> 获取最新版本的Amaple.js文件。</p>
+</blockquote>
+</li>
+</ul>
+<h3 id="Nodejs构建开发模式"><a href="#Nodejs构建开发模式" class="headerlink" title="# Nodejs构建开发模式"></a># Nodejs构建开发模式</h3><p>对于熟悉Nodejs构建工具的中高端开发者，可使用npm安装 <a href="https://github.com/amjs-team/amaple" target="_blank" rel="noopener"><strong>Amaple</strong></a> 。<br><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">npm install amaple --save</span><br></pre></td></tr></table></figure></p>
+<p>Nodejs环境下的构建教程即将推出，敬请期待…</p>
+<h2 id="Amaple技术交流"><a href="#Amaple技术交流" class="headerlink" title="Amaple技术交流"></a><strong>Amaple技术交流</strong></h2><p>如果你对 <strong>Amaple</strong> 有任何评价、建议或问题，可通过以下方式提交，或在此文章中直接评论，我们将会在最快的速度进行回复。</p>
+<ul>
+<li><a href="https://github.com/amjs-team/amaple/issues" target="_blank" rel="noopener">提交一个issue</a></li>
+<li>Amaple官方QQ群：674036951</li>
+<li>Email：<a href="mailto:jou@amaple.org">jou@amaple.org</a></li>
+</ul>
+<h2 id="准备好了吗？开始学习Amaple"><a href="#准备好了吗？开始学习Amaple" class="headerlink" title="准备好了吗？开始学习Amaple"></a><strong>准备好了吗？开始学习Amaple</strong></h2><p><strong>阅读教程时需特别关注代码中的注释文字，它一般是这个功能的具体使用方法。</strong></p>
+</div>
+		<div id="page-nav">
+			<a class="title-color nav next" href="{{ next.path }}" :if="next.title">
+				<img src="/images/arrow.png">
+				<span class="title-color">{{ next.title }}</span>
+			</a>
+			<a class="nav prev" href="{{ prev.path }}" :if="prev.title">
+				<span class="title-color">{{ prev.title }}</span>
+				<img src="/images/arrow.png">
+			</a>
+		</div>
+	</template>
+	<script>
+		function scrollAnchor ( anchor, scrollTo ) {
+			var anchorElem = document.querySelector ( "#" + window.decodeURI ( anchor ) );
+			if ( anchorElem ) {
+				scrollTo ( anchorElem.offsetTop - 10 );
+			}
+		}
+
+		new am.Module ( {
+			init: function ( menu, checkPost ) {
+				var list = [{"tag":"开始","children":[{"tag":"Amaple特性简介","children":[]},{"tag":"Amaple使用前置要求","children":[]},{"tag":"Amaple技术伙伴招募","children":[]},{"tag":"开发模式介绍","children":[{"tag":"# 普通开发模式","children":[]},{"tag":"# Nodejs构建开发模式","children":[]}]},{"tag":"Amaple技术交流","children":[]},{"tag":"准备好了吗？开始学习Amaple","children":[]}]}],
+					posts = [{"title":"开始","path":"first-step","index":1,"current":true},{"title":"启动路由","path":"start-router","index":2},{"title":"模块","path":"module","index":3},{"title":"模板指令与状态数据(state)","path":"directive-and-state","index":4},{"title":"组件","path":"component","index":5},{"title":"插件","path":"plugin","index":6},{"title":"路由配置","path":"config-router","index":7}];
+
+				menu.state.list = list.length > 0 ? list : [ { children: [] } ];
+				menu.state.posts = posts;
+				menu.state.categoryName = "基础";
+
+				return {
+					prev: checkPost ( {
+						title: "启动路由",
+						path: "start-router"
+					}, posts ),
+					next: checkPost ( {
+						title: "",
+						path: ""
+					}, posts )
+				};
+			},
+			mounted: function ( scrollTo ) {
+				scrollAnchor ( this.get.target, scrollTo );
+			},
+			queryUpdated: function ( scrollTo ) {
+				scrollAnchor ( this.get.target, scrollTo );
+			}
+		} );
+	</script>
+
+	<style scoped>
+		#page-nav {
+			margin-top: 60px;
+		}
+		.nav {
+			font-size: 16px;
+			border: none;
+		}
+		.nav:hover {
+			border: none;
+		}
+		.nav img {
+			width: 18px;
+			margin: 0 5px;
+			vertical-align: middle;
+		}
+		.prev {
+			float: right;
+		}
+		.next {
+			float: left;
+		}
+		.next img {
+			transform: rotate(180deg);
+			-ms-transform: rotate(180deg);
+			-moz-transform: rotate(180deg);
+			-webkit-transform: rotate(180deg);;
+			-o-transform: rotate(180deg);
+		}
+	</style>
+</module>

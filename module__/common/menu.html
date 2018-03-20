@@ -1,0 +1,89 @@
+<module>
+	<template>
+		<div class="nav">
+			<h2 class="title-color title-size">当前目录</h2>
+			<ol class="current-nav">
+				<li :for="item in list [ 0 ].children">
+					<a href="?target={{ transformLink ( item.tag ) }}">
+						<span>{{ item.tag }}</span>
+					</a>
+					<ol :if="item.children.length > 0" class="child-nav">
+						<li :for="childItem in item.children">
+							<a href="?target={{ transformLink ( childItem.tag ) }}">
+								<span>{{ childItem.tag }}</span>
+							</a>
+						</li>
+					</ol>
+				</li>
+			</ol>
+		</div>
+		<div class="nav">
+			<h2 class="title-color title-size">{{ categoryName }}</h2>
+			<ol class="current-nav">
+				<li :for="post in posts">
+					<a href="{{ post.path }}">
+						<span :if="post.current" class="current-post">{{ post.title }}</span>
+						<span :else>{{ post.title }}</span>
+					</a>
+				</li>
+			</ol>
+		</div>
+	</template>
+
+	<script>
+		new am.Module ( {
+			init: function () {
+				return {
+					list: [
+						{ children: [] }
+					],
+					categoryName: "",
+					posts: [],
+					transformLink: function ( link ) {
+						link = link.replace ( /[#\s]/g, "" ).replace ( /[&;:().]/g, "-" );
+						link = link.substr ( 0, 1 ) === "-" ? link.substr ( 1 ) : link;
+						link = link.substr ( -1, 1 ) === "-" ? link.substr ( 0, link.length - 1 ) : link;
+
+						return link;
+					}
+				};
+			},
+			mounted: function ( menu ) {
+				menu.state = this.state;
+			}
+		} );
+	</script>
+
+	<style scoped>
+		.nav {
+			margin: 40px 0 90px 0;
+		}
+		.current-nav li {
+			font-size: 16px;
+			margin: 6px 0;
+		}
+		.child-nav {
+			margin-left: 6px;
+		}
+		.child-nav li {
+			margin: 0;
+			font-size: 14px;
+			color: #959fad;
+		}
+		.child-nav li span {
+			color: #959fad;
+		}
+		.current-post {
+			color: #ffb949;
+		}
+		span {
+			transition: color .3s;
+			-moz-transition: color .3s;
+			-webkit-transition: color .3s;
+			-o-transition: color .3s;
+		}
+		a span:hover {
+			color: #ffb949;
+		}
+	</style>
+</module>

@@ -1,0 +1,40 @@
+<module>
+	<template>
+		<div class="doc-wrap">
+			<div class="menu" :module="menu" style="{{ height }}"></div>
+			<div class="post" :module></div>
+		</div>
+	</template>
+
+	<script>
+		new am.Module ( {
+			init: function () {
+				return {
+					height: {
+						height: ( document.documentElement.clientHeight || document.body.clientHeight ) - 95
+					}
+				};
+			}
+		} );
+	</script>
+
+	<style scoped>
+		.doc-wrap {
+			width: 80%;
+			margin: 0 auto;
+			margin-top: 95px;
+			overflow: hidden;
+			position: relative;
+		}
+		.menu {
+			width: 20%;
+			position: fixed;
+			overflow-y: scroll;
+		}
+		.post {
+			width: 70%;
+			float: right;
+			margin-top: 35px;
+		}
+	</style>
+</module>

@@ -1,0 +1,124 @@
+<module :title="模块 · Amaple">
+	<template>
+		<div><h1 id="模块"><a href="#模块" class="headerlink" title="模块"></a>模块</h1><p>正如它的名字，模块用于amaplejs单页应用的页面分割，所有的跳转更新和代码编写都是以模块为单位的。</p>
+<h2 id="定义一个模块"><a href="#定义一个模块" class="headerlink" title="定义一个模块"></a>定义一个模块</h2><p>一个模块由<code>&lt;module&gt;</code>标签对包含，内部分为template模板、JavaScript和css三部分，像这样：</p>
+<figure class="highlight html"><figcaption><span>html</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">module</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">template</span>&gt;</span></span><br><span class="line">        <span class="comment">&lt;!-- 编写模块的html模板 --&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">span</span>&gt;</span>hello amaplejs,page index<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">a</span> <span class="attr">href</span>=<span class="string">"/about?from=index"</span>&gt;</span>direct to page about<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">template</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="undefined"></span></span><br><span class="line"><span class="undefined">     </span></span><br><span class="line"><span class="javascript">        <span class="comment">// 编写模块JavaScript代码</span></span></span><br><span class="line"><span class="javascript">        <span class="comment">// 在一个模块的JavaScript中，am为自动注入对象，你不需引入它，即使是在webpack环境下</span></span></span><br><span class="line"><span class="javascript">        <span class="comment">// 这里通常使用new am.Module()创建一个amaple模块对象，它将会在构造函数中处理模板内容和模板样式等一系列的初始化工作</span></span></span><br><span class="line"><span class="javascript">        <span class="keyword">new</span> am.Module ();</span></span><br><span class="line"><span class="undefined">    </span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">style</span> <span class="attr">scoped</span>&gt;</span><span class="undefined"></span></span><br><span class="line"><span class="undefined">        /* 编写模块样式 */</span></span><br><span class="line"><span class="undefined">        span &#123; font-size: 20px; &#125;</span></span><br><span class="line"><span class="undefined">    </span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">module</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<h2 id="设置模块局部样式"><a href="#设置模块局部样式" class="headerlink" title="设置模块局部样式"></a>设置模块局部样式</h2><p>大多数情况下我们可能更希望让一个模块中的css样式只作用当前的html模板，这当然我们也有所考虑，只需在<code>&lt;style&gt;</code>中添加<code>scoped</code>属性就会自动限制它的作用范围了，就是如此简单。但如果<code>&lt;style&gt;</code>不带<code>scoped</code>属性时将不会只作用到当前的html模板内。</p>
+<h2 id="模块生命周期"><a href="#模块生命周期" class="headerlink" title="模块生命周期"></a>模块生命周期</h2><p>当我们在编写一个模块的JavaScript时通常使用<code>am.Module</code>类创建一个amaple模块对象，它将会在构造函数中进行一系列的初始化工作，而一个模块的生命周期函数将会在初始化的不同阶段，或模块数据改变时自动触发，它们共分为5个阶段，具体如下：</p>
+<ul>
+<li><code>init</code>：模块初始化时触发，它将要求你在定义时返回<code>&lt;template&gt;</code>模板中所使用的状态数据<blockquote>
+<p>关于状态数据的内容将在“模板指令与状态数据（state）”中讲解</p>
+</blockquote>
+</li>
+<li><code>mounted</code>：解析模板并挂载状态数据时触发，你可以在这里处理一些模块的后续操作，如为此模块请求网络数据并更新到模板中等。</li>
+<li><code>queryUpdated</code>：模块更新时部分不需被替换的模块，检测到GET或POST参数变化（增加、移除或修改参数）时触发，如所有页面的header部分总是不变，此时它将不会被替换。</li>
+<li><code>paramUpdated</code>：模块更新时部分不需被替换的模块，检测到<code>param</code>参数变化（增加、移除或修改参数）时触发，只有设置了路由通配符的模块才有<code>param</code>参数。<blockquote>
+<p>关于路由通配符的内容我们将会在《路由配置》中详细讲解</p>
+</blockquote>
+</li>
+<li><code>unmount</code>：在更新模块时被替换的模块将会触发。<br>你可以这样设置一个模块的生命周期函数：</li>
+</ul>
+<figure class="highlight html"><figcaption><span>html</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">template</span>&gt;</span>...<span class="tag">&lt;/<span class="name">template</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="undefined"></span></span><br><span class="line"><span class="javascript">    <span class="keyword">new</span> am.Module ( &#123;</span></span><br><span class="line"><span class="javascript">        init : <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span></span><br><span class="line"><span class="undefined">          </span></span><br><span class="line"><span class="javascript">        <span class="comment">// 返回一个包含状态数据的对象，这些状态数据作用是解析挂载模板</span></span></span><br><span class="line"><span class="javascript">        <span class="keyword">return</span> &#123;&#125;;</span></span><br><span class="line"><span class="undefined">    &#125;,</span></span><br><span class="line"><span class="javascript">    mounted : <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;&#125;,</span></span><br><span class="line"><span class="javascript">    queryUpdated : <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;&#125;,</span></span><br><span class="line"><span class="javascript">    paramUpdated : <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;&#125;,</span></span><br><span class="line"><span class="javascript">    unmount : <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;&#125;</span></span><br><span class="line"><span class="undefined">&#125; );</span></span><br><span class="line"><span class="undefined"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>生命周期函数内的<code>this</code>指向<code>am.Module</code>对象，如果它们使用ES6的箭头函数（Arrow function）会导致函数内<code>this</code>指针指向不正确而出错。</p>
+</blockquote>
+<h2 id="模块跳转与表单提交"><a href="#模块跳转与表单提交" class="headerlink" title="模块跳转与表单提交"></a>模块跳转与表单提交</h2><p>和普通页面一样，模块跳转与表单提交都会改变url，在host与port都相同的情况下都会触发模块更新，否则将进行页面刷新的普通跳转。模块匹配及更新看如下图解：<br><img src="/module__/module/flow.jpg"></p>
+<h3 id="模块跳转"><a href="#模块跳转" class="headerlink" title="# 模块跳转"></a># 模块跳转</h3><p>在普通页面的跳转中，我们使用<code>&lt;a&gt;</code>标签设置<code>href</code>属性进行跳转，在amaplejs中也是如此，但不同的是，所有dom元素上设置了<code>href</code>属性后，点击都可以触发模块更新，并且当<code>href</code>后带有<code>get</code>参数时将会解析成键值对保存在<code>am.Module</code>对象内：<br><figure class="highlight html"><figcaption><span>html</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">a</span> <span class="attr">href</span>=<span class="string">"/about?from=index"</span>&gt;</span>direct to page about<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
+<p>点击此按钮跳转将会匹配到<code>/module/about.html</code>模块，并且<code>about</code>模块对象内的<code>get</code>参数值为<code>{from: &quot;index&quot;}</code>。<br><figure class="highlight javascript"><figcaption><span>javascript</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="comment">// about模块内可使用this.get对象的属性值</span></span><br><span class="line"><span class="keyword">new</span> am.Module ( &#123;</span><br><span class="line">    init : <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> &#123;</span><br><span class="line">            <span class="keyword">from</span>: <span class="keyword">this</span>.get.from</span><br><span class="line">        &#125;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125; );</span><br></pre></td></tr></table></figure></p>
+<h3 id="表单提交"><a href="#表单提交" class="headerlink" title="# 表单提交"></a># 表单提交</h3><p>amaplejs的表单提交与普通页面的表单提交写法也相同，在<code>&lt;form&gt;</code>内编写表单元素并设置<code>action</code>属性，它指定表单提交路的路径：<br><figure class="highlight html"><figcaption><span>html</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">template</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">form</span> <span class="attr">action</span>=<span class="string">"account/register"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"text"</span> <span class="attr">name</span>=<span class="string">"username"</span> <span class="attr">value</span>=<span class="string">"jim"</span> /&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"password"</span> <span class="attr">name</span>=<span class="string">"pwd"</span> <span class="attr">value</span>=<span class="string">"jim001"</span> /&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"text"</span> <span class="attr">value</span>=<span class="string">"10"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line">    ...</span><br><span class="line"><span class="tag">&lt;/<span class="name">template</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
+<p>提交表单到<code>account/register</code>后，服务端需返回一个路径字符串，来告诉框架表单提交后跳转的路径，它可能像这样：<br><figure class="highlight php"><figcaption><span>php</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">    <span class="comment">// 表单数据的处理</span></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">echo</span> <span class="string">"/submit/success"</span>;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure></p>
+<p>表单提交后将会使用服务端返回的<code>/submit/success</code>路径进行模块的更新跳转，这样就完成了一个表单提交，此时<code>/submit/success</code>路径所匹配的模块中会自动生成<code>post</code>参数对象<code>{ username: &quot;jim&quot; }</code>(表单元素设置了<code>name</code>属性，且<code>type</code>不为<code>password</code>的值才会在<code>this.post</code>中创建)：<br><figure class="highlight javascript"><figcaption><span>javascript</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="keyword">new</span> am.Module ( &#123;</span><br><span class="line">    init : <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> &#123;</span><br><span class="line">            <span class="keyword">this</span>.username : <span class="keyword">this</span>.post.username</span><br><span class="line">        &#125;;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125; );</span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<p>为了实现多个模块间的跳转，你可以继续创建一个<code>module/about.html</code>模块文件，内容与<code>index.html</code>几乎相同，像这样：<br><figure class="highlight html"><figcaption><span>html</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">module</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">template</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">span</span>&gt;</span>hello amaplejs,page about<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">a</span> <span class="attr">href</span>=<span class="string">"/index?from=about"</span>&gt;</span>direct to page index<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">template</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="undefined"></span></span><br><span class="line"><span class="javascript">        <span class="keyword">new</span> am.Module ();</span></span><br><span class="line"><span class="undefined">    </span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">style</span> <span class="attr">scoped</span>&gt;</span><span class="undefined"></span></span><br><span class="line"><span class="undefined">        span &#123; font-size: 20px; &#125;</span></span><br><span class="line"><span class="undefined">    </span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">module</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<h2 id="嵌套模块"><a href="#嵌套模块" class="headerlink" title="嵌套模块"></a>嵌套模块</h2><p>当一个页面需设置二级菜单时，我们可能希望在一个模块中嵌套一个模块节点，而这在amaplejs中也是支持的，你只需在一个模块的<code>&lt;template&gt;</code>模板内继续使用<code>:module</code>属性定义模块节点，如：<br><figure class="highlight html"><figcaption><span>html</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">template</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">span</span>&gt;</span>hello amaplejs,page index<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">a</span> <span class="attr">href</span>=<span class="string">"/about?from=index"</span>&gt;</span>direct to page about<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">:module</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">template</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
+<p>这样就嵌套了一个不具名的模块节点，你可能会问怎么可以定义两个不具名的模块节点呢，这是因为amaplejs可支持你设置无限层级的嵌套模块，就像html的元素嵌套一样，并且不同层级模块节点的命名空间（namespace）是相互独立的，但相同层级只能有一个不具名的模块节点，且不能出现名称相同的模块节点（其实不具名的模块节点的名称默认是“default”）。</p>
+<blockquote>
+<p>【对模块层级的理解】模块层级与dom元素层级无关，需以模块为单位节点作为层级参考标准，不同模块内定义的嵌套模块为不同层级，而同一个模块内定义的嵌套模块不论位置如何都属于同一层级。</p>
+</blockquote>
+<h3 id="配置子路由"><a href="#配置子路由" class="headerlink" title="# 配置子路由"></a># 配置子路由</h3><p>定义嵌套模块节点后，我们也需为它配置路由映射，指定嵌套模块节点在不同url下应该匹配哪些模块：<br><figure class="highlight javascript"><figcaption><span>javascript</span></figcaption><table><tr><td class="code"><pre><span class="line">am.startRouter( &#123;</span><br><span class="line">    routes : <span class="function"><span class="keyword">function</span> (<span class="params"> router </span>) </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 使用route函数的第三个参数设置嵌套模块节点的路由映射</span></span><br><span class="line">        router.module ().route ( <span class="string">"/"</span>, <span class="string">"module/index"</span>, <span class="function"><span class="keyword">function</span> (<span class="params"> childRouter </span>) </span>&#123;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 此回调函数将接收一个childRouter参数</span></span><br><span class="line">            <span class="comment">// 不同层的命名空间是独立的，所以调用router.module函数指定的是嵌套层的模块节点</span></span><br><span class="line">            childRouter.module ().route ( <span class="string">"subpage"</span>, <span class="string">"module/index/sub_page"</span> );</span><br><span class="line">            <span class="comment">// 它将首先匹配“/”，然后继续匹配嵌套模块“subpage”</span></span><br><span class="line">        &#125; )</span><br><span class="line">        .route ( <span class="string">"/about"</span>, <span class="string">"module/about"</span> );</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125; );</span><br></pre></td></tr></table></figure></p>
+<h2 id="父子模块之间的通信"><a href="#父子模块之间的通信" class="headerlink" title="父子模块之间的通信"></a>父子模块之间的通信</h2><p>嵌套模块节点与上一层模块节点的关系为父子模块，它们经常需要进行通信，如父模块下发数据到子模块中，或父模块访问子模块的数据，此时你可以这样做：<br><figure class="highlight javascript"><figcaption><span>javascript</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="comment">// 在子模块中通过parent属性来获取父模块对象</span></span><br><span class="line"><span class="keyword">new</span> am.Module ( &#123;</span><br><span class="line">    init : <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">    </span><br><span class="line">        <span class="comment">// this.parent为父模块对象，当一个模块为最顶层模块时，它的parent属性将为null</span></span><br><span class="line">        <span class="keyword">return</span> &#123;</span><br><span class="line">            btnText : <span class="keyword">this</span>.parent.state.text</span><br><span class="line">        &#125;;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125; );</span><br></pre></td></tr></table></figure></p>
+<p>在父模块中不能直接访问到子模块对象，但可通过子模块主动传值的方式让父模块获取到子模块的数据，就像我们的代码作用域，外层作用域不能直接获取内层作用域的值，但可通过内层作用域为外层作用域的变量赋值来访问。在子模块中通过<code>parent</code>属性来获取父模块对象，然后调用父模块中定义的模块函数并传入相应的值即可主动传值到父模块了。</p>
+<blockquote>
+<p>模块函数将在《模板指令与状态数据》中讲解</p>
+</blockquote>
+</div>
+		<div id="page-nav">
+			<a class="title-color nav next" href="{{ next.path }}" :if="next.title">
+				<img src="/images/arrow.png">
+				<span class="title-color">{{ next.title }}</span>
+			</a>
+			<a class="nav prev" href="{{ prev.path }}" :if="prev.title">
+				<span class="title-color">{{ prev.title }}</span>
+				<img src="/images/arrow.png">
+			</a>
+		</div>
+	</template>
+	<script>
+		function scrollAnchor ( anchor, scrollTo ) {
+			var anchorElem = document.querySelector ( "#" + window.decodeURI ( anchor ) );
+			if ( anchorElem ) {
+				scrollTo ( anchorElem.offsetTop - 10 );
+			}
+		}
+
+		new am.Module ( {
+			init: function ( menu, checkPost ) {
+				var list = [{"tag":"模块","children":[{"tag":"定义一个模块","children":[]},{"tag":"设置模块局部样式","children":[]},{"tag":"模块生命周期","children":[]},{"tag":"模块跳转与表单提交","children":[{"tag":"# 模块跳转","children":[]},{"tag":"# 表单提交","children":[]}]},{"tag":"嵌套模块","children":[{"tag":"# 配置子路由","children":[]}]},{"tag":"父子模块之间的通信","children":[]}]}],
+					posts = [{"title":"开始","path":"first-step","index":1},{"title":"启动路由","path":"start-router","index":2},{"title":"模块","path":"module","index":3,"current":true},{"title":"模板指令与状态数据(state)","path":"directive-and-state","index":4},{"title":"组件","path":"component","index":5},{"title":"插件","path":"plugin","index":6},{"title":"路由配置","path":"config-router","index":7}];
+
+				menu.state.list = list.length > 0 ? list : [ { children: [] } ];
+				menu.state.posts = posts;
+				menu.state.categoryName = "基础";
+
+				return {
+					prev: checkPost ( {
+						title: "模板指令与状态数据(state)",
+						path: "directive-and-state"
+					}, posts ),
+					next: checkPost ( {
+						title: "启动路由",
+						path: "start-router"
+					}, posts )
+				};
+			},
+			mounted: function ( scrollTo ) {
+				scrollAnchor ( this.get.target, scrollTo );
+			},
+			queryUpdated: function ( scrollTo ) {
+				scrollAnchor ( this.get.target, scrollTo );
+			}
+		} );
+	</script>
+
+	<style scoped>
+		#page-nav {
+			margin-top: 60px;
+		}
+		.nav {
+			font-size: 16px;
+			border: none;
+		}
+		.nav:hover {
+			border: none;
+		}
+		.nav img {
+			width: 18px;
+			margin: 0 5px;
+			vertical-align: middle;
+		}
+		.prev {
+			float: right;
+		}
+		.next {
+			float: left;
+		}
+		.next img {
+			transform: rotate(180deg);
+			-ms-transform: rotate(180deg);
+			-moz-transform: rotate(180deg);
+			-webkit-transform: rotate(180deg);;
+			-o-transform: rotate(180deg);
+		}
+	</style>
+</module>

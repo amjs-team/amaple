@@ -1,0 +1,38 @@
+.title-color {
+  color: #ed5626;
+}
+.title-size {
+  font-size: 22px;
+  margin-bottom: 14px;
+}
+span,
+p,
+li {
+  color: #78808a;
+  line-height: 26px;
+}
+.header {
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+}
+.border-bottom {
+  border-bottom: solid 1px #f0f1f4;
+}
+@media screen and (max-width: 768px) {
+  .title-size {
+    font-size: 16px;
+  }
+}
+@media screen and (-webkit-min-device-pixel-ratio: 2) {
+  .border-bottom {
+    border-bottom: solid 0.5px #f0f1f4;
+  }
+}
+@media screen and (-webkit-min-device-pixel-ratio: 3) {
+  .border-bottom {
+    border-bottom: solid 0.34px #f0f1f4;
+  }
+}

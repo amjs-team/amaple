@@ -1,0 +1,274 @@
+<module :title="插件 · Amaple">
+	<template>
+		<div><h1 id="插件"><a href="#插件" class="headerlink" title="插件"></a>插件</h1><p><strong> Amaple </strong>拥有非常强大插件功能，这也是它的突出功能之一，Amaple插件一般表现为功能块（函数）或功能块（包含一系列函数和属性的Object对象），它除了支持Amaple规范定义的插件外，还支持所有<a href="https://github.com/amdjs/amdjs-api/wiki/AMD-%28%E4%B8%AD%E6%96%87%E7%89%88%29" target="_blank" rel="noopener"><strong> AMD </strong>(点击了解详情)</a>和<a href="https://segmentfault.com/a/1190000003985390" target="_blank" rel="noopener"><strong> IIFE </strong>(点击了解详情)</a>规范的插件，在<strong> rollup </strong>、<strong> webpack </strong>、<strong> browserify </strong>等模块打包工具流行的今天，这也意味着几乎所有的第三方js库都可以与Amaple协同运作，同时也支持旧式的iife格式js库。</p>
+<h2 id="定义并安装Amaple规范的插件"><a href="#定义并安装Amaple规范的插件" class="headerlink" title="定义并安装Amaple规范的插件"></a>定义并安装Amaple规范的插件</h2><p>在安装<code>Amaple</code>规范的插件前，我们需定义一个特定格式的<code>pluginDefinition</code>（插件定义对象）供<code>Amaple</code>安装，这个对象必须包含<code>name</code>属性和<code>build</code>函数，分别表示插件名与构建函数，此构建函数返回的值将作为插件实体。然后使用<code>am.install(pluginDefinition)</code>并传入插件安装对象<code>pluginDefinition</code>进行安装：<br><figure class="highlight javascript"><figcaption><span>javascript</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="comment">// 插件定义对象</span></span><br><span class="line"><span class="keyword">const</span> pluginDefinition = &#123;</span><br><span class="line">    name : <span class="string">"switch"</span>,   <span class="comment">// 定义插件名，命名规则与变量名的规则相同</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 构建函数，它要求返回一个插件实体</span></span><br><span class="line">    <span class="comment">// 无效返回值（undefined、null、0、false等）将会抛出错误</span></span><br><span class="line">    <span class="comment">// build函数中的this指向的是am对象，所以你可以使用它进行组件定义或am属性的扩展</span></span><br><span class="line">    build : <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">        <span class="keyword">var</span> state = <span class="string">"OFF"</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> &#123;</span><br><span class="line">            press: <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">                 <span class="keyword">return</span> state === <span class="string">"OFF"</span> ? <span class="string">"ON"</span> : <span class="string">"OFF"</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 调用后插件将会被安装，此时就完成了一个名为switch的插件</span></span><br><span class="line"><span class="comment">// 它是一个含有`press`函数的Object对象。</span></span><br><span class="line">am.install (pluginDefinition);</span><br></pre></td></tr></table></figure></p>
+<p>在Amaple中，插件也可以像模块与组件文件一样编写在独立的js文件中，它也提供了相应的插件载入机制。如我们可将上面的插件定义代码单独放到<code>/plugin/switch.js</code>文件中。</p>
+<h2 id="载入插件"><a href="#载入插件" class="headerlink" title="载入插件"></a>载入插件</h2><p>无论是<strong> Amaple </strong>规范、<strong> amd </strong>和<strong> iife </strong>规范的插件在Amaple中都可以以单独文件的形式存在，对于这些插件我们需要载入它们才可使用，我们可在<code>am.startRouter</code>函数的参数内添加<code>plugin</code>属性指定项目依赖的插件路径信息，这样Amaple将会自动加载这些插件文件，<code>plugin</code>具体配置如下：<br><figure class="highlight javascript"><figcaption><span>javascript</span></figcaption><table><tr><td class="code"><pre><span class="line">am.startRouter( &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">    baseURL : &#123;</span><br><span class="line">        <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// 可为插件文件设置base路径，所有的插件文件请求路径都将基于“/plugin”目录，不设置时默认为“/”</span></span><br><span class="line">        plugin: <span class="string">"/plugin"</span></span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    <span class="comment">// plugin的值为一个数组，通过它来指定项目中依赖的所有插件</span></span><br><span class="line">    <span class="comment">// 以下分别表示插件载入的4种方式</span></span><br><span class="line">    plugin: [</span><br><span class="line"></span><br><span class="line">        <span class="comment">// ①.插件路径字符串，适用于amaple规范的单独文件插件</span></span><br><span class="line">        <span class="comment">//   如上面定义的switch插件可使用此方式载入，加载路径依赖baseURL</span></span><br><span class="line">        <span class="string">"siwtch"</span>,</span><br><span class="line"></span><br><span class="line">        <span class="comment">// ②.插件定义对象pluginDefinition，直接传入此对象后将会安装此插件</span></span><br><span class="line">        <span class="comment">//    与amaple规范的单独文件插件相比，不需调用am.install函数。</span></span><br><span class="line">        <span class="comment">//    这对于webpack等模块化环境下非常有用，你可以import任意js库并通过build函数retuen它进行安装</span></span><br><span class="line">        &#123; <span class="attr">name</span>: <span class="string">"switch"</span>, <span class="attr">build</span>: <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123; ... &#125; &#125;,</span><br><span class="line"></span><br><span class="line">        <span class="comment">// ③.amd规范js库，支持amd规范的所有js库都可以这样载入并作为amaple的插件使用</span></span><br><span class="line">        <span class="comment">//    url依赖baseURL，且url值为“http://”、“https://”开头时可直接载入外网js库</span></span><br><span class="line">        &#123; <span class="attr">format</span>: <span class="string">"amd"</span>, <span class="attr">name</span>: <span class="string">"anime"</span>, <span class="attr">url</span>: <span class="string">"amd/animejs"</span> &#125;,</span><br><span class="line"></span><br><span class="line">        <span class="comment">// ④.iife规范js库，iife规范下将会使用global的值作为全局对象名，并在window对象下寻找它，未定义global时会使用name的值代替global值进行寻找</span></span><br><span class="line">        <span class="comment">//    url依赖baseURL，且url值为“http://”、“https://”开头时可直接载入外网js库</span></span><br><span class="line">        &#123; <span class="attr">format</span>: <span class="string">"iife"</span>, <span class="attr">name</span>: <span class="string">"lodash"</span>, <span class="attr">global</span>: <span class="string">"_"</span>, <span class="attr">url</span>: <span class="string">"iife/lodash"</span> &#125;</span><br><span class="line">    ]</span><br><span class="line">&#125; );</span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<p>虽然插件的载入是异步执行的，但请不必担心，它们会根据<code>plugin</code>数组按顺序进行安装，这对于拥有依赖的插件是很有用的，你可以在<code>plugin</code>属性中先载入被依赖的插件，这样，依赖它们的插件就可以顺利获取到它们了。</p>
+</blockquote>
+<h2 id="使用插件"><a href="#使用插件" class="headerlink" title="使用插件"></a>使用插件</h2><p>被载入的插件可在模块、组件以及其他插件中使用，你可以在模块、组件的所有生命周期函数以及插件的<code>build</code>函数中直接通过插件名接收插件实体对象，这也是极为简单的，如在一个模块中使用<strong> switch </strong>插件：<br><figure class="highlight javascript"><figcaption><span>javascript</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="keyword">new</span> am.Module ( &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 使用插件名直接接收，switch插件将会自动注入到init、mounted函数中</span></span><br><span class="line">    <span class="comment">// 其他生命周期函数中也使用此方法注入对应插件实体</span></span><br><span class="line">    init : <span class="function"><span class="keyword">function</span> (<span class="params"> switch </span>) </span>&#123; ... &#125;,</span><br><span class="line">    mounted : <span class="function"><span class="keyword">function</span> (<span class="params"> switch </span>) </span>&#123; ... &#125;,</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125; );</span><br></pre></td></tr></table></figure></p>
+<h2 id="预定义插件"><a href="#预定义插件" class="headerlink" title="预定义插件"></a>预定义插件</h2><p>Amaple框架中有<code>util</code>、<code>http</code>、<code>event</code>、<code>promise</code>四个预定义插件，它们可以直接在生命周期函数中接收，而不需要在配置对象<code>plugin</code>属性中显式引入。</p>
+<blockquote>
+<p>此小节主要介绍四个预定义插件的使用方法，但插件使用在Amaple中并不是必须的，所以如果你想更快看完此教程，可先跳过此小节的学习。</p>
+</blockquote>
+<h3 id="工具函数插件util"><a href="#工具函数插件util" class="headerlink" title="# 工具函数插件util"></a># 工具函数插件util</h3><h4 id="类型：Object"><a href="#类型：Object" class="headerlink" title="类型：Object"></a>类型：Object</h4><h4 id="描述："><a href="#描述：" class="headerlink" title="描述："></a>描述：</h4><p>js工具函数集合</p>
+<h4 id="对象属性："><a href="#对象属性：" class="headerlink" title="对象属性："></a>对象属性：</h4><h5 id="type-arg-any"><a href="#type-arg-any" class="headerlink" title="type(arg: any)"></a><strong>type(arg: any)</strong></h5><ul>
+<li>类型：Function</li>
+<li>描述：判断数据类型，与“typeof”关键字相比，它还可以判断null和Array两个数据类型</li>
+<li>参数：<ul>
+<li>arg|any：需判断类型的数据</li>
+</ul>
+</li>
+<li>返回值：传入参数的数据类型<h5 id="foreach-target-ArrayLike-Object-callback-Function"><a href="#foreach-target-ArrayLike-Object-callback-Function" class="headerlink" title="foreach(target: ArrayLike|Object, callback: Function)"></a><strong>foreach(target: ArrayLike|Object, callback: Function)</strong></h5></li>
+<li>类型：Function</li>
+<li>描述：循环遍历一个对象，使用方法与array.forEach类似。但它还可以遍历类数组如Node.childNodes、Node.attributes等，且当传入的参数不可遍历时将直接返回。参数callback为循环遍历时的回调函数，它分别接收遍历项的值、遍历下表、遍历变量本身三个参数，当回调函数返回false时将break结束本次循环，而且此时foreach执行结束后也将会返回一个false，这在结束多层循环遍历时很有用，开发者可以通过“return foreach(…)”再次推出上层循环。</li>
+<li>参数：<ul>
+<li>target|ArrayLike、Object：循环遍历的目标变量值</li>
+<li>callback|Function：循环遍历时的回调函数，它分别接收遍历项的值、遍历下表、遍历变量本身三个参数，返回false可结束循环遍历</li>
+</ul>
+</li>
+<li>返回值：无<h5 id="isEmpty-object-Array-Object"><a href="#isEmpty-object-Array-Object" class="headerlink" title="isEmpty(object: Array|Object)"></a><strong>isEmpty(object: Array|Object)</strong></h5></li>
+<li>类型：Function</li>
+<li>描述：判断一个数组或对象是否为空，检查对象时它只会检查该对象本身的成员属性</li>
+<li>参数：<ul>
+<li>object|Array、Object：待判断的数组会对象</li>
+</ul>
+</li>
+<li>返回值：空时为true，不空时为false<h5 id="isPlainObject-object-Object"><a href="#isPlainObject-object-Object" class="headerlink" title="isPlainObject (object: Object)"></a><strong>isPlainObject (object: Object)</strong></h5></li>
+<li>类型：Function</li>
+<li>描述：判断一个对象是否为纯粹的Object数据对象</li>
+<li>参数：<ul>
+<li>object|Object：待判断对象</li>
+</ul>
+</li>
+<li>返回值：是则返回true，不是则返回false<h5 id="guid"><a href="#guid" class="headerlink" title="guid()"></a><strong>guid()</strong></h5></li>
+<li>类型：Function</li>
+<li>描述：获取唯一标识</li>
+<li>参数：无</li>
+<li>返回值：唯一标识<h3 id="Ajax插件http"><a href="#Ajax插件http" class="headerlink" title="# Ajax插件http"></a># Ajax插件http</h3><h4 id="类型：Object-1"><a href="#类型：Object-1" class="headerlink" title="类型：Object"></a>类型：Object</h4><h4 id="描述：-1"><a href="#描述：-1" class="headerlink" title="描述："></a>描述：</h4>Ajax网络请求插件，它的对象函数<code>get</code>、<code>post</code>、<code>request</code>都实现了<br><a href="http://www.jb51.net/article/50725.htm" target="_blank" rel="noopener"><strong>Promise/A+规范</strong></a>，在定义回调函数上，除了普通的异步回调函数传参外，还支持使用链式调用的方式来实现异步回调函数的调用，例如<code>http.get(...).done(function(result) {...}).fail(function(error){...})</code>或<code>http.get(...).then(function(result){}, function(error){...})</code>，来指定成功与失败的回调函数，如果在Promise对象上和回调函数传参上同时指定了回调函数，则会执行传参回调函数。成功回调函数<code>successHandler</code>将接收的参数为响应内容<code>response</code>、响应状态码<code>status</code>，响应状态内容<code>statusText</code>及自定义XHR对象<code>amXHR</code>，<code>amXHR</code>对象属性详细如下：</li>
+<li><strong>setRequestHeader(header: String, value: String)</strong><ul>
+<li>描述：设置请求头，请求执行前设置有效</li>
+<li>参数：<ul>
+<li>header|String：请求头名称</li>
+<li>value|String：请求头值</li>
+</ul>
+</li>
+<li>返回值：无</li>
+</ul>
+</li>
+<li><strong>getResponseHeader(header: String)</strong><ul>
+<li>描述：获取返回头信息，请求响应后可获取</li>
+<li>参数：<ul>
+<li>header|String：返回头名称</li>
+</ul>
+</li>
+<li>返回值：对应的返回头信息</li>
+</ul>
+</li>
+<li><strong>getAllResponseHeaders()</strong><ul>
+<li>描述：获取所有返回头信息，请求响应后可获取</li>
+<li>参数：无</li>
+<li>返回值：所有返回头信息</li>
+</ul>
+</li>
+<li><strong>overrideMimeType(mimetype: String)</strong><ul>
+<li>描述：设置mimeType，请求执行前设置有效</li>
+<li>参数：<ul>
+<li>mimetype|String：mimeType值</li>
+</ul>
+</li>
+<li>返回值：无</li>
+</ul>
+</li>
+<li><p><strong>abort(statusText: String)</strong></p>
+<ul>
+<li>描述：触发请求中断回调，在支持请求中断且请求响应前有效</li>
+<li>参数：<ul>
+<li>statusText|String：中断信息，开发者可在中断回调中的statusText获取到</li>
+</ul>
+</li>
+<li>返回值：无<h4 id="http插件对象函数："><a href="#http插件对象函数：" class="headerlink" title="http插件对象函数："></a>http插件对象函数：</h4><h5 id="get-url-String-args-String-Object-callback-Function-dataType-String"><a href="#get-url-String-args-String-Object-callback-Function-dataType-String" class="headerlink" title="get(url: String, args?: String|Object, callback?: Function, dataType?: String)"></a>get(url: String, args?: String|Object, callback?: Function, dataType?: String)</h5></li>
+<li>类型：Function</li>
+<li>描述：执行Ajax GET请求，它将返回一个Promise对象用于以链式调用的方式来实现异步回调函数</li>
+<li>参数：<ul>
+<li>url|String：请求url</li>
+<li>args?|String、Object：get提交的数据，此参数传入String时以“k1=v1&amp;k2=v2”的格式传入，传入Object时为一个数据对象</li>
+<li>callback?|Function：请求成功回调函数，。它</li>
+<li>dataType?|String：设置响应内容的格式，可选为“TEXT/JSON/SCRIPT/JSONP”（可忽略大小写），默认为“TEXT”</li>
+</ul>
+</li>
+<li>返回值：Promise对象<h5 id="post-url-String-args-String-Object-callback-Function-dataType-String"><a href="#post-url-String-args-String-Object-callback-Function-dataType-String" class="headerlink" title="post(url: String, args?: String|Object, callback?: Function, dataType?: String)"></a>post(url: String, args?: String|Object, callback?: Function, dataType?: String)</h5></li>
+<li><p>类型：Function</p>
+</li>
+<li><p>描述：执行Ajax POST请求，它将返回一个Promise对象用于以链式调用的方式来实现异步回调函数</p>
+</li>
+<li>参数：<ul>
+<li>url|String：请求url</li>
+<li>args?|String、Object：post提交的数据，此参数传入String时以“k1=v1&amp;k2=v2”的格式传入，传入Object时为一个数据对象</li>
+<li>callback?|Function：请求成功回调函数，如果传入此参数则以它为回调函数执行。它将接收的参数为响应内容response、响应状态码status，响应状态内容statusText及自定义XHR对象amXHR</li>
+<li>dataType?|String：设置响应内容的格式，可选为“TEXT/JSON/SCRIPT/JSONP”（可忽略大小写），默认为“TEXT”</li>
+</ul>
+</li>
+<li>返回值：Promise对象<h5 id="request-options-Object"><a href="#request-options-Object" class="headerlink" title="request(options: Object)"></a>request(options: Object)</h5></li>
+<li>类型：Function</li>
+<li>描述：执行Ajax请求，相比于get、post函数，它可以完成更复杂的请求操作，且此函数可直接在data属性中传入带有上传文件的form表单元素或FormData对象实现文件上传操作，当在低版本浏览器使用form表单元素上传时将自动使用隐藏iframe刷新的方式上传，但在支持FormData对象的浏览器中自动使用FormData对象实现文件上传</li>
+<li>参数：<ul>
+<li>options|Object：可选属性详情如下：<ul>
+<li>method?|String：请求类型，GET或POST，大小写不敏感，默认为GET</li>
+<li>url|String： 请求地址</li>
+<li>data?|String：提交的额外参数，可选为格式为k1=v1&amp;k2=v2的字符串、{k1:v1, k2:v2}的数据对象、FormData对象及form表单元素对象，当data为form对象时，如果也提供了src参数则优先使用src参数当做url进行提交</li>
+<li>async?|Boolean：是否异步请求，默认为true</li>
+<li>cache?|Boolean：请求缓存，如果为false，则每次都会发送请求，默认为true</li>
+<li>contentType|String：请求参数编码</li>
+<li>dataType?|String：返回的数据类型，TEXT/JSON/SCRIPT/JSONP，大小写不敏感，默认为TEXT</li>
+<li>username?|String：服务器认证用户名</li>
+<li>password?|String：服务器认证密码</li>
+<li>mimeType?|String：设置mimeType</li>
+<li>headers?|Object：额外的请求头信息，为一个对象</li>
+<li>timeout?|Number：请求超时时间</li>
+<li>beforeSend?|Function：请求发送前回调，函数参数为amXHR对象、当前配置对象options</li>
+<li>success?|Function：请求成功后回调，函数参数为data、statusText、amXHR对象</li>
+<li>error?|Function：请求失败后回调，函数参数为amXHR对象、statusText</li>
+<li>complete?|Function：请求完成后回调，函数参数为amXHR对象、statusText</li>
+<li>abort?|Function：请求中断后回调，函数参数为statusText</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>返回值：Promise对象<h3 id="自定义事件插件event"><a href="#自定义事件插件event" class="headerlink" title="# 自定义事件插件event"></a># 自定义事件插件event</h3><h4 id="类型：Object-2"><a href="#类型：Object-2" class="headerlink" title="类型：Object"></a>类型：Object</h4><h4 id="描述：-2"><a href="#描述：-2" class="headerlink" title="描述："></a>描述：</h4>自定义事件对象，支持跨模块触发事件<h4 id="对象函数："><a href="#对象函数：" class="headerlink" title="对象函数："></a>对象函数：</h4><h5 id="on-types-String-listener-Function-once-Boolean"><a href="#on-types-String-listener-Function-once-Boolean" class="headerlink" title="on(types: String, listener: Function, once?: Boolean)"></a>on(types: String, listener: Function, once?: Boolean)</h5></li>
+</ul>
+</li>
+<li>类型：Function</li>
+<li>描述：绑定自定义事件，参数types以空格分隔开可同时绑定一个回调函数到多个事件类型上</li>
+<li>参数：<ul>
+<li>types|String：自定义事件名称，使用空格隔开可同时绑定一个监听函数到多个事件类型上listener|Function：事件回调函数</li>
+<li>once?|Boolean：是否只能触发一次，设置为true时，触发一次回调后将自动解除绑定</li>
+</ul>
+</li>
+<li>返回值：无<h5 id="emit-types-String"><a href="#emit-types-String" class="headerlink" title="emit(types: String)"></a>emit(types: String)</h5></li>
+<li>类型：Function</li>
+<li>描述：触发自定义事件，当一个事件有多个回调函数时触发后将顺序执行多个回调函数</li>
+<li>参数：<ul>
+<li>types|String：自定义事件名称，使用空格隔开可同时触发多个事件</li>
+</ul>
+</li>
+<li>返回值：无<h5 id="remove-types-String-listener-Function"><a href="#remove-types-String-listener-Function" class="headerlink" title="remove(types: String, listener: Function)"></a>remove(types: String, listener: Function)</h5></li>
+<li>类型：Function</li>
+<li>描述：解绑事件，可一次解绑多个类型的事件</li>
+<li>参数：<ul>
+<li>types|String：自定义事件名称，使用空格隔开可同时解绑多个事件</li>
+<li>listener|Function：事件回调函数，必须与绑定事件时传入的回调函数相同才可成功解绑</li>
+</ul>
+</li>
+<li>返回值：无<h3 id="异步操作同步化插件promise"><a href="#异步操作同步化插件promise" class="headerlink" title="# 异步操作同步化插件promise"></a># 异步操作同步化插件promise</h3><h4 id="类型：Class"><a href="#类型：Class" class="headerlink" title="类型：Class"></a>类型：Class</h4><h4 id="描述：-3"><a href="#描述：-3" class="headerlink" title="描述："></a>描述：</h4><a href="http://www.jb51.net/article/50725.htm" target="_blank" rel="noopener"><strong>Promise/A+规范</strong></a> 规范实现类，用于以同步的方式去执行回调函数，而不用将回调函数传入执行函数中，更加符合逻辑，且在需要执行多重回调处理时，以链式结构来表示函数处理后的回调。<h4 id="成员函数："><a href="#成员函数：" class="headerlink" title="成员函数："></a>成员函数：</h4><h5 id="then-onFulfilled-Function-onRejected-Function"><a href="#then-onFulfilled-Function-onRejected-Function" class="headerlink" title="then(onFulfilled: Function, onRejected?: Function)"></a>then(onFulfilled: Function, onRejected?: Function)</h5></li>
+<li>类型：Function</li>
+<li>描述：指定成功与失败的回调函数，返回值为Promise对象，如果有多重异步回调则可以在此函数后继续链式调用来指定后续的异步回调函数</li>
+<li>参数：<ul>
+<li>onFulfilled|Function：成功时的回调函数</li>
+<li>onRejected?|Function：失败时的回调函数</li>
+</ul>
+</li>
+<li>返回值：Promise对象<h5 id="done-onFulfilled-Function"><a href="#done-onFulfilled-Function" class="headerlink" title="done(onFulfilled: Function)"></a>done(onFulfilled: Function)</h5></li>
+<li>类型：Function</li>
+<li>描述：指定成功的回调函数，相当于调用then函数只传入有效的成功回调</li>
+<li>参数：<ul>
+<li>onFulfilled|Function：成功时的回调函数</li>
+</ul>
+</li>
+<li>返回值：Promise对象<h5 id="fail-onRejected-Function"><a href="#fail-onRejected-Function" class="headerlink" title="fail(onRejected: Function)"></a>fail(onRejected: Function)</h5></li>
+<li>类型：Function</li>
+<li>描述：指定失败的回调函数，相当于调用then函数只传入有效的失败回调</li>
+<li>参数：<ul>
+<li>onRejected|Function：失败时的回调函数</li>
+</ul>
+</li>
+<li>返回值：Promise对象<h5 id="always-callback-Function"><a href="#always-callback-Function" class="headerlink" title="always(callback: Function)"></a>always(callback: Function)</h5></li>
+<li>类型：Function</li>
+<li>描述：绑定执行完成的回调函数，无论执行函数成功与失败都将调用此方法绑定的回调函数</li>
+<li>参数：<ul>
+<li>callback|Function：执行完成的回调函数</li>
+</ul>
+</li>
+<li>返回值：Promise对象</li>
+</ul>
+</div>
+		<div id="page-nav">
+			<a class="title-color nav next" href="{{ next.path }}" :if="next.title">
+				<img src="/images/arrow.png">
+				<span class="title-color">{{ next.title }}</span>
+			</a>
+			<a class="nav prev" href="{{ prev.path }}" :if="prev.title">
+				<span class="title-color">{{ prev.title }}</span>
+				<img src="/images/arrow.png">
+			</a>
+		</div>
+	</template>
+	<script>
+		function scrollAnchor ( anchor, scrollTo ) {
+			var anchorElem = document.querySelector ( "#" + window.decodeURI ( anchor ) );
+			if ( anchorElem ) {
+				scrollTo ( anchorElem.offsetTop - 10 );
+			}
+		}
+
+		new am.Module ( {
+			init: function ( menu, checkPost ) {
+				var list = [{"tag":"插件","children":[{"tag":"定义并安装Amaple规范的插件","children":[]},{"tag":"载入插件","children":[]},{"tag":"使用插件","children":[]},{"tag":"预定义插件","children":[{"tag":"# 工具函数插件util","children":[{"tag":"类型：Object","children":[]},{"tag":"描述：","children":[]},{"tag":"对象属性：","children":[{"tag":"type(arg: any)","children":[]},{"tag":"foreach(target: ArrayLike|Object, callback: Function)","children":[]},{"tag":"isEmpty(object: Array|Object)","children":[]},{"tag":"isPlainObject (object: Object)","children":[]},{"tag":"guid()","children":[]}]}]},{"tag":"# Ajax插件http","children":[{"tag":"类型：Object","children":[]},{"tag":"描述：","children":[]},{"tag":"http插件对象函数：","children":[{"tag":"get(url: String, args?: String|Object, callback?: Function, dataType?: String)","children":[]},{"tag":"post(url: String, args?: String|Object, callback?: Function, dataType?: String)","children":[]},{"tag":"request(options: Object)","children":[]}]}]},{"tag":"# 自定义事件插件event","children":[{"tag":"类型：Object","children":[]},{"tag":"描述：","children":[]},{"tag":"对象函数：","children":[{"tag":"on(types: String, listener: Function, once?: Boolean)","children":[]},{"tag":"emit(types: String)","children":[]},{"tag":"remove(types: String, listener: Function)","children":[]}]}]},{"tag":"# 异步操作同步化插件promise","children":[{"tag":"类型：Class","children":[]},{"tag":"描述：","children":[]},{"tag":"成员函数：","children":[{"tag":"then(onFulfilled: Function, onRejected?: Function)","children":[]},{"tag":"done(onFulfilled: Function)","children":[]},{"tag":"fail(onRejected: Function)","children":[]},{"tag":"always(callback: Function)","children":[]}]}]}]}]}],
+					posts = [{"title":"开始","path":"first-step","index":1},{"title":"启动路由","path":"start-router","index":2},{"title":"模块","path":"module","index":3},{"title":"模板指令与状态数据(state)","path":"directive-and-state","index":4},{"title":"组件","path":"component","index":5},{"title":"插件","path":"plugin","index":6,"current":true},{"title":"路由配置","path":"config-router","index":7}];
+
+				menu.state.list = list.length > 0 ? list : [ { children: [] } ];
+				menu.state.posts = posts;
+				menu.state.categoryName = "基础";
+
+				return {
+					prev: checkPost ( {
+						title: "路由配置",
+						path: "config-router"
+					}, posts ),
+					next: checkPost ( {
+						title: "组件",
+						path: "component"
+					}, posts )
+				};
+			},
+			mounted: function ( scrollTo ) {
+				scrollAnchor ( this.get.target, scrollTo );
+			},
+			queryUpdated: function ( scrollTo ) {
+				scrollAnchor ( this.get.target, scrollTo );
+			}
+		} );
+	</script>
+
+	<style scoped>
+		#page-nav {
+			margin-top: 60px;
+		}
+		.nav {
+			font-size: 16px;
+			border: none;
+		}
+		.nav:hover {
+			border: none;
+		}
+		.nav img {
+			width: 18px;
+			margin: 0 5px;
+			vertical-align: middle;
+		}
+		.prev {
+			float: right;
+		}
+		.next {
+			float: left;
+		}
+		.next img {
+			transform: rotate(180deg);
+			-ms-transform: rotate(180deg);
+			-moz-transform: rotate(180deg);
+			-webkit-transform: rotate(180deg);;
+			-o-transform: rotate(180deg);
+		}
+	</style>
+</module>

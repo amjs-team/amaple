@@ -1,0 +1,201 @@
+.highlight {
+  color: #d1d9e1;
+  background: #f1f2f7;
+  padding: 6px 16px;
+  margin: 10px 0;
+  border-radius: 5px;
+  overflow: auto;
+  font-size: 13px;
+}
+.highlight figcaption {
+  position: absolute;
+  right: 10px;
+  top: 5px;
+}
+.highlight figcaption span {
+  color: #e6e6e6;
+}
+.highlight .code .line {
+  color: #78808a;
+}
+.highlight .code .comment,
+.highlight .code .quote {
+  color: #b1b1b1;
+  font-style: italic;
+}
+.highlight .code .params {
+  color: #f3a140;
+}
+.highlight .code .keyword,
+.highlight .code .selector-tag,
+.highlight .code .literal,
+.highlight .code .type,
+.highlight .code .addition {
+  color: #c9c;
+}
+.highlight .code .number,
+.highlight .code .selector-attr,
+.highlight .code .selector-pseudo {
+  color: #f99157;
+}
+.highlight .code .string,
+.highlight .code .doctag,
+.highlight .code .regexp {
+  color: #e56659;
+}
+.highlight .code .title,
+.highlight .code .name,
+.highlight .code .section,
+.highlight .code .built_in {
+  color: #f3a140;
+}
+.highlight .code .variable,
+.highlight .code .template-variable,
+.highlight .code .selector-id,
+.highlight .code .class .title {
+  color: #fc6;
+}
+.highlight .code .section,
+.highlight .code .strong {
+  font-weight: bold;
+}
+.highlight .code .symbol,
+.highlight .code .bullet,
+.highlight .code .subst,
+.highlight .code .meta,
+.highlight .code .link {
+  color: #f99157;
+}
+.highlight .code .deletion {
+  color: #dc322f;
+}
+.highlight .code .formula {
+  background: #eee8d5;
+}
+.highlight .code .attr,
+.highlight .code .attribute {
+  color: #ddc155;
+}
+.highlight .code .emphasis {
+  font-style: italic;
+}
+@media screen and (max-width: 768px) {
+  .highlight {
+    border-radius: 0;
+  }
+}
+.post h1 {
+  color: #ed5626;
+  margin-bottom: 20px;
+}
+.post h2,
+.post h3,
+.post h4,
+.post h5,
+.post h6 {
+  margin: 30px 0 20px 0;
+  color: #ff8e92;
+}
+.post code {
+  background: #fff9ef;
+  color: #ffb949;
+  padding: 0 4px;
+  border-radius: 4px;
+  margin: 0 2px;
+}
+.post em a {
+  border-bottom: dashed 1px #78808a;
+}
+.post a {
+  transition: border 0.3s , color 0.3s;
+  -moz-transition: border 0.3s , color 0.3s;
+  -webkit-transition: border 0.3s , color 0.3s;
+  -o-transition: border 0.3s , color 0.3s;
+  color: #78808a;
+  border-bottom: dashed 1px #78808a;
+}
+.post a:hover {
+  border-bottom: dashed 1px #ffb949;
+  color: #ffb949;
+}
+.post strong {
+  font-weight: bold;
+}
+.post ul,
+.post ol {
+  margin: 15px 0 15px 28px;
+}
+.post ul ul,
+.post ol ul {
+  list-style-type: circle;
+  margin-left: 40px;
+}
+.post ul ol,
+.post ol ol {
+  list-style-type: circle;
+  margin-left: 40px;
+}
+.post ul {
+  list-style-type: disc;
+}
+.post ol {
+  list-style-type: decimal;
+}
+.post blockquote {
+  position: relative;
+  margin: 1em 0;
+  padding: 8px 12px;
+  background: #f9f9f9;
+  border-left: solid 4px #ffe0a2;
+}
+.post blockquote::before {
+  content: "Notice";
+  color: #ed5626;
+  font-size: 16px;
+  font-weight: bold;
+}
+.post hr {
+  margin: 40px 0;
+  height: 1px;
+  background: $grey;
+  border: none;
+}
+.post img {
+  width: 100%;
+}
+.post .video-container {
+  position: relative;
+  padding-top: 56.25%;
+  height: 0;
+  overflow: hidden;
+}
+.post .video-container iframe,
+.post .video-container object,
+.post .video-container embed {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  margin-top: 0;
+}
+.post > table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.post > table th,
+.post > table td {
+  padding: 0 2em;
+  height: 2em;
+}
+.post > table th {
+  border-bottom: 2px solid $gray-300;
+}
+.post > table tbody tr {
+  height: 20px;
+  border-bottom: 1px solid $grey;
+}
+.post > table tbody tr:nth-child(odd) {
+  background: $grey-250;
+}
