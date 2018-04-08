@@ -57,7 +57,7 @@ describe ( "Parse amaple module => ", () => {
 				</template>
 				<script>
 					new am.Module ( {
-						init () {
+						init: function () {
 							return {
 								show: true
 							};
