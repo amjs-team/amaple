@@ -22,7 +22,7 @@ function createVNode ( watcher, arg, index ) {
 
     // 原始元素没有引用实际dom时传入null，表示克隆vnode不引用任何实际dom
     let itemNode = elem.clone ( false ),
-        scopedAuxiliary = Tmpl.defineScoped ( scopedDefinition, itemNode ),
+        scopedAuxiliary = Tmpl.defineScoped ( scopedDefinition, itemNode, watcher.index ),
         nextSibClone;
 
     itemNode.key = key;
@@ -107,7 +107,7 @@ export default {
             keyExpr = /^\(\s*([$\w]+)\s*,\s*([$\w]+)\s*\)$/;
 
         if ( !forExpr.test ( this.expr ) ) {
-            throw directiveErr ( "for", "for指令内的循环格式为'item in list'或'(item, index) in list'，请正确使用该指令" );
+            throw directiveErr ( "for", "for指令内的循环格式为'item in list'或'(item, index) in list'，且item和index必须符合变量命名规范，请正确使用该指令" );
         }
     	const 
             variable = this.expr.match ( forExpr ),
@@ -216,8 +216,8 @@ export default {
 
                     // 更新局部监听数据
                     // 有index时更新index值
-                    if ( this.index ) {
-                        const rindex = new RegExp ( this.index + "$" );
+                    if ( this.index && itemNode.scoped ) {
+                        const rindex = new RegExp ( `${ this.index }$` );
                         foreach ( itemNode.scoped, ( val, key, scoped ) => {
                             if ( rindex.test ( key ) && val !== index ) {
                                 scoped [ key ] = index;
@@ -226,7 +226,7 @@ export default {
                     }
                 }
                 else {
-                    itemNode = createVNode ( this, val, index, {} );
+                    itemNode = createVNode ( this, val, index );
 
                     const scopedCssObject = this.tmpl.module.scopedCssObject;
                     if ( scopedCssObject ) {

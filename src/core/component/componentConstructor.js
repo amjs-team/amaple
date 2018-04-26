@@ -9,6 +9,7 @@ import ValueWatcher from "../ValueWatcher";
 import ViewModel from "../ViewModel";
 import NodeTransaction from "../vnode/NodeTransaction";
 import VFragment from "../vnode/VFragment";
+import { makeFn } from "../ViewWatcher";
 
 const dataType = [ String, Number, Function, Boolean, Object ];
 
@@ -66,7 +67,7 @@ function validateProp ( prop, validate ) {
 export default {
 
     /**
-        initProps ( componentNode: DOMObject, moduleVm: Object )
+        initProps ( componentNode: DOMObject, moduleVm: Object, scoped?: Object, moduleTmpl: Object )
     
         Return Type:
         props
@@ -78,23 +79,91 @@ export default {
         URL doc:
         http://amaple.org/######
     */
-    initProps ( componentNode, moduleVm, propsValidator ) {
-        let props = {}, match;
-
+    initProps ( componentNode, moduleVm, scoped, moduleTmpl ) {
+        let props = {}, match, hasStateValue, bindingType;
+        const 
+            twoWay = "tw",
+            singleWay = "sw",
+            rneedBinding = new RegExp ( `${ twoWay }|${ singleWay }` ),
+            rpropExpr = new RegExp ( `^${ rexpr.source }$` );
         foreach ( componentNode.attrs, ( attrVal, name ) => {
             
             // 属性名需符合变量的命名规则
             if ( rvar.test ( name ) ) {
-                if ( match = attrVal.match ( rexpr ) ) {
-                    const 
-                        subs = new Subscriber (),
-                        propName = match [ 1 ],
+                let expr = "";
+
+                hasStateValue = false;
+                // 属性值只有差值表达式，且差值表达式内只有状态变量名的才进行双向绑定
+                if ( match = attrVal.match ( rpropExpr ) ) {
+                    hasStateValue = true;
+                    expr = match [ 1 ];
+                    if ( scoped && scoped.regexp ) {
+                        expr = match [ 1 ].replace ( scoped.regexp, mat => scoped.prefix + mat );   
+                    }
+
+                    if ( expr === match [ 1 ] && rvar.test ( match [ 1 ] ) ) {
+                        bindingType = twoWay;
+                    }
+                    else if ( expr !== match [ 1 ] && ( !scoped.indexName || !scoped.indexName.test ( match [ 1 ] ) ) ) {
+                        bindingType = false;
+                    }
+                    else {
+                        bindingType = singleWay;
+                    }
+                }
+                else {
+                    const exprs = [];
+                    let hasScopedValue = false;
+                    if ( !scoped ) {
+                        expr = attrVal.replace ( rexpr, ( mat, rep ) => {
+                            exprs.push ( rep );
+                            return `" + (${ rep }) + "`;
+                        } );
+                        
+                        bindingType = exprs.length > 0 ? singleWay : false;
+                    }
+                    else {
+                        expr = attrVal.replace ( 
+                            rexpr, 
+                            ( mat, rep ) => {
+                                exprs.push ( rep );
+                                return `" + (${ rep.replace ( scoped.regexp, mat => {
+                                    hasScopedValue = true;
+                                    return scoped.prefix + mat;
+                                } ) }) + "`;
+                            }
+                        );
+
+                        if ( exprs.length > 0 ) {
+                            if ( !hasScopedValue || ( scoped.indexName && scoped.indexName.test ( exprs.join ( " " ) ) ) ) {
+                                bindingType = singleWay;
+                            }
+                            else {
+                                bindingType = false;
+                            }
+                        }
+                    }
+                    hasStateValue = exprs.length > 0;
+                    expr = hasStateValue ? `"${ expr }"` : expr;
+                }
+                if ( rneedBinding.test ( bindingType ) ) {
+                    const subs = new Subscriber ();
+                    let propValue, getter;
+                    if ( bindingType === twoWay ) {
                         getter = () => {
-                            return moduleVm [ propName ];
+                            return moduleVm [ expr ];
                         };
+                    }
+                    else {
+                        const getterFn = makeFn ( expr );
+                        getter = () => {
+                            moduleTmpl.addScoped ( scoped && scoped.scopedMounts );
+                            const value = getterFn ( moduleVm );
+                            moduleTmpl.removeScoped ( scoped && scoped.scopedMounts );
 
-                    let propValue;
-
+                            return value;
+                        };
+                    }
                     new ValueWatcher ( ( newVal ) => {
                         propValue = newVal;
                         subs.notify ();
@@ -107,17 +176,23 @@ export default {
                             subs.subscribe ();
                             return propValue;
                         },
-                        ( newVal ) => {
+                        bindingType === twoWay ? ( newVal ) => {
                             if ( newVal !== propValue ) {
-                                moduleVm [ propName ] = propValue = newVal;
-
-                                subs.notify ();
+                                moduleVm [ expr ] = newVal;
                             }
+                        } : () => {
+                            throw componentErr ( 
+                                "binding type", 
+                                `组件'${ componentNode.nodeName.toLowerCase () }'的'${ name }'属性无法从组件内部赋值修改该值，请尝试将修改外部state的回调函数传入该组件内进行调用修改` 
+                            );
                         }, props );
                 }
                 else {
-                    props [ name ] = attrVal;
+                    props [ name ] = hasStateValue ? makeFn ( expr ) ( moduleVm ) : attrVal;
                 }
+            }
+            else {
+                throw componentErr ( "props variable", `组件'${ componentNode.nodeName.toLowerCase () }'的props名'${ name }'须符合变量命名规范` );
             }
         } );
 

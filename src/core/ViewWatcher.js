@@ -19,12 +19,10 @@ import NodeTransaction from "./vnode/NodeTransaction";
 	URL doc:
 	http://amaple.org/######
 */
-function makeFn ( code ) {
-	return new Function ( "runtimeErr", 
-	`var self = this,
-		 ret;
-	self.addScoped ();
-	with ( self.tmpl.getViewModel () ) {
+export function makeFn ( code ) {
+	const fn = new Function ( "vm", "runtimeErr", 
+	`var __this = this, ret;
+	with ( vm ) {
 		try {
 			ret = ${ code };
 		}
@@ -32,12 +30,15 @@ function makeFn ( code ) {
 			throw runtimeErr ( "vm", e );
 		}
 	}
-	self.removeScoped ();
 	return ret;` );
+
+	return function ( vm ) {
+		return fn.call ( this || {}, vm, runtimeErr );
+	};
 }
 
 /**
-	ViewWatcher ( directive: Object, node: DOMObject, expr: String, tmpl?: Object, scoped?: Object )
+	ViewWatcher ( directive: Object, node: DOMObject, expr: String, scoped?: Object, tmpl?: Object )
 
 	Return Type:
 	void
@@ -50,7 +51,7 @@ function makeFn ( code ) {
 	URL doc:
 	http://amaple.org/######
 */
-export default function ViewWatcher ( directive, node, expr, tmpl, scoped ) {
+export default function ViewWatcher ( directive, node, expr, scoped, tmpl ) {
 
 	this.directive = directive;
 	this.node = node;
@@ -61,7 +62,7 @@ export default function ViewWatcher ( directive, node, expr, tmpl, scoped ) {
 	( directive.before || noop ).call ( this );
 
 	// 如果scoped为局部数据对象则将expr内的局部变量名替换为局部变量名
-	if ( type ( scoped ) === "object" && scoped.regexp instanceof RegExp ) {
+	if ( scoped && scoped.regexp instanceof RegExp ) {
 		this.expr = this.expr.replace ( scoped.regexp, match => scoped.prefix + match );
 	}
 	
@@ -79,7 +80,7 @@ export default function ViewWatcher ( directive, node, expr, tmpl, scoped ) {
     	
     	// 将获取表达式的真实值并将此watcher对象绑定到依赖监听属性中
 		Subscriber.watcher = this;
-		val = this.getter ( runtimeErr );
+		val = this.getter ( this.tmpl.vm );
 
 		// 局部变量没有设置监听，所以不会调用Subscriber.subscriber()，需手动设置为undefined
 		delete Subscriber.watcher;
@@ -105,67 +106,27 @@ extend ( ViewWatcher.prototype, {
 		http://amaple.org/######
 	*/
 	update () {
+		this.tmpl.addScoped ( this.scoped && this.scoped.scopedMounts );
 
     	// 当已开启了一个事物时将收集新旧节点等待变更
     	// 当没有开启事物时直接处理更新操作
     	if ( NodeTransaction.acting instanceof NodeTransaction ) {
     		NodeTransaction.acting.collect ( this.tmpl.moduleNode );
-    		this.directive.update.call ( this, this.getter ( runtimeErr ) );
+    		this.directive.update.call ( this, this.getter ( this.tmpl.vm ) );
     	}
     	else {
     		const diffBackup = this.tmpl.moduleNode.clone ();
-    		this.directive.update.call ( this, this.getter ( runtimeErr ) );
+    		this.directive.update.call ( this, this.getter ( this.tmpl.vm ) );
     		this.tmpl.moduleNode.diff ( diffBackup ).patch ();
     	}
-    },
-	
-	/**
-    	addScoped ()
-    
-    	Return Type:
-    	Object
-    	void
-    
-    	Description:
-		为vm增加局部变量
-    
-    	URL doc:
-    	http://amaple.org/######
-    */
-	addScoped () {
-    	
-    	// 增加局部变量
-		foreach ( this.scoped && this.scoped.scopedMounts || [], mountFunc => {
-			mountFunc ( this.tmpl.getViewModel () );
-		} );
-    },
-	
-	/**
-    	removeScoped ()
-    
-    	Return Type:
-    	Object
-    	void
-    
-    	Description:
-		移除vm中的局部变量
-    
-    	URL doc:
-    	http://amaple.org/######
-    */
-	removeScoped () {
 
-    	// 移除局部变量
-		foreach ( this.scoped && this.scoped.scopedUnmounts || [], unmountFunc => {
-			unmountFunc ( this.tmpl.getViewModel () );
-		} );
+    	this.tmpl.removeScoped ( this.scoped && this.scoped.scopedUnmounts );
     },
 
     /**
     	unmount ( subscribe: Object )
     
     	Return Type:
-    	void
     
     	Description:
     	卸载此watcher对象

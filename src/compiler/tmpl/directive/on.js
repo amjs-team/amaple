@@ -36,10 +36,10 @@ export default {
         
         this.type = exprMatch [ 1 ];
     	this.attrExpr = "on" + this.type;
-    	this.expr = `function (${ event }) {
-            self.addScoped ();
+    	this.expr = `function(${ event }) {
+            __this.tmpl.addScoped(__this.scoped && __this.scoped.scopedMounts);
 			${ listener };
-            self.removeScoped ();
+            __this.tmpl.removeScoped(__this.scoped && __this.scoped.scopedUnmounts);
 		}`;
     },
 

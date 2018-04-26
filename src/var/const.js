@@ -9,7 +9,7 @@ export const DEVELOP_SINGLE = 1;
 export const rword = /\S+/g;
 
 // 变量名正则表达式
-export const rvar = /[A-Za-z$_][\w$]*/;
+export const rvar = /^[A-Za-z$_][\w$]*$/;
 
 // 模板表达式匹配正则
 export const rexpr = /{{\s*(.*?)\s*}}/;

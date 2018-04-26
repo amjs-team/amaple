@@ -28,11 +28,13 @@ export default {
         this.replacement.conditionElems = elem.conditionElems;
 
         // 如果有key表示此元素为循环遍历元素，需为占位元素设置相同key
-        // 且循环遍历的元素一定有局部变量，也需将此赋予
-        if ( elem.key && elem.scoped ) {
+        if ( elem.key ) {
             this.replacement.key = elem.key;
-            this.replacement.scoped = elem.scoped;
             elem.replacement = this.replacement;
+        }
+        // 当循环遍历有index时，该元素才有局部变量，此时也需将此赋予
+        if ( elem.scoped ) {
+            this.replacement.scoped = elem.scoped;
         }
 
         // 将elem在DOM结构中去掉，以便在下面循环扫描时不会扫描到elem的nextSibling元素

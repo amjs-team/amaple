@@ -26,7 +26,7 @@ export default {
             nodeName = elem.nodeName,
             inputType = ( elem.attr ( "type" ) || "" ).toLowerCase (),
             expr = this.expr,
-            vm = this.tmpl.getViewModel (),
+            vm = this.tmpl.vm,
             modelArray = vm [ expr ];
         if ( !/INPUT|TEXTAREA|SELECT/.test ( nodeName ) ) {
             throw directiveErr ( "model", "这个指令只能在包括'<input>'、'<textarea>'、'<select>'在内的表单元素上使用" );

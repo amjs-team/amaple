@@ -79,7 +79,7 @@ function parseTemplate ( moduleString, parses ) {
 }
 
 /**
-	parseStyle ( css: String )
+	removeCssBlank ( css: String )
 
 	Return Type:
 	String
@@ -123,58 +123,63 @@ function parseSiblingCss ( css ) {
 		atContext = "",
 		hierarchy = 0;
 
-	css.replace ( rcssparser, ( match, selector, content ) => {
-		if ( !atContext ) {
-			content = content.trim ();
-
-			// css选择器为普通选择器时
-			if ( new RegExp ( `^${ rselector.source }` ).test ( selector ) ) {
-				styles.push ( {
-					selector,
-					content : removeCssBlank ( content )
-				} );
-			}
-
-			// css选择器为@keyframes或@media时
-			else {
-				if ( rkeyframes.test ( selector ) ) {
-					atContext = "keyframes";
+	try {
+		css.replace ( rcssparser, ( match, selector, content ) => {
+			if ( !atContext ) {
+				content = content.trim ();
+	
+				// css选择器为普通选择器时
+				if ( new RegExp ( `^${ rselector.source }` ).test ( selector ) ) {
+					styles.push ( {
+						selector,
+						content : removeCssBlank ( content )
+					} );
 				}
-				else if ( rmedia.test ( selector ) ) {
-					atContext = "media";
-				}
-
-				styles.push ( selectorItem );
-				selectorItem.selector = selector;
-				selectorItem.content = removeCssBlank ( content + "}" );
-			}
-		}
-		else {
-			match = match.trim ();
-			if ( isEnd ( match ) ) {
-				if ( hierarchy > 0 ) {
-					selectorItem.content += match;
-					hierarchy --;
-				}
+	
+				// css选择器为@keyframes或@media时
 				else {
-
-					// 当css项为@media时，需对它的内部选择器做范围样式的处理
-					if ( /media/.test ( atContext ) ) {
-						selectorItem.content = parseSiblingCss ( selectorItem.content );
+					if ( rkeyframes.test ( selector ) ) {
+						atContext = "keyframes";
 					}
-					atContext = "";
-					selectorItem = {};
+					else if ( rmedia.test ( selector ) ) {
+						atContext = "media";
+					}
+	
+					styles.push ( selectorItem );
+					selectorItem.selector = selector;
+					selectorItem.content = removeCssBlank ( content + "}" );
 				}
-				return "";
 			}
-
-			// 表示层次，当层级为内层时遇到结束符将不会结束
-			if ( new RegExp ( `${ rkeyframes.source }|${ rmedia.source }` ).test ( selector ) ) {
-				hierarchy ++;
+			else {
+				match = match.trim ();
+				if ( isEnd ( match ) ) {
+					if ( hierarchy > 0 ) {
+						selectorItem.content += match;
+						hierarchy --;
+					}
+					else {
+	
+						// 当css项为@media时，需对它的内部选择器做范围样式的处理
+						if ( /media/.test ( atContext ) ) {
+							selectorItem.content = parseSiblingCss ( selectorItem.content );
+						}
+						atContext = "";
+						selectorItem = {};
+					}
+					return "";
+				}
+	
+				// 表示层次，当层级为内层时遇到结束符将不会结束
+				if ( new RegExp ( `${ rkeyframes.source }|${ rmedia.source }` ).test ( selector ) ) {
+					hierarchy ++;
+				}
+				selectorItem.content += removeCssBlank ( match );
 			}
-			selectorItem.content += removeCssBlank ( match );
-		}
-	} );
+		} );
+	}
+	catch ( e ) {
+		throw moduleErr ( "css-parse", "css解析错误，请检查模块css并确保其语法完全正确" );
+	}
 
 	return styles;
 }
@@ -198,6 +203,7 @@ function parseStyle ( moduleString, parses ) {
 	const
 		rstyle = /<style(?:.*?)>([\s\S]*)<\/style>/i,
 		risScoped = /^<style(?:.*?)scoped(?:.*?)/i,
+		rcssComment = /\/\*([\s\S]*?)\*\//g,
 		styleMatch = rstyle.exec ( moduleString );
 
 	if ( styleMatch ) {
@@ -205,7 +211,7 @@ function parseStyle ( moduleString, parses ) {
 
 		let style;
     	if ( risScoped.test ( styleMatch [ 0 ] ) ) {
-			style = ( styleMatch [ 1 ] || "" ).trim ();
+			style = ( styleMatch [ 1 ] || "" ).trim ().replace ( rcssComment, "" );
 
 			// 解析每个css项并保存到parsers.style中
 			parses.style = parseSiblingCss ( style );

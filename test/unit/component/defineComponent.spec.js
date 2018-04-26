@@ -36,16 +36,18 @@ describe ( "define component =>", () => {
 		const 
 			tc = new TestComp (),
 			fragment = VFragment (),
-			div = VElement ( "div" );
+			testComp = VElement ( "test-comp" );
 
-		fragment.appendChild ( div );
+		fragment.appendChild ( testComp );
 		const realDOM = fragment.render ();
 		let fBackup = fragment.clone ();
 
-		div.isComponent = true;
-		tc.__init__ ( div, {} );
+		testComp.isComponent = true;
+		tc.__init__ ( testComp, {
+			module: { state: {} }
+		} );
 
-		expect ( fragment.children [ 0 ].nodeName ).toBe ( "DIV" );
+		expect ( fragment.children [ 0 ].nodeName ).toBe ( "TEST-COMP" );
 		expect ( fragment.children [ 0 ].templateNodes [ 0 ].nodeName ).toBe ( "BUTTON" );
 		expect ( fragment.children [ 0 ].templateNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( "test-btn" );
 		expect ( fragment.children [ 0 ].templateNodes [ 1 ].children [ 0 ].nodeValue ).toBe ( "" );
@@ -108,18 +110,20 @@ describe ( "define component =>", () => {
 
 		let tc = new TestComp (),
 			fragment = VFragment (),
-			div = VElement ( "div" );
+			testComp = VElement ( "test-comp" );
 
-		fragment.appendChild ( div );
+		fragment.appendChild ( testComp );
 		let realDOM = fragment.render (),
 			fBackup = fragment.clone ();
 
-		div.isComponent = true;
+		testComp.isComponent = true;
 		expect ( function () {
-			tc.__init__ ( div, {} );
+			tc.__init__ ( testComp, {} );
 		} ).toThrow ();
-		div.attr ( "suffix", ".am" );
-		tc.__init__ ( div, {} );
+		testComp.attr ( "suffix", ".am" );
+		tc.__init__ ( testComp, {
+			module: { state: {} }
+		} );
 
 
 		expect ( fragment.children [ 0 ].templateNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( "default button.am" );
@@ -135,25 +139,27 @@ describe ( "define component =>", () => {
 		////////////////////////////////////////
 		tc = new TestComp ();
 		fragment = VFragment ();
-		div = VElement ( "div" );
-		div.attr ( "text", "external button" );
-		div.attr ( "suffix", ".am" );
+		testComp = VElement ( "test-comp" );
+		testComp.attr ( "text", "external button" );
+		testComp.attr ( "suffix", ".am" );
 
-		fragment.appendChild ( div );
+		fragment.appendChild ( testComp );
 		realDOM = fragment.render ();
 		fBackup = fragment.clone ();
 
-		div.isComponent = true;
+		testComp.isComponent = true;
 		expect ( function () {
-			div.attr ( "link", "./a" );
-			tc.__init__ ( div, {} );
+			testComp.attr ( "link", "./a" );
+			tc.__init__ ( testComp, {} );
 		} ).toThrow ();
 
 		//////////////////////////////////////////
 		//////////////////////////////////////////
 		//////////////////////////////////////////
-		div.attr ( "link", "/a/b/c" );
-		tc.__init__ ( div, {} );
+		testComp.attr ( "link", "/a/b/c" );
+		tc.__init__ ( testComp, {
+			module: { state: {} }
+		} );
 
 		expect ( fragment.children [ 0 ].templateNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( "external button.am" );
 		expect ( fragment.children [ 0 ].templateNodes [ 0 ].attr ( "href" ) ).toBe ( "/a/b/c" );
@@ -169,21 +175,23 @@ describe ( "define component =>", () => {
 		// ////////////////////////////////////////
 		tc = new TestComp ();
 		fragment = VFragment ();
-		div = VElement ( "div" );
-		div.attr ( "suffix", ".am" );
+		testComp = VElement ( "test-comp" );
+		testComp.attr ( "suffix", ".am" );
 
-		fragment.appendChild ( div );
+		fragment.appendChild ( testComp );
 		realDOM = fragment.render ();
 		fBackup = fragment.clone ();
 
-		div.isComponent = true;
+		testComp.isComponent = true;
 		expect ( function () {
-			div.attr ( "classname", "abde" );
-			tc.__init__ ( div, {} );
+			testComp.attr ( "classname", "abde" );
+			tc.__init__ ( testComp, {} );
 		} ).toThrow ();
 
-		div.attr ( "classname", "abcde" );
-		tc.__init__ ( div, {} );
+		testComp.attr ( "classname", "abcde" );
+		tc.__init__ ( testComp, {
+			module: { state: {} }
+		} );
 		expect ( fragment.children [ 0 ].templateNodes [ 0 ].attr ( "class" ) ).toBe ( "abcde" );
 		fragment.diff ( fBackup ).patch ();
 		expect ( realDOM.firstChild.className ).toBe ( "abcde" );
@@ -232,19 +240,21 @@ describe ( "define component =>", () => {
 		//vm模拟模块ViewModel，测试vm将值传入组件props中
 		let tc = new TestComp (),
 			fragment = VFragment (),
-			div = VElement ( "div" ),
+			compEntity = VElement ( "test-comp" ),
 			vm = new ViewModel ( { text : "button", link : "/b" } );
 
-		fragment.appendChild ( div );
+		fragment.appendChild ( compEntity );
 		let realDOM = fragment.render (),
 			fBackup = fragment.clone ();
 
-		div.isComponent = true;
-		div.attr ( {
+		compEntity.isComponent = true;
+		compEntity.attr ( {
 			text : "{{ text }}",
 			link : "{{ link }}"
 		} );
-		tc.__init__ ( div, { state : vm } );
+		tc.__init__ ( compEntity, {
+			module: { state : vm }
+		 } );
 
 		expect ( fragment.children [ 0 ].templateNodes [ 0 ].children [ 0 ].nodeValue ).toBe ( "button" );
 		expect ( fragment.children [ 0 ].templateNodes [ 0 ].attr ( "href" ) ).toBe ( "/b" );

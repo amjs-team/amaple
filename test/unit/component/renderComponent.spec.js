@@ -17,7 +17,7 @@ describe ( "render component => ", () => {
 			init () {
 				return {
 			    	btnText : "test-btn",
-			    	console : ""
+			    	console : this.props.defaultConsole || ""
 			    };
 			},
 			render () {
@@ -179,6 +179,7 @@ describe ( "render component => ", () => {
 		expect ( div.children.length ).toBe ( 5 );
 		expect ( div.children [ 1 ].templateNodes [ 0 ].nodeName ).toBe ( "BUTTON" );
 		expect ( div.children [ 1 ].templateNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "a" );
+		// expect ( div.children [ 1 ].templateNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "a" );
 		expect ( div.children [ 2 ].templateNodes [ 0 ].nodeName ).toBe ( "BUTTON" );
 		expect ( div.children [ 2 ].templateNodes [ 4 ].children [ 0 ].nodeValue ).toBe ( "b" );
 		expect ( div.children [ 3 ].templateNodes [ 0 ].nodeName ).toBe ( "BUTTON" );
@@ -516,5 +517,68 @@ describe ( "render component => ", () => {
 		expect ( unmountSpy.calls.count () ).toBe ( 1 );
 		expect ( moduleObj.components.length ).toBe ( 0 );
 		expect ( Object.keys ( moduleObj.references ).length ).toBe ( 0 );
+	} );
+
+	it ( "render a component which has two-way binding props", () => {
+		const 
+			moduleObj = {},
+			div = VElement ( "div" ),
+			vm = new ViewModel ( {
+				twoWayValue: 0
+			} ),
+			tmpl = new Tmpl ( vm, [ TestComp ], moduleObj );
+		
+		moduleObj.state = vm;
+		div.appendChild ( VElement ( "test-comp", { "twoWayValue" : "{{ twoWayValue }}" }, null ) );
+		tmpl.mount ( div, true );
+
+		expect ( moduleObj.components [ 0 ].props.twoWayValue ).toBe ( 0 );
+		vm.twoWayValue = 1;
+		expect ( moduleObj.components [ 0 ].props.twoWayValue ).toBe ( 1 );
+		moduleObj.components [ 0 ].props.twoWayValue = 2;
+		expect ( moduleObj.components [ 0 ].props.twoWayValue ).toBe ( 2 );
+	} );
+
+	it ( "render a div that contains component which has scoped props and computed value", () => {
+		const 
+			moduleObj = {},
+			div = VElement ( "div" ),
+			vm = new ViewModel ( {
+				list : [ "a", "b", "c" ],
+				stateValue : "zzz-"
+			} ),
+			tmpl = new Tmpl ( vm, [ TestComp ], moduleObj );
+		
+		moduleObj.state = vm;
+		div.appendChild ( VElement ( "div", {
+			":for" : "(item, i) in list"
+		}, null, [ VElement ( "test-comp", { 
+
+				// 只有单独使用差值表达式且状态值不为局部状态的才可以被双向绑定
+				defaultConsole : "{{ item }}",
+				twoWayValue: "{{ stateValue }}",
+				computedValue : "{{ stateValue + 'suffix' + i }}",
+				mixValue : "{{ stateValue }}stateValue"
+			}, null ) ] ) );
+		tmpl.mount ( div, true );
+
+		let props = moduleObj.components [ 0 ].props;
+		expect ( props.defaultConsole ).toBe ( "a" );
+		expect ( props.twoWayValue ).toBe ( "zzz-" );
+		expect ( props.computedValue ).toBe ( "zzz-suffix0" );
+		expect ( props.mixValue ).toBe ( "zzz-stateValue" );
+
+		props = moduleObj.components [ 1 ].props;
+		expect ( props.defaultConsole ).toBe ( "b" );
+		expect ( props.twoWayValue ).toBe ( "zzz-" );
+		expect ( props.computedValue ).toBe ( "zzz-suffix1" );
+		expect ( props.mixValue ).toBe ( "zzz-stateValue" );
+		
+		vm.stateValue = "xxx-";
+		props = moduleObj.components [ 0 ].props;
+		expect ( props.twoWayValue ).toBe ( "xxx-" );
+		expect ( moduleObj.components [ 1 ].props.twoWayValue ).toBe ( "xxx-" );
+		expect ( props.computedValue ).toBe ( "xxx-suffix0" );
+		expect ( props.mixValue ).toBe ( "xxx-stateValue" );
 	} );
 } );

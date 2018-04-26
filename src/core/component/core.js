@@ -44,21 +44,24 @@ export default function Component () {
 extend ( Component.prototype, {
 	
     /**
-        __init__ ( componentVNode: Object, moduleObj: Object )
+        __init__ ( componentVNode: Object, moduleTmpl: Object, scoped?: Object )
     
         Return Type:
         void
     
         Description:
         初始化一个对应的组件对象
+        moduleObj为组件所在的模块对象，它将提供模块状态值，和组件卸载时提供移除操作对象
+        scoped为局部状态，它将为组件props提供局部状态值，只有在局部范围内才会存在值
     
         URL doc:
         http://amaple.org/######
     */
-	__init__ ( componentVNode, moduleObj ) {
-    	
+	__init__ ( componentVNode, moduleTmpl, scoped ) {
+        const moduleObj = moduleTmpl.module;
+        
         // 初始化props
-        this.props = componentConstructor.initProps ( componentVNode, moduleObj.state );
+        this.props = componentConstructor.initProps ( componentVNode, moduleObj.state, scoped, moduleTmpl );
 
     	//////////////////////////////////////////
     	// 获取init方法返回值并初始化vm数据
@@ -125,7 +128,7 @@ extend ( Component.prototype, {
 
         // 解析组件并挂载数据
         this.references = {};
-        tmpl.mount ( vfragment, false, Tmpl.defineScoped ( subElements, componentVNode, false ) );
+        tmpl.mount ( vfragment, false, Tmpl.defineScoped ( subElements, componentVNode ) );
 
         // 追加局部属性
         appendScopedAttr ( vfragment, scopedCssObject.selectors, scopedCssObject.identifier );
