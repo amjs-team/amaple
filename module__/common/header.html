@@ -125,6 +125,7 @@
 			paramUpdated: function () {
 				if ( this.param.root !== "" ) {
 					this.state.bgClass [ "bg-show" ] = true;
+					this.state.bgClass [ "bg-hide" ] = false;
 				}
 				else {
 					this.state.bgClass [ isCritial () && "bg-show" || "bg-hide" ] = true;
