@@ -33,7 +33,7 @@ am.class ( "AmBtn" ).extends ( am.Component ) ( {
 		}
 
 		this.template ( [
-			'<a href="{{ href }}" :onclick="onclick" target="{{ target }}" class="am-btn">',
+			'<a href="{{ href }}" target="{{ target }}" class="am-btn">',
 				'<img :if="img && !imgPos" src="{{ img }}" />',
 				'{{ subElements.default }}',
 				'<img :if="img && imgPos" src="{{ img }}" />',
