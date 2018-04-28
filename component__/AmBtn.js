@@ -9,11 +9,13 @@ am.class ( "AmBtn" ).extends ( am.Component ) ( {
 			imgPos: this.props.imgPos,
 			leftBg: this.props.leftBg,
 			rightBg: this.props.rightBg,
+			usage: this.props.usage,
+			onclick: this.props.onclick || function () {}
 		}
 	},
 	render: function () {
 		var amBtn = {
-			padding: "8px 24px",
+			padding: this.state.usage === "menu" ? "2px 12px" : "8px 24px",
 			"text-align": "center",
 			"border-radius": 25,
 			"box-sizing": "border-box",
@@ -26,12 +28,12 @@ am.class ( "AmBtn" ).extends ( am.Component ) ( {
 		}
 		else {
 			amBtn.background = "linear-gradient(to right, " + this.state.leftBg + " 0%, " + this.state.rightBg + " 100%)";
-			amBtn [ "box-shadow" ] = "5px 5px 30px -6px " + this.state.rightBg;
+			amBtn [ "box-shadow" ] = "5px 5px 15px -6px " + this.state.rightBg;
 			amBtn.color = "#ffffff";
 		}
 
 		this.template ( [
-			'<a href="{{ href }}" target="{{ target }}" class="am-btn">',
+			'<a href="{{ href }}" :onclick="onclick" target="{{ target }}" class="am-btn">',
 				'<img :if="img && !imgPos" src="{{ img }}" />',
 				'{{ subElements.default }}',
 				'<img :if="img && imgPos" src="{{ img }}" />',

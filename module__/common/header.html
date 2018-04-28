@@ -1,7 +1,7 @@
 <module>
 	<template>
-		<div class="header-wrap border-bottom {{ bgClass }}">
-			<ul>
+		<div class="header-wrap{{ bgClass }}">
+			<ul class="menu-pc">
 				<li class="menu" :for="(item, key) in nav" :if="key !== 'home'">
 					<a href="{{ item }}" class="title-color">{{ key }}</a>
 				</li>
@@ -9,9 +9,35 @@
 					<a href="/"><img src="images/icon-amaple.png"></a>
 				</li>
 			</ul>
+
+			<!-- mobile相关 -->
+			<div class="btn-menu-mobile" :onclick="toggleMenu">
+				<img src="images/btn-menu.png" />
+			</div>
+			<div class="menu-container {{ menuClass }}">
+				<div class="menu-1">
+					<h4 class="title-color">菜单</h4>
+					<ul>
+						<li class="menu-mobile" :for="(item, key) in nav" :if="key !== 'home'">
+							<am-btn type="fill" leftBg="#fcc64a" onclick="{{ toggleMenu }}" href="{{ item }}" rightBg="#fb9d41" usage="menu">{{ key }}</am-btn>
+						</li>
+						<li id="menu-home"></li>
+					</ul>
+				</div>
+				<div id="lang-sel-mobile">
+					<img src="images/icon-lang-m.png">
+					<span class="title-color">{{ locale }}</span>
+					<select :onchange="changeLocale" :ref="localeMobile">
+						<option value="简体中文">简体中文</option>
+						<!-- <option value="English">English</option> -->
+					</select>
+				</div>
+			</div>
+			<!-- mobile相关 end -->
+
 			<div id="lang-sel">
 				<img src="images/icon-lang.png">
-				<span >{{ locale }}</span>
+				<span>{{ locale }}</span>
 				<select :onchange="changeLocale" :ref="locale">
 					<option value="简体中文">简体中文</option>
 					<!-- <option value="English">English</option> -->
@@ -26,17 +52,48 @@
 			return ( document.body.scrollTop || document.documentElement.scrollTop || 0 ) > criticalScroll;
 		}
 
+		var AmBtn = import ( "AmBtn" ),
+			bgClassBackup = "";
 		new am.Module ( {
 			init: function ( nav ) {
 				var headerStatus = "",
-					self = this;
-
+					bgClass = {};
+				
+				bgClass [ "bg-show" ] = false;
+				bgClass [ "bg-hide" ] = false;
+				bgClass [ "visible-menu" ] = false;
 				return {
 					nav: nav,
-					bgClass: "",
+					bgClass: bgClass,
+					menuClass: "menu-hide",
 					locale: "简体中文",
 					changeLocale: function ( e ) {
 						this.locale = e.target.value;
+					},
+					toggleMenu: function () {
+						if ( this.bgClass [ "visible-menu" ] === false ) {
+							this.bgClass [ "visible-menu" ] = true;
+							
+							// menu显示时禁止滚动
+							document.body.style.height = "100%";
+							document.body.style.overflow = "hidden";
+
+							bgClassBackup = this.bgClass [ "bg-show" ] ? "bg-show" : "bg-hide";
+							this.bgClass [ "bg-show" ] = true;
+							this.bgClass [ "bg-hide" ] = false;
+							this.menuClass = "menu-show";
+						}
+						else {
+							this.bgClass [ "visible-menu" ] = false;
+
+							// menu隐藏时恢复滚动
+							document.body.style.height = "auto";
+							document.body.style.overflow = "auto";
+
+							this.bgClass [ bgClassBackup ] = true;
+							this.bgClass [ bgClassBackup === "bg-hide" ? "bg-show" : "bg-hide" ] = false;
+							this.menuClass = "menu-hide";
+						}
 					}
 				};
 			},
@@ -45,16 +102,20 @@
 					self = this;
 
 				if ( self.param.root !== "" ) {
-					this.state.bgClass = "bg-show";
+					this.state.bgClass [ "bg-show" ] = true;
 				}
 
 				function scrollHandler () {
 					if ( self.param.root === "" ) {
 						if ( isCritial () ) {
-							self.state.bgClass = headerStatus = "bg-show";
+							headerStatus = "bg-show";
+							self.state.bgClass [ "bg-show" ] = true;
+							self.state.bgClass [ "bg-hide" ] = false;
 						}
 						else {
-							self.state.bgClass = headerStatus = "bg-hide";
+							headerStatus = "bg-hide";
+							self.state.bgClass [ "bg-hide" ] = true;
+							self.state.bgClass [ "bg-show" ] = false;
 						}
 					}
 				}
@@ -63,10 +124,10 @@
 			},
 			paramUpdated: function () {
 				if ( this.param.root !== "" ) {
-					this.state.bgClass = "bg-show";
+					this.state.bgClass [ "bg-show" ] = true;
 				}
 				else {
-					this.state.bgClass = isCritial () && "bg-show" || "bg-hide";
+					this.state.bgClass [ isCritial () && "bg-show" || "bg-hide" ] = true;
 				}
 			}
 		} );
@@ -74,46 +135,24 @@
 
 	<style scoped>
 		.bg-show {
-			animation: bgshow 0.5s;
-			-webkit-animation: bgshow 0.5s;
 			background: #ffffff;
-		}
-		@keyframes bgshow
-		{
-			from {background: rgba(255, 255, 255, 0);}
-			to {background: rgba(255, 255, 255, 1);}
-		}
-		@-webkit-keyframes bgshow
-		{
-			from {background: rgba(255, 255, 255, 0);}
-			to {background: rgba(255, 255, 255, 1);}
+			box-shadow: 0px -2px 20px #fffaf5;
 		}
 		.bg-hide {
-			animation: bghide 0.5s;
-			-webkit-animation: bghide 0.5s;
 			background: rgba(255, 255, 255, 0);
 			border: none;
-		}
-		@keyframes bghide
-		{
-			from {background: rgba(255, 255, 255, 1);}
-			to {background: rgba(255, 255, 255, 0);}
-		}
-		@-webkit-keyframes bghide
-		{
-			from {background: rgba(255, 255, 255, 1);}
-			to {background: rgba(255, 255, 255, 0);}
 		}
 		.header-wrap {
 			overflow: hidden;
 			position: relative;
+			transition: all 0.5s;
 		}
-		ul {
+		.menu-pc {
 			margin: 10px 0;
 			overflow: hidden;
 			text-align: center;
 		}
-		ul li {
+		.menu-pc li {
 			display: inline-block;
 			font-size: 15px;
 			width: 10%;
@@ -123,27 +162,21 @@
 			vertical-align: -19px;
 			width: 42px;
 		}
-		@media screen and (min-width: 768px) {
-			.menu {
-				font-weight: bold;
-				padding-top: 20px;
-			}	
-		}
 		#lang-sel {
 			width: 95px;
 			position: absolute;
 			right: 5%;
 			top: 26px;
 		}
-		#lang-sel img {
+		#lang-sel img, #lang-sel-mobile img {
 			width: 18px;
 			margin-right: 8px;
 			vertical-align: middle;
 		}
-		#lang-sel span {
+		#lang-sel span, #lang-sel-mobile span {
 			font-size: 13px;
 		}
-		#lang-sel select {
+		#lang-sel select, #lang-sel-mobile select {
 			width: 100%;
 			height: 100%;
 			position: absolute;
@@ -152,14 +185,76 @@
 			opacity: 0;
 		}
 		@media screen and (max-width: 768px) {
+			.header-wrap {
+				height: 57px;
+			}
+			.visible-menu {
+				height: 100%;
+			}
+			.menu {
+				font-weight: bold;
+				padding-top: 20px;
+			}
 			#icon-am img {
 				width: 28px;
 			}
-			.menu {
+			.menu-pc .menu {
 				display: none;
 			}
 			#lang-sel {
 				display: none;
+			}
+		}
+		.btn-menu-mobile {
+			display: none;
+		}
+		.menu-container {
+			display: none;
+		}
+		@media screen and (max-width: 768px) {
+			.btn-menu-mobile {
+				display: block;
+				position: absolute;
+			    top: 20px;
+			    right: 20px;
+			    width: 22px;
+			}
+			.btn-menu-mobile img {
+				width: 100%;
+			}
+			.menu-container {
+				display: block;
+				margin: 0 20px;
+				position: relative;
+				text-align: center;
+				overflow: hidden;
+
+				transition: opacity 0.5s;
+			}
+			.menu-show {
+				opacity: 1;
+			}
+			.menu-hide {
+				opacity: 0;
+			}
+			.visible-menu {
+				height: 800px;
+			}
+			.menu-1 {
+				margin: 34px 0;
+			}
+			.menu-container h4 {
+				margin: 0 0 8px 10px;
+				font-size: 16px;
+			}
+			.menu-mobile {
+				width: auto;
+				display: inline-block;
+				margin-right: 10px;
+			}
+			#lang-sel-mobile {
+				padding: 12px 0;
+				position: relative;
 			}
 		}
 	</style>

@@ -1,6 +1,6 @@
 <module>
 	<template>
-		<div class="footer-wrap{{ root ? '-other' : '' }}">
+		<div class="{{ root ? 'footer-wrap-other' : 'footer-wrap' }}">
 			<a href="https://github.com/amjs-team/amaple.org/blob/master/source/_posts/{{ title }}.md" target="_blank" :if="root !== ''">教程不够清楚？点击编辑此页面</a>
 			<a href="https://github.com/amjs-team/amaple/issues">提交issue</a>
 			<a href="#">联系Amaple-Team</a>
@@ -31,6 +31,7 @@
 		.footer-wrap {
 			margin: 110px 0 50px 0;
 			text-align: center;
+			font-size: 13px;
 		}
 		.footer-wrap-other {
 			width: 80%;
@@ -38,17 +39,24 @@
 			margin-top: 110px;
 			margin-bottom: 50px;
 			text-align: right;
+			font-size: 13px;
 		}
 		a {
 			margin: 0 20px 0 20px;
 			color: #78808a;
 		}
 		#copyright {
-			margin-top: 10px;
+			margin-top: 6px;
 		}
 		@media screen and (max-width: 768px) {
 			.footer-wrap {
 				margin: 80px 0 50px 0;
+			}
+			.footer-wrap-other {
+				width: 86%;
+			}
+			.footer-wrap-other a {
+				margin: 0 0 0 20px;
 			}
 		}
 	</style>

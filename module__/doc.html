@@ -1,21 +1,13 @@
 <module>
 	<template>
 		<div class="doc-wrap">
-			<div class="menu" :module="menu" style="{{ height }}"></div>
+			<div class="menu" :module="menu" style="height:{{ ( document.documentElement.clientHeight || document.body.clientHeight ) - 95 }}px"></div>
 			<div class="post" :module></div>
 		</div>
 	</template>
 
 	<script>
-		new am.Module ( {
-			init: function () {
-				return {
-					height: {
-						height: ( document.documentElement.clientHeight || document.body.clientHeight ) - 95
-					}
-				};
-			}
-		} );
+		new am.Module ();
 	</script>
 
 	<style scoped>
@@ -35,6 +27,20 @@
 			width: 70%;
 			float: right;
 			margin-top: 35px;
+		}
+		@media screen and (max-width: 768px) {
+			.doc-wrap {
+				width: auto;
+				margin: 0 20px;
+				margin-top: 30px;
+			}
+			.menu {
+				display: none;
+			}
+			.post {
+				width: 100%;
+				float: none;
+			}
 		}
 	</style>
 </module>
