@@ -21,7 +21,7 @@
 					<h4 class="title-color">菜单</h4>
 					<ul>
 						<li class="menu-mobile" :for="(item, key) in nav" :if="key !== 'home'">
-							<am-btn type="fill" leftBg="#fcc64a" onclick="{{ toggleMenu }}" href="{{ item }}" rightBg="#fb9d41" usage="menu">{{ key }}</am-btn>
+							<am-btn type="fill" leftBg="#fcc64a" href="{{ item }}" rightBg="#fb9d41" usage="menu">{{ key }}</am-btn>
 						</li>
 						<li id="menu-home"></li>
 					</ul>
@@ -77,7 +77,7 @@
 							this.bgClass [ "visible-menu" ] = true;
 							
 							// menu显示时禁止滚动
-							document.body.style.height = "100%";
+							document.body.style.height = document.documentElement.clientHeight || document.body.clientHeight;
 							document.body.style.overflow = "hidden";
 
 							bgClassBackup = this.bgClass [ "bg-show" ] ? "bg-show" : "bg-hide";
@@ -253,7 +253,7 @@
 				opacity: 0;
 			}
 			.visible-menu {
-				height: 800px;
+				height: 1000px;
 			}
 			.menu-1 {
 				margin: 34px 0;

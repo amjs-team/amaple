@@ -9,8 +9,7 @@ am.class ( "AmBtn" ).extends ( am.Component ) ( {
 			imgPos: this.props.imgPos,
 			leftBg: this.props.leftBg,
 			rightBg: this.props.rightBg,
-			usage: this.props.usage,
-			onclick: this.props.onclick || function () {}
+			usage: this.props.usage
 		}
 	},
 	render: function () {
