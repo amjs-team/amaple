@@ -29,18 +29,19 @@ export default function Tmpl ( vm, components, module ) {
 extend ( Tmpl.prototype, {
 
     /**
-        mount ( vnode: Object, mountModule: Boolean, scoped?: Object )
+        mount ( vnode: Object, mountModule: Boolean, scoped?: Object, addScoped?: Boolean )
     
         Return Type:
         void
     
         Description:
         使用vm对象挂载并动态绑定数据到模板
+        addScoped用于控制添加和移除局部变量，否则可能会导致if、for中的调用导致局部变量被移除
     
         URL doc:
         http://amaple.org/######
     */
-    mount ( vnode, mountModule, scoped ) {
+    mount ( vnode, mountModule, scoped, addScoped = false ) {
         if ( !this.moduleNode ) {
             this.moduleNode = vnode;
         }
@@ -54,8 +55,11 @@ extend ( Tmpl.prototype, {
             return a.handler.name === "model" ? 1 : 0;
         } );
 
-        // 如果有局部状态数据则添加局部状态到state上
-        this.addScoped ( scoped && scoped.scopedMounts );
+        // 如果有局部状态且不重复，则添加局部状态到state上
+        // 防止在if、for中的调用导致局部变量被移除
+        if ( scoped && addScoped ) {
+            this.addScoped ( scoped.scopedMounts );
+        }
 
         // 为相应模板元素挂载数据
         foreach ( compileHandlers.watchers, watcher => {
@@ -77,7 +81,9 @@ extend ( Tmpl.prototype, {
         } );
 
         // 移除局部数据
-        this.removeScoped ( scoped && scoped.scopedUnmounts );
+        if ( scoped && addScoped ) {
+            this.removeScoped ( scoped.scopedUnmounts );
+        }
     },
     
     /**
@@ -98,7 +104,7 @@ extend ( Tmpl.prototype, {
     },
 
     /**
-        addScoped ()
+        addScoped ( scopedMounts: Object )
     
         Return Type:
         Object
@@ -117,7 +123,7 @@ extend ( Tmpl.prototype, {
     },
     
     /**
-        removeScoped ()
+        removeScoped ( scopedMounts: Object )
     
         Return Type:
         Object

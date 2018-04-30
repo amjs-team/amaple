@@ -29,13 +29,9 @@ describe ( "directive expr => ", () => {
         expect ( realDOM.childNodes.item ( 0 ).childNodes.item ( 0 ).nodeValue ).toBe ( "success" );
         expect ( realDOM.childNodes.item ( 0 ).nextSibling.childNodes.item ( 0 ).nodeValue ).toBe ( "success123" );
 
-
-        dBackup = d.clone ();
         vm.expr = "hello";
         expect ( d.children [ 0 ].children [ 0 ].nodeValue ).toBe ( "hello" );
         expect ( d.children [ 0 ].nextSibling ().children [ 0 ].nodeValue ).toBe ( "hello123" );
-        // 比较最小更新步骤并渲染到实际dom
-        d.diff ( dBackup ).patch ();
         expect ( realDOM.childNodes.item ( 0 ).childNodes.item ( 0 ).nodeValue ).toBe ( "hello" );
         expect ( realDOM.childNodes.item ( 0 ).nextSibling.childNodes.item ( 0 ).nodeValue ).toBe ( "hello123" );
     } );
@@ -90,7 +86,8 @@ describe ( "directive expr => ", () => {
     } );
 
     it ( "Common treatment at attribute 'style' and 'class' when state isn't a object", () => {
-        d.appendChild ( VElement ( "p", { class: "first-class{{ clazz }}", style: "margin-top:20px{{ color }}" }, null, [ VTextNode ( "hello icejs" ) ] ) );
+        d.appendChild ( VElement ( "p", { class: "first-class{{ clazz }}", style: "margin-top:20px{{ color }}" }, null ) );
+        d.appendChild ( VElement ( "p", { class: "second-class{{ clazzStr }}", style: "width:{{width}}px" }, null ) );
         const realDOM = d.render ();
 
         let dBackup = d.clone (),
@@ -100,13 +97,17 @@ describe ( "directive expr => ", () => {
                     background: "red",
                     color: "white",
                     fontSize: 20,
-                }
+                },
+                clazzStr: "d",
+                width: 100
             } ),
             t = new Tmpl ( vm, [], {} );
         t.mount ( d, true );
 
         expect ( d.children [ 0 ].attr ( "class" ) ).toBe ( "first-class a b c" );
         expect ( d.children [ 0 ].attr ( "style" ) ).toBe ( "margin-top:20px;background:red;color:white;font-size:20px;" );
+        expect ( d.children [ 1 ].attr ( "class" ) ).toBe ( "second-class d" );
+        expect ( d.children [ 1 ].attr ( "style" ) ).toBe ( "width:100px" );
         d.diff ( dBackup ).patch ();
         
         expect ( realDOM.querySelector ( ".first-class" ).nodeName ).toBe ( "P" );
@@ -120,12 +121,19 @@ describe ( "directive expr => ", () => {
     } );
 
     it ( "Special treatment at attribute 'style' and 'class' when state is a object", () => {
-        d.appendChild ( VElement ( "p", { class: "{{ clazz }}", style: "{{ color }}" }, null, [ VTextNode ( "hello icejs" ) ] ) );
+        d.appendChild ( VElement ( "p", { class: "{{ clazz }}", style: "{{ color }}" }, null, [
+            VElement ( "p", { class: "{{ obj }}" } )
+        ] ) );
         const realDOM = d.render ();
 
         let dBackup = d.clone (),
             vm = new ViewModel ( {
                 clazz: [ "a", "b", "c" ],
+                obj: {
+                    first: true,
+                    second: false,
+                    third: true
+                },
                 color: {
                     background: "red",
                     color: "white",
@@ -137,14 +145,32 @@ describe ( "directive expr => ", () => {
 
         expect ( d.children [ 0 ].attr ( "class" ) ).toBe ( "a b c" );
         expect ( d.children [ 0 ].attr ( "style" ) ).toBe ( "background:red;color:white;font-size:20px;" );
+        expect ( d.children [ 0 ].children [ 0 ].attr ( "class" ) ).toBe ( "first third" );
         d.diff ( dBackup ).patch ();
         
         expect ( realDOM.querySelector ( ".a" ).nodeName ).toEqual ( "P" );
         expect ( realDOM.querySelector ( ".b" ).nodeName ).toEqual ( "P" );
         expect ( realDOM.querySelector ( ".c" ).nodeName ).toEqual ( "P" );
+        expect ( realDOM.querySelector ( ".first" ).nodeName ).toEqual ( "P" );
+        expect ( realDOM.querySelector ( ".third" ).nodeName ).toEqual ( "P" );
         expect ( realDOM.firstChild.style.background ).toMatch ( /red/ );
         expect ( realDOM.firstChild.style.color ).toBe ( "white" );
         expect ( realDOM.firstChild.style.fontSize ).toBe ( "20px" );
+
+        ////////////////////////////
+        ////////////////////////////
+        vm.clazz.push ( "d" );
+        expect ( realDOM.querySelector ( ".d" ).nodeName ).toEqual ( "P" );
+
+        ////////////////////////////
+        ////////////////////////////
+        vm.color.background = "black";
+        expect ( realDOM.firstChild.style.background ).toBe ( "black" );
+
+        ////////////////////////////
+        ////////////////////////////
+        vm.obj.second = true;
+        expect ( realDOM.querySelector ( ".second" ).nodeName ).toEqual ( "P" );
     } );
 
     it ( "Directive expression with calculation", () => {

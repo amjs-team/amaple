@@ -24,16 +24,29 @@ function toString ( val ) {
     String
 
     Description:
-    绑定元素的class时可传入数组，绑定渲染时会自动用空格隔开
+    绑定元素的class时可传入数组和对象，绑定渲染时会自动用空格隔开
+    参数为对象时，它将会把值为true的key作为类名
 
     URL doc:
     http://amaple.org/######
 */
-function arrayToClass ( val ) {
-    if ( type ( val ) !== "array" ) {
-        return ` ${ toString ( val ) } `;
+function arrayOrObjectToClass ( val ) {
+    const tval = type ( val );
+    if ( tval === "array" ) {
+        return ` ${ val.join ( " " ) } `;
     }
-    return ` ${ val.join ( " " ) } `;
+    else if ( tval === "object" ) {
+        const arr = [];
+        foreach ( val, ( v, k ) => {
+            if ( v ) {
+                arr.push ( k );
+            }
+        } );
+
+        return ` ${ arr.join ( " " ) } `;
+    }
+
+    return ` ${ toString ( val ) } `;
 }
 
 /**
@@ -51,7 +64,7 @@ function arrayToClass ( val ) {
 */
 function objectToStyle ( val ) {
     if ( type ( val ) !== "object" ) {
-        return `;${ toString ( val ) }`;
+        return toString ( val );
     }
     
     
@@ -94,7 +107,7 @@ export default {
 
         this.attrName = exprMatch [ 1 ];
         this.expr = exprMatch [ 2 ];
-        this.transformFn = this.attrName === "class" ? arrayToClass 
+        this.transformFn = this.attrName === "class" ? arrayOrObjectToClass 
             : this.attrName === "style" ? objectToStyle : toString;
 
         // 当表达式只有“{{ expr }}”时直接取出表达式的值

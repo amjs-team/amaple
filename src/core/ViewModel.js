@@ -101,7 +101,7 @@ function initState ( states, context ) {
 			watch = state.watch;
 			state = state.value;
 		}
-      
+		
     	state = convertSubState ( state, subs, context );
       	
       	defineReactiveProperty ( key, () => {

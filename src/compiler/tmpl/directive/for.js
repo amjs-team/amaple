@@ -47,7 +47,7 @@ function createVNode ( watcher, arg, index ) {
     f.appendChild ( itemNode );
 
     // 为遍历克隆的元素挂载数据
-    watcher.tmpl.mount ( f, true, scopedAuxiliary );
+    watcher.tmpl.mount ( f, true, scopedAuxiliary, true );
     itemNode = f.children [ 0 ];
 
     return itemNode;

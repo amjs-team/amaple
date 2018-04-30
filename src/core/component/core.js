@@ -128,7 +128,7 @@ extend ( Component.prototype, {
 
         // 解析组件并挂载数据
         this.references = {};
-        tmpl.mount ( vfragment, false, Tmpl.defineScoped ( subElements, componentVNode ) );
+        tmpl.mount ( vfragment, false, Tmpl.defineScoped ( subElements, componentVNode ), true );
 
         // 追加局部属性
         appendScopedAttr ( vfragment, scopedCssObject.selectors, scopedCssObject.identifier );

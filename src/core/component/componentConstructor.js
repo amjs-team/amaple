@@ -91,8 +91,8 @@ export default {
             // 属性名需符合变量的命名规则
             if ( rvar.test ( name ) ) {
                 let expr = "";
-
                 hasStateValue = false;
+                
                 // 属性值只有差值表达式，且差值表达式内只有状态变量名的才进行双向绑定
                 if ( match = attrVal.match ( rpropExpr ) ) {
                     hasStateValue = true;
