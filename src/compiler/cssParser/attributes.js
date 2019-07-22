@@ -55,7 +55,7 @@ export const rules = {
 		const name = data.name;
 		let value = data.value;
 
-		if ( /\s/.test ( value ) ){
+		if ( /\s/.test ( value ) ) {
 			return falseFunc;
 		}
 
