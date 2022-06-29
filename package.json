@@ -64,7 +64,7 @@
     "lodash": "^4.17.4",
     "rollup": "^0.52.1",
     "rollup-plugin-babel": "^2.7.1",
-    "shelljs": "^0.7.8",
+    "shelljs": "^0.8.5",
     "webpack": "^3.3.0"
   },
   "config": {
